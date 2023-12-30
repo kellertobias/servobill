@@ -26,6 +26,8 @@ import {
 import { InvoiceRepository } from '@/backend/repositories/invoice.repository';
 import { CustomerRepository } from '@/backend/repositories/customer.repository';
 import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
+import { SettingsRepository } from '@/backend/repositories/settings.repository';
+import { InvoiceSettingsEntity } from '@/backend/entities/settings.entity';
 
 @Service()
 @Resolver(() => Invoice)
@@ -33,6 +35,7 @@ export class InvoiceResolver {
 	constructor(
 		@Inject(InvoiceRepository) private invoiceRepository: InvoiceRepository,
 		@Inject(CustomerRepository) private customerRepository: CustomerRepository,
+		@Inject(SettingsRepository) private settingsRepository: SettingsRepository,
 	) {}
 
 	@Authorized()
@@ -86,6 +89,9 @@ export class InvoiceResolver {
 		type: InvoiceType = InvoiceType.INVOICE,
 		@Ctx() context: GqlContext,
 	): Promise<Invoice> {
+		const setting = await this.settingsRepository.getSetting(
+			InvoiceSettingsEntity,
+		);
 		const customer = await this.customerRepository.getById(customerId);
 
 		if (!customer) {
@@ -97,6 +103,12 @@ export class InvoiceResolver {
 			customer,
 			context.session?.user?.name || 'Unknown',
 		);
+
+		invoice.updateTexts({
+			footerText: setting.defaultInvoiceFooterText,
+		});
+
+		await this.invoiceRepository.save(invoice);
 
 		return invoice;
 	}

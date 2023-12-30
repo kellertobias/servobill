@@ -42,62 +42,9 @@ export class GenerateInvoiceHtmlHandler
 	implements ICqrsHandler<GenerateInvoiceHtmlCommand>
 {
 	constructor() {}
-	async execute(command: GenerateInvoiceHtmlCommand['request']) {
-		const template = command.noWrap
-			? command.template
-			: makeTemplate(command.template, command.styles);
 
-		handlebars.registerHelper('date', function (date, format) {
-			if (!date || !(typeof date === 'string' || date instanceof Date)) {
-				date =
-					command.invoice.type === InvoiceType.INVOICE
-						? command.invoice.invoicedAt
-						: command.invoice.offeredAt;
-			}
-			return dayjs(date).format(
-				typeof format === 'string' && format ? format : 'DD.MM.YYYY',
-			);
-		});
-		handlebars.registerHelper('nl2br', function (text: string) {
-			return new handlebars.SafeString(text.replaceAll('\n', '<br />'));
-		});
-		handlebars.registerHelper('withTax', function (options) {
-			const hasTax = command.invoice.items.some(
-				(item) => item.taxPercentage && item.taxPercentage > 0,
-			);
-			// eslint-disable-next-line unicorn/prefer-ternary
-			if (hasTax) {
-				// @ts-expect-error this references the handlebars context
-				return options.fn(this);
-			} else {
-				// @ts-expect-error this references the handlebars context
-				return options.inverse(this);
-			}
-			return '';
-		});
-		handlebars.registerHelper('ifInvoice', function (options) {
-			// eslint-disable-next-line unicorn/prefer-ternary
-			if (command.invoice.type === InvoiceType.INVOICE) {
-				// @ts-expect-error this references the handlebars context
-				return options.fn(this);
-			} else {
-				// @ts-expect-error this references the handlebars context
-				return options.inverse(this);
-			}
-		});
-		handlebars.registerHelper('ifOffer', function (options) {
-			// eslint-disable-next-line unicorn/prefer-ternary
-			if (command.invoice.type === InvoiceType.OFFER) {
-				// @ts-expect-error this references the handlebars context
-				return options.fn(this);
-			} else {
-				// @ts-expect-error this references the handlebars context
-				return options.inverse(this);
-			}
-		});
-		const compiledTemplate = handlebars.compile(template);
-
-		const html = compiledTemplate({
+	private buildData(command: GenerateInvoiceHtmlCommand['request']) {
+		return {
 			name:
 				command.invoice.customer.contactName || command.invoice.customer.name,
 			company: {
@@ -113,6 +60,7 @@ export class GenerateInvoiceHtmlHandler
 			due: command.invoice.dueAt,
 			invoice: {
 				...command.invoice,
+				footerText: command.invoice.footerText || '',
 			},
 			subtotal: `${centsToPrice(
 				command.invoice.items.reduce(
@@ -161,7 +109,72 @@ export class GenerateInvoiceHtmlHandler
 					item.priceCents * item.quantity * (1 + item.taxPercentage / 100),
 				)}€`,
 			})),
+		};
+	}
+
+	private registerHelpers(command: GenerateInvoiceHtmlCommand['request']) {
+		handlebars.registerHelper('date', function (date, format) {
+			if (!date || !(typeof date === 'string' || date instanceof Date)) {
+				date =
+					command.invoice.type === InvoiceType.INVOICE
+						? command.invoice.invoicedAt
+						: command.invoice.offeredAt;
+			}
+			if (!date) {
+				return 'Invalid date';
+			}
+			return dayjs(date).format(
+				typeof format === 'string' && format ? format : 'DD.MM.YYYY',
+			);
 		});
+		handlebars.registerHelper('nl2br', function (text: string) {
+			return new handlebars.SafeString(`${text}`.replaceAll('\n', '<br />'));
+		});
+		handlebars.registerHelper('withTax', function (options) {
+			const hasTax = command.invoice.items.some(
+				(item) => item?.taxPercentage && item?.taxPercentage > 0,
+			);
+			// eslint-disable-next-line unicorn/prefer-ternary
+			if (hasTax) {
+				// @ts-expect-error this references the handlebars context
+				return options.fn(this);
+			} else {
+				// @ts-expect-error this references the handlebars context
+				return options.inverse(this);
+			}
+		});
+		handlebars.registerHelper('ifInvoice', function (options) {
+			// eslint-disable-next-line unicorn/prefer-ternary
+			if (command.invoice.type === InvoiceType.INVOICE) {
+				// @ts-expect-error this references the handlebars context
+				return options.fn(this);
+			} else {
+				// @ts-expect-error this references the handlebars context
+				return options.inverse(this);
+			}
+		});
+		handlebars.registerHelper('ifOffer', function (options) {
+			// eslint-disable-next-line unicorn/prefer-ternary
+			if (command.invoice.type === InvoiceType.OFFER) {
+				// @ts-expect-error this references the handlebars context
+				return options.fn(this);
+			} else {
+				// @ts-expect-error this references the handlebars context
+				return options.inverse(this);
+			}
+		});
+	}
+
+	async execute(command: GenerateInvoiceHtmlCommand['request']) {
+		const template = command.noWrap
+			? command.template
+			: makeTemplate(command.template, command.styles);
+
+		this.registerHelpers(command);
+
+		const compiledTemplate = handlebars.compile(template);
+		const data = this.buildData(command);
+		const html = compiledTemplate(data);
 
 		return {
 			html,

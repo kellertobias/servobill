@@ -12,7 +12,7 @@
         }
 
         p {
-            margin-bottom: 5px;;
+            margin-bottom: 5px;
         }
 
         a {
@@ -32,7 +32,6 @@
                 font-family: Arial, Helvetica, sans-serif;
                 font-size: 12pt;
                 margin: 0;
-                padding: 0;
             }
 
             a {
@@ -62,7 +61,6 @@
             font-family: Arial, Helvetica, sans-serif;
             font-size: 12pt;
             margin: 0;
-            padding: 0;
         }
         [data-ogsc] body {
             background-color: #181716;
@@ -70,7 +68,6 @@
             font-family: Arial, Helvetica, sans-serif;
             font-size: 12pt;
             margin: 0;
-            padding: 0;
         }
         
         /* Custom Dark Mode Font Colors */
@@ -81,12 +78,9 @@
             color: #bd0d4d;
         }
 
-        body {
-            padding: 15px; 
-        }
-
     </style>
    <body>
+    <div style="margin: 15px;">
       <div>
          <p>Hallo {{name}}</p>
          {{#ifInvoice}}
@@ -97,15 +91,11 @@
          <p>Sollten Sie Fragen haben, zögern Sie nicht, sich zu melden.</p>
          {{/ifOffer}}
          <div style="margin-bottom: 15px;"><p>mit freundlichen Grüßen,<br/>
-            Tobias S. Keller
+            {{company.name}}
          </p></div>
       </div>
-      <div style="font-size:10pt; margin-left: -10px;">
-         <img src="https://tobisk.de/signature/line.jpg"><br/>
-      </div>
       <div style="font-size:10pt; margin-top: 15px;">
-         <img class="light-img" src="https://tobisk.de/signature/logo.png">
-         <img class="dark-img" src="https://tobisk.de/signature/logo-white.png">
+         <img src="{{company.logo}}">
       </div>
       <div style="font-size:10pt">
          <b style="font-size:10pt;"><br/></b>
@@ -130,5 +120,6 @@
         Web: {{company.web}}
         <br/>
      </div>
+    </div>
    </body>
 </html>
