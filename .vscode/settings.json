@@ -1,0 +1,34 @@
+{
+    "explorer.excludeGitIgnore": false,
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.patterns": {
+        "*.ts": "${capture}.js",
+        ".env": ".env.example",
+        ".sentryclirc": ".sentryclirc.sample, sentry.*.config.ts",
+        "*.js": "${capture}.js.map, ${capture}.min.js, ${capture}.d.ts",
+        "*.jsx": "${capture}.js",
+        "*.tsx": "${capture}.ts",
+        ".eslintrc.*": ".eslintignore, .editorconfig, .prettierrc, .prettierrc.js*, .prettierignore, .stylelintrc, .stylelintignore",
+        "package.json": "tsconfig.json, tsconfig.*.json, package.json, package-lock.json",
+        "docker-compose.yml": ".dockerignore, Dockerfile",
+        "next.config.js": "next-env.d.ts, schema.graphql, schema.prisma, postcss.config.js*, tailwind.config.js*, keystone.db",
+    },
+    "files.watcherExclude": {
+        ".keystone/**": true,
+        ".next/**": true
+    },
+    "files.exclude": {
+        "**/.open-next": true,
+        "**/.next": true,
+        "**/.swc": true,
+        "**/.sst": true,
+        "**/node_modules": true
+    },
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit"
+    },
+    "editor.formatOnSave": true,
+    "eslint.validate": ["javascript", "typescript", "typescriptreact"],
+
+    
+}

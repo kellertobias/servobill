@@ -1,0 +1,57 @@
+name: Production Workflow
+
+on:
+  push:
+    branches:
+      - live
+
+env:
+  NODE_ENV: "production"
+
+jobs:
+  Deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.head_ref }}
+
+    - name: Install modules
+      run: NODE_ENV=development && npm ci
+
+    - name: Lint
+      run: npm run lint
+    
+    - name: Setup AWS
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: 'eu-central-1'
+      run: |
+        aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+        aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+        aws configure set default.region $AWS_DEFAULT_REGION
+        aws configure set region $AWS_DEFAULT_REGION
+        aws --version
+    - name: Download Layers
+      run: |
+        mkdir -p layers/chromium
+        wget https://github.com/Sparticuz/chromium/releases/download/v114.0.0/chromium-v114.0.0-layer.zip -O layers/chromium.zip
+        unzip layers/chromium.zip -d layers/chromium
+        rm layers/chromium.zip
+        ls -lach .
+        ls -lach layers
+        ls -lach layers/chromium
+    - name: Build & Deploy
+      env:
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        ALLOWED_EMAILS: ${{ secrets.ALLOWED_EMAILS }}
+        OAUTH_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
+        HOSTED_ZONE_DOMAIN_NAME: ${{ secrets.HOSTED_ZONE_DOMAIN_NAME }}
+        SITE_DOMAIN: ${{ secrets.SITE_DOMAIN }}
+      run: |
+        npm run gql:type
+        npx sst deploy --stage prod
+
+   

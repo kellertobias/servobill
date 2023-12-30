@@ -1,0 +1,20 @@
+# don't ever lint node_modules
+node_modules
+# don't lint build output (make sure it's set to your correct build folder name)
+_ignore_api
+.next
+.sst
+.open-next
+.github
+.swc
+**/.git
+**/.svn
+**/.hg
+**/node_modules
+
+# don't lint nyc coverage output
+coverage
+
+*.js
+
+public

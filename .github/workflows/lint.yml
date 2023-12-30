@@ -1,0 +1,17 @@
+name: Develop Workflow
+
+on:
+  push:
+    branches:
+      - '*'
+      - '!live'
+
+jobs:
+  Lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install modules
+      run: npm ci
+    - name: Run ESLint
+      run: npm run lint

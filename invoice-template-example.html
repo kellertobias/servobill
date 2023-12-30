@@ -1,0 +1,261 @@
+<!-- The Table is so that in print layout the header/ footer repeats on each page and doesn't overlap the content -->
+<table>
+	<thead><tr><td>
+		<header id="header">
+			<img id="logo" src="{{company.logo}}" alt="">
+		</header>
+	</td></tr></thead>
+	<tbody><tr><td>
+		
+{{foldmarks}}
+<!-- <div id="aligner-left">-</div>
+<div id="aligner-right">-</div> -->
+<div id="body">
+	<div id="address">
+		<small id="sender">
+			Abs. {{company.name}} - {{company.street}} - {{company.zip}} {{company.city}}
+		</small>
+		<div class="recipient">
+			<div><b>{{customer.name}}</b></div>
+			{{#if customer.showContact}}<div>{{customer.contactName}}</div>{{/if}}
+			<div>{{customer.street}}</div>
+			<div>{{customer.zip}} {{customer.city}}</div>
+			<div>{{customer.country}}</div>
+		</div>
+	</div>
+	<div id="info-box">
+		<div class="grid">
+			<div>
+				Kundennummer
+			</div>
+			<div>
+				{{customer.customerNumber}}
+			</div>
+		</div>
+		{{#ifInvoice}}
+		<div class="grid">
+			<div>
+				Rechnungsnummer
+			</div>
+			<div>
+				{{invoice.invoiceNumber}}
+			</div>
+		</div>
+		{{/ifInvoice}}
+		{{#ifOffer}}
+		<div class="grid">
+			<div>
+				Angebotsnummer
+			</div>
+			<div>
+				{{invoice.offerNumber}}
+			</div>
+		</div>
+		{{/ifOffer}}
+		{{#ifInvoice}}
+		<div class="grid">
+			<div>
+				Rechnungsdatum
+			</div>
+			<div>
+				{{date invoice.invoicedAt}}
+			</div>
+		</div>
+		{{/ifInvoice}}
+		{{#ifOffer}}
+		<div class="grid">
+			<div>
+				Angebotsdatum
+			</div>
+			<div>
+				{{date invoice.offeredAt}}
+			</div>
+		</div>
+		{{/ifOffer}}
+		<div class="grid">
+			<div>
+				{{#ifOffer}}Gültig bis{{else}}Fällig am{{/ifOffer}}
+			</div>
+			<div>
+				{{date invoice.dueAt "DD.MM.YYYY"}}
+			</div>
+		</div>
+	</div>
+	<div id="content">
+		<div id="subject">
+			{{#ifOffer}}Angebot{{else}}Rechnung{{/ifOffer}}
+		</div>
+		<div id="items">
+			<div class="grid title {{#withTax}}with-tax{{/withTax}}">
+				<div>
+					Artikel
+				</div>
+				<div>
+					Einzelpreis
+				</div>
+				<div>
+					Menge
+				</div>
+				{{#withTax}}<div>
+					Steuer
+				</div>
+				{{/withTax}}
+				<div>
+					Summe
+				</div>
+			</div>
+			{{#each items}}
+			<div class="grid {{#withTax}}with-tax{{/withTax}}">
+				<div>
+					<div>
+						{{name}}
+					</div>
+					<div>
+						{{nl2br description}}
+					</div>
+				</div>
+				<div>
+					{{price}}
+				</div>
+				<div>
+					{{quantity}}
+				</div>
+				{{#withTax}}
+				<div>
+					{{tax}}
+				</div>
+				{{/withTax}}
+				<div>
+					{{total}}
+				</div>
+			</div>
+			{{/each}}
+			<div id="items-end">
+				<div id="conditions">
+					<p><b>Bedingungen:</b></p>
+					{{nl2br invoice.footerText}}
+				</div>
+				<div id="totals">
+					{{#withTax}}
+					<div class="grid">
+						<div>
+							Summe Netto
+						</div>
+						<div>
+							{{subtotal}}
+						</div>
+					</div>
+					<div class="grid">
+						<div>
+							Steuer
+						</div>
+						<div>
+							{{tax}}
+						</div>
+					</div>
+					{{/withTax}}
+					<div class="grid" id="main-total">
+						<div>
+							Summe
+						</div>
+						<div>
+							{{total}}
+						</div>
+					</div>
+					{{#if invoice.paidCents}}
+					<div class="grid">
+						<div>
+							Bereits gezahlt
+						</div>
+						<div>
+							{{paid}}
+						</div>
+					</div>
+					<div class="grid">
+						<div>
+							Noch Offen
+						</div>
+						<div>
+							{{remaining}}
+						</div>
+					</div>
+					{{/if}}
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+	</td></tr></tbody>
+	<tfoot><tr><td>
+		<footer id="footer">
+			<div id="footer-inner">
+				<div>
+					<div><b>{{company.name}}</b></div>
+					<div>{{company.street}}</div>
+					<div>{{company.zip}} {{company.city}}</div>
+					<div><b>StNr:</b> {{company.taxId}}</div>
+				</div>
+				<div>
+					<div><b>E-Mail:</b> {{company.email}}</div>
+					<div><b>Mobil:</b> {{company.phone}}</div>
+					<div><b>Web:</b> {{company.web}}</div>
+					<div><b>Ust.Id:</b> {{company.vatId}}</div>
+				</div>
+				<div>
+					<div><b>Bankverbindung</b></div>
+					<div><b>Kontoinhaber:</b> {{company.bank.accountHolder}}</div>
+					<div><b>IBAN:</b> {{company.bank.iban}}</div>
+					<div><b>BIC:</b> {{company.bank.bic}}</div>
+				</div>
+			</div>
+		</footer>
+	</td></tr></tfoot>
+</table>
+<script type="text/javascript">
+	window.onload = addPageNumbers;
+	const bottomMargin = '35mm';
+	const a4height = 297;
+
+	function getTotalPages() {
+		// Add a div with 1cm height and width
+		const standardSquare = document.createElement('div');
+		standardSquare.style.width = '1cm';
+		standardSquare.style.height = '1cm';
+		standardSquare.style.background = 'red';
+		document.body.appendChild(standardSquare);
+
+		const x1cm = standardSquare.offsetWidth;
+		const y1cm = standardSquare.offsetHeight;
+		// Get size of page in px
+		console.log({x1cm, y1cm})
+
+		// now we know how many pixels are in 1cm
+		// we can calculate the height of the page in px
+		const pageHeight = a4height * y1cm / 10;
+		const totalHeight = document.body.scrollHeight;
+		const totalPages = Math.ceil(totalHeight / pageHeight);
+		console.log({pageHeight, totalHeight, totalPages})
+		// remove the div
+		document.body.removeChild(standardSquare);
+
+		return totalPages;
+	}
+
+	function addPageNumberDiv(i, totalPages) {
+		const pageNumberDiv = document.createElement("div");
+		pageNumberDiv.className = "page-number";
+		pageNumberDiv.textContent = "Page " + i + " of " + totalPages;
+		pageNumberDiv.style.height = "40px";
+		pageNumberDiv.style.top = `calc((${i} * (${a4height}mm - 0.5px)) - ${bottomMargin})`;
+		document.getElementById("content").appendChild(pageNumberDiv);
+	}
+
+	function addPageNumbers() {
+		const totalPages = getTotalPages();
+
+		for (var i = 1; i <= totalPages; i++) {
+			addPageNumberDiv(i, totalPages);
+		}
+	}
+</script>
