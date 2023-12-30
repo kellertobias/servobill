@@ -18,7 +18,7 @@
     "fix:prettier": "prettier --write \"**/*.ts(x)\"",
     "vscode-jest": "jest --passWithNoTests",
     "template": "tsx stack/local/template-builder.ts",
-    "deploy": "./setup-layers-prod.sh && npm run gql:type && sst deploy --stage prod",
+    "deploy": "./stack/setup-layers-prod.sh && npm run gql:type && sst deploy --stage prod",
     "clean": "rm -rf ./layers"
   },
   "dependencies": {

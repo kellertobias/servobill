@@ -36,13 +36,7 @@ jobs:
         aws --version
     - name: Download Layers
       run: |
-        mkdir -p layers/chromium
-        wget https://github.com/Sparticuz/chromium/releases/download/v114.0.0/chromium-v114.0.0-layer.zip -O layers/chromium.zip
-        unzip layers/chromium.zip -d layers/chromium
-        rm layers/chromium.zip
-        ls -lach .
-        ls -lach layers
-        ls -lach layers/chromium
+        ./stack/setup-layers-prod.sh
     - name: Build & Deploy
       env:
         JWT_SECRET: ${{ secrets.JWT_SECRET }}

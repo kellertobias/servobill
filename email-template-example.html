@@ -1,0 +1,134 @@
+<html lang="de">
+    <meta name="color-scheme" content="light dark">
+    <meta name="supported-color-schemes" content="light dark">
+    <style type="text/css">
+        html, body {
+            background-color: #181716;
+            color: #EEEEEE;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12pt;
+            margin: 0;
+            padding: 0;
+        }
+
+        p {
+            margin-bottom: 5px;;
+        }
+
+        a {
+            color: #bd0d4d;
+        }
+
+        /* Shows Dark Mode-Only Content, Like Images */
+        .light-img { display:block !important; width: auto !important; overflow: visible !important; float: none !important; max-height:inherit !important; max-width:inherit !important; line-height: auto !important; margin-top:0px !important; visibility:inherit !important; }
+            
+        /* Hides Light Mode-Only Content, Like Images */
+        .dark-img { display:none; display:none !important; }
+
+        @media (prefers-color-scheme: dark ) {
+            html, body {
+                background-color: #181716;
+                color: #EEEEEE;
+                font-family: Arial, Helvetica, sans-serif;
+                font-size: 12pt;
+                margin: 0;
+                padding: 0;
+            }
+
+            a {
+                color: #bd0d4d;
+            }
+            
+            /* Shows Dark Mode-Only Content, Like Images */
+            .dark-img { display:block !important; width: auto !important; overflow: visible !important; float: none !important; max-height:inherit !important; max-width:inherit !important; line-height: auto !important; margin-top:0px !important; visibility:inherit !important; }
+            
+            /* Hides Light Mode-Only Content, Like Images */
+            .light-img { display:none; display:none !important; }
+            
+            /* Custom Dark Mode Background Color */
+            .darkmode { background-color: #272623 !important; }
+        }
+
+        /* Shows Dark Mode-Only Content, Like Images */
+        [data-ogsc] .dark-img { display:block !important; width: auto !important; overflow: visible !important; float: none !important; max-height:inherit !important; max-width:inherit !important; line-height: auto !important; margin-top:0px !important; visibility:inherit !important; }
+        
+        /* Hides Light Mode-Only Content, Like Images */
+        [data-ogsc] .light-img { display:none; display:none !important; }
+        
+        /* Custom Dark Mode Background Color */
+        [data-ogsc] html{
+            background-color: #181716;
+            color: #EEEEEE;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12pt;
+            margin: 0;
+            padding: 0;
+        }
+        [data-ogsc] body {
+            background-color: #181716;
+            color: #EEEEEE;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12pt;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Custom Dark Mode Font Colors */
+        [data-ogsc] h1, [data-ogsc] h2, [data-ogsc] p, [data-ogsc] span, [data-ogsc] a, [data-ogsc] b { color: #ffffff !important; }
+        
+        /* Custom Dark Mode Text Link Color */
+        [data-ogsc] a {
+            color: #bd0d4d;
+        }
+
+        body {
+            padding: 15px; 
+        }
+
+    </style>
+   <body>
+      <div>
+         <p>Hallo {{name}}</p>
+         {{#ifInvoice}}
+         <p>Anbei befindet sich die Rechnung {{number}} über {{total}}, vom {{date}}</p>
+         {{/ifInvoice}}
+         {{#ifOffer}}
+         <p>Anbei befindet sich Ihr Angebot {{number}} über {{total}}.</p>
+         <p>Sollten Sie Fragen haben, zögern Sie nicht, sich zu melden.</p>
+         {{/ifOffer}}
+         <div style="margin-bottom: 15px;"><p>mit freundlichen Grüßen,<br/>
+            Tobias S. Keller
+         </p></div>
+      </div>
+      <div style="font-size:10pt; margin-left: -10px;">
+         <img src="https://tobisk.de/signature/line.jpg"><br/>
+      </div>
+      <div style="font-size:10pt; margin-top: 15px;">
+         <img class="light-img" src="https://tobisk.de/signature/logo.png">
+         <img class="dark-img" src="https://tobisk.de/signature/logo-white.png">
+      </div>
+      <div style="font-size:10pt">
+         <b style="font-size:10pt;"><br/></b>
+      </div>
+      <div style="font-size:10pt"><b style="font-size:10pt;">
+         {{company.name}}
+         </b><br/>
+      </div>
+      <div style="font-size:10pt">
+        {{company.street}}
+        <br/>
+     </div>
+     <div style="font-size:10pt">
+        {{company.zip}} {{company.city}}
+        <br/>
+     </div>
+     <div style="font-size:10pt; margin-top: 5px;">
+        Mobil: {{company.phone}}
+        <br/>
+     </div>
+     <div style="font-size:10pt">
+        Web: {{company.web}}
+        <br/>
+     </div>
+   </body>
+</html>
