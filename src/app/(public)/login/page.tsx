@@ -96,12 +96,12 @@ export default function LoginPage() {
 						</form>
 
 						<p className="mt-10 text-center text-sm text-gray-400">
-							Interested in this Billing software?{' '}
+							Interested in this Billing software? visit{' '}
 							<a
-								href="#"
+								href="tobisk.de/serverless-invoicing"
 								className="font-semibold leading-6 text-indigo-400 hover:text-indigo-300"
 							>
-								visit tobisk.de
+								tobisk.de/serverless-invoicing
 							</a>
 						</p>
 					</div>

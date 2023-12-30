@@ -96,7 +96,7 @@ export function Stack({ stack, ...rest }: StackContext) {
 			},
 		},
 		environment: {
-			NEXT_PUBLIC_API_URL: `https://${process.env.API_DOMAIN!}`,
+			NEXT_PUBLIC_API_URL: `https://api.${process.env.SITE_DOMAIN!}`,
 		},
 	});
 	restoreAfterNextBuild();
@@ -107,7 +107,6 @@ export function Stack({ stack, ...rest }: StackContext) {
 		ALLOWED_EMAILS: process.env.ALLOWED_EMAILS!,
 		OAUTH_CLIENT_ID: process.env.OAUTH_CLIENT_ID!,
 		TABLE_ELECTRODB: tables.electrodb.tableName,
-		API_DOMAIN: `api.${process.env.SITE_DOMAIN!}`,
 		SITE_DOMAIN: process.env.SITE_DOMAIN!,
 		BUCKET_FILES: files.bucketName,
 	};

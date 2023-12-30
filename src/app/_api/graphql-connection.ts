@@ -5,10 +5,7 @@ export { gql } from '@/common/gql';
 // export type DocumentNode = ReturnType<typeof gql>;
 
 export const isServer = typeof window === 'undefined';
-const host =
-	process.env.NODE_ENV === 'development'
-		? 'http://localhost:3000/'
-		: `https://api.${window.location.host}`;
+const host = process.env.NEXT_PUBLIC_API_URL;
 const endpoint = `${host}/api/graphql`;
 
 export const connection = new GraphQLClient(endpoint, {
