@@ -120,7 +120,10 @@ const company = {
 };
 
 const connections: ws[] = [];
-
+const templates = {
+	html: './templates/invoice.html',
+	style: './templates/invoice.css',
+};
 const execute = async (amountItems = -1, tax = true) => {
 	const handler = new GenerateInvoiceHtmlHandler();
 	const { html } = await handler.execute({
@@ -135,30 +138,28 @@ const execute = async (amountItems = -1, tax = true) => {
 			})),
 		},
 		logoUrl: 'https://via.placeholder.com/150',
-		template: fs
-			.readFileSync(path.resolve('./invoice-template-example.html'))
-			.toString(),
-		styles: fs
-			.readFileSync(path.resolve('./invoice-template-example.css'))
-			.toString(),
+		template: fs.readFileSync(path.resolve(templates.html)).toString(),
+		styles: fs.readFileSync(path.resolve(templates.style)).toString(),
 		company,
 	} as GenerateInvoiceHtmlCommand['request']);
 	return html;
 };
-fs.watch(path.resolve('./'), { recursive: true }, (operation, file) => {
-	if (
-		!file ||
-		!['invoice-template-example.html', 'invoice-template-example.css'].includes(
-			file,
-		) ||
-		operation !== 'change'
-	) {
-		return;
-	}
-	connections.forEach((connection) => {
-		connection.send('reload');
-	});
-});
+fs.watch(
+	path.resolve('./templates'),
+	{ recursive: true },
+	(operation, file) => {
+		if (
+			!file ||
+			![templates.html, templates.style].includes(file) ||
+			operation !== 'change'
+		) {
+			return;
+		}
+		connections.forEach((connection) => {
+			connection.send('reload');
+		});
+	},
+);
 
 const port = Number.parseInt(`${process.env.PORT || 2998}`);
 const app = express();

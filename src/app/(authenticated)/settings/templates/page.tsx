@@ -259,6 +259,7 @@ export default function TemplateHomePage() {
 				noPadding
 				contentClassName="overflow-hidden pt-6"
 				fullWidth
+				footer={<div className="mb-12"></div>}
 			>
 				<TemplateSettings
 					data={data}
