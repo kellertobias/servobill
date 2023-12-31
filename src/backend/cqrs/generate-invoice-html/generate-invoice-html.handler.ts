@@ -128,7 +128,9 @@ export class GenerateInvoiceHtmlHandler
 			);
 		});
 		handlebars.registerHelper('nl2br', function (text: string) {
-			return new handlebars.SafeString(`${text}`.replaceAll('\n', '<br />'));
+			return new handlebars.SafeString(
+				`${text || ''}`.replaceAll('\n', '<br />'),
+			);
 		});
 		handlebars.registerHelper('withTax', function (options) {
 			const hasTax = command.invoice.items.some(
