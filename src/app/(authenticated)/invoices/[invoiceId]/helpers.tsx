@@ -198,7 +198,9 @@ export function InlineEditableText({
 						/>
 					) : (
 						<span className="whitespace-pre-line">
-							{value || (
+							{value?.trim() ? (
+								value
+							) : (
 								<span className="opacity-30">{empty || placeholder}</span>
 							)}
 						</span>
