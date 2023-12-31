@@ -316,7 +316,6 @@ type Query {
   expense(id: String!): Expense!
   expenses(limit: Int, skip: Int, where: ExpenseWhereInput): [Expense!]!
   generateReport(where: IncomeSurplusReportWhereInput): IncomeSurplusReport!
-  generateReportExport(where: IncomeSurplusReportWhereInput!): IncomeSurplusReport!
   getContext: GetContextResult!
   invoice(id: String!): Invoice!
   invoices(limit: Int, skip: Int, where: InvoiceWhereInput): [Invoice!]!

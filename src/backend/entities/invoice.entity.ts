@@ -245,10 +245,14 @@ export class InvoiceEntity extends DomainEntity {
 		}
 
 		if (this.type === InvoiceType.INVOICE) {
+			console.log('this.invoicedAt', this.invoicedAt);
+			console.log('this.dueAt', this.dueAt);
 			this.invoicedAt = this.invoicedAt || new Date();
 			this.dueAt =
 				this.dueAt ||
-				dayjs().add(settings.defaultInvoiceDueDays, 'days').toDate();
+				dayjs(this.invoicedAt)
+					.add(settings.defaultInvoiceDueDays, 'days')
+					.toDate();
 		} else {
 			this.offeredAt = this.offeredAt || new Date();
 			this.dueAt =
