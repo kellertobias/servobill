@@ -4,7 +4,10 @@ import { useParams } from 'next/navigation';
 
 import {
 	CheckCircleIcon,
+	EnvelopeIcon,
 	PaperClipIcon,
+	PlusCircleIcon,
+	TrashIcon,
 	UserCircleIcon,
 } from '@heroicons/react/20/solid';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -22,6 +25,40 @@ dayjs.extend(relativeTime);
 
 const getActivityIcon = (type: InvoiceActivityType) => {
 	switch (type) {
+		case InvoiceActivityType.CreatedInvoice:
+		case InvoiceActivityType.CreatedOffer: {
+			return (
+				<PlusCircleIcon className="h-6 w-6 text-gray-600" aria-hidden="true" />
+			);
+		}
+		case InvoiceActivityType.CancelOffer:
+		case InvoiceActivityType.CancelInvoice: {
+			return <TrashIcon className="h-6 w-6 text-red-600" aria-hidden="true" />;
+		}
+		case InvoiceActivityType.SentInvoiceEmail:
+		case InvoiceActivityType.SentInvoiceLetter:
+		case InvoiceActivityType.SentOfferEmail:
+		case InvoiceActivityType.SentOfferLetter: {
+			return (
+				<EnvelopeIcon className="h-4 w-4 text-gray-400" aria-hidden="true" />
+			);
+		}
+		case InvoiceActivityType.SentInvoiceManually:
+		case InvoiceActivityType.SentOfferManually: {
+			return (
+				<EnvelopeIcon className="h-4 w-4 text-blue-600" aria-hidden="true" />
+			);
+		}
+		case InvoiceActivityType.EmailSent: {
+			return (
+				<EnvelopeIcon className="h-4 w-4 text-green-600" aria-hidden="true" />
+			);
+		}
+		case InvoiceActivityType.EmailBounced: {
+			return (
+				<EnvelopeIcon className="h-4 w-4 text-red-600" aria-hidden="true" />
+			);
+		}
 		case InvoiceActivityType.Payment: {
 			return (
 				<CheckCircleIcon className="h-6 w-6 text-blue-600" aria-hidden="true" />
@@ -79,8 +116,8 @@ const getActivityText = (
 		case InvoiceActivityType.SentInvoiceEmail: {
 			return (
 				<>
-					<span className="font-medium text-gray-900">{user}</span> sent the
-					invoice via email to the client.
+					<span className="font-medium text-gray-900">{user}</span> triggered
+					the invoice to be sent via email to the client.
 				</>
 			);
 		}
@@ -88,8 +125,8 @@ const getActivityText = (
 		case InvoiceActivityType.SentInvoiceLetter: {
 			return (
 				<>
-					<span className="font-medium text-gray-900">{user}</span> sent the
-					invoice as a letter to the client.
+					<span className="font-medium text-gray-900">{user}</span> triggered
+					the invoice to be sent as a letter to the client.
 				</>
 			);
 		}
@@ -97,8 +134,8 @@ const getActivityText = (
 		case InvoiceActivityType.SentOfferEmail: {
 			return (
 				<>
-					<span className="font-medium text-gray-900">{user}</span> sent the
-					offer via email to the client.
+					<span className="font-medium text-gray-900">{user}</span> triggered
+					the offer to be sent via email to the client.
 				</>
 			);
 		}
@@ -106,8 +143,54 @@ const getActivityText = (
 		case InvoiceActivityType.SentOfferLetter: {
 			return (
 				<>
-					<span className="font-medium text-gray-900">{user}</span> sent the
-					offer as a letter to the client.
+					<span className="font-medium text-gray-900">{user}</span> triggered
+					the offer to be sent as a letter to the client.
+				</>
+			);
+		}
+
+		case InvoiceActivityType.SentInvoiceManually: {
+			return (
+				<>
+					<span className="font-medium text-gray-900">{user}</span> marked the
+					invoice to be sent manually to the client.
+				</>
+			);
+		}
+
+		case InvoiceActivityType.SentOfferManually: {
+			return (
+				<>
+					<span className="font-medium text-gray-900">{user}</span> marked the
+					offer to be sent manually to the client.
+				</>
+			);
+		}
+
+		case InvoiceActivityType.EmailSent: {
+			return <>The email was successfully sent to the client.</>;
+		}
+
+		case InvoiceActivityType.EmailBounced: {
+			return <>The email bounced and could not be delivered.</>;
+		}
+
+		case InvoiceActivityType.CancelInvoice:
+		case InvoiceActivityType.CancelOffer: {
+			return (
+				<>
+					<span className="font-medium text-gray-900">{user}</span> cancelled
+					the invoice.
+				</>
+			);
+		}
+
+		case InvoiceActivityType.ArchiveInvoice:
+		case InvoiceActivityType.ArchiveOffer: {
+			return (
+				<>
+					<span className="font-medium text-gray-900">{user}</span> archived the
+					invoice.
 				</>
 			);
 		}
@@ -204,7 +287,7 @@ function InvoiceActivityForm({
 						<div className="flex items-center">
 							<button
 								type="button"
-								className="-m-2.5 flex h-10 w-10 items-center justify-center rounded-full text-gray-400 hover:text-gray-500"
+								className="-m-2.5 flex h-10 w-10 items-center justify-center rounded-full text-gray-400 hover:text-gray-500 opacity-50 cursor-not-allowed"
 							>
 								<PaperClipIcon className="h-5 w-5" aria-hidden="true" />
 								<span className="sr-only">Attach a file</span>
@@ -247,7 +330,7 @@ export function InvoiceActivityFeed() {
 								{activity.type === InvoiceActivityType.Note ? (
 									<>
 										<UserCircleIcon className="relative mt-3 h-6 w-6 flex-none bg-gray-50" />
-										<div className="flex-auto rounded-md p-3 ring-1 ring-inset ring-gray-200">
+										<div className="flex-auto rounded-md p-2 -m-2 my-1.5 ring-1 ring-inset ring-gray-200">
 											<div className="flex justify-between gap-x-4">
 												<div className="py-0.5 text-xs leading-5 text-gray-500">
 													<span className="font-medium text-gray-900">
