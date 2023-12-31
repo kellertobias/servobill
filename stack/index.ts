@@ -3,8 +3,14 @@ import fs from 'fs';
 
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { config } from 'dotenv';
-import { Bucket, EventBus, StackContext, Table } from 'sst/constructs';
-import { NextjsSite } from 'sst/constructs';
+import {
+	NextjsSite,
+	Permissions,
+	Bucket,
+	EventBus,
+	StackContext,
+	Table,
+} from 'sst/constructs';
 import { HostedZone } from 'aws-cdk-lib/aws-route53';
 
 import { StackApi } from './api';
@@ -204,8 +210,9 @@ export function Stack({ stack, ...rest }: StackContext) {
 	api.bind([...baseBinds]);
 	api.bind([bus]);
 
-	api.attachPermissions(['s3']);
-	bus.attachPermissions(['s3']);
+	const permissions: Permissions = ['s3', 'ses'];
+	api.attachPermissions(permissions);
+	bus.attachPermissions(permissions);
 
 	// stack.addOutputs({
 	// 	SiteUrl: site.url,
