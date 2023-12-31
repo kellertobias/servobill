@@ -197,11 +197,11 @@ export function InlineEditableText({
 							onBlur={() => setEditing(false)}
 						/>
 					) : (
-						<>
+						<span className="whitespace-pre-line">
 							{value || (
 								<span className="opacity-30">{empty || placeholder}</span>
 							)}
-						</>
+						</span>
 					)}
 					{postfix && (
 						<span className="whitespace-nowrap break-keep pl-1">{postfix}</span>
