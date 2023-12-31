@@ -112,11 +112,14 @@ export default function CommandPallette<T extends { id: string | number }>({
 									<div className="flex transform-gpu divide-x divide-gray-100">
 										<div
 											className={clsx(
-												'max-h-96 min-w-0 flex-auto scroll-py-4 overflow-y-auto px-6 py-4',
+												'sm:max-h-[28rem] min-w-0 flex-auto scroll-py-4 overflow-y-auto px-6 py-4',
 												{
 													'hidden sm:block sm:h-96': showItem,
 												},
 											)}
+											style={{
+												height: 'calc(100vh - 5rem)',
+											}}
 										>
 											<div className="-mx-2 text-sm text-gray-700">
 												{data.map((item) => (
@@ -139,9 +142,15 @@ export default function CommandPallette<T extends { id: string | number }>({
 										</div>
 
 										<div
-											className={clsx('h-96 w-full sm:w-1/2  overflow-y-auto', {
-												'hidden sm:block': !showItem,
-											})}
+											className={clsx(
+												'sm:max-h-[28rem] w-full sm:w-1/2  overflow-y-auto relative',
+												{
+													'hidden sm:block': !showItem,
+												},
+											)}
+											style={{
+												height: 'calc(100vh - 5rem)',
+											}}
 										>
 											{showItem && (
 												<>

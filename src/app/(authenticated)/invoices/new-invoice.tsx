@@ -80,7 +80,7 @@ export function NewInvoiceModal({ onClose }: { onClose: () => void }) {
 							)}
 						</p>
 					</div>
-					<div className="flex flex-auto flex-col justify-between p-6">
+					<div className="flex-auto flex flex-col justify-between p-6">
 						<dl className="grid grid-cols-1 gap-x-6 gap-y-3 text-sm text-gray-700">
 							<dt className="col-end-1 font-semibold text-gray-900">Address</dt>
 							<dd className="truncate">
@@ -90,10 +90,11 @@ export function NewInvoiceModal({ onClose }: { onClose: () => void }) {
 								<br />
 								{item.country}
 							</dd>
+
 							<dt className="col-end-1 font-semibold text-gray-900">Email</dt>
 							<dd className="truncate">{item.email}</dd>
 						</dl>
-						<div className="mt-6 w-full flex-col flex gap-2">
+						<div className="mt-6 flex-col flex gap-2 fixed sm:static bottom-6 left-6 right-6">
 							<Button
 								secondary
 								onClick={async () => {
