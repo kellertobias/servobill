@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 
 import { DateInput } from '@/components/date';
-import { confirmDialog } from '@/components/delete-confirm';
+import { confirmDialog } from '@/components/dialog';
 import { doToast } from '@/components/toast';
 import { API, gql } from '@/api/index';
 import { Input } from '@/components/input';

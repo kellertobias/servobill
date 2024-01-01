@@ -4,7 +4,7 @@ import { Dialog, Transition } from '@headlessui/react';
 import { ExclamationCircleIcon, XMarkIcon } from '@heroicons/react/20/solid';
 
 import { Button } from './button';
-import { confirmDialog } from './delete-confirm';
+import { confirmDialog } from './dialog';
 
 export function Drawer(props: {
 	id: string | null;

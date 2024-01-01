@@ -61,6 +61,8 @@ export default function CommandPallette<T extends { id: string | number }>({
 		}
 	}, [open]);
 
+	const paletteHeight = 'calc(80vh - 2 * 1rem - 3rem)';
+
 	return (
 		<Transition.Root
 			show={open}
@@ -118,7 +120,7 @@ export default function CommandPallette<T extends { id: string | number }>({
 												},
 											)}
 											style={{
-												height: 'calc(100vh - 5rem)',
+												height: paletteHeight,
 											}}
 										>
 											<div className="-mx-2 text-sm text-gray-700">
@@ -149,7 +151,7 @@ export default function CommandPallette<T extends { id: string | number }>({
 												},
 											)}
 											style={{
-												height: 'calc(100vh - 5rem)',
+												height: paletteHeight,
 											}}
 										>
 											{showItem && (

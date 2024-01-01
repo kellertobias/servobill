@@ -1,6 +1,6 @@
 import { useRouter } from 'next/navigation';
 
-import { confirmDialog } from '@/components/delete-confirm';
+import { confirmDialog } from '@/components/dialog';
 import { doToast } from '@/components/toast';
 import { API, gql } from '@/api/index';
 

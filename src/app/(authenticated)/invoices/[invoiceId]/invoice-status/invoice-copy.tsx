@@ -2,7 +2,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { doToast } from '@/components/toast';
-import { confirmDialog } from '@/components/delete-confirm';
+import { confirmDialog } from '@/components/dialog';
 import { Toggle } from '@/components/toggle';
 import { API, gql } from '@/api/index';
 
