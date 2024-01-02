@@ -57,7 +57,6 @@ export class ReportsResolver {
 				),
 			);
 
-		console.log(invoices);
 		const expenses = await this.expenseRepository
 			.listByQuery({
 				where: { year: startYear },
