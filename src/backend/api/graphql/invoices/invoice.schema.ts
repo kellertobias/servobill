@@ -9,7 +9,7 @@ import {
 	MaxLength,
 } from 'class-validator';
 
-import { Customer } from '../customers/customers.schema';
+import { Customer, CustomerInput } from '../customers/customers.schema';
 import { FilteredObjectProperties } from '../types';
 
 import {
@@ -282,4 +282,118 @@ export class InvoiceSubmissionInput {
 
 	@Field({ nullable: true })
 	when?: Date;
+}
+
+@InputType()
+export class InvoiceCustomerInput implements CustomerInput {
+	@Field({ nullable: true })
+	id?: string;
+
+	@IsString()
+	@Field()
+	name!: string;
+
+	@Field({ nullable: true })
+	customerNumber?: string;
+
+	@Field({ nullable: true })
+	contactName?: string;
+
+	@Field()
+	showContact!: boolean;
+
+	@Field({ nullable: true })
+	email?: string;
+
+	@Field({ nullable: true })
+	street?: string;
+
+	@Field({ nullable: true })
+	zip?: string;
+
+	@Field({ nullable: true })
+	city?: string;
+
+	@Field({ nullable: true })
+	state?: string;
+
+	@Field({ nullable: true })
+	country?: string;
+
+	@Field({ nullable: true })
+	notes?: string;
+}
+
+@InputType()
+export class InvoiceImportInput
+	implements
+		FilteredObjectProperties<
+			Omit<
+				InvoiceEntity,
+				| 'items'
+				| 'customer'
+				| 'createdAt'
+				| 'updatedAt'
+				| 'id'
+				| 'totalCents'
+				| 'totalTax'
+				| 'activity'
+				| 'submissions'
+			>
+		>
+{
+	@IsString()
+	customerId!: string;
+
+	@IsOptional()
+	@Field({ nullable: true })
+	subject?: string;
+
+	@IsOptional()
+	@Field({ nullable: true })
+	offerNumber?: string;
+
+	@IsOptional()
+	@Field({ nullable: true })
+	invoiceNumber?: string;
+
+	@IsOptional()
+	@Field(() => InvoiceType)
+	type!: InvoiceType;
+
+	@IsOptional()
+	@Field(() => InvoiceStatus, { nullable: true })
+	status!: InvoiceStatus;
+
+	@IsOptional()
+	@Field({ nullable: true })
+	offeredAt?: Date;
+
+	@IsOptional()
+	@Field({ nullable: true })
+	invoicedAt?: Date;
+
+	@IsOptional()
+	@Field({ nullable: true })
+	dueAt?: Date;
+
+	@IsOptional()
+	@Field(() => Int, { nullable: true })
+	paidCents?: number;
+
+	@IsOptional()
+	@Field({ nullable: true })
+	paidAt?: Date;
+
+	@IsOptional()
+	@Field({ nullable: true })
+	paidVia?: string;
+
+	@IsOptional()
+	@Field({ nullable: true })
+	footerText?: string;
+
+	@IsOptional()
+	@Field(() => [InvoiceItemInput], { nullable: true })
+	items!: InvoiceItemInput[];
 }

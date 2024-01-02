@@ -13,12 +13,17 @@ import { GqlContext } from '../types';
 import {
 	Invoice,
 	InvoiceChangedResponse,
+	InvoiceImportInput,
 	InvoiceInput,
 	InvoiceWhereInput,
 } from './invoice.schema';
 
 import { Inject, Service } from '@/common/di';
-import { InvoiceStatus, InvoiceType } from '@/backend/entities/invoice.entity';
+import {
+	InvoiceEntity,
+	InvoiceStatus,
+	InvoiceType,
+} from '@/backend/entities/invoice.entity';
 import {
 	InvoiceActivityEntity,
 	InvoiceActivityType,
@@ -28,6 +33,7 @@ import { CustomerRepository } from '@/backend/repositories/customer.repository';
 import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
 import { SettingsRepository } from '@/backend/repositories/settings.repository';
 import { InvoiceSettingsEntity } from '@/backend/entities/settings.entity';
+import { CustomerEntity } from '@/backend/entities/customer.entity';
 
 @Service()
 @Resolver(() => Invoice)
@@ -170,6 +176,77 @@ export class InvoiceResolver {
 		await this.invoiceRepository.delete(invoice.id);
 
 		return invoice;
+	}
+
+	@Authorized()
+	@Mutation(() => [Invoice])
+	async importInvoices(
+		@Arg('invoices', () => [InvoiceImportInput]) data: [InvoiceImportInput],
+		@Ctx() context: GqlContext,
+	): Promise<Invoice[]> {
+		const customers = new Map<string, CustomerEntity>();
+		const invoices: InvoiceEntity[] = [];
+		for (const invoiceData of data) {
+			let customer: CustomerEntity | null = null;
+			if (customers.has(invoiceData.customerId)) {
+				customer = customers.get(invoiceData.customerId) || null;
+			} else {
+				customer = await this.customerRepository.getById(
+					invoiceData.customerId,
+				);
+				if (!customer) {
+					throw new Error('Customer not found');
+				}
+				customers.set(invoiceData.customerId, customer);
+			}
+			if (!customer) {
+				throw new Error('Customer not found');
+			}
+
+			const invoice = await this.invoiceRepository.create(
+				invoiceData.type,
+				customer,
+				context.session?.user?.name || 'Unknown',
+			);
+			invoices.push(invoice);
+			invoice.status = invoiceData.status;
+
+			invoice.updateDates({
+				offeredAt: invoiceData.offeredAt,
+				invoicedAt: invoiceData.invoicedAt,
+				dueAt: invoiceData.dueAt,
+			});
+			invoice.updateTexts({
+				subject: invoiceData.subject,
+				footerText: invoiceData.footerText,
+			});
+			invoice.updateItems(
+				invoiceData.items.map(
+					(item) =>
+						new InvoiceItemEntity({
+							...item,
+						}),
+				),
+			);
+			invoice.invoiceNumber = invoiceData.invoiceNumber;
+			invoice.offerNumber = invoiceData.offerNumber;
+			if (invoiceData.paidCents) {
+				invoice.addPayment(
+					{
+						paidCents: invoiceData.paidCents,
+						paidAt: invoiceData.paidAt || new Date(),
+						paidVia: invoiceData.paidVia || 'Unknown',
+					},
+					context.session?.user?.name || 'Unknown',
+				);
+			}
+			invoice.paidCents = invoiceData.paidCents;
+			invoice.paidAt = invoiceData.paidAt;
+			invoice.paidVia = invoiceData.paidVia;
+
+			await this.invoiceRepository.save(invoice);
+		}
+		return invoices;
 	}
 
 	@Authorized()

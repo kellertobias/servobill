@@ -13,6 +13,7 @@ import { useLoadData } from '@/hooks/load-data';
 import { API, gql } from '@/api/index';
 import { useInvoiceList } from '@/hooks/use-invoice-list';
 import { InvoicesTable } from '@/components/invoices-table';
+import { exportInvoices, importInvoices } from '@/api/import';
 
 import { NewInvoiceModal } from './new-invoice';
 
@@ -90,7 +91,7 @@ export default function InvoiceHomePage() {
 	const pageSize = 10;
 	const currentPage = React.useRef(0);
 
-	const { data, loading } = useInvoiceList({ pageSize, currentPage });
+	const { data, loading, reload } = useInvoiceList({ pageSize, currentPage });
 
 	return (
 		<PageContent
@@ -102,6 +103,31 @@ export default function InvoiceHomePage() {
 					<Button icon={PlusIcon} header onClick={showNewInvoiceModal}>
 						New Invoice
 					</Button>
+				</>
+			}
+			footer={
+				<>
+					<div className="flex justify-center mt-6 gap-1 text-gray-500 text-xs">
+						{/* <a
+							className="text-xs text-gray-500 hover:text-gray-900 cursor-pointer"
+							onClick={async () => {
+								await importInvoices();
+
+								reload();
+							}}
+						>
+							Import from JSON
+						</a>{' '}
+						&bull;{' '} */}
+						<a
+							className="text-xs text-gray-500 hover:text-gray-900 cursor-pointer"
+							onClick={async () => {
+								await exportInvoices();
+							}}
+						>
+							Export to JSON
+						</a>
+					</div>
 				</>
 			}
 		>

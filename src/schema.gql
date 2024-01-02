@@ -170,6 +170,22 @@ type InvoiceChangedResponse {
   updatedAt: DateTime!
 }
 
+input InvoiceImportInput {
+  dueAt: DateTime
+  footerText: String
+  invoiceNumber: String
+  invoicedAt: DateTime
+  items: [InvoiceItemInput!]
+  offerNumber: String
+  offeredAt: DateTime
+  paidAt: DateTime
+  paidCents: Int
+  paidVia: String
+  status: InvoiceStatus
+  subject: String
+  type: InvoiceType!
+}
+
 input InvoiceInput {
   customerId: String!
   dueAt: DateTime
@@ -270,6 +286,7 @@ type Mutation {
   deleteExpense(id: String!): Expense!
   deleteInvoice(id: String!): Invoice!
   deleteProduct(id: String!): Product!
+  importInvoices(invoices: [InvoiceImportInput!]!): [Invoice!]!
   invoiceAddComment(attachment: String, comment: String!, invoiceId: String!): InvoiceChangedResponse!
   invoiceAddPayment(id: String!, payment: InvoicePaymentInput!): InvoiceChangedResponse!
   invoiceCancelUnpaid(id: String!): InvoiceChangedResponse!
