@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
 		description: 'Tobisk Faktura Billing',
 		start_url: '/',
 		display: 'standalone',
-		background_color: '#000',
-		theme_color: '#000',
+		background_color: '#1F2937',
+		theme_color: '#1F2937',
 		icons: [
 			{
 				src: '/favicon-96x96.png',

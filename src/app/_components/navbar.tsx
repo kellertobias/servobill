@@ -133,7 +133,7 @@ export const Navbar = () => {
 												onClick={() => window.location.replace('/')}
 												className="h-8 w-8 object-contain"
 												src="/logo-icon.png"
-												alt="Tobisk Media"
+												alt="Servobill"
 											/>
 										</div>
 										<div className="hidden md:block">
