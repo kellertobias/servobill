@@ -89,6 +89,7 @@ export class AuthenticationService {
 
 		const session = new Session({
 			...user,
+			picture: user.profilePictureUrl,
 			sessionId: sessionEntity.sessionId,
 			renewalId,
 		});
@@ -214,6 +215,7 @@ export class AuthenticationService {
 
 		const session = new Session({
 			...user,
+			picture: user.profilePictureUrl,
 			sessionId: sessionEntity.sessionId,
 			renewalId: undefined, // This forces a new renewal id to be generated
 		});

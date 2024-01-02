@@ -2,8 +2,14 @@ import clsx from 'clsx';
 import { usePathname } from 'next/navigation';
 import React, { Fragment } from 'react';
 
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/20/solid';
+import {
+	Bars3Icon,
+	UserCircleIcon,
+	XMarkIcon,
+} from '@heroicons/react/20/solid';
 import { Disclosure, Menu, Transition } from '@headlessui/react';
+
+import { useUserContext } from '@/hooks/require-login';
 
 type MenuItemDef = {
 	name?: string;
@@ -110,6 +116,7 @@ const MenuItems: React.FC<{
 };
 
 export const Navbar = () => {
+	const user = useUserContext();
 	return (
 		<Disclosure as="nav" className="bg-gray-800">
 			{({ open }) => (
@@ -142,11 +149,20 @@ export const Navbar = () => {
 													<Menu.Button className="relative flex max-w-xs items-center rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
 														<span className="absolute -inset-1.5" />
 														<span className="sr-only">Open user menu</span>
-														<img
-															className="h-8 w-8 rounded-full "
-															src="/avatar.jpg"
-															alt=""
-														/>
+														<span className="bg-gray-700 flex items-center justify-center h-10 w-10 rounded-full">
+															{user?.profilePictureUrl ? (
+																<img
+																	className="h-10 w-10 rounded-full "
+																	src={user?.profilePictureUrl}
+																	alt=""
+																/>
+															) : (
+																<UserCircleIcon
+																	className="h-10 w-10 text-gray-400"
+																	aria-hidden="true"
+																/>
+															)}
+														</span>
 													</Menu.Button>
 												</div>
 												<Transition

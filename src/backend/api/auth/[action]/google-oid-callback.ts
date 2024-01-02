@@ -52,6 +52,7 @@ export const googleOidCallbackHandler: APIHandler = async (evt) => {
 		userId: token?.sub,
 		name: token?.name,
 		email: token?.email,
+		profilePictureUrl: token?.picture,
 	});
 
 	if (!user) {

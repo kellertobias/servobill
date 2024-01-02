@@ -8,6 +8,9 @@ export class AuthCheckResult {
 	@Field({ nullable: true })
 	userName?: string;
 
+	@Field({ nullable: true })
+	profilePictureUrl?: string;
+
 	@Field()
 	refreshable!: boolean;
 }

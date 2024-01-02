@@ -12,6 +12,7 @@ export class UserEntity {
 	public name!: string;
 	public email!: string;
 	public roles!: string[];
+	public profilePictureUrl?: string;
 
 	constructor(props: Partial<UserEntity>) {
 		Object.assign(this, props);
@@ -156,6 +157,7 @@ export class SessionRepository {
 		userId?: string;
 		name?: string;
 		email?: string;
+		profilePictureUrl?: string;
 	}): Promise<UserEntity | undefined> {
 		if (!user.email || !user.name || !user.userId) {
 			return undefined;

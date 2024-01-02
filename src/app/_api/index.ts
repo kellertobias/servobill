@@ -5,12 +5,16 @@ export { gql } from './graphql';
 
 export const API = {
 	query,
-	isLoggedIn: async (): Promise<boolean> => {
+	isLoggedIn: async (): Promise<
+		false | { userName: string; profilePictureUrl?: string }
+	> => {
 		const result = await query(
 			gql(`
 				query CheckLoggedIn {
 					loggedInUser {
 						authenticated
+						userName
+						profilePictureUrl
 						refreshable
 					}
 				}
@@ -24,7 +28,12 @@ export const API = {
 				return false;
 			}
 		}
-		return true;
+		const { userName, profilePictureUrl } = result.loggedInUser;
+		if (!userName) {
+			return false;
+		}
+
+		return { userName, profilePictureUrl: profilePictureUrl || undefined };
 	},
 	getContext: async () => {
 		const result = await query(

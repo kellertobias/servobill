@@ -5,6 +5,7 @@
 
 type AuthCheckResult {
   authenticated: Boolean!
+  profilePictureUrl: String
   refreshable: Boolean!
   userName: String
 }

@@ -16,6 +16,7 @@ export class AuthResolver {
 		return {
 			authenticated: !!context.session?.user,
 			userName: context.session?.user?.name || '',
+			profilePictureUrl: context.session?.user?.picture || '',
 			refreshable: context.session?.refreshable || false,
 		};
 	}
