@@ -7,9 +7,12 @@ import { usePopper } from 'react-popper';
 import { Popover } from '@headlessui/react';
 import { ArrowLeftIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
 import Datepicker from 'tailwind-datepicker-react';
 
 import { Input } from './input';
+
+dayjs.extend(utc);
 
 const datepickerBasicOptions = {
 	autoHide: false,
@@ -94,7 +97,9 @@ export const DateInput: React.FC<{
 
 	const handleChange = (selectedDate: Date) => {
 		setSelectedDate(selectedDate);
-		onChange?.(dayjs(selectedDate).format(format));
+		const format = 'YYYY-MM-DDTHH:mm:ss.SSS[Z]';
+		const interim = dayjs(selectedDate).format(format);
+		onChange?.(dayjs.utc(interim, format).format(format));
 	};
 
 	const onHandlePickerClick = React.useMemo(() => {
@@ -131,7 +136,11 @@ export const DateInput: React.FC<{
 										: undefined
 								}
 								className={clsx(
-									'w-full m-0 mb-[7px] p-0 outline outline-transparent border-none bg-transparent resize-none',
+									'w-full m-0 p-0 outline outline-transparent border-none bg-transparent resize-none',
+									{
+										'mb-[7px]': !reduced,
+										'cursor-pointer': reduced,
+									},
 								)}
 								value={
 									value

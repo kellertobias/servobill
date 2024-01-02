@@ -230,28 +230,27 @@ export function InlineEditableDate({
 	postfix?: string;
 }) {
 	return (
-		<InlineEditableArea locked={locked}>
-			{(editing, setEditing) =>
-				editing ? (
-					<DateInput
-						value={value || undefined}
-						onChange={(value) => {
-							onChange(value);
-							setEditing(false);
-						}}
-						reduced
-					/>
-				) : (
-					<>
-						{value ? (
-							dayjs(value).format('DD.MM.YYYY')
-						) : (
-							<span className="opacity-30">{empty || placeholder}</span>
-						)}
-					</>
-				)
-			}
-		</InlineEditableArea>
+		<div className={clsx('relative w-full group')}>
+			{locked ? (
+				<>
+					{value ? (
+						dayjs(value).format('DD.MM.YYYY')
+					) : (
+						<span className="opacity-30">{empty || placeholder}</span>
+					)}
+				</>
+			) : (
+				<DateInput
+					value={value || undefined}
+					onChange={(value) => {
+						console.log(value);
+						onChange(value);
+					}}
+					placeholder={placeholder}
+					reduced
+				/>
+			)}
+		</div>
 	);
 }
 
