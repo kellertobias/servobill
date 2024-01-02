@@ -45,3 +45,7 @@ If you are done, you can copy the template to the settings in the app.
 ## Deploying
 
 This section is currently being written
+
+## License
+
+We are currently working with our legal team to pick the right license for this project. Until then, please do not use this project for commercial purposes other than for invoicing your own clients.
