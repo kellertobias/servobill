@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 
 export enum InvoiceActivityType {
+	IMPORTED = 'IMPORTED',
 	CREATED_INVOICE = 'CREATED_INVOICE',
 	CREATED_OFFER = 'CREATED_OFFER',
 	UPDATED = 'UPDATED',

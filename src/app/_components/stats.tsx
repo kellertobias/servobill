@@ -75,11 +75,16 @@ export const StatsDisplay: React.FC<{
 						</dt>
 						<dd
 							className={clsx(
-								changeType === 'negative' ? 'text-rose-600' : 'text-gray-700',
+								changeType === 'negative' ? 'text-rose-600' : 'text-green-700',
 								'text-xs font-medium',
 							)}
 						>
-							{!!stat.change && <>{stat.change} %</>}
+							{!!stat.change && (
+								<>
+									{changeType === 'negative' ? '-' : '+'}{' '}
+									{Number(stat.change).toFixed(2)} %
+								</>
+							)}
 						</dd>
 						<dd className="w-full flex-none text-xl sm:text-2xl font-medium leading-3 sm:leading-6 tracking-tight text-gray-900">
 							{stat.value}

@@ -2,7 +2,6 @@
 
 import React from 'react';
 
-import CodeEditor from '@uiw/react-textarea-code-editor';
 import useDebouncedMemo from '@sevenoutman/use-debounced-memo';
 
 import { PageContent } from '@/components/page';
@@ -13,34 +12,10 @@ import { LoadingSkeleton } from '@/components/loading';
 import { NotFound } from '@/components/not-found';
 import { Button } from '@/components/button';
 import { doToast } from '@/components/toast';
-import { exportSettings, importSettings } from '@/api/import';
+import { exportSettings, importSettings } from '@/api/import-export/settings';
+import { SettingsBlock } from '@/components/settings-block';
 
 import { Numbering } from '@/common/numbers';
-
-function SettingsBlock({
-	title,
-	subtitle,
-	children,
-}: {
-	title: string;
-	subtitle: string | React.ReactNode;
-	children: React.ReactNode;
-}) {
-	return (
-		<div className="grid grid-cols-1 gap-x-8 gap-y-10 pb-4 pt-12 first:pt-0 last:pb-0 md:grid-cols-5">
-			<div className="md:col-span-2">
-				<h2 className="text-base font-semibold leading-7 text-gray-900">
-					{title}
-				</h2>
-				<div className="mt-1 text-sm leading-6 text-gray-600">{subtitle}</div>
-			</div>
-
-			<div className="grid md:col-span-3 max-w-3xl grid-cols-1 gap-x-6 gap-y-4">
-				{children}
-			</div>
-		</div>
-	);
-}
 
 function NumberValidity({
 	template,
@@ -732,23 +707,16 @@ export default function SettingsHomePage() {
 						<label className="block text-sm font-medium leading-6 text-gray-900 mb-1">
 							E-Mail-Template
 						</label>
-						<CodeEditor
+						<Input
+							textarea
 							value={data?.emailTemplate}
 							placeholder="Your HTML Template goes here"
-							onChange={(evn) =>
+							onChange={(emailTemplate) =>
 								setData((current) => ({
 									...current,
-									emailTemplate: evn.target.value,
+									emailTemplate,
 								}))
 							}
-							padding={15}
-							data-color-mode="dark"
-							language="mustache"
-							className="rounded mb-3"
-							style={{
-								fontFamily:
-									'ui-monospace,SFMono-Regular,SF Mono,Consolas,Liberation Mono,Menlo,monospace',
-							}}
 						/>
 
 						<div>
@@ -757,6 +725,20 @@ export default function SettingsHomePage() {
 							</label>
 							<Button secondary href="/settings/templates">
 								Open PDF Template
+							</Button>
+						</div>
+					</SettingsBlock>
+					<SettingsBlock
+						title="Danger Zone"
+						subtitle={
+							<div className="prose prose-sm leading-4 text-xs text-gray-500/80">
+								Here you can delete all your data or reset your database.
+							</div>
+						}
+					>
+						<div>
+							<Button danger href="/settings/danger-zone">
+								Go to Danger Zone
 							</Button>
 						</div>
 					</SettingsBlock>

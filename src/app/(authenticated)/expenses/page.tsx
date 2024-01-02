@@ -10,7 +10,7 @@ import { PageContent } from '@/components/page';
 import { Table } from '@/components/table';
 import { useLoadData } from '@/hooks/load-data';
 import { API, gql } from '@/api/index';
-import { exportExpenses, importExpenses } from '@/api/import';
+import { exportExpenses, importExpenses } from '@/api/import-export/expenses';
 
 import ExpenseOverlay from './expense-overlay';
 

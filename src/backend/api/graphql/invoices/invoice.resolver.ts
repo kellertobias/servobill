@@ -179,9 +179,25 @@ export class InvoiceResolver {
 	}
 
 	@Authorized()
+	@Mutation(() => Boolean)
+	async purgeInvoices(@Arg('confirm') confirm: string): Promise<boolean> {
+		if (confirm !== 'confirm') {
+			throw new Error('Confirmation string is wrong');
+		}
+		const invoices = await this.invoiceRepository.listByQuery({
+			where: {},
+		});
+		for (const invoice of invoices) {
+			await this.invoiceRepository.delete(invoice.id);
+		}
+
+		return true;
+	}
+
+	@Authorized()
 	@Mutation(() => [Invoice])
 	async importInvoices(
-		@Arg('invoices', () => [InvoiceImportInput]) data: [InvoiceImportInput],
+		@Arg('data', () => [InvoiceImportInput]) data: [InvoiceImportInput],
 		@Ctx() context: GqlContext,
 	): Promise<Invoice[]> {
 		const customers = new Map<string, CustomerEntity>();
@@ -209,7 +225,16 @@ export class InvoiceResolver {
 				context.session?.user?.name || 'Unknown',
 			);
 			invoices.push(invoice);
-			invoice.status = invoiceData.status;
+			invoice.activity = [];
+			invoice.addActivity(
+				new InvoiceActivityEntity({
+					type: InvoiceActivityType.IMPORTED,
+					user: context.session?.user?.name || 'Unknown',
+				}),
+			);
+
+			invoice.createdAt =
+				invoiceData.invoicedAt || invoiceData.offeredAt || new Date();
 
 			invoice.updateDates({
 				offeredAt: invoiceData.offeredAt,
@@ -230,6 +255,8 @@ export class InvoiceResolver {
 			);
 			invoice.invoiceNumber = invoiceData.invoiceNumber;
 			invoice.offerNumber = invoiceData.offerNumber;
+			invoice.status = invoiceData.status;
+
 			if (invoiceData.paidCents) {
 				invoice.addPayment(
 					{

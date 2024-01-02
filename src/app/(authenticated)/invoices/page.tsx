@@ -13,7 +13,8 @@ import { useLoadData } from '@/hooks/load-data';
 import { API, gql } from '@/api/index';
 import { useInvoiceList } from '@/hooks/use-invoice-list';
 import { InvoicesTable } from '@/components/invoices-table';
-import { exportInvoices, importInvoices } from '@/api/import';
+import { importInvoices } from '@/api/import-export/invoices-import';
+import { exportInvoices } from '@/api/import-export/invoices-export';
 
 import { NewInvoiceModal } from './new-invoice';
 
@@ -41,13 +42,9 @@ function InvoiceHomePageStats() {
 				}
 			`),
 			variables: {
-				startOfYear: dayjs().startOf('year').toDate().toISOString(),
-				endOfYear: dayjs().endOf('year').toDate().toISOString(),
-				startOfLastYear: dayjs()
-					.startOf('year')
-					.subtract(1, 'year')
-					.toDate()
-					.toISOString(),
+				startOfYear: dayjs().subtract(1, 'year').toDate().toISOString(),
+				endOfYear: dayjs().toDate().toISOString(),
+				startOfLastYear: dayjs().subtract(2, 'year').toDate().toISOString(),
 			},
 		}),
 	);
@@ -108,17 +105,18 @@ export default function InvoiceHomePage() {
 			footer={
 				<>
 					<div className="flex justify-center mt-6 gap-1 text-gray-500 text-xs">
-						{/* <a
+						<a
 							className="text-xs text-gray-500 hover:text-gray-900 cursor-pointer"
 							onClick={async () => {
 								await importInvoices();
-
+								// wait 3 seconds
+								await new Promise((resolve) => setTimeout(resolve, 3000));
 								reload();
 							}}
 						>
 							Import from JSON
 						</a>{' '}
-						&bull;{' '} */}
+						&bull;{' '}
 						<a
 							className="text-xs text-gray-500 hover:text-gray-900 cursor-pointer"
 							onClick={async () => {

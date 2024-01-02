@@ -45,16 +45,19 @@ export class ReportsResolver {
 			.then((results) =>
 				results.filter(
 					(invoice) =>
-						invoice.type === InvoiceType.INVOICE &&
-						dayjs(invoice.invoicedAt).isAfter(startDate) &&
-						dayjs(invoice.invoicedAt).isBefore(endDate) &&
-						[
-							InvoiceStatus.PAID,
-							InvoiceStatus.PAID_PARTIALLY,
-							InvoiceStatus.SENT,
-						].includes(invoice.status),
+						true ||
+						(invoice.type === InvoiceType.INVOICE &&
+							dayjs(invoice.invoicedAt).isAfter(startDate) &&
+							dayjs(invoice.invoicedAt).isBefore(endDate) &&
+							[
+								InvoiceStatus.PAID,
+								InvoiceStatus.PAID_PARTIALLY,
+								InvoiceStatus.SENT,
+							].includes(invoice.status)),
 				),
 			);
+
+		console.log(invoices);
 		const expenses = await this.expenseRepository
 			.listByQuery({
 				where: { year: startYear },
@@ -141,6 +144,7 @@ export class ReportsResolver {
 		};
 		for (const booking of bookings) {
 			if (booking.type === 'invoice') {
+				report.surplusCents += booking.surplusCents;
 				report.incomeCents += booking.surplusCents;
 				report.invoiceTaxCents += booking.taxCents;
 				report.overdueCents += booking.overdueCents || 0;
@@ -148,6 +152,7 @@ export class ReportsResolver {
 				report.openCents += booking.unpaidCents || 0;
 				report.openInvoices += booking.unpaidCents ? 1 : 0;
 			} else if (booking.type === 'expense') {
+				report.surplusCents -= booking.surplusCents;
 				report.expensesCents += booking.surplusCents;
 				report.expensesTaxCents += booking.taxCents;
 			}

@@ -9,7 +9,7 @@ import { PageContent } from '@/components/page';
 import { Table } from '@/components/table';
 import { useLoadData } from '@/hooks/load-data';
 import { API, gql } from '@/api/index';
-import { exportProducts, importProducts } from '@/api/import';
+import { exportProducts, importProducts } from '@/api/import-export/products';
 
 import ProductOverlay from './product-overlay';
 

@@ -41,6 +41,22 @@ export class ExpenseResolver {
 	}
 
 	@Authorized()
+	@Mutation(() => Boolean)
+	async purgeExpenses(@Arg('confirm') confirm: string): Promise<boolean> {
+		if (confirm !== 'confirm') {
+			throw new Error('Confirmation string is wrong');
+		}
+		const expenses = await this.repository.listByQuery({
+			where: {},
+		});
+		for (const expense of expenses) {
+			await this.repository.delete(expense.id);
+		}
+
+		return true;
+	}
+
+	@Authorized()
 	@Query(() => Expense)
 	async expense(@Arg('id') id: string): Promise<Expense | null> {
 		return this.repository.getById(id);

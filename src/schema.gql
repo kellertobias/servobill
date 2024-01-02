@@ -151,6 +151,7 @@ enum InvoiceActivityType {
   CREATED_OFFER
   EMAIL_BOUNCED
   EMAIL_SENT
+  IMPORTED
   NOTE
   PAID
   PAYMENT
@@ -171,6 +172,7 @@ type InvoiceChangedResponse {
 }
 
 input InvoiceImportInput {
+  customerId: String!
   dueAt: DateTime
   footerText: String
   invoiceNumber: String
@@ -286,13 +288,15 @@ type Mutation {
   deleteExpense(id: String!): Expense!
   deleteInvoice(id: String!): Invoice!
   deleteProduct(id: String!): Product!
-  importInvoices(invoices: [InvoiceImportInput!]!): [Invoice!]!
+  importInvoices(data: [InvoiceImportInput!]!): [Invoice!]!
   invoiceAddComment(attachment: String, comment: String!, invoiceId: String!): InvoiceChangedResponse!
   invoiceAddPayment(id: String!, payment: InvoicePaymentInput!): InvoiceChangedResponse!
   invoiceCancelUnpaid(id: String!): InvoiceChangedResponse!
   invoiceDeleteDraft(id: String!): InvoiceChangedResponse!
   invoicePdf(id: String!): String
   invoiceSend(id: String!, submission: InvoiceSubmissionInput!): InvoiceChangedResponse!
+  purgeExpenses(confirm: String!): Boolean!
+  purgeInvoices(confirm: String!): Boolean!
   sendTestEvent(data: String!, name: String!): String!
   testRenderTemplate(pdf: Boolean, styles: String!, template: String!): String!
   updateCustomer(data: CustomerInput!, id: String!): Customer!

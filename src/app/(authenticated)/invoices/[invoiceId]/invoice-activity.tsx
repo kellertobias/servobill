@@ -25,6 +25,11 @@ dayjs.extend(relativeTime);
 
 const getActivityIcon = (type: InvoiceActivityType) => {
 	switch (type) {
+		case InvoiceActivityType.Imported: {
+			return (
+				<PlusCircleIcon className="h-6 w-6 text-gray-600" aria-hidden="true" />
+			);
+		}
 		case InvoiceActivityType.CreatedInvoice:
 		case InvoiceActivityType.CreatedOffer: {
 			return (
@@ -86,6 +91,14 @@ const getActivityText = (
 	notes: string | null | undefined,
 ) => {
 	switch (type) {
+		case InvoiceActivityType.Imported: {
+			return (
+				<>
+					<span className="font-medium text-gray-900">{user}</span> imported the
+					invoice.
+				</>
+			);
+		}
 		case InvoiceActivityType.CreatedInvoice: {
 			return (
 				<>

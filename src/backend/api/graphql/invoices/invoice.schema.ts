@@ -343,6 +343,7 @@ export class InvoiceImportInput
 		>
 {
 	@IsString()
+	@Field()
 	customerId!: string;
 
 	@IsOptional()
