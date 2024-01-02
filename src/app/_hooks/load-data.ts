@@ -69,10 +69,9 @@ export const useHasChanges = <T>(
 ): boolean => {
 	return useDebouncedMemo(
 		() => {
-			return (
-				JSON.stringify(mapper(initialData)) !==
-				JSON.stringify(mapper(currentData))
-			);
+			const a = JSON.stringify(mapper(initialData));
+			const b = JSON.stringify(mapper(currentData));
+			return a !== b;
 		},
 		[initialData, currentData],
 		debounceTime,

@@ -85,10 +85,14 @@ export default function ExpenseOverlay({
 			title={expenseId === 'new' ? 'New Expense' : 'Edit Expense'}
 			subtitle={initialData?.name}
 			onClose={onClose}
-			onSave={async () => {
-				await onSave?.();
-				onClose(true);
-			}}
+			onSave={
+				onSave
+					? async () => {
+							await onSave?.();
+							onClose(true);
+						}
+					: undefined
+			}
 			deleteText={{
 				title: 'Delete Expense',
 				content: (

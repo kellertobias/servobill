@@ -84,10 +84,14 @@ export default function ProductOverlay({
 			title={productId === 'new' ? 'New Product' : 'Edit Product'}
 			subtitle={initialData?.name}
 			onClose={onClose}
-			onSave={async () => {
-				await onSave?.();
-				onClose(true);
-			}}
+			onSave={
+				onSave
+					? async () => {
+							await onSave?.();
+							onClose(true);
+						}
+					: undefined
+			}
 			deleteText={{
 				title: 'Delete Product',
 				content: (

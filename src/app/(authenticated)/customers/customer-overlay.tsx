@@ -74,10 +74,14 @@ export default function CustomerOverlay({
 			title={customerId === 'new' ? 'New Customer' : 'Edit Customer'}
 			subtitle={initialData?.name}
 			onClose={onClose}
-			onSave={async () => {
-				await onSave?.();
-				onClose(true);
-			}}
+			onSave={
+				onSave
+					? async () => {
+							await onSave?.();
+							onClose(true);
+						}
+					: undefined
+			}
 			deleteText={{
 				title: 'Delete Customer',
 				content: (
