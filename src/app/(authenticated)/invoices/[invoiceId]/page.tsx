@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 
 import { PageContent } from '@/components/page';
 import { LoadingSkeleton } from '@/components/loading';
@@ -8,6 +9,7 @@ import { useHasChanges } from '@/hooks/load-data';
 import { Button } from '@/components/button';
 import { API, gql } from '@/api/index';
 import { doToast } from '@/components/toast';
+import { confirmDialog } from '@/components/dialog';
 
 import { useInvoiceData } from './data';
 import { InvoiceStatusPaid } from './invoice-status/invoice-status-paid';
@@ -22,6 +24,7 @@ import { InvoiceHeader } from './invoice-header';
 import { InvoiceStatus, InvoiceType } from '@/common/gql/graphql';
 
 export default function InvoiceDetailPage() {
+	const router = useRouter();
 	const { data, initialData, setData, loading, reload } = useInvoiceData();
 	const hasChanges = useHasChanges(data, initialData, (inv) => ({
 		customer: {
@@ -66,7 +69,7 @@ export default function InvoiceDetailPage() {
 	}
 
 	const locked = data.status !== InvoiceStatus.Draft;
-
+	const name = data.type === InvoiceType.Invoice ? 'Invoice' : 'Offer';
 	return (
 		<PageContent
 			title={
@@ -76,6 +79,65 @@ export default function InvoiceDetailPage() {
 			}
 			noPadding
 			contentClassName="px-6 pt-6"
+			footer={
+				<>
+					<div className="flex justify-center mt-6 gap-1 text-gray-500 text-xs">
+						<a
+							className="text-xs text-gray-500 hover:text-gray-900 cursor-pointer"
+							onClick={async () => {
+								if (
+									(await confirmDialog({
+										danger: true,
+										title: `Delete ${name}?`,
+										content: (
+											<>
+												Are you sure you want to delete this {name}? This action
+												cannot be undone and does not yet cancel delete the PDF
+												files on S3. Also, Invoice Numbers won't be reset.
+											</>
+										),
+									})) &&
+									(await new Promise<boolean>((resolve) =>
+										setTimeout(() => resolve(true), 750),
+									)) &&
+									(await confirmDialog({
+										danger: true,
+										title: `Really Delete ${name}?`,
+										content: (
+											<>
+												Sorry to annoy you with this again, but are you really
+												sure? This action cannot be undone and might not be
+												legal according to the tax law in your country.
+											</>
+										),
+									}))
+								) {
+									doToast({
+										promise: (async () => {
+											await API.query({
+												query: gql(`
+														mutation DeleteInvoice($id: String!) {
+															deleteInvoice(id: $id) {id}
+														}
+													`),
+												variables: {
+													id: data.id,
+												},
+											});
+											router.push('/invoices');
+										})(),
+										loading: `Deleting ${name}...`,
+										success: `${name} deleted`,
+										error: `${name} could not be deleted`,
+									});
+								}
+							}}
+						>
+							Delete {name}
+						</a>
+					</div>
+				</>
+			}
 		>
 			<div className="pb-16 ">
 				<div className="mx-auto grid max-w-2xl grid-cols-1 grid-rows-1 items-start gap-x-8 gap-y-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">

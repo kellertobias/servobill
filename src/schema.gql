@@ -268,6 +268,7 @@ type Mutation {
   createProduct(data: ProductInput!): Product!
   deleteCustomer(id: String!): Customer!
   deleteExpense(id: String!): Expense!
+  deleteInvoice(id: String!): Invoice!
   deleteProduct(id: String!): Product!
   invoiceAddComment(attachment: String, comment: String!, invoiceId: String!): InvoiceChangedResponse!
   invoiceAddPayment(id: String!, payment: InvoicePaymentInput!): InvoiceChangedResponse!

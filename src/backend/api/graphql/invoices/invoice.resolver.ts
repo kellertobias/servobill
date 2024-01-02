@@ -159,6 +159,20 @@ export class InvoiceResolver {
 	}
 
 	@Authorized()
+	@Mutation(() => Invoice)
+	async deleteInvoice(@Arg('id') id: string): Promise<Invoice> {
+		const invoice = await this.invoiceRepository.getById(id);
+
+		if (!invoice) {
+			throw new Error('Invoice not found');
+		}
+
+		await this.invoiceRepository.delete(invoice.id);
+
+		return invoice;
+	}
+
+	@Authorized()
 	@Mutation(() => InvoiceChangedResponse)
 	async invoiceAddComment(
 		@Arg('invoiceId') invoiceId: string,
