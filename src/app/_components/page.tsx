@@ -3,10 +3,26 @@ import React from 'react';
 
 import { NotFound } from './not-found';
 
+export const PageCard: React.FC<
+	React.PropsWithChildren<{
+		noPadding?: boolean;
+		className?: string;
+	}>
+> = ({ noPadding = false, className, children }) => (
+	<div
+		className={clsx('rounded-lg bg-white shadow mb-6', className, {
+			'px-5 py-6 sm-px-6': !noPadding,
+		})}
+	>
+		{children}
+	</div>
+);
+
 export const PageContent: React.FC<
 	React.PropsWithChildren<{
 		title: string;
 		noPadding?: boolean;
+		noCard?: boolean;
 		contentClassName?: string;
 		right?: React.ReactNode;
 		footer?: React.ReactNode;
@@ -16,6 +32,7 @@ export const PageContent: React.FC<
 > = ({
 	title,
 	noPadding = false,
+	noCard = false,
 	contentClassName,
 	right,
 	footer,
@@ -52,8 +69,9 @@ export const PageContent: React.FC<
 				})}
 			>
 				<div
-					className={clsx('rounded-lg bg-white shadow ', contentClassName, {
-						'px-5 py-6 sm-px-6': !noPadding,
+					className={clsx(contentClassName, {
+						'px-5 py-6 sm-px-6': !noPadding && !noCard,
+						'rounded-lg bg-white shadow': !noCard,
 					})}
 				>
 					{children}

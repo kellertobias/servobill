@@ -86,6 +86,7 @@ export class ReportsResolver {
 				return;
 			}
 			bookings.push({
+				id: invoice.id,
 				type: 'invoice',
 				name: `${invoice.invoiceNumber}`,
 				valutaDate: invoice.invoicedAt,
@@ -102,6 +103,7 @@ export class ReportsResolver {
 
 		expenses.forEach((expense) => {
 			bookings.push({
+				id: expense.id,
 				type: 'expense',
 				name: `${expense.name}`,
 				description: expense.description,

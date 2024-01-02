@@ -4,7 +4,7 @@ import { doToast } from '@/components/toast';
 
 import { API, gql } from '../index';
 
-import { requestFile } from './helper';
+import { downloadFile, requestFile } from './helper';
 
 import { Customer } from '@/common/gql/graphql';
 
@@ -134,15 +134,10 @@ export const exportCustomers = async () => {
 			};
 
 			const dataStr = JSON.stringify(data);
-			const dataUri =
-				'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-
-			const exportFileDefaultName = 'customers.json';
-
-			const linkElement = document.createElement('a');
-			linkElement.setAttribute('href', dataUri);
-			linkElement.setAttribute('download', exportFileDefaultName);
-			linkElement.click();
+			downloadFile({
+				content: dataStr,
+				filename: 'customers.json',
+			});
 		})(),
 		loading: 'Exporting Customers...',
 		success: 'Customers Exported!',

@@ -3,7 +3,7 @@ import { doToast } from '@/components/toast';
 
 import { API, gql } from '../index';
 
-import { requestFile } from './helper';
+import { downloadFile, requestFile } from './helper';
 
 export const importProducts = async () => {
 	const raw = await requestFile();
@@ -68,15 +68,11 @@ export const exportProducts = async () => {
 			};
 
 			const dataStr = JSON.stringify(data);
-			const dataUri =
-				'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
 
-			const exportFileDefaultName = 'products.json';
-
-			const linkElement = document.createElement('a');
-			linkElement.setAttribute('href', dataUri);
-			linkElement.setAttribute('download', exportFileDefaultName);
-			linkElement.click();
+			downloadFile({
+				content: dataStr,
+				filename: 'products.json',
+			});
 		})(),
 		loading: 'Exporting Products...',
 		success: 'Products Exported!',

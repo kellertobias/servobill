@@ -26,3 +26,18 @@ export const requestFile = async () => {
 		input.click();
 	});
 };
+
+export const downloadFile = (options: {
+	filename: string;
+	content: string;
+	type?: string;
+}) => {
+	const dataUri = `data:${
+		options.type || 'application/json;charset=utf-8'
+	},${encodeURIComponent(options.content)}`;
+
+	const linkElement = document.createElement('a');
+	linkElement.setAttribute('href', dataUri);
+	linkElement.setAttribute('download', options.filename);
+	linkElement.click();
+};

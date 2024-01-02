@@ -4,6 +4,8 @@ import { doToast } from '@/components/toast';
 
 import { API, gql } from '../index';
 
+import { downloadFile } from './helper';
+
 export const exportInvoices = async () => {
 	doToast({
 		promise: (async () => {
@@ -55,15 +57,11 @@ export const exportInvoices = async () => {
 			};
 
 			const dataStr = JSON.stringify(data);
-			const dataUri =
-				'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
 
-			const exportFileDefaultName = 'invoices.json';
-
-			const linkElement = document.createElement('a');
-			linkElement.setAttribute('href', dataUri);
-			linkElement.setAttribute('download', exportFileDefaultName);
-			linkElement.click();
+			downloadFile({
+				content: dataStr,
+				filename: 'invoices.json',
+			});
 		})(),
 		loading: 'Exporting Invoices...',
 		success: 'Invoices Exported!',

@@ -98,10 +98,10 @@ export default function LoginPage() {
 						<p className="mt-10 text-center text-sm text-gray-400">
 							Interested in this Billing software? visit{' '}
 							<a
-								href="tobisk.de/serverless-invoicing"
+								href="https://www.servobill.de"
 								className="font-semibold leading-6 text-indigo-400 hover:text-indigo-300"
 							>
-								tobisk.de/serverless-invoicing
+								servobill.de
 							</a>
 						</p>
 					</div>

@@ -93,6 +93,7 @@ type IncomeSurplusReport {
 
 type IncomeSurplusReportItem {
   description: String
+  id: String!
   name: String!
   surplusCents: Int!
   taxCents: Int!

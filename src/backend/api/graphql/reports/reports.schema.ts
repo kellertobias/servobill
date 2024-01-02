@@ -58,6 +58,9 @@ export class IncomeSurplusReport {
 @ObjectType()
 export class IncomeSurplusReportItem {
 	@Field()
+	id!: string;
+
+	@Field()
 	type!: string;
 
 	@Field()
