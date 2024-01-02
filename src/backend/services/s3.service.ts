@@ -76,19 +76,21 @@ export class S3Service {
 
 	public async putObject(location: {
 		region?: string;
-		bucket: string;
+		bucket?: string;
 		key: string;
 		body: string | Buffer;
+		public?: boolean;
 		contentType?: string;
 		contentDisposition?: string;
 	}) {
 		const commandProps: PutObjectCommandInput = {
-			Bucket: location.bucket,
+			Bucket: location.bucket || this.configuration.buckets.files,
 			Key: location.key,
 			Body: location.body,
 			// StorageClass: this.configuration.isLocal
 			// 	? 'STANDARD'
 			// 	: 'INTELLIGENT_TIERING',
+			ACL: location.public ? 'public-read' : 'private',
 		};
 		if (location.contentType) {
 			commandProps.ContentType = location.contentType;
@@ -97,6 +99,10 @@ export class S3Service {
 			commandProps.ContentDisposition = location.contentDisposition;
 		}
 		const command = new PutObjectCommand(commandProps);
-		return await this.client.send(command);
+		await this.client.send(command);
+
+		const url = await this.getSignedUrl(location);
+		const [resource] = url.split('?');
+		return resource;
 	}
 }

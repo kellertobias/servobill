@@ -8,6 +8,7 @@ import { APIHandler } from '../../types';
 import { SessionRepository } from '@/backend/repositories/session.repository';
 import { DefaultContainer } from '@/common/di';
 import { Logger } from '@/backend/services/logger.service';
+import { S3Service } from '@/backend/services/s3.service';
 
 const logger = new Logger('GoogleAuth');
 
@@ -19,6 +20,27 @@ const verify = async (idToken: string) => {
 	});
 	const payload = ticket.getPayload();
 	return payload;
+};
+
+const getUserPicture = async (user: TokenPayload) => {
+	const picture = user?.picture;
+	if (!picture) {
+		return null;
+	}
+	// Download Picture to buffer
+	const res = await fetch(picture);
+	const buffer = Buffer.from(await res.arrayBuffer());
+
+	// Upload to S3
+	const s3 = DefaultContainer.get(S3Service);
+	const key = `profile-pictures/${user?.sub}.png`;
+	const url = await s3.putObject({
+		body: buffer,
+		key,
+		public: true,
+	});
+
+	return url;
 };
 
 export const googleOidCallbackHandler: APIHandler = async (evt) => {
@@ -48,11 +70,13 @@ export const googleOidCallbackHandler: APIHandler = async (evt) => {
 	}
 	const sessionUserRepo = DefaultContainer.get(SessionRepository);
 
+	const profilePicture = await getUserPicture(token);
+
 	const user = await sessionUserRepo.findUserForSession({
 		userId: token?.sub,
 		name: token?.name,
 		email: token?.email,
-		profilePictureUrl: token?.picture,
+		profilePictureUrl: profilePicture || undefined,
 	});
 
 	if (!user) {

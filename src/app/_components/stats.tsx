@@ -81,7 +81,7 @@ export const StatsDisplay: React.FC<{
 						>
 							{!!stat.change && (
 								<>
-									{changeType === 'negative' ? '-' : '+'}{' '}
+									{changeType === 'negative' ? '' : '+'}
 									{Number(stat.change).toFixed(2)} %
 								</>
 							)}

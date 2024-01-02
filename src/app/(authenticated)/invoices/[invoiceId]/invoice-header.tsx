@@ -29,15 +29,17 @@ export function InvoiceHeader({
 	));
 	return (
 		<>
-			<p className="text-sm">
-				<InlineEditableText
-					prefix="Invoice Subject: "
-					locked={locked}
-					value={data.subject}
-					placeholder="Invoice Subject"
-					onChange={(subject) => onChange({ subject })}
-				/>
-			</p>
+			{(!locked || data.subject) && (
+				<p className="text-sm">
+					<InlineEditableText
+						prefix="Invoice Subject: "
+						locked={locked}
+						value={data.subject}
+						placeholder="Invoice Subject"
+						onChange={(subject) => onChange({ subject })}
+					/>
+				</p>
+			)}
 			<dl className="mt-6 grid grid-cols-1 text-sm leading-6 sm:grid-cols-2">
 				<div className="mt-8 sm:mt-6 sm:border-t sm:border-gray-900/5 sm:pt-6">
 					<InlineEditableArea
