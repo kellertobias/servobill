@@ -9,13 +9,10 @@ export default function Index() {
 		<div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
 			<div className="sm:mx-auto sm:w-full sm:max-w-sm">
 				<img
-					className="mx-auto h-28 w-auto"
+					className="mx-auto h-40 mb-12 w-auto"
 					src="/logo-white-stacked.png"
-					alt="Tobisk Media"
+					alt="Servobill"
 				/>
-				<h2 className="mt-4 text-center text-xl leading-9 font-extralight tracking-tight text-gray-300/70">
-					FAKTURA
-				</h2>
 			</div>
 
 			<div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm flex flex-row justify-center">

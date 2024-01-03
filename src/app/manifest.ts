@@ -2,9 +2,9 @@ import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
 	return {
-		name: 'Tobisk Faktura',
-		short_name: 'Tobisk Faktura',
-		description: 'Tobisk Faktura Billing',
+		name: 'Servobill',
+		short_name: 'Servobill',
+		description: 'Servobill Invoicing App',
 		start_url: '/',
 		display: 'standalone',
 		background_color: '#1F2937',

@@ -15,12 +15,12 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-	title: 'Tobisk Invoices',
+	title: 'Servobill',
 	description: 'Serverless Invoice and Expenses Management',
 	manifest: '/manifest.json',
 	appleWebApp: {
 		capable: true,
-		title: 'Tobisk Faktura',
+		title: 'Servobill',
 		statusBarStyle: 'black',
 	},
 };
