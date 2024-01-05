@@ -15,7 +15,7 @@ We feature a simple, easy-to-use interface for creating and managing invoices. Y
 - Simple reports
 - Manage clients & products
 
-<img src="/docs/screenshot-home.jpeg" alt="Servobill" width="200"/> <img src="/docs/screenshot-bill.jpeg" alt="Servobill" width="200"/> <img src="/docs/screenshot-bill-actions.jpeg" alt="Servobill" width="200"/>
+<img src="/docs/screenshot-1.jpeg" alt="Servobill" width="200"/> <img src="/docs/screenshot-2.jpeg" alt="Servobill" width="200"/> <img src="/docs/screenshot-3.jpeg" alt="Servobill" width="200"/> <img src="/docs/screenshot-4.jpeg" alt="Servobill" width="200"/>
 
 
 ## Developing
