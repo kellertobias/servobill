@@ -133,6 +133,14 @@ export function Stack({ stack, ...rest }: StackContext) {
 		});
 	}
 
+	const baseLayers = [
+		lambda.LayerVersion.fromLayerVersionArn(
+			stack,
+			'LayerOtel',
+			'arn:aws:lambda:eu-central-1:184161586896:layer:opentelemetry-collector-amd64-0_3_1:1',
+		),
+	];
+
 	const bus = new EventBus(stack, 'bus', {
 		defaults: {
 			retries: 5,
@@ -168,9 +176,12 @@ export function Stack({ stack, ...rest }: StackContext) {
 					handler: {
 						function: {
 							handler: `${endpoint.file}.${endpoint.handler}`,
-							layers: endpoint.layers?.map(
-								(layerPath) => layerCache[layerPath],
-							),
+							layers: [
+								...baseLayers,
+								...(endpoint.layers || []).map(
+									(layerPath) => layerCache[layerPath],
+								),
+							],
 							logGroup: makeLogGroup(stack, [
 								'eventhandler',
 								endpoint.eventType,
@@ -182,7 +193,7 @@ export function Stack({ stack, ...rest }: StackContext) {
 		});
 	}
 
-	const api = StackApi({ stack, ...rest }, layerCache, {
+	const api = StackApi({ stack, ...rest }, baseLayers, layerCache, {
 		customDomain: {
 			domainName: `api.${process.env.SITE_DOMAIN!}`,
 			cdk: {

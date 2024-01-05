@@ -15,6 +15,7 @@ import { makeLogGroup } from './log-group';
 
 export function StackApi(
 	{ stack }: StackContext,
+	baseLayers: lambda.ILayerVersion[],
 	layerCache: Record<string, lambda.LayerVersion>,
 	props?: Omit<ApiProps<Record<string, ApiAuthorizer>, string>, 'routes'> & {
 		environment?: Record<string, string>;
@@ -37,7 +38,10 @@ export function StackApi(
 		] = {
 			function: {
 				handler: `${endpoint.file}.${endpoint.handler}`,
-				layers: endpoint.layers?.map((layerPath) => layerCache[layerPath]),
+				layers: [
+					...baseLayers,
+					...(endpoint.layers || []).map((layerPath) => layerCache[layerPath]),
+				],
 				logGroup: makeLogGroup(stack, [endpoint.method, endpoint.path]),
 			},
 		};
