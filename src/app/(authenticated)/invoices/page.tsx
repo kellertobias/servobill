@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useModal } from 'react-modal-hook';
+import { useRouter } from 'next/navigation';
 
 import { PlusIcon } from '@heroicons/react/20/solid';
 import dayjs from 'dayjs';
@@ -19,6 +20,7 @@ import { exportInvoices } from '@/api/import-export/invoices-export';
 import { NewInvoiceModal } from './new-invoice';
 
 function InvoiceHomePageStats() {
+	const router = useRouter();
 	const { data, loading } = useLoadData(async () =>
 		API.query({
 			query: gql(`
@@ -77,7 +79,13 @@ function InvoiceHomePageStats() {
 			),
 		},
 	];
-	return <StatsDisplay stats={stats} loading={loading} />;
+	return (
+		<StatsDisplay
+			stats={stats}
+			loading={loading}
+			onClick={() => router.push('/reports')}
+		/>
+	);
 }
 
 export default function InvoiceHomePage() {

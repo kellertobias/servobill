@@ -7,6 +7,7 @@ export type StatsDisplayStat = {
 	subValue?: string | number;
 	change?: number;
 	changeType?: string;
+	onClick?: () => void;
 };
 
 const StatsLoadingSkeleton: React.FC<{
@@ -47,11 +48,13 @@ export const StatsDisplay: React.FC<{
 	className?: string;
 	stats: StatsDisplayStat[];
 	loading?: boolean;
-}> = ({ stats, className, loading }) =>
+	onClick?: () => void;
+}> = ({ stats, className, loading, onClick }) =>
 	loading ? (
 		<StatsLoadingSkeleton className={className} numStats={stats.length} />
 	) : (
 		<dl
+			onClick={onClick}
 			className={clsx(
 				className,
 				'mx-auto grid grid-cols-1 gap-px bg-gray-900/5',
@@ -67,6 +70,7 @@ export const StatsDisplay: React.FC<{
 					stat.changeType || (stat.change || 0) >= 0 ? 'positive' : 'negative';
 				return (
 					<div
+						onClick={stat.onClick}
 						key={stat.name}
 						className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2 bg-white px-4 py-4 sm:py-6 sm:px-6 xl:px-8"
 					>

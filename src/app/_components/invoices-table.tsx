@@ -59,21 +59,26 @@ export function InvoicesTable({
 										</div>
 										{getInvoiceStatusBadge(invoice)}
 									</div>
-									{invoice.paidAt ? (
-										<div className="mt-1 text-xs leading-5 text-gray-500">
-											Paid At: {dayjs(invoice.paidAt).format('DD.MM.YYYY')}
-										</div>
-									) : invoice.dueAt ? (
-										<div className="mt-1 text-xs leading-5 text-gray-500">
-											Due At: {dayjs(invoice.dueAt).format('DD.MM.YYYY')}
-										</div>
-									) : null}
-									{invoice.paidCents &&
-									invoice.paidCents !== invoice.totalCents ? (
-										<div className="mt-1 text-xs leading-5 text-gray-500">
-											Already Paid: {API.centsToPrice(invoice.paidCents)} €
-										</div>
-									) : null}
+									<div className="mt-1 text-xs leading-5 text-gray-500">
+										<span className="block sm:hidden font-semibold">
+											{invoice.customer.name}{' '}
+										</span>
+										{invoice.paidAt ? (
+											<span>
+												Paid At: {dayjs(invoice.paidAt).format('DD.MM.YYYY')}
+											</span>
+										) : invoice.dueAt ? (
+											<span>
+												Due At: {dayjs(invoice.dueAt).format('DD.MM.YYYY')}
+											</span>
+										) : null}
+										{invoice.paidCents &&
+										invoice.paidCents !== invoice.totalCents ? (
+											<span>
+												Already Paid: {API.centsToPrice(invoice.paidCents)} €
+											</span>
+										) : null}
+									</div>
 								</div>
 							</div>
 						</>

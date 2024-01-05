@@ -1,4 +1,4 @@
-![Servobill](/public/github-header.png)
+![Servobill](/docs/github-header.png)
 
 # Servobill
 
@@ -14,6 +14,11 @@ We feature a simple, easy-to-use interface for creating and managing invoices. Y
 - Manage expenses
 - Simple reports
 - Manage clients & products
+
+![Servobill](/docs/screenshot-home.png)
+![Servobill](/docs/screenshot-bill.png)
+![Servobill](/docs/screenshot-bill-actions.png)
+
 
 ## Developing
 
