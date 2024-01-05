@@ -55,7 +55,24 @@ If you are done, you can copy the template to the settings in the app.
 
 ## Deploying
 
-This section is currently being written
+### On your AWS account
+
+This section is currently being written. Basic Steps:
+
+- Setup your AWS account if you don't have one
+- Setup a Hosted zone in Route53 (or use an existing one)
+- If you have a CAA record, make sure that it allows Amazon to issue certificates for your domain
+- Setup an identity in SES and request production access (or use an existing one)
+- Setup a Google OAuth Client ID (or use an existing one)
+- Generate a random string for the JWT secret (e.g. with `openssl rand -base64 32`)
+- Create your .env file (see .env.example)
+- Run `npm run deploy` in the root directory
+
+If the deployment faily, you need to delete a few resources manually, especially the CloudWatch Log Groups, because we used fixed names for those.
+
+### Via Docker Compose
+
+At the moment we do not have a docker image for servobill yet as it is heavily built on top of the serverless mindset. However as the local development environment is built with docker-compose and does not need online services (besides SES), it might be possible that we will provide a docker image in the future. The main problem is that the app uses dynamodb to store the data and there is no easy way to run dynamodb yourself on a production ready scale. If you want to help us with that, please open an issue or a pull request.
 
 ## License
 
