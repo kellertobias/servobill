@@ -47,6 +47,7 @@ export function SelectCustomerModal({
 			onClose={onClose}
 			data={data || []}
 			onSearch={setSearch}
+			getCategory={(item) => item.name.slice(0, 1).toUpperCase()}
 			renderItem={(item) => (
 				<>
 					<div className="flex-none p-6 text-center">

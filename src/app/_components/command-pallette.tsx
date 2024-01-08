@@ -16,6 +16,7 @@ export default function CommandPallette<T extends { id: string | number }>({
 	renderListItem,
 	nameKey = 'name' as keyof T,
 	onClose,
+	getCategory,
 	notFound = (
 		<>
 			<ExclamationCircleIcon
@@ -29,6 +30,8 @@ export default function CommandPallette<T extends { id: string | number }>({
 		</>
 	),
 }: {
+	getCategory?: (data: T) => string;
+
 	onSearch: (query: string) => void;
 	nameKey?: keyof T;
 	data: T[];
@@ -37,6 +40,8 @@ export default function CommandPallette<T extends { id: string | number }>({
 	onClose: () => void;
 	notFound?: React.ReactNode;
 }) {
+	let lastCategory: string | undefined;
+
 	const renderListItemFinal =
 		renderListItem ||
 		((item: T, active: boolean) => (
@@ -123,23 +128,43 @@ export default function CommandPallette<T extends { id: string | number }>({
 												height: paletteHeight,
 											}}
 										>
-											<div className="-mx-2 text-sm text-gray-700">
-												{data.map((item) => (
-													<div
-														key={item.id}
-														onClick={() => setItem(item)}
-														className={clsx(
-															'flex cursor-default select-none items-center rounded-md p-2',
+											<div className="-mx-2 -mt-4 text-sm text-gray-700">
+												{data.map((item) => {
+													const nextCategory = getCategory?.(item);
+													let renderCategory = null;
+													if (nextCategory && nextCategory !== lastCategory) {
+														lastCategory = nextCategory;
+														renderCategory = (
+															<div
+																key={nextCategory}
+																className="flex cursor-default select-none items-center p-1 px-6 font-semibold text-gray-900 bg-gray-200 -mx-4 relative isolate"
+															>
+																{nextCategory}
+																<div className="absolute inset-y-0 right-full -z-10 w-screen border-b border-gray-200 bg-gray-50" />
+																<div className="absolute inset-y-0 left-0 -z-10 w-screen border-b border-gray-200 bg-gray-50" />
+															</div>
+														);
+													}
 
-															'hover:bg-gray-100 hover:text-gray-900',
-														)}
-													>
-														{renderListItemFinal(
-															item,
-															showItem?.id === item.id,
-														)}
-													</div>
-												))}
+													return (
+														<React.Fragment key={item.id}>
+															{renderCategory}
+															<div
+																onClick={() => setItem(item)}
+																className={clsx(
+																	'flex cursor-default select-none items-center rounded-md p-2',
+
+																	'hover:bg-gray-100 hover:text-gray-900',
+																)}
+															>
+																{renderListItemFinal(
+																	item,
+																	showItem?.id === item.id,
+																)}
+															</div>
+														</React.Fragment>
+													);
+												})}
 											</div>
 										</div>
 

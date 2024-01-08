@@ -20,7 +20,7 @@ export function ProductCatalogModal({
 			API.query({
 				query: gql(`
                     query SearchProducts($search: String!) {
-                        products(where: {search: $search}, limit: 10) {
+                        products(where: {search: $search}, limit: 100) {
                             id
 							category
 							name
@@ -43,6 +43,7 @@ export function ProductCatalogModal({
 			onClose={onClose}
 			data={data || []}
 			onSearch={setSearch}
+			getCategory={(item) => item.category}
 			renderItem={(item) => (
 				<>
 					<div className="flex-none p-3 text-center">
