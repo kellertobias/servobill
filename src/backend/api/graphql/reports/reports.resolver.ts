@@ -153,9 +153,9 @@ export class ReportsResolver {
 				report.openCents += booking.unpaidCents || 0;
 				report.openInvoices += booking.unpaidCents ? 1 : 0;
 			} else if (booking.type === 'expense') {
-				report.surplusCents -= booking.surplusCents;
-				report.expensesCents += booking.surplusCents;
-				report.expensesTaxCents += booking.taxCents;
+				report.surplusCents += booking.surplusCents;
+				report.expensesCents -= booking.surplusCents;
+				report.expensesTaxCents -= booking.taxCents;
 			}
 		}
 
