@@ -351,19 +351,6 @@ export default function ReportHomePage() {
 										Load
 									</Button>
 								</div>
-								<div>
-									<Button
-										onClick={() => {
-											// eslint-disable-next-line unicorn/no-useless-undefined
-											setStartDate(undefined);
-											// eslint-disable-next-line unicorn/no-useless-undefined
-											setEndDate(undefined);
-										}}
-										secondary
-									>
-										Clear
-									</Button>
-								</div>
 							</div>
 						</div>
 					</SettingsBlock>

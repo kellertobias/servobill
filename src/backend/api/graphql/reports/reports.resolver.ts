@@ -45,15 +45,14 @@ export class ReportsResolver {
 			.then((results) =>
 				results.filter(
 					(invoice) =>
-						true ||
-						(invoice.type === InvoiceType.INVOICE &&
-							dayjs(invoice.invoicedAt).isAfter(startDate) &&
-							dayjs(invoice.invoicedAt).isBefore(endDate) &&
-							[
-								InvoiceStatus.PAID,
-								InvoiceStatus.PAID_PARTIALLY,
-								InvoiceStatus.SENT,
-							].includes(invoice.status)),
+						invoice.type === InvoiceType.INVOICE &&
+						dayjs(invoice.invoicedAt).isAfter(startDate) &&
+						dayjs(invoice.invoicedAt).isBefore(endDate) &&
+						[
+							InvoiceStatus.PAID,
+							InvoiceStatus.PAID_PARTIALLY,
+							InvoiceStatus.SENT,
+						].includes(invoice.status),
 				),
 			);
 
