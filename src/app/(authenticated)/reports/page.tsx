@@ -69,16 +69,16 @@ function ReportPreview({ start, end }: { start?: string; end?: string }) {
 			name: 'Revenue',
 			value: `${API.centsToPrice(data?.report?.incomeCents)} €`,
 			change: API.getChange(
-				data?.reference?.incomeCents,
 				data?.report?.incomeCents,
+				data?.reference?.incomeCents,
 			),
 		},
 		{
 			name: 'Profit',
 			value: `${API.centsToPrice(data?.report?.surplusCents)} €`,
 			change: API.getChange(
-				data?.reference?.surplusCents,
 				data?.report?.surplusCents,
+				data?.reference?.surplusCents,
 			),
 		},
 		data?.reference?.invoiceTaxCents != 0 || data?.report?.invoiceTaxCents != 0
@@ -86,24 +86,24 @@ function ReportPreview({ start, end }: { start?: string; end?: string }) {
 					name: 'Invoiced Tax',
 					value: `${API.centsToPrice(data?.report?.invoiceTaxCents)} €`,
 					change: API.getChange(
-						data?.reference?.invoiceTaxCents,
 						data?.report?.invoiceTaxCents,
+						data?.reference?.invoiceTaxCents,
 					),
 				}
 			: {
 					name: 'Expenses',
 					value: `${API.centsToPrice(data?.report?.expensesCents)} €`,
 					change: API.getChange(
-						data?.reference?.expensesCents,
 						data?.report?.expensesCents,
+						data?.reference?.expensesCents,
 					),
 				},
 		{
 			name: 'Expended Tax',
 			value: `${API.centsToPrice(data?.report?.expensesTaxCents)} €`,
 			change: API.getChange(
-				data?.reference?.expensesTaxCents,
 				data?.report?.expensesTaxCents,
+				data?.reference?.expensesTaxCents,
 			),
 		},
 	];
