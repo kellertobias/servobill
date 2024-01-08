@@ -17,6 +17,7 @@ export default function ExpenseOverlay({
 	onClose: (reloadData?: boolean) => void;
 	openCreated?: (id: string) => void;
 }) {
+	const [taxManuallyChanged, setTaxManuallyChanged] = React.useState(false);
 	const { data, setData, initialData, reload } = useLoadData(
 		async ({ expenseId }) =>
 			expenseId === 'new'
@@ -138,7 +139,15 @@ export default function ExpenseOverlay({
 									label="Expenditure (Amount)"
 									value={data?.expenditure}
 									onChange={(expenditure) =>
-										setData((current) => ({ ...current, expenditure }))
+										setData((current) => {
+											let taxAmount = current?.taxAmount;
+											if (!taxManuallyChanged) {
+												taxAmount = API.centsToPrice(
+													API.priceToCents(expenditure) * 0.19,
+												);
+											}
+											return { ...current, expenditure, taxAmount };
+										})
 									}
 								/>
 							</div>
@@ -146,9 +155,10 @@ export default function ExpenseOverlay({
 								<Input
 									label="Included Tax (Amount)"
 									value={data?.taxAmount}
-									onChange={(taxAmount) =>
-										setData((current) => ({ ...current, taxAmount }))
-									}
+									onChange={(taxAmount) => {
+										setTaxManuallyChanged(true);
+										setData((current) => ({ ...current, taxAmount }));
+									}}
 								/>
 							</div>
 							<div>

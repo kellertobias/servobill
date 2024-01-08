@@ -81,14 +81,23 @@ function ReportPreview({ start, end }: { start?: string; end?: string }) {
 				data?.report?.surplusCents,
 			),
 		},
-		{
-			name: 'Invoiced Tax',
-			value: `${API.centsToPrice(data?.report?.invoiceTaxCents)} €`,
-			change: API.getChange(
-				data?.reference?.invoiceTaxCents,
-				data?.report?.invoiceTaxCents,
-			),
-		},
+		data?.reference?.invoiceTaxCents != 0 || data?.report?.invoiceTaxCents != 0
+			? {
+					name: 'Invoiced Tax',
+					value: `${API.centsToPrice(data?.report?.invoiceTaxCents)} €`,
+					change: API.getChange(
+						data?.reference?.invoiceTaxCents,
+						data?.report?.invoiceTaxCents,
+					),
+				}
+			: {
+					name: 'Expenses',
+					value: `${API.centsToPrice(data?.report?.expensesCents)} €`,
+					change: API.getChange(
+						data?.reference?.expensesCents,
+						data?.report?.expensesCents,
+					),
+				},
 		{
 			name: 'Expended Tax',
 			value: `${API.centsToPrice(data?.report?.expensesTaxCents)} €`,
@@ -229,10 +238,89 @@ export default function ReportHomePage() {
 							<div className="prose prose-sm leading-4 text-xs text-gray-500/80">
 								Select the start and end dates for the report you want to
 								generate.
+								<br />
+								Quick Range select:{' '}
+								<a
+									onClick={() => {
+										// eslint-disable-next-line unicorn/no-useless-undefined
+										setStartDate(undefined);
+										// eslint-disable-next-line unicorn/no-useless-undefined
+										setEndDate(undefined);
+										setTimeout(() => {
+											setStartDate(
+												dayjs()
+													.startOf('year')
+													.subtract(1, 'year')
+													.format('YYYY-MM-DD'),
+											);
+											setEndDate(dayjs().startOf('year').format('YYYY-MM-DD'));
+										}, 100);
+									}}
+									className="text-blue-600 hover:text-blue-500 no-underline cursor-pointer"
+								>
+									Last Year
+								</a>{' '}
+								&bull;{' '}
+								<a
+									onClick={() => {
+										// eslint-disable-next-line unicorn/no-useless-undefined
+										setStartDate(undefined);
+										// eslint-disable-next-line unicorn/no-useless-undefined
+										setEndDate(undefined);
+										setTimeout(() => {
+											setStartDate(
+												dayjs().subtract(365, 'days').format('YYYY-MM-DD'),
+											);
+											setEndDate(dayjs().format('YYYY-MM-DD'));
+										}, 100);
+									}}
+									className="text-blue-600 hover:text-blue-500 no-underline cursor-pointer"
+								>
+									Last 365 days
+								</a>{' '}
+								&bull;{' '}
+								<a
+									onClick={() => {
+										// eslint-disable-next-line unicorn/no-useless-undefined
+										setStartDate(undefined);
+										// eslint-disable-next-line unicorn/no-useless-undefined
+										setEndDate(undefined);
+										setTimeout(() => {
+											setStartDate(
+												dayjs()
+													.startOf('month')
+													.subtract(1, 'month')
+													.format('YYYY-MM-DD'),
+											);
+											setEndDate(dayjs().startOf('month').format('YYYY-MM-DD'));
+										}, 100);
+									}}
+									className="text-blue-600 hover:text-blue-500 no-underline cursor-pointer"
+								>
+									Last Month
+								</a>{' '}
+								&bull;{' '}
+								<a
+									onClick={() => {
+										// eslint-disable-next-line unicorn/no-useless-undefined
+										setStartDate(undefined);
+										// eslint-disable-next-line unicorn/no-useless-undefined
+										setEndDate(undefined);
+										setTimeout(() => {
+											setStartDate(
+												dayjs().startOf('month').format('YYYY-MM-DD'),
+											);
+											setEndDate(dayjs().format('YYYY-MM-DD'));
+										}, 100);
+									}}
+									className="text-blue-600 hover:text-blue-500 no-underline cursor-pointer"
+								>
+									This Month
+								</a>
 							</div>
 						}
 					>
-						<div className="block sm:grid grid-cols-2 gap-4">
+						<div className="block sm:grid grid-cols-3 gap-4">
 							<DateInput
 								label="Start Date"
 								value={startDate}
@@ -245,6 +333,38 @@ export default function ReportHomePage() {
 								onChange={setEndDate}
 								placeholder="Select End Date"
 							/>
+							<div className="pt-8 flex flex-row gap-2">
+								<div>
+									<Button
+										onClick={() => {
+											// eslint-disable-next-line unicorn/no-useless-undefined
+											setStartDate(undefined);
+											// eslint-disable-next-line unicorn/no-useless-undefined
+											setEndDate(undefined);
+											setTimeout(() => {
+												setStartDate(startDate);
+												setEndDate(endDate);
+											}, 50);
+										}}
+										secondary
+									>
+										Load
+									</Button>
+								</div>
+								<div>
+									<Button
+										onClick={() => {
+											// eslint-disable-next-line unicorn/no-useless-undefined
+											setStartDate(undefined);
+											// eslint-disable-next-line unicorn/no-useless-undefined
+											setEndDate(undefined);
+										}}
+										secondary
+									>
+										Clear
+									</Button>
+								</div>
+							</div>
 						</div>
 					</SettingsBlock>
 				</PageCard>
