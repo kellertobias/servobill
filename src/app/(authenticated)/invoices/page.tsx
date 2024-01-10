@@ -66,16 +66,16 @@ function InvoiceHomePageStats() {
 			name: 'Yearly Revenue',
 			value: `${API.centsToPrice(data?.report?.incomeCents)} €`,
 			change: API.getChange(
-				data?.reference?.incomeCents,
 				data?.report?.incomeCents,
+				data?.reference?.incomeCents,
 			),
 		},
 		{
 			name: 'Yearly Profit',
 			value: `${API.centsToPrice(data?.report?.surplusCents)} €`,
 			change: API.getChange(
-				data?.reference?.surplusCents,
 				data?.report?.surplusCents,
+				data?.reference?.surplusCents,
 			),
 		},
 	];
