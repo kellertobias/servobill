@@ -1,150 +1,67 @@
 /* eslint-disable no-console */
-import fs from 'fs';
+import path from 'path';
 
-import * as lambda from 'aws-cdk-lib/aws-lambda';
+import esbuildPluginTsc from 'esbuild-plugin-tsc';
 import { config } from 'dotenv';
 import {
 	NextjsSite,
 	Permissions,
-	Bucket,
 	EventBus,
 	StackContext,
-	Table,
 } from 'sst/constructs';
-import { HostedZone } from 'aws-cdk-lib/aws-route53';
 
 import { StackApi } from './api';
-import { tableDefinitions } from './local/initialize/definitions/tables';
 import { eventHandlerEndpoints, apiEndpoints } from './build-index';
 import { makeLogGroup } from './log-group';
+import { makeOtelConfig, otelBaseConfig } from './otel';
+import { getDomainConfig } from './domain';
+import { prepareNextBuild, restoreAfterNextBuild } from './build-prep';
+import { getDataResources } from './data';
+import { getCleanEnvironment } from './helpers';
+import { getLayers } from './layers';
 
 config();
 
-// Move src/app/api to src/app/_ignore_api
-const apiDir = 'src/app/api';
-const ignoreApiDir = '_ignore_api';
-const tsconfigNext = 'tsconfig.json';
-let tsconfigOriginal: string | undefined;
-
-const prepareNextBuild = () => {
-	console.log('[NextJS] Preparing Build');
-	if (fs.existsSync(apiDir)) {
-		fs.renameSync(apiDir, ignoreApiDir);
-	}
-	const currentTsConfigRaw = fs.readFileSync(tsconfigNext, 'utf8');
-	tsconfigOriginal = currentTsConfigRaw;
-	const tsConfig = JSON.parse(currentTsConfigRaw);
-	tsConfig.include = [
-		'next-env.d.ts',
-		'src/app/**/*.ts',
-		'src/app/**/*.tsx',
-		'src/common/**/*.ts',
-		'src/common/**/*.tsx',
-		'.next/types/**/*.ts',
-	];
-	tsConfig.exclude = [
-		...tsConfig.exclude,
-		`${ignoreApiDir}/**/*`,
-		'src/app/backend/**/*',
-	];
-
-	fs.writeFileSync(tsconfigNext, JSON.stringify(tsConfig, null, 2));
-};
-
-const restoreAfterNextBuild = () => {
-	console.log('[NextJS] Restoring After Build');
-	if (fs.existsSync(ignoreApiDir)) {
-		fs.renameSync(ignoreApiDir, apiDir);
-	}
-	if (tsconfigOriginal) {
-		fs.writeFileSync(tsconfigNext, tsconfigOriginal);
-	}
-};
-
-export function makeTables(stack: StackContext['stack']) {
-	const tables = {} as Record<keyof typeof tableDefinitions, Table>;
-
-	for (const [tableName, tableDefinition] of Object.entries(tableDefinitions)) {
-		const table = new Table(stack, tableName, {
-			fields: tableDefinition.fields,
-			primaryIndex: tableDefinition.primaryIndex,
-			globalIndexes: tableDefinition.globalIndexes,
-		});
-		tables[tableName as keyof typeof tableDefinitions] = table;
-	}
-
-	return tables;
-}
-
 export function Stack({ stack, ...rest }: StackContext) {
-	const hostedZone = HostedZone.fromLookup(stack, 'HostedZone', {
-		domainName: process.env.HOSTED_ZONE_DOMAIN_NAME!,
-	});
-	const files = new Bucket(stack, 'files', {
-		cors: true,
-		...(process.env.BUCKETS_FILE_SST
-			? {
-					name: process.env.BUCKETS_FILE_SST,
-				}
-			: {}),
+	const openTelemetry = makeOtelConfig();
+	const domain = getDomainConfig({ stack, ...rest });
+	const { tables, buckets } = getDataResources({ stack, ...rest });
+	const { baseLayers, layerCache } = getLayers({
+		stack,
+		...rest,
+		openTelemetry,
 	});
 
-	const tables = makeTables(stack);
-
-	// Prepare
 	prepareNextBuild();
 	const site = new NextjsSite(stack, 'site', {
-		bind: [files],
-		customDomain: {
-			domainName: process.env.SITE_DOMAIN!,
-			cdk: {
-				hostedZone,
-			},
-		},
+		bind: [buckets.files],
+		customDomain: domain.siteCustomDomain,
 		environment: {
-			NEXT_PUBLIC_API_URL: `https://api.${process.env.SITE_DOMAIN!}`,
+			NEXT_PUBLIC_API_URL: domain.publicApiUrl,
 		},
 	});
 	restoreAfterNextBuild();
 
-	const baseBinds = [files, tables.electrodb];
-	const baseEnvironment = {
-		JWT_SECRET: process.env.JWT_SECRET!,
-		ALLOWED_EMAILS: process.env.ALLOWED_EMAILS!,
-		OAUTH_CLIENT_ID: process.env.OAUTH_CLIENT_ID!,
+	const baseBinds = [buckets.files, tables.electrodb];
+	const baseEnvironment = getCleanEnvironment({
+		...otelBaseConfig,
+		JWT_SECRET: [process.env.JWT_SECRET],
+		ALLOWED_EMAILS: [process.env.ALLOWED_EMAILS],
+		OAUTH_CLIENT_ID: [process.env.OAUTH_CLIENT_ID],
 		TABLE_ELECTRODB: tables.electrodb.tableName,
-		SITE_DOMAIN: process.env.SITE_DOMAIN!,
-		BUCKET_FILES: files.bucketName,
-	};
+		SITE_DOMAIN: domain.siteDomain,
+		BUCKET_FILES: buckets.files.bucketName,
 
-	const layerCache: Record<string, lambda.LayerVersion> = {};
-	const layers = [
-		...new Set(
-			[...eventHandlerEndpoints, ...apiEndpoints].flatMap(
-				({ layers }) => layers || [],
-			),
-		).values(),
-	];
-	for (const layerPath of layers) {
-		const logicalId = layerPath.replaceAll(/\W/g, '');
-		console.log(`[Layer] ${layerPath} - ${logicalId}`);
-		layerCache[layerPath] = new lambda.LayerVersion(stack, logicalId, {
-			code: lambda.Code.fromAsset(layerPath),
-		});
-	}
-
-	const baseLayers = [
-		lambda.LayerVersion.fromLayerVersionArn(
-			stack,
-			'LayerOtel',
-			'arn:aws:lambda:eu-central-1:184161586896:layer:opentelemetry-collector-amd64-0_3_1:1',
-		),
-	];
+		JSON_LOGS_ENDPOINT: process.env.LOGS_ENDPOINT,
+		SERVICE_NAMESPACE: 'servobill',
+		NODE_OPTIONS: '--enable-source-maps',
+	});
 
 	const bus = new EventBus(stack, 'bus', {
 		defaults: {
 			retries: 5,
 			function: {
+				copyFiles: [openTelemetry].filter((x) => !!x) as { from: string }[],
 				environment: {
 					...baseEnvironment,
 				},
@@ -193,30 +110,48 @@ export function Stack({ stack, ...rest }: StackContext) {
 		});
 	}
 
-	const api = StackApi({ stack, ...rest }, baseLayers, layerCache, {
-		customDomain: {
-			domainName: `api.${process.env.SITE_DOMAIN!}`,
-			cdk: {
-				hostedZone,
+	const api = StackApi(
+		{ stack, ...rest },
+		baseLayers,
+		layerCache,
+		apiEndpoints,
+		{
+			customDomain: domain.apiCustomDomain,
+			cors: {
+				allowOrigins: site.customDomainUrl
+					? [site.customDomainUrl]
+					: [site.url!],
+				allowMethods: ['ANY'],
+				allowHeaders: [
+					'Content-Type',
+					'Authorization',
+					'Apollo-Require-Preflight',
+					'Content-Length',
+					'Cookie',
+				],
+				allowCredentials: true,
+			},
+			function: {
+				environment: {
+					...baseEnvironment,
+					EVENT_BUS_NAME: bus.eventBusName,
+				},
+				runtime: 'nodejs20.x',
+				nodejs: {
+					format: 'cjs',
+					esbuild: {
+						plugins: [
+							esbuildPluginTsc({
+								tsconfigPath: path.resolve('tsconfig.json'),
+							}),
+						],
+					},
+					// splitting: true,
+					install: ['graphql', 'graphql-tools', 'type-graphql'],
+				},
 			},
 		},
-		cors: {
-			allowOrigins: site.customDomainUrl ? [site.customDomainUrl] : [site.url!],
-			allowMethods: ['ANY'],
-			allowHeaders: [
-				'Content-Type',
-				'Authorization',
-				'Apollo-Require-Preflight',
-				'Content-Length',
-				'Cookie',
-			],
-			allowCredentials: true,
-		},
-		environment: {
-			...baseEnvironment,
-			EVENT_BUS_NAME: bus.eventBusName,
-		},
-	});
+	);
 
 	api.bind([...baseBinds]);
 	api.bind([bus]);

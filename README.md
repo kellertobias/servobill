@@ -34,7 +34,7 @@ This section is currently being written. Basic Steps:
 - Create your .env file (see .env.example)
 - Run `npm run deploy` in the root directory
 
-If the deployment faily, you need to delete a few resources manually, especially the CloudWatch Log Groups, because we used fixed names for those.
+If the deployment fails, you need to delete a few resources manually, especially the CloudWatch Log Groups, because we used fixed names for those.
 
 ### Via Docker Compose
 

@@ -1,24 +1,23 @@
-import path from 'path';
-
 import * as lambda from 'aws-cdk-lib/aws-lambda';
-import esbuildPluginTsc from 'esbuild-plugin-tsc';
 import {
 	Api,
 	ApiAuthorizer,
 	ApiFunctionRouteProps,
 	ApiProps,
+	FunctionProps,
 	StackContext,
 } from 'sst/constructs';
 
-import { apiEndpoints } from './build-index';
 import { makeLogGroup } from './log-group';
+import { ApiEndpoint } from './build-index/api';
 
 export function StackApi(
 	{ stack }: StackContext,
 	baseLayers: lambda.ILayerVersion[],
 	layerCache: Record<string, lambda.LayerVersion>,
+	apiEndpoints: ApiEndpoint[],
 	props?: Omit<ApiProps<Record<string, ApiAuthorizer>, string>, 'routes'> & {
-		environment?: Record<string, string>;
+		function?: FunctionProps;
 	},
 ) {
 	// API handlers are in src/api and are deployed to /api
@@ -46,26 +45,12 @@ export function StackApi(
 			},
 		};
 	}
-	const { environment, ...rootProps } = props || {};
+
+	const { function: functionDefiniton, ...rootProps } = props || {};
 	return new Api(stack, 'api', {
 		...rootProps,
 		defaults: {
-			function: {
-				environment,
-				runtime: 'nodejs20.x',
-				nodejs: {
-					format: 'cjs',
-					esbuild: {
-						plugins: [
-							esbuildPluginTsc({
-								tsconfigPath: path.resolve('tsconfig.json'),
-							}),
-						],
-					},
-					// splitting: true,
-					install: ['graphql', 'graphql-tools', 'type-graphql'],
-				},
-			},
+			function: functionDefiniton,
 		},
 		routes: endpoints,
 	});
