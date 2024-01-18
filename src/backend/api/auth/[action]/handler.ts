@@ -30,3 +30,6 @@ export const handler: APIHandler = async (evt, ctx) => {
 		body: JSON.stringify({ message: 'Not Found' }),
 	} as Awaited<ReturnType<APIHandler>>;
 };
+
+// eslint-disable-next-line unicorn/prefer-module
+module.exports = { handler };

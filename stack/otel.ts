@@ -87,16 +87,16 @@ export const makeOtelConfig = () => {
 };
 
 export const otelBaseConfig = {
-	// OTEL_LOG_LEVEL: process.env.OTEL_ENDPOINT ? 'WARN' : undefined,
+	OTEL_LOG_LEVEL: process.env.OTEL_ENDPOINT ? 'WARN' : undefined,
 	OPENTELEMETRY_EXTENSION_LOG_LEVEL: process.env.OTEL_ENDPOINT
 		? 'WARN'
 		: undefined,
 	OPENTELEMETRY_COLLECTOR_CONFIG_FILE: process.env.OTEL_ENDPOINT
 		? '/var/task/collector.yaml'
 		: undefined,
-	// AWS_LAMBDA_EXEC_WRAPPER: process.env.OTEL_ENDPOINT
-	// 	? '/opt/otel-handler'
-	// 	: undefined,
+	AWS_LAMBDA_EXEC_WRAPPER: process.env.OTEL_ENDPOINT
+		? '/opt/otel-handler'
+		: undefined,
 
 	JSON_LOGS_ENDPOINT: process.env.LOGS_ENDPOINT,
 };
