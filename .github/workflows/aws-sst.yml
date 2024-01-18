@@ -44,6 +44,9 @@ jobs:
         OAUTH_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
         HOSTED_ZONE_DOMAIN_NAME: ${{ secrets.HOSTED_ZONE_DOMAIN_NAME }}
         SITE_DOMAIN: ${{ secrets.SITE_DOMAIN }}
+        OTEL_ENDPOINT: ${{ secrets.OTEL_ENDPOINT }}
+        LOGS_ENDPOINT: ${{ secrets.LOGS_ENDPOINT }}
+        OTEL_HEADERS: ${{ secrets.OTEL_HEADERS }}
       run: |
         npm run gql:type
         npx sst deploy --stage prod
