@@ -15,6 +15,7 @@ We feature a simple, easy-to-use interface for creating and managing invoices. Y
 - Manage expenses
 - Simple reports
 - Manage clients & products
+- OpenTelemetry Traces & Logs Support
 
 <img src="/docs/screenshot-1.jpeg" alt="Servobill" width="200"/> <img src="/docs/screenshot-2.jpeg" alt="Servobill" width="200"/> <img src="/docs/screenshot-3.jpeg" alt="Servobill" width="200"/> <img src="/docs/screenshot-4.jpeg" alt="Servobill" width="200"/>
 

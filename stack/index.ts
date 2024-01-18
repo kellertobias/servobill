@@ -2,13 +2,13 @@
 import path from 'path';
 
 import esbuildPluginTsc from 'esbuild-plugin-tsc';
-import { config } from 'dotenv';
 import {
 	NextjsSite,
 	Permissions,
 	EventBus,
 	StackContext,
 } from 'sst/constructs';
+import './load-environ';
 
 import { StackApi } from './api';
 import { eventHandlerEndpoints, apiEndpoints } from './build-index';
@@ -20,10 +20,11 @@ import { getDataResources } from './data';
 import { getCleanEnvironment } from './helpers';
 import { getLayers } from './layers';
 
-config();
-
 export function Stack({ stack, ...rest }: StackContext) {
 	const openTelemetry = makeOtelConfig();
+	const copyFiles = [openTelemetry].filter((x) => x !== null) as {
+		from: string;
+	}[];
 	const domain = getDomainConfig({ stack, ...rest });
 	const { tables, buckets } = getDataResources({ stack, ...rest });
 	const { baseLayers, layerCache } = getLayers({
@@ -52,7 +53,6 @@ export function Stack({ stack, ...rest }: StackContext) {
 		SITE_DOMAIN: domain.siteDomain,
 		BUCKET_FILES: buckets.files.bucketName,
 
-		JSON_LOGS_ENDPOINT: process.env.LOGS_ENDPOINT,
 		SERVICE_NAMESPACE: 'servobill',
 		NODE_OPTIONS: '--enable-source-maps',
 	});
@@ -61,7 +61,7 @@ export function Stack({ stack, ...rest }: StackContext) {
 		defaults: {
 			retries: 5,
 			function: {
-				copyFiles: [openTelemetry].filter((x) => !!x) as { from: string }[],
+				copyFiles,
 				environment: {
 					...baseEnvironment,
 				},
@@ -132,6 +132,7 @@ export function Stack({ stack, ...rest }: StackContext) {
 				allowCredentials: true,
 			},
 			function: {
+				copyFiles,
 				environment: {
 					...baseEnvironment,
 					EVENT_BUS_NAME: bus.eventBusName,
