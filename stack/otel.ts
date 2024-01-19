@@ -99,4 +99,5 @@ export const otelBaseConfig = {
 		: undefined,
 
 	JSON_LOGS_ENDPOINT: process.env.LOGS_ENDPOINT,
+	JSON_LOGS_HEADERS: process.env.LOGS_HEADERS,
 };
