@@ -34,7 +34,8 @@ import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
 import { SettingsRepository } from '@/backend/repositories/settings.repository';
 import { InvoiceSettingsEntity } from '@/backend/entities/settings.entity';
 import { CustomerEntity } from '@/backend/entities/customer.entity';
-import { Span } from '@/backend/instrumentation';
+import { ActiveSpan, Span } from '@/backend/instrumentation';
+import type { OtelSpan } from '@/backend/instrumentation';
 
 @Service()
 @Resolver(() => Invoice)
@@ -49,12 +50,14 @@ export class InvoiceResolver {
 	@Authorized()
 	@Query(() => [Invoice])
 	async invoices(
+		@ActiveSpan() span: OtelSpan,
 		@Arg('where', { nullable: true }) where?: InvoiceWhereInput,
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		@Arg('skip', () => Int, { nullable: true }) skip?: number,
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		@Arg('limit', () => Int, { nullable: true }) limit?: number,
 	): Promise<Invoice[]> {
+		span.setAttribute('context.where', JSON.stringify(where));
 		const data = await this.invoiceRepository.listByQuery({
 			where: { ...where },
 			skip,
@@ -86,7 +89,11 @@ export class InvoiceResolver {
 	@Span('InvoiceResolver.invoice')
 	@Authorized()
 	@Query(() => Invoice)
-	async invoice(@Arg('id') id: string): Promise<Invoice | null> {
+	async invoice(
+		@Arg('id') id: string,
+		@ActiveSpan() span: OtelSpan,
+	): Promise<Invoice | null> {
+		span.setAttribute('context.invoiceId', id);
 		return this.invoiceRepository.getById(id);
 	}
 

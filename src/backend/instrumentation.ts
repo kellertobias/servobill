@@ -11,7 +11,7 @@ import {
 	SpanStatusCode,
 	propagation,
 	context,
-	Span,
+	Span as OtelSpan,
 } from '@opentelemetry/api';
 
 const tracer = trace.getTracer('lambda');
@@ -61,6 +61,27 @@ export function withSpan<A extends unknown[], R>(
 	};
 }
 
+// Method Parameter Decorator that gets the currently active span as a parameter
+export function ActiveSpan() {
+	return function (
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		target: any,
+		propertyKey: string,
+		parameterIndex: number,
+	) {
+		// eslint-disable-next-line @typescript-eslint/ban-types
+		const originalMethod = target[propertyKey] as Function;
+		target[propertyKey] = function (...args: unknown[]) {
+			const span = trace.getSpan(context.active());
+			if (span) {
+				args[parameterIndex] = span;
+			}
+			return originalMethod.apply(this, args);
+		};
+		return target;
+	};
+}
+
 // Class Method Decorator
 export function Span(
 	spanName: string,
@@ -98,24 +119,6 @@ export function Span(
 	};
 }
 
-const getActiveContext = <E>(evt: E) => {
-	const apiGatewayEvent = evt as unknown as APIGatewayProxyEventV2;
-	const eventHandlerEvent = evt as unknown as EventBridgeEvent<string, unknown>;
-
-	if (apiGatewayEvent.requestContext) {
-		return context.active();
-	} else if (eventHandlerEvent['detail-type']) {
-		const activeContext = propagation.extract(
-			context.active(),
-			(eventHandlerEvent.detail as undefined | { tracerContext: unknown })
-				?.tracerContext,
-		);
-		return activeContext;
-	} else {
-		return context.active();
-	}
-};
-
 const withEventBridgeInstrumentation = async <
 	E extends EventBridgeEvent<string, unknown>,
 	R,
@@ -128,7 +131,10 @@ const withEventBridgeInstrumentation = async <
 	handler: Handler<E, R | void>,
 	[evt, ctx, cb]: Parameters<Handler<E, R | void>>,
 ): Promise<R | void> => {
-	const activeContext = getActiveContext(evt);
+	const activeContext = propagation.extract(
+		context.active(),
+		(evt.detail as undefined | { tracerContext: unknown })?.tracerContext,
+	);
 	const span = tracer.startSpan(
 		spanInfo.name,
 		{
@@ -189,7 +195,7 @@ const handleSpanExecution = async <E, R>(
 		span,
 		onThrow,
 	}: {
-		span: Span;
+		span: OtelSpan;
 		onThrow?: (error: Error) => Awaited<R> | null;
 	},
 	handler: Handler<E, R | void>,
@@ -197,7 +203,7 @@ const handleSpanExecution = async <E, R>(
 ): Promise<R | void> => {
 	let answer: Awaited<R> | void;
 	try {
-		span.addEvent('start');
+		span.addEvent('start handler');
 		answer = await handler(evt, ctx, cb);
 	} catch (error) {
 		span.setStatus({ code: SpanStatusCode.ERROR });
@@ -301,3 +307,5 @@ export const withInstrumentation = <E, R>(
 		}
 	};
 };
+
+export type { Span as OtelSpan } from '@opentelemetry/api';
