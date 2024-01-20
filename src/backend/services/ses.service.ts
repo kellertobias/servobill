@@ -1,5 +1,6 @@
 import * as ses from '@aws-sdk/client-ses';
 import nodemailer from 'nodemailer';
+import SESTransport from 'nodemailer/lib/ses-transport';
 
 import { Span } from '../instrumentation';
 
@@ -51,7 +52,7 @@ export class SESService {
 			filename: string;
 			content: Buffer | string;
 		}[];
-	}) {
+	}): Promise<SESTransport.SentMessageInfo> {
 		const transporter = nodemailer.createTransport({
 			SES: { ses: this.client, aws: ses },
 		});

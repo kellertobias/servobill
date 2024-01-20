@@ -111,6 +111,21 @@ export abstract class AbstractRepository<
 		});
 	}
 
+	@Span('Repository.createWithId')
+	public async createWithId(
+		entityId: string,
+		...args: CreateArgs
+	): Promise<DomainEntity> {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const store = this.store as Entity<string, string, string, any>;
+		const entity = this.generateEmptyItem(entityId, ...args);
+
+		const data = this.domainToOrmEntity(entity);
+		await store.create({ ...data, storeId: this.storeId }).go();
+		await this.purgeOutbox(entity);
+		return this.ormToDomainEntity({ data });
+	}
+
 	@Span('Repository.create')
 	public async create(...args: CreateArgs): Promise<DomainEntity> {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -7,6 +7,7 @@ import {
 	Permissions,
 	EventBus,
 	StackContext,
+	Topic,
 } from 'sst/constructs';
 import './load-environ';
 
@@ -120,6 +121,37 @@ export function Stack({ stack, ...rest }: StackContext) {
 		});
 	}
 
+	const deliveryTopic = new Topic(stack, 'DeliveryTopic', {
+		subscribers: {
+			EmailDelivery: {
+				function: {
+					handler: 'src/backend/events/delivery/status/handler.handler',
+					layers: [...baseLayers],
+					environment: {
+						OTEL_SERVICE_NAME: `${stack.stackName}-DELIVERY-EMAIL`,
+					},
+				},
+			},
+		},
+		defaults: {
+			function: {
+				copyFiles,
+				environment: {
+					...baseEnvironment,
+				},
+				permissions: [...baseBinds],
+				nodejs: {
+					format: 'cjs',
+					install: [...installOtelPackages],
+					esbuild: {},
+				},
+				runtime: 'nodejs20.x',
+				timeout: 60 * 1, // 5 minutes
+				memorySize: 1024,
+			},
+		},
+	});
+
 	const api = StackApi(
 		{ stack, ...rest },
 		baseLayers,
@@ -176,10 +208,11 @@ export function Stack({ stack, ...rest }: StackContext) {
 	api.attachPermissions(permissions);
 	bus.attachPermissions(permissions);
 
-	// stack.addOutputs({
-	// 	SiteUrl: site.url,
-	// 	SiteCustomUrl: site.customDomainUrl,
-	// 	ApiUrl: api.url,
-	// 	ApiCustomUrl: api.customDomainUrl,
-	// });
+	stack.addOutputs({
+		// SiteUrl: site.url,
+		// SiteCustomUrl: site.customDomainUrl,
+		// ApiUrl: api.url,
+		// ApiCustomUrl: api.customDomainUrl,
+		DeliveryTopicArn: deliveryTopic.topicArn,
+	});
 }

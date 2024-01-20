@@ -21,6 +21,7 @@ import {
 	InvoiceActivityEntity,
 	InvoiceActivityType,
 } from '@/backend/entities/invoice-activity.entity';
+import { EmailRepository } from '@/backend/repositories/email.repository';
 
 const getSubject = async (
 	invoice: InvoiceEntity,
@@ -73,6 +74,8 @@ export const handler: EventHandler = makeEventHandler(
 	async (event, { logger }) => {
 		const invoiceRepository = DefaultContainer.get(InvoiceRepository);
 		const settingsRepository = DefaultContainer.get(SettingsRepository);
+		const emailRepository = DefaultContainer.get(EmailRepository);
+
 		const ses = DefaultContainer.get(SESService);
 		const cqrs = CqrsBus.forRoot({
 			handlers: [CreateInvoicePdfHandler, GenerateInvoiceHtmlHandler],
@@ -169,7 +172,7 @@ export const handler: EventHandler = makeEventHandler(
 			to: redactedTo,
 		});
 		// Send email
-		await ses.sendEmail({
+		const msg = await ses.sendEmail({
 			from: template.sendFrom,
 			to: invoice.customer.email,
 			replyTo: template.replyTo,
@@ -181,6 +184,14 @@ export const handler: EventHandler = makeEventHandler(
 					content: pdf,
 				},
 			],
+		});
+
+		const emailStatus = await emailRepository.createWithId(msg.messageId);
+		emailStatus.update({
+			entityType: 'invoice',
+			entityId: invoice.id,
+			recipient: invoice.customer.email,
+			sentAt: new Date(),
 		});
 
 		logger.info('Email sent', { invoiceId: invoice.id, to: redactedTo });

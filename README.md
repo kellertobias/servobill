@@ -15,12 +15,12 @@ We feature a simple, easy-to-use interface for creating and managing invoices. Y
 - Manage expenses
 - Simple reports
 - Manage clients & products
-- OpenTelemetry Traces & Logs Support
 - Developer Experience:
     - Dependencies in Docker Compose for local development
     - Modern decorator based codebase
     - Dependency Injection
     - Event driven Design
+    - OpenTelemetry Support for Traces & Logs
     - Automatic API Type generation
     - Automatic adding of new endpoints to infrastructure definition
     - CQRS (Bus implemented and some commands present)
