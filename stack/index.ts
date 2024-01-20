@@ -107,7 +107,9 @@ export function Stack({ stack, ...rest }: StackContext) {
 								endpoint.eventType,
 							]),
 							environment: {
-								OTEL_SERVICE_NAME: `${stack.stackName}-EVENT-${endpoint.eventType}`,
+								OTEL_SERVICE_NAME: `${
+									stack.stackName
+								}-EVENT-${endpoint.eventType.replaceAll('.', '-')}`,
 							},
 						},
 					},

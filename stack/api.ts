@@ -46,7 +46,13 @@ export function StackApi(
 				],
 				logGroup: makeLogGroup(stack, [endpoint.method, endpoint.path]),
 				environment: {
-					OTEL_SERVICE_NAME: `${stack.stackName}-${endpoint.method}-${endpoint.path}`,
+					OTEL_SERVICE_NAME: `${stack.stackName}-${
+						endpoint.method
+					}-${endpoint.path
+						.replaceAll('/', '-')
+						.replaceAll('[', '')
+						.replaceAll(']', '')
+						.replaceAll('.', '-')}`,
 				},
 			},
 		};
