@@ -11,6 +11,7 @@ import {
 	SpanStatusCode,
 	propagation,
 	context,
+	Span,
 } from '@opentelemetry/api';
 
 const tracer = trace.getTracer('lambda');
@@ -115,6 +116,135 @@ const getActiveContext = <E>(evt: E) => {
 	}
 };
 
+const withEventBridgeInstrumentation = async <
+	E extends EventBridgeEvent<string, unknown>,
+	R,
+>(
+	spanInfo: {
+		name: string;
+		attributes?: Record<string, AttributeValue>;
+		onThrow?: (error: Error) => Awaited<R> | null;
+	},
+	handler: Handler<E, R | void>,
+	[evt, ctx, cb]: Parameters<Handler<E, R | void>>,
+): Promise<R | void> => {
+	const activeContext = getActiveContext(evt);
+	const span = tracer.startSpan(
+		spanInfo.name,
+		{
+			attributes: {
+				...spanInfo.attributes,
+				'faas.handlerType': 'EventBridge',
+				'event.type': evt['detail-type'],
+				'event.id': evt.id,
+				'event.source': evt.source,
+				'event.detail': JSON.stringify(evt.detail),
+				'event.time': evt.time,
+				'event.resources': evt.resources,
+			},
+		},
+		activeContext,
+	);
+	trace.setSpan(activeContext, span);
+
+	return handler(evt, ctx, cb);
+};
+
+const withApiGatewayInstrumentation = async <
+	E extends APIGatewayProxyEventV2,
+	R,
+>(
+	spanInfo: {
+		name: string;
+		attributes?: Record<string, AttributeValue>;
+		onThrow?: (error: Error) => Awaited<R> | null;
+	},
+	handler: Handler<E, R | void>,
+	[evt, ctx, cb]: Parameters<Handler<E, R | void>>,
+): Promise<R | void> => {
+	return tracer.startActiveSpan(spanInfo.name, async (span) => {
+		if (spanInfo.attributes) {
+			span.setAttributes({
+				...spanInfo.attributes,
+				'faas.handlerType': 'APIGateway',
+				'http.method': evt?.requestContext?.http?.method,
+				'http.host': evt?.requestContext?.domainName,
+				'http.target': evt?.requestContext?.http?.path,
+				'http.protocol': evt?.requestContext?.http?.protocol,
+				'http.sourceIp': evt?.requestContext?.http?.sourceIp,
+				'http.userAgent': evt?.requestContext?.http?.userAgent,
+				'lambda.accountId': evt?.requestContext?.accountId,
+			});
+		}
+		return await handleSpanExecution(
+			{ span, onThrow: spanInfo.onThrow },
+			handler,
+			[evt, ctx, cb],
+		);
+	});
+};
+
+const handleSpanExecution = async <E, R>(
+	{
+		span,
+		onThrow,
+	}: {
+		span: Span;
+		onThrow?: (error: Error) => Awaited<R> | null;
+	},
+	handler: Handler<E, R | void>,
+	[evt, ctx, cb]: Parameters<Handler<E, R | void>>,
+): Promise<R | void> => {
+	let answer: Awaited<R> | void;
+	try {
+		span.addEvent('start');
+		answer = await handler(evt, ctx, cb);
+	} catch (error) {
+		span.setStatus({ code: SpanStatusCode.ERROR });
+		if (error instanceof Error) {
+			span.recordException(error);
+		} else {
+			span.recordException(new Error(String(error)));
+		}
+		if (onThrow) {
+			const errorResult = onThrow(
+				error instanceof Error ? error : new Error(String(error)),
+			);
+			if (errorResult === null) {
+				throw error;
+			} else {
+				answer = errorResult;
+			}
+		} else {
+			throw error;
+		}
+	} finally {
+		span.end();
+	}
+	return answer;
+};
+
+const withWrappedInstrumentation = <E, R>(
+	spanInfo: {
+		name: string;
+		attributes?: Record<string, AttributeValue>;
+		onThrow?: (error: Error) => Awaited<R> | null;
+	},
+	handler: Handler<E, R | void>,
+	args: Parameters<Handler<E, R | void>>,
+): Promise<R | void> => {
+	return tracer.startActiveSpan(spanInfo.name, (span) => {
+		if (spanInfo.attributes) {
+			span.setAttributes(spanInfo.attributes);
+		}
+		return handleSpanExecution(
+			{ span, onThrow: spanInfo.onThrow },
+			handler,
+			args,
+		);
+	});
+};
+
 export const withInstrumentation = <E, R>(
 	tracerConfig: {
 		name: string;
@@ -129,98 +259,45 @@ export const withInstrumentation = <E, R>(
 			unknown
 		>;
 
-		const activeContext = getActiveContext(evt);
-		const span = tracer.startSpan(
-			tracerConfig.name,
-			{
-				attributes: {},
-			},
-			activeContext,
-		);
-
-		span.setAttribute('faas.memory', ctx.memoryLimitInMB);
-		span.setAttribute('faas.requestId', ctx.awsRequestId);
-		span.setAttribute('faas.remainingTime', ctx.getRemainingTimeInMillis());
-		span.setAttribute('process.runtime.version', process.version);
-		span.setAttribute('process.runtime.arch', process.arch);
-		span.setAttribute('process.runtime.name', process.release.name);
-		// If the handler is a API Gateway handler, we get the URL and Method:
+		const attributes: Record<string, AttributeValue> = {
+			'faas.memory': ctx.memoryLimitInMB,
+			'faas.requestId': ctx.awsRequestId,
+			'faas.remainingTime': ctx.getRemainingTimeInMillis(),
+			'process.runtime.version': process.version,
+			'process.runtime.arch': process.arch,
+			'process.runtime.name': process.release.name,
+		};
 
 		if (apiGatewayEvent.requestContext) {
-			span.setAttribute('faas.handlerType', 'APIGateway');
-			span.setAttribute(
-				'http.method',
-				apiGatewayEvent?.requestContext?.http?.method,
-			);
-			span.setAttribute(
-				'http.host',
-				apiGatewayEvent?.requestContext?.domainName,
-			);
-			span.setAttribute(
-				'http.target',
-				apiGatewayEvent?.requestContext?.http?.path,
-			);
-			span.setAttribute(
-				'http.protocol',
-				apiGatewayEvent?.requestContext?.http?.protocol,
-			);
-			span.setAttribute(
-				'http.sourceIp',
-				apiGatewayEvent?.requestContext?.http?.sourceIp,
-			);
-			if (apiGatewayEvent?.requestContext?.http?.userAgent) {
-				span.setAttribute(
-					'http.userAgent',
-					apiGatewayEvent?.requestContext?.http?.userAgent,
-				);
-			}
-			span.setAttribute(
-				'lambda.accountId',
-				apiGatewayEvent?.requestContext?.accountId,
+			return withApiGatewayInstrumentation(
+				{
+					...tracerConfig,
+					attributes,
+				},
+				handler as Handler<APIGatewayProxyEventV2, R>,
+				[apiGatewayEvent, ctx, cb],
 			);
 		} else if (eventHandlerEvent['detail-type']) {
-			span.setAttribute('faas.handlerType', 'EventBridge');
-			span.setAttribute('event.type', eventHandlerEvent['detail-type']);
-			span.setAttribute('event.id', eventHandlerEvent.id);
-			span.setAttribute('event.source', eventHandlerEvent.source);
-			span.setAttribute(
-				'event.detail',
-				JSON.stringify(eventHandlerEvent.detail),
+			return withEventBridgeInstrumentation(
+				{
+					...tracerConfig,
+					attributes,
+				},
+				handler as Handler<EventBridgeEvent<string, unknown>, R>,
+				[eventHandlerEvent, ctx, cb],
 			);
-			span.setAttribute('event.time', eventHandlerEvent.time);
-			span.setAttribute('event.resources', eventHandlerEvent.resources);
 		} else {
-			span.setAttribute('lambda.handlerType', 'Unknown');
+			return withWrappedInstrumentation(
+				{
+					...tracerConfig,
+					attributes: {
+						...attributes,
+						'lambda.handlerType': 'Unknown',
+					},
+				},
+				handler,
+				[evt, ctx, cb],
+			);
 		}
-
-		trace.setSpan(activeContext, span);
-
-		let answer: Awaited<R> | void;
-		try {
-			span.addEvent('start');
-			answer = await handler(evt, ctx, cb);
-		} catch (error) {
-			span.setStatus({ code: SpanStatusCode.ERROR });
-			if (error instanceof Error) {
-				span.recordException(error);
-			} else {
-				span.recordException(new Error(String(error)));
-			}
-			if (tracerConfig.onThrow) {
-				const errorResult = tracerConfig.onThrow(
-					error instanceof Error ? error : new Error(String(error)),
-				);
-				if (errorResult === null) {
-					throw error;
-				} else {
-					answer = errorResult;
-				}
-			} else {
-				throw error;
-			}
-		} finally {
-			span.end();
-		}
-		return answer;
 	};
 };
