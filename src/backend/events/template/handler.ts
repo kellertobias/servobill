@@ -19,7 +19,7 @@ export const handlerName = 'handler';
 export const layers = ['layers/chromium'];
 export const handler: EventHandler = makeEventHandler(
 	GenerateTemplatePreviewEvent,
-	async (event, _, { logger }) => {
+	async (event, { logger }) => {
 		const { template, styles } = event;
 
 		const config = DefaultContainer.get(ConfigService);

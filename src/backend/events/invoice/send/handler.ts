@@ -70,7 +70,7 @@ export const handlerName = 'handler';
 export const layers = ['layers/chromium'];
 export const handler: EventHandler = makeEventHandler(
 	InvoiceSendEvent,
-	async (event, _, { logger }) => {
+	async (event, { logger }) => {
 		const invoiceRepository = DefaultContainer.get(InvoiceRepository);
 		const settingsRepository = DefaultContainer.get(SettingsRepository);
 		const ses = DefaultContainer.get(SESService);

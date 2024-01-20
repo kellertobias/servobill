@@ -93,14 +93,37 @@ export function Span(
 		descriptor: PropertyDescriptor,
 	) {
 		const originalMethod = descriptor.value;
-		descriptor.value = async function (...args: unknown[]) {
-			return tracer.startActiveSpan(spanName, async (span) => {
+
+		if (!originalMethod || typeof originalMethod !== 'function') {
+			throw new Error(`@Span decorator can only be applied to async methods`);
+		}
+
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		descriptor.value = function (...args: any[]) {
+			return tracer.startActiveSpan(spanName, (span) => {
 				if (attributes) {
 					span.setAttributes(attributes);
 				}
 				let answer: unknown;
 				try {
-					answer = await originalMethod.apply(this, args);
+					answer = originalMethod.apply(this, args);
+					if (answer instanceof Promise) {
+						answer = answer
+							.then((value) => {
+								span.end();
+								return value;
+							})
+							.catch((error) => {
+								span.setStatus({ code: SpanStatusCode.ERROR });
+								if (error instanceof Error) {
+									span.recordException(error);
+								} else {
+									span.recordException(new Error(String(error)));
+								}
+								span.end();
+								throw error;
+							});
+					}
 				} catch (error) {
 					span.setStatus({ code: SpanStatusCode.ERROR });
 					if (error instanceof Error) {
@@ -110,7 +133,9 @@ export function Span(
 					}
 					throw error;
 				} finally {
-					span.end();
+					if (!(answer instanceof Promise)) {
+						span.end();
+					}
 				}
 				return answer;
 			});
@@ -131,6 +156,7 @@ const withEventBridgeInstrumentation = async <
 	handler: Handler<E, R | void>,
 	[evt, ctx, cb]: Parameters<Handler<E, R | void>>,
 ): Promise<R | void> => {
+	console.log(evt.detail);
 	const activeContext = propagation.extract(
 		context.active(),
 		(evt.detail as undefined | { tracerContext: unknown })?.tracerContext,

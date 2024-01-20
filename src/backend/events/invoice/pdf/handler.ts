@@ -19,7 +19,7 @@ export const handlerName = 'handler';
 export const layers = ['layers/chromium'];
 export const handler: EventHandler = makeEventHandler(
 	InvoiceGeneratePdfEvent,
-	async (event, _, { logger }) => {
+	async (event, { logger }) => {
 		console.log(event);
 		const invoiceRepository = DefaultContainer.get(InvoiceRepository);
 		const settingsRepository = DefaultContainer.get(SettingsRepository);

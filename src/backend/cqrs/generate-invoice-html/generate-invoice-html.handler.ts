@@ -178,7 +178,8 @@ export class GenerateInvoiceHtmlHandler
 		this.registerHelpers(command);
 
 		const compiledTemplate = handlebars.compile(template);
-		const data = this.buildData(command);
+		const data = await this.buildData(command);
+		console.log(data);
 		const html = compiledTemplate(data);
 
 		return {

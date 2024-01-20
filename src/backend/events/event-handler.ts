@@ -11,8 +11,10 @@ export const makeEventHandler = <T extends object>(
 	EventValidatorClass: new () => T,
 	handler: (
 		data: T,
-		event: EventBridgeEvent<string, unknown>,
-		context: Context & { logger: Logger },
+		context: Context & {
+			logger: Logger;
+			originalEvent: EventBridgeEvent<string, unknown>;
+		},
 	) => Promise<void>,
 ): EventHandlerFunction => {
 	return withInstrumentation(
@@ -48,7 +50,7 @@ export const makeEventHandler = <T extends object>(
 			}
 
 			try {
-				return handler(eventData, event, { ...context, logger });
+				return handler(eventData, { ...context, originalEvent: event, logger });
 			} catch (error: unknown) {
 				logger.error(`Handler failed for Event ${event['detail-type']}`, {
 					eventName: event['detail-type'],
