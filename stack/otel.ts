@@ -58,10 +58,10 @@ exporters:
 ${Object.entries(headers)
 	.map(([key, value]) => `			${key}: "${value}"`)
 	.join('\n')}
-		sending_queue:
-			enabled: false
-		retry_on_failure:
-			enabled: false
+#		sending_queue:
+#			enabled: false
+#		retry_on_failure:
+#			enabled: false
 
 service:
 	pipelines:

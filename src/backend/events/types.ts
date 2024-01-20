@@ -1,6 +1,3 @@
-import type { EventBridgeEvent, Context } from 'aws-lambda';
+import type { EventBridgeEvent, Handler } from 'aws-lambda';
 
-export type EventHandler = (
-	event: EventBridgeEvent<string, unknown>,
-	context: Context,
-) => Promise<void>;
+export type EventHandler = Handler<EventBridgeEvent<string, unknown>, void>;

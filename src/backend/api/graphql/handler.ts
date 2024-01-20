@@ -8,6 +8,8 @@ import { SessionLambdaContext, withSession } from '../session';
 import { getGraphQLServer } from './server';
 import { GqlContext } from './types';
 
+import { withInstrumentation } from '@/backend/instrumentation';
+
 const contextBuilder = async ({
 	event,
 	context,
@@ -39,16 +41,21 @@ const contextBuilder = async ({
 
 export const method = 'ANY';
 export const handlerName = 'handler';
-export const handler = withSession(async (evt, ctx) => {
-	console.log('GraphQL handler', evt.body);
-	const gqlHandler = await getGraphQLServer(contextBuilder);
-	const answer = await gqlHandler(
-		{ ...evt, httpMethod: evt.requestContext.http.method },
-		ctx,
-		() => {},
-	);
-	return answer;
-});
+export const handler = withInstrumentation(
+	{
+		name: 'graphql',
+	},
+	withSession(async (evt, ctx) => {
+		console.log('GraphQL handler', evt.body);
+		const gqlHandler = await getGraphQLServer(contextBuilder);
+		const answer = await gqlHandler(
+			{ ...evt, httpMethod: evt.requestContext.http.method },
+			ctx,
+			() => {},
+		);
+		return answer;
+	}),
+);
 
 // eslint-disable-next-line unicorn/prefer-module
 module.exports = { handler };

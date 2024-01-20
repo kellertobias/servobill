@@ -30,6 +30,7 @@
     "@aws-sdk/s3-request-presigner": "^3.481.0",
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",
+    "@opentelemetry/api": "^1.7.0",
     "@sevenoutman/use-debounced-memo": "^1.0.0",
     "@sparticuz/chromium": "^109.0.5",
     "@uiw/react-textarea-code-editor": "^3.0.2",
