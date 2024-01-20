@@ -4,8 +4,6 @@ export const prepareHandlerExport = (endpoint: {
 	file: string;
 	handler: string;
 }) => {
-	console.log('prepareHandlerExport', endpoint);
-	console.log(process.cwd());
 	const file = `${process.cwd()}/${endpoint.file}.ts`;
 	fs.writeFileSync(
 		file,

@@ -8,6 +8,7 @@ const tsconfigNext = 'tsconfig.json';
 let tsconfigOriginal: string | undefined;
 
 export const prepareNextBuild = () => {
+	// eslint-disable-next-line no-console
 	console.log('[NextJS] Preparing Build');
 	if (fs.existsSync(apiDir)) {
 		fs.renameSync(apiDir, ignoreApiDir);
@@ -33,6 +34,7 @@ export const prepareNextBuild = () => {
 };
 
 export const restoreAfterNextBuild = () => {
+	// eslint-disable-next-line no-console
 	console.log('[NextJS] Restoring After Build');
 	if (fs.existsSync(ignoreApiDir)) {
 		fs.renameSync(ignoreApiDir, apiDir);

@@ -43,6 +43,7 @@ const isExpiredError = (error: unknown): boolean => {
 
 export const renewSessionToken = async () => {
 	if (waitForRenewal.failed) {
+		// eslint-disable-next-line no-console
 		console.log(
 			'Attempting to renew Token ... last renewing failed. Aborting.',
 		);
@@ -50,6 +51,7 @@ export const renewSessionToken = async () => {
 	}
 
 	if (waitForRenewal.renewing) {
+		// eslint-disable-next-line no-console
 		console.log('Attempting to renew Token ...already renewing');
 		return;
 	}
@@ -58,16 +60,20 @@ export const renewSessionToken = async () => {
 	waitForRenewal.renewing = true;
 
 	try {
+		// eslint-disable-next-line no-console
 		console.log('Attempting to renew Token ...Renewing session token...');
 		const response = await restConnection.get('/api/auth/renew');
+		// eslint-disable-next-line no-console
 		console.log(response);
 		waitForRenewal.renewing = false;
 		waitForRenewal.current.resolve();
+		// eslint-disable-next-line no-console
 		console.log('...done');
 	} catch (error) {
 		waitForRenewal.renewing = false;
 		waitForRenewal.current.resolve();
 		waitForRenewal.failed = error;
+		// eslint-disable-next-line no-console
 		console.log('...failed with', error);
 		throw error;
 	}

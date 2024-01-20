@@ -245,8 +245,6 @@ export class InvoiceEntity extends DomainEntity {
 		}
 
 		if (this.type === InvoiceType.INVOICE) {
-			console.log('this.invoicedAt', this.invoicedAt);
-			console.log('this.dueAt', this.dueAt);
 			this.invoicedAt = this.invoicedAt || new Date();
 			this.dueAt =
 				this.dueAt ||

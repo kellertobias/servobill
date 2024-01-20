@@ -1,7 +1,6 @@
 import fs from 'fs';
 
 const maybeParseJson = (str?: string) => {
-	console.log('maybeParseJson', { str });
 	try {
 		if (!str) {
 			return {};

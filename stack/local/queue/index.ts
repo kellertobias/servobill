@@ -114,6 +114,7 @@ const handleNextEvent = async () => {
 				fail: (error: Error | string) => null,
 				succeed: (messageOrObject: any) => null,
 			},
+			() => null,
 		);
 	} catch (error: unknown) {
 		console.log(

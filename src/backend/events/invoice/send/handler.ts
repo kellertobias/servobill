@@ -101,7 +101,7 @@ export const handler: EventHandler = makeEventHandler(
 			invoice.pdf?.forContentHash !== invoice.contentHash ||
 			!invoice.pdf.key
 		) {
-			console.log('No PDF. Generating');
+			logger.info('No PDF. Generating', { invoiceId: invoice.id });
 			const { html } = await cqrs.execute(
 				new GenerateInvoiceHtmlCommand({
 					logoUrl: template.invoiceCompanyLogo,
@@ -130,9 +130,12 @@ export const handler: EventHandler = makeEventHandler(
 			invoice.updatePdf(location);
 
 			await invoiceRepository.save(invoice);
-			console.log('PDF generated. Saving.');
+			logger.info('PDF generated. Saving.', { invoiceId: invoice.id });
 		} else {
-			console.log('PDF exists. Downloading');
+			logger.info('PDF exists. Downloading', {
+				invoiceId: invoice.id,
+				key: invoice.pdf.key,
+			});
 			// Get pdf from s3
 			const downloadedPdf = await s3.getObject({
 				bucket: invoice.pdf.bucket,
@@ -153,12 +156,18 @@ export const handler: EventHandler = makeEventHandler(
 			throw new Error('No email address');
 		}
 
-		console.log("Genrating email's subject and body");
+		logger.info("Genrating email's subject and body", {
+			invoiceId: invoice.id,
+		});
 
 		const subject = await getSubject(invoice, template, cqrs);
 		const emailHtml = await getEmail(invoice, template, cqrs);
-
-		console.log('Sending email');
+		const redactedTo = `<redacted>@${invoice.customer.email.split('@').at(-1)}`;
+		logger.info('Sending email', {
+			invoiceId: invoice.id,
+			subject,
+			to: redactedTo,
+		});
 		// Send email
 		await ses.sendEmail({
 			from: template.sendFrom,
@@ -174,7 +183,7 @@ export const handler: EventHandler = makeEventHandler(
 			],
 		});
 
-		console.log('Email sent');
+		logger.info('Email sent', { invoiceId: invoice.id, to: redactedTo });
 
 		invoice.addActivity(
 			new InvoiceActivityEntity({

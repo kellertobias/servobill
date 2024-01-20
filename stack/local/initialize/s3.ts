@@ -15,8 +15,10 @@ export const initializeS3 = async (endpoint: string) => {
 		tls: false,
 	});
 
+	// eslint-disable-next-line no-console
 	console.log('Creating S3 Buckets');
 	for (const { name, cors } of Object.values(bucketDefinitions)) {
+		// eslint-disable-next-line no-console
 		console.log(`Creating S3 Bucket ${name}`);
 		try {
 			const result = await client.send(
@@ -24,26 +26,34 @@ export const initializeS3 = async (endpoint: string) => {
 					Bucket: name,
 				}),
 			);
+			// eslint-disable-next-line no-console
 			console.log(result);
 		} catch (error: unknown) {
+			// eslint-disable-next-line no-console
 			console.log(`Error creating bucket ${name}`);
 
 			if (error instanceof Error) {
 				if (error.name === 'ResourceInUseException') {
+					// eslint-disable-next-line no-console
 					console.log('Bucket already exists');
 				} else if (error.name === 'SyntaxError') {
+					// eslint-disable-next-line no-console
 					console.log("Error: Couldn't parse response body");
+					// eslint-disable-next-line no-console
 					console.log(error);
 				} else {
+					// eslint-disable-next-line no-console
 					console.log(error);
 				}
 			} else {
+				// eslint-disable-next-line no-console
 				console.log(error);
 			}
 		}
 
 		try {
 			if (cors) {
+				// eslint-disable-next-line no-console
 				console.log(`Creating CORS configuration for ${name}`);
 				await client.send(
 					new PutBucketCorsCommand({
@@ -62,18 +72,24 @@ export const initializeS3 = async (endpoint: string) => {
 				);
 			}
 		} catch (error: unknown) {
+			// eslint-disable-next-line no-console
 			console.log(`Error creating CORS configuration for ${name}`);
 
 			if (error instanceof Error) {
 				if (error.name === 'NoSuchBucket') {
+					// eslint-disable-next-line no-console
 					console.log('Bucket does not exist');
 				} else if (error.name === 'SyntaxError') {
+					// eslint-disable-next-line no-console
 					console.log("Error: Couldn't parse response body");
+					// eslint-disable-next-line no-console
 					console.log(error);
 				} else {
+					// eslint-disable-next-line no-console
 					console.log(error);
 				}
 			} else {
+				// eslint-disable-next-line no-console
 				console.log(error);
 			}
 		}

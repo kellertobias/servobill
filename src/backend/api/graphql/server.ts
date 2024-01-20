@@ -6,9 +6,12 @@ import { APIGatewayProxyStructuredResultV2 } from 'aws-lambda';
 
 import { globalSchema } from '.';
 
+import { Logger } from '@/backend/services/logger.service';
+
 // import { Logger } from '@/backend/services/logger.service';
 
 // const logger = new Logger('GraphQL');
+const logger = new Logger('GraphQLServer');
 
 export async function getGraphQLServer<E, C, Ctx>(
 	contextBuilder: ({
@@ -23,7 +26,7 @@ export async function getGraphQLServer<E, C, Ctx>(
 	const server = new ApolloServer({
 		schema,
 		formatError: (error) => {
-			console.log('Error');
+			logger.warn('Error');
 			const { code, exception } = (error?.extensions || {
 				code: 'UNKNOWN',
 				exception: {},
@@ -35,8 +38,11 @@ export async function getGraphQLServer<E, C, Ctx>(
 				};
 			};
 
-			console.log('GrqphQL Error');
-			console.dir(error, { depth: null });
+			logger.warn('GraphQL Error', {
+				error,
+				code,
+				nodeEnv: process.env.NODE_ENV,
+			});
 
 			if (
 				error.extensions.exception.stacktrace[0].includes(
@@ -67,12 +73,14 @@ export async function getGraphQLServer<E, C, Ctx>(
 					path: error.path,
 				};
 			} else if (code === 'INTERNAL_SERVER_ERROR') {
-				console.log(
-					chalk.red(error.extensions.exception.stacktrace.join('\n')),
-				);
+				if (process.env.NODE_ENV !== 'production') {
+					// eslint-disable-next-line no-console
+					console.log(
+						chalk.red(error.extensions.exception.stacktrace.join('\n')),
+					);
+				}
 				throw new Error('Internal server error');
 			}
-			console.log(chalk.yellow(error.message));
 			return error;
 		},
 

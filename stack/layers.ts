@@ -17,6 +17,7 @@ export const getLayers = ({
 	];
 	for (const layerPath of layers) {
 		const logicalId = layerPath.replaceAll(/\W/g, '');
+		// eslint-disable-next-line no-console
 		console.log(`[Layer] ${layerPath} - ${logicalId}`);
 		layerCache[layerPath] = new lambda.LayerVersion(stack, logicalId, {
 			code: lambda.Code.fromAsset(layerPath),

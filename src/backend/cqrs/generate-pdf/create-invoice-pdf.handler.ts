@@ -75,7 +75,7 @@ export class CreateInvoicePdfHandler
 			margin: { top: '1in', right: '1in', bottom: '1in', left: '1in' },
 		};
 
-		console.log('Generating pdf');
+		this.logger.info('Generating pdf');
 		const pdf = await this.generatePdf(html, options);
 
 		// Upload to S3
@@ -86,7 +86,6 @@ export class CreateInvoicePdfHandler
 				command.invoice.id
 			}.pdf`;
 
-		console.log({ bucket, key });
 		this.logger.info('Uploading pdf to S3', {
 			bucket,
 			key,

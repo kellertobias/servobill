@@ -19,7 +19,7 @@ export const handlerName = 'handler';
 export const layers = ['layers/chromium'];
 export const handler: EventHandler = makeEventHandler(
 	GenerateTemplatePreviewEvent,
-	async (event) => {
+	async (event, _, { logger }) => {
 		const { template, styles } = event;
 
 		const config = DefaultContainer.get(ConfigService);
@@ -89,14 +89,13 @@ export const handler: EventHandler = makeEventHandler(
 				}),
 			);
 		} else {
-			console.log('html', html.length);
 			await s3.putObject({
 				bucket: config.buckets.files,
 				key: event.key,
 				contentType: 'text/html',
 				body: html,
 			});
-			console.log('uploaded', config.buckets.files, event.key);
+			logger.info('uploaded', { bucket: config.buckets.files, key: event.key });
 		}
 	},
 );

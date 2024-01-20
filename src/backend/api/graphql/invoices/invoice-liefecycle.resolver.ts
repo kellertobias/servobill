@@ -207,19 +207,18 @@ export class InvoiceLifecycleResolver {
 	async invoicePdf(@Arg('id') invoiceId: string): Promise<string | null> {
 		const invoice = await this.invoiceRepository.getById(invoiceId);
 
-		console.log('invoicePdf');
+		this.logger.info('starting invoicePdf');
 
 		if (!invoice) {
 			throw new Error('Invoice not found');
 		}
 
-		console.log('invoicePdf having invoice');
+		this.logger.info('found invoice');
 
 		if (invoice.pdf && invoice.contentHash === invoice.pdf?.forContentHash) {
 			const bucket = invoice.pdf.bucket;
 			const key = invoice.pdf.key;
 			if (bucket && key) {
-				console.log('already exists');
 				this.logger.info('Invoice PDF already exists');
 				return await this.s3Service.getSignedUrl({
 					bucket,
@@ -230,23 +229,20 @@ export class InvoiceLifecycleResolver {
 			if (
 				!dayjs(invoice.pdf.requestedAt).isBefore(dayjs().subtract(1, 'minute'))
 			) {
-				console.log('already requested');
 				this.logger.info('Invoice PDF already requested');
 				return null;
 			}
 
-			console.log('requesting');
 			this.logger.info('Last Invoice request was more than 1 minute ago');
 		}
 
 		this.logger.info('Requesting Invoice PDF');
-		console.log('requesting pdf');
 		invoice.requestPdf();
-		console.log('saving');
+		this.logger.info('Requested Invoice PDF, now saving invoice');
 
 		await this.invoiceRepository.save(invoice);
 
-		console.log('saved');
+		this.logger.info('Saved Invoice');
 
 		return null;
 	}

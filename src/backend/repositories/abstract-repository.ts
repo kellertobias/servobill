@@ -6,6 +6,7 @@ import { injectable } from 'inversify';
 import { DomainEntity as DomainBaseEntity } from '../entities/abstract.entity';
 import { EventBusService } from '../services/eventbus.service';
 
+import { Logger } from '@/backend/services/logger.service';
 import { DefaultContainer } from '@/common/di';
 
 @injectable()
@@ -18,6 +19,7 @@ export abstract class AbstractRepository<
 	F extends string = string,
 	C extends string = string,
 > {
+	protected abstract logger: Logger;
 	protected store!: Entity<string, string, string, S>;
 
 	protected abstract mainIdName: string;
@@ -95,10 +97,11 @@ export abstract class AbstractRepository<
 	}
 
 	private async purgeOutbox(entity: DomainEntity): Promise<void> {
-		console.log('purgeOutbox');
+		this.logger.debug('Purging Outbox');
 		const eventBus = DefaultContainer.get(EventBusService);
 		entity.purgeEvents(async (event) => {
-			console.log('purgeOutbox event', event);
+			this.logger.debug('Purging Outbox Event', { event });
+
 			await eventBus.send(event.name, {
 				aggregateId: event.aggregateId,
 				...event.data,

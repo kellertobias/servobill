@@ -46,7 +46,6 @@ export const handler = withInstrumentation(
 		name: 'graphql',
 	},
 	withSession(async (evt, ctx) => {
-		console.log('GraphQL handler', evt.body);
 		const gqlHandler = await getGraphQLServer(contextBuilder);
 		const answer = await gqlHandler(
 			{ ...evt, httpMethod: evt.requestContext.http.method },

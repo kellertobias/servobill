@@ -14,6 +14,7 @@ const projectionTypes: Record<string, ProjectionType> = {
 };
 
 export const initializeDynamoDB = async (endpoint: string) => {
+	// eslint-disable-next-line no-console
 	console.log('Creating DynamoDB Client', {
 		endpoint,
 	});
@@ -23,8 +24,10 @@ export const initializeDynamoDB = async (endpoint: string) => {
 		region: 'local',
 	});
 
+	// eslint-disable-next-line no-console
 	console.log('Creating DynamoDB Tables');
 	for (const [tableName, tableDefinition] of Object.entries(tableDefinitions)) {
+		// eslint-disable-next-line no-console
 		console.log(`Creating DynamoDB Table ${tableName}`);
 		try {
 			const result = await client.send(
@@ -90,20 +93,27 @@ export const initializeDynamoDB = async (endpoint: string) => {
 					],
 				}),
 			);
+			// eslint-disable-next-line no-console
 			console.log(result);
 		} catch (error: unknown) {
+			// eslint-disable-next-line no-console
 			console.log(`Error creating table ${tableName}`);
 
 			if (error instanceof Error) {
 				if (error.name === 'ResourceInUseException') {
+					// eslint-disable-next-line no-console
 					console.log('Table already exists');
 				} else if (error.name === 'SyntaxError') {
+					// eslint-disable-next-line no-console
 					console.log("Error: Couldn't parse response body");
+					// eslint-disable-next-line no-console
 					console.log(error);
 				} else {
+					// eslint-disable-next-line no-console
 					console.log(error);
 				}
 			} else {
+				// eslint-disable-next-line no-console
 				console.log(error);
 			}
 		}

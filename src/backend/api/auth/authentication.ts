@@ -131,7 +131,7 @@ export class AuthenticationService {
 				session: SessionOp.END,
 			});
 		} catch (error: unknown) {
-			console.error(error);
+			logger.error('Error ending session', { error });
 			return this.generateResponse({
 				statusCode: 401,
 				body: { message: 'No Tokens Set' },

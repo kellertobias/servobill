@@ -15,6 +15,7 @@ export const makeLogGroup = (stack: StackContext['stack'], parts: string[]) => {
 		pathParts.map((part) => part[0].toUpperCase() + part.slice(1)).join('');
 
 	const path = pathParts.join('/');
+	// eslint-disable-next-line no-console
 	console.log(`[LogGroup] ${path} - ${logicalName}`);
 	return new LogGroup(stack, logicalName, {
 		logGroupName: `/invoices/${path}/`,
