@@ -18,6 +18,7 @@ const {
 
 // Setup Environment
 const serviceName =
+	process.env.OTEL_SERVICE_NAME ||
 	process.env.SERVICE_NAME ||
 	process.env.AWS_LAMBDA_FUNCTION_NAME ||
 	process.env.SERVICE_NAME_FALLBACK ||
@@ -26,8 +27,6 @@ const serviceName =
 const resource = Resource.default().merge(
 	new Resource({
 		[SemanticResourceAttributes.SERVICE_NAME]: serviceName,
-		[SemanticResourceAttributes.SERVICE_VERSION]:
-			process.env.OTEL_SERVICE_VERSION || '1.0.0',
 		[SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]:
 			process.env.OTEL_SERVICE_ENVIRONMENT || 'production',
 		[SemanticResourceAttributes.SERVICE_NAMESPACE]:
@@ -39,13 +38,13 @@ const traceExporter = new OTLPTraceExporter({
 	url: 'http://localhost:4317',
 });
 
-const provider = new BasicTracerProvider({ resource });
+// const provider = new BasicTracerProvider({ resource });
 // export spans to console (useful for debugging)
 // provider.addSpanProcessor(new SimpleSpanProcessor(new ConsoleSpanExporter()));
 // export spans to opentelemetry collector
 const spanProcessor = new SimpleSpanProcessor(traceExporter);
-provider.addSpanProcessor(spanProcessor);
-provider.register();
+// provider.addSpanProcessor(spanProcessor);
+// provider.register();
 
 // Glue it all together
 const sdk = new opentelemetry.NodeSDK({
