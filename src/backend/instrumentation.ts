@@ -12,11 +12,6 @@ import {
 	propagation,
 	context,
 } from '@opentelemetry/api';
-import { AsyncHooksContextManager } from '@opentelemetry/context-async-hooks';
-
-const contextManager = new AsyncHooksContextManager();
-contextManager.enable();
-context.setGlobalContextManager(contextManager);
 
 const tracer = trace.getTracer('lambda');
 
@@ -36,7 +31,20 @@ export function Span(
 				if (attributes) {
 					span.setAttributes(attributes);
 				}
-				const answer = await originalMethod.apply(this, args);
+				let answer: unknown;
+				try {
+					answer = await originalMethod.apply(this, args);
+				} catch (error) {
+					span.setStatus({ code: SpanStatusCode.ERROR });
+					if (error instanceof Error) {
+						span.recordException(error);
+					} else {
+						span.recordException(new Error(String(error)));
+					}
+					throw error;
+				} finally {
+					span.end();
+				}
 				return answer;
 			});
 		};
