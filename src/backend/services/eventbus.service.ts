@@ -2,12 +2,14 @@ import {
 	EventBridgeClient,
 	PutEventsCommand,
 } from '@aws-sdk/client-eventbridge';
+import { trace, context, propagation } from '@opentelemetry/api';
 
 import { ConfigService } from './config.service';
 import { Logger } from './logger.service';
 
 import { CustomJson } from '@/common/json';
 import { Inject, Service } from '@/common/di';
+const tracer = trace.getTracer('eventbus');
 
 @Service()
 export class EventBusService {
@@ -49,26 +51,35 @@ export class EventBusService {
 			options,
 		});
 
-		const response = await this.client.send(
-			new PutEventsCommand({
-				Entries: [
-					{
-						EventBusName: this.configuration.eventBusName,
-						Detail: CustomJson.toJson(message),
-						DetailType: messageType,
-						Resources: options?.resources,
-						Source: options?.source || 'default',
-					},
-				],
-			}),
-		);
+		const tracerContext = {};
+		propagation.inject(context.active(), tracerContext);
+		return tracer.startActiveSpan('sendEvent', async (span) => {
+			const response = await this.client.send(
+				new PutEventsCommand({
+					Entries: [
+						{
+							EventBusName: this.configuration.eventBusName,
+							Detail: CustomJson.toJson({
+								...message,
+								...tracerContext,
+								traceId: span.spanContext().traceId,
+								spanId: span.spanContext().spanId,
+							}),
+							DetailType: messageType,
+							Resources: options?.resources,
+							Source: options?.source || 'default',
+						},
+					],
+				}),
+			);
 
-		this.logger.info('Event Sent', {
-			type: messageType,
-			response,
-			options,
+			this.logger.info('Event Sent', {
+				type: messageType,
+				response,
+				options,
+			});
+
+			return response.Entries?.[0].EventId;
 		});
-
-		return response.Entries?.[0].EventId;
 	}
 }
