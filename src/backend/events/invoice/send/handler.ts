@@ -186,6 +186,8 @@ export const handler: EventHandler = makeEventHandler(
 			],
 		});
 
+		console.log(msg);
+
 		const emailStatus = await emailRepository.createWithId(msg.messageId);
 		emailStatus.update({
 			entityType: 'invoice',
