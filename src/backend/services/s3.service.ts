@@ -6,6 +6,8 @@ import {
 	PutObjectCommandInput,
 } from '@aws-sdk/client-s3';
 
+import { Span } from '../instrumentation';
+
 import { ConfigService } from './config.service';
 
 import { Inject, Service } from '@/common/di';
@@ -60,6 +62,7 @@ export class S3Service {
 		return url;
 	}
 
+	@Span('S3Service.getObject')
 	public async getObject(location: {
 		region?: string;
 		bucket?: string;
@@ -74,6 +77,7 @@ export class S3Service {
 		return response.Body;
 	}
 
+	@Span('S3Service.putObject')
 	public async putObject(location: {
 		region?: string;
 		bucket?: string;

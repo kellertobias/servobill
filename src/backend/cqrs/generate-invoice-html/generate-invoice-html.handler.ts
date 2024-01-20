@@ -6,6 +6,7 @@ import { GenerateInvoiceHtmlCommand } from './generate-invoice-html.command';
 import { CqrsHandler, ICqrsHandler } from '@/backend/services/cqrs.service';
 import { centsToPrice } from '@/common/money';
 import { InvoiceType } from '@/backend/entities/invoice.entity';
+import { Span } from '@/backend/instrumentation';
 
 const makeTemplate = (template: string, styles: string) => {
 	return `
@@ -43,6 +44,7 @@ export class GenerateInvoiceHtmlHandler
 {
 	constructor() {}
 
+	@Span('GenerateInvoiceHtmlHandler.execute')
 	private buildData(command: GenerateInvoiceHtmlCommand['request']) {
 		return {
 			name:
@@ -167,6 +169,7 @@ export class GenerateInvoiceHtmlHandler
 		});
 	}
 
+	@Span('GenerateInvoiceHtmlHandler.execute')
 	async execute(command: GenerateInvoiceHtmlCommand['request']) {
 		const template = command.noWrap
 			? command.template

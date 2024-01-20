@@ -5,6 +5,7 @@ import { injectable } from 'inversify';
 
 import { DomainEntity as DomainBaseEntity } from '../entities/abstract.entity';
 import { EventBusService } from '../services/eventbus.service';
+import { Span } from '../instrumentation';
 
 import { Logger } from '@/backend/services/logger.service';
 import { DefaultContainer } from '@/common/di';
@@ -83,6 +84,7 @@ export abstract class AbstractRepository<
 		return this.ormToDomainEntitySafe(entity);
 	}
 
+	@Span('Repository.getById')
 	public async getById(id: string): Promise<DomainEntity | null> {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const store = this.store as Entity<string, string, string, any>;
@@ -109,6 +111,7 @@ export abstract class AbstractRepository<
 		});
 	}
 
+	@Span('Repository.create')
 	public async create(...args: CreateArgs): Promise<DomainEntity> {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const store = this.store as Entity<string, string, string, any>;
@@ -121,6 +124,7 @@ export abstract class AbstractRepository<
 		return this.ormToDomainEntity({ data });
 	}
 
+	@Span('Repository.save')
 	public async save(entity: DomainEntity): Promise<void> {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const store = this.store as Entity<string, string, string, any>;
@@ -140,6 +144,7 @@ export abstract class AbstractRepository<
 		await this.purgeOutbox(entity);
 	}
 
+	@Span('Repository.delete')
 	public async delete(id: string): Promise<void> {
 		const entity = await this.getById(id);
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any

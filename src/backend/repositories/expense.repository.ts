@@ -1,5 +1,7 @@
 import { DBService } from '../services/dynamodb.service';
 import { ExpenseEntity } from '../entities/expense.entity';
+import { Logger } from '../services/logger.service';
+import { Span } from '../instrumentation';
 
 import { AbstractRepository } from './abstract-repository';
 
@@ -84,6 +86,7 @@ export class ExpenseRepository extends AbstractRepository<
 	[],
 	typeof entitySchema.schema
 > {
+	protected logger = new Logger(ExpenseRepository.name);
 	protected mainIdName: string = 'expenseId';
 
 	protected storeId: string = 'expense';
@@ -125,6 +128,7 @@ export class ExpenseRepository extends AbstractRepository<
 		};
 	}
 
+	@Span('ExpenseRepository.listByQuery')
 	public async listByQuery(query: {
 		where?: { search?: string; year?: number };
 		skip?: number;

@@ -1,5 +1,6 @@
 import { DBService } from '../services/dynamodb.service';
 import { AbstractSettingsEntity } from '../entities/settings.entity';
+import { Span } from '../instrumentation';
 
 import { CustomJson } from '@/common/json';
 import { ObjectProperties } from '@/common/ts-helpers';
@@ -62,6 +63,7 @@ export class SettingsRepository {
 		return CustomJson.fromJson(data?.data || '{}') as T;
 	}
 
+	@Span('SettingsRepository.save')
 	private async save(settingId: string, data: string): Promise<void> {
 		await this.store
 			.upsert({
@@ -72,6 +74,7 @@ export class SettingsRepository {
 			.go();
 	}
 
+	@Span('SettingsRepository.getSetting')
 	public async getSetting<T extends typeof AbstractSettingsEntity>(
 		SettingsClass: T,
 	): Promise<InstanceType<T>> {

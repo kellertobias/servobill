@@ -11,6 +11,8 @@ import {
 } from '../entities/invoice-activity.entity';
 import { InvoiceSubmissionEntity } from '../entities/invoice-submission.entity';
 import { CustomerEntity } from '../entities/customer.entity';
+import { Logger } from '../services/logger.service';
+import { Span } from '../instrumentation';
 
 import { AbstractRepository } from './abstract-repository';
 
@@ -144,6 +146,7 @@ export class InvoiceRepository extends AbstractRepository<
 	[InvoiceType, CustomerEntity, string],
 	typeof entitySchema.schema
 > {
+	protected logger = new Logger(InvoiceRepository.name);
 	protected mainIdName: string = 'invoiceId';
 
 	protected storeId: string = 'invoice';
@@ -236,6 +239,7 @@ export class InvoiceRepository extends AbstractRepository<
 		};
 	}
 
+	@Span('InvoiceRepository.listByQuery')
 	public async listByQuery(query: {
 		where?: { type?: InvoiceType; status?: InvoiceStatus; year?: number };
 		skip?: number;

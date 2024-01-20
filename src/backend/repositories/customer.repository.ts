@@ -7,6 +7,8 @@ import {
 
 import { DBService } from '../services/dynamodb.service';
 import { CustomerEntity } from '../entities/customer.entity';
+import { Logger } from '../services/logger.service';
+import { Span } from '../instrumentation';
 
 import { AbstractRepository } from './abstract-repository';
 
@@ -117,6 +119,7 @@ export class CustomerRepository extends AbstractRepository<
 	[],
 	typeof entitySchema.schema
 > {
+	protected logger = new Logger(CustomerRepository.name);
 	protected mainIdName: string = 'customerId';
 
 	protected storeId: string = 'customer';
@@ -181,6 +184,7 @@ export class CustomerRepository extends AbstractRepository<
 		});
 	}
 
+	@Span('CustomerRepository.listByQuery')
 	public async listByQuery(query: {
 		where?: { search?: string };
 		skip?: number;

@@ -1,5 +1,7 @@
 import 'reflect-metadata';
 
+import { Span } from '../instrumentation';
+
 import { Logger } from './logger.service';
 
 import { DefaultContainer, Service } from '@/common/di';
@@ -104,6 +106,7 @@ export class CqrsBus {
 		}
 	}
 
+	@Span('CqrsBus.execute')
 	public async execute<C extends ICqrsCommand>(
 		command: C,
 	): Promise<C['response']> {

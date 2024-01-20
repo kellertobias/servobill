@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto';
 import { Entity, Schema } from 'electrodb';
 
 import { DBService } from '../services/dynamodb.service';
+import { Span } from '../instrumentation';
 
 import { Inject, Service } from '@/common/di';
 
@@ -153,6 +154,7 @@ export class SessionRepository {
 		};
 	}
 
+	@Span('SessionRepository.findUserForSession')
 	public async findUserForSession(user: {
 		userId?: string;
 		name?: string;
@@ -168,6 +170,7 @@ export class SessionRepository {
 		return undefined;
 	}
 
+	@Span('SessionRepository.getSession')
 	public async getSession(sessionId: string): Promise<SessionEntity | null> {
 		const data = this.ormToDomainEntity(
 			await this.store
@@ -180,6 +183,7 @@ export class SessionRepository {
 		return data;
 	}
 
+	@Span('SessionRepository.createSession')
 	public async createSession(
 		session: Omit<SessionEntity, 'sessionId' | 'createdAt' | 'updatedAt'> &
 			Partial<SessionEntity>,
@@ -195,6 +199,7 @@ export class SessionRepository {
 		return this.ormToDomainEntity({ data });
 	}
 
+	@Span('SessionRepository.updateSession')
 	public async updateSession(
 		sessionId: SessionEntity['sessionId'],
 		session: Partial<Omit<SessionEntity, 'sessionId'>>,
@@ -227,6 +232,7 @@ export class SessionRepository {
 			.go();
 	}
 
+	@Span('SessionRepository.deleteSession')
 	public async deleteSession(
 		sessionId: SessionEntity['sessionId'],
 	): Promise<void> {

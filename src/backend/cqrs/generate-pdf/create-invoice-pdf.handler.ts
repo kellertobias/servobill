@@ -1,4 +1,5 @@
-import puppeteer, { PDFOptions } from 'puppeteer-core';
+import puppeteer from 'puppeteer-core';
+import type { PDFOptions } from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
 import dayjs from 'dayjs';
 
@@ -9,6 +10,7 @@ import { CqrsHandler, ICqrsHandler } from '@/backend/services/cqrs.service';
 import { Logger } from '@/backend/services/logger.service';
 import { ConfigService } from '@/backend/services/config.service';
 import { S3Service } from '@/backend/services/s3.service';
+import { Span } from '@/backend/instrumentation';
 
 // const executablePath = process.env.IS_OFFLINE
 // 	? // eslint-disable-next-line unicorn/no-useless-undefined
@@ -25,6 +27,7 @@ export class CreateInvoicePdfHandler
 		@Inject(ConfigService) private readonly config: ConfigService,
 	) {}
 
+	@Span('CreateInvoicePdfHandler.generatePdf')
 	private async generatePdf(html: string, options: PDFOptions) {
 		let browser = null;
 		try {

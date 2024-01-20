@@ -1,6 +1,8 @@
 import * as ses from '@aws-sdk/client-ses';
 import nodemailer from 'nodemailer';
 
+import { Span } from '../instrumentation';
+
 import { ConfigService } from './config.service';
 
 import { Inject, Service } from '@/common/di';
@@ -31,6 +33,7 @@ export class SESService {
 		this.client = new ses.SESClient(sesOptions);
 	}
 
+	@Span('SESService.sendEmail')
 	public sendEmail({
 		from,
 		replyTo,

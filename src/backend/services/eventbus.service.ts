@@ -4,6 +4,8 @@ import {
 } from '@aws-sdk/client-eventbridge';
 import { trace, context, propagation } from '@opentelemetry/api';
 
+import { Span } from '../instrumentation';
+
 import { ConfigService } from './config.service';
 import { Logger } from './logger.service';
 
@@ -37,6 +39,7 @@ export class EventBusService {
 		this.client = new EventBridgeClient(eventBridgeOptions);
 	}
 
+	@Span('EventBusService.send')
 	public async send<T>(
 		messageType: string,
 		message: T,

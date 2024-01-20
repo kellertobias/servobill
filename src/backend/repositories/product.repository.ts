@@ -7,6 +7,7 @@ import {
 
 import { DBService } from '../services/dynamodb.service';
 import { ProductEntity } from '../entities/product.entity';
+import { Logger } from '../services/logger.service';
 
 import { AbstractRepository } from './abstract-repository';
 
@@ -106,6 +107,7 @@ export class ProductRepository extends AbstractRepository<
 	[],
 	typeof entitySchema.schema
 > {
+	protected logger = new Logger(ProductRepository.name);
 	protected mainIdName: string = 'productId';
 
 	protected storeId: string = 'product';
