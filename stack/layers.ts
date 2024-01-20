@@ -32,13 +32,13 @@ export const getLayers = ({
 					`arn:aws:lambda:${stack.region}:184161586896:layer:opentelemetry-collector-amd64-0_3_1:1`,
 				)
 			: undefined,
-		openTelemetry
-			? lambda.LayerVersion.fromLayerVersionArn(
-					stack,
-					'LayerOtelInstrumentation',
-					`arn:aws:lambda:${stack.region}:184161586896:layer:opentelemetry-nodejs-0_3_0:1`,
-				)
-			: undefined,
+		// openTelemetry
+		// 	? lambda.LayerVersion.fromLayerVersionArn(
+		// 			stack,
+		// 			'LayerOtelInstrumentation',
+		// 			`arn:aws:lambda:${stack.region}:184161586896:layer:opentelemetry-nodejs-0_3_0:1`,
+		// 		)
+		// 	: undefined,
 		process.env.LOGS_ENDPOINT
 			? lambda.LayerVersion.fromLayerVersionArn(
 					stack,

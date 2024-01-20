@@ -78,12 +78,20 @@ service:
 export const makeOtelConfig = () => {
 	const config = otelConfig();
 	if (!config) {
-		return null;
+		return [];
 	}
 	// Write file as YAML to collector.yaml
 	fs.writeFileSync('collector.yaml', config.replaceAll('\t', '  '));
-	return { from: './collector.yaml' };
+	return [{ from: './collector.yaml' }, { from: './tracing.cjs' }];
 };
+
+export const installOtelPackages = [
+	'@opentelemetry/sdk-node',
+	'@opentelemetry/exporter-trace-otlp-grpc',
+	'@opentelemetry/resources',
+	'@opentelemetry/semantic-conventions',
+	'@opentelemetry/tracing',
+];
 
 export const otelBaseConfig = {
 	OTEL_LOG_LEVEL: process.env.OTEL_ENDPOINT ? 'WARN' : undefined,
