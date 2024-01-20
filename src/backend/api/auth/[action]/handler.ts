@@ -13,7 +13,7 @@ export const method = 'ANY';
 export const handlerName = 'handler';
 export const handler: APIHandler = withInstrumentation(
 	{
-		name: 'auth',
+		name: 'api.auth',
 	},
 	async (evt, ctx, cb) => {
 		const action = evt.pathParameters?.['action'];

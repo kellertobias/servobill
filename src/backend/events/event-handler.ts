@@ -17,7 +17,7 @@ export const makeEventHandler = <T extends object>(
 ): EventHandlerFunction => {
 	return withInstrumentation(
 		{
-			name: `event-${EventValidatorClass.name.toLowerCase()}`,
+			name: `event.${EventValidatorClass.name.toLowerCase()}`,
 		},
 
 		async (event: EventBridgeEvent<string, unknown>, context: Context) => {

@@ -15,6 +15,51 @@ import {
 
 const tracer = trace.getTracer('lambda');
 
+export function withSpan<A extends unknown[], R>(
+	spanAttributes: { name: string },
+	handler: (...args: A) => R,
+): (...args: A) => R {
+	return (...args: A) => {
+		return tracer.startActiveSpan(spanAttributes.name, (span) => {
+			span.setAttributes(spanAttributes);
+			let answer: undefined | R;
+			try {
+				answer = handler(...args);
+				if (answer instanceof Promise) {
+					answer
+						.then((value) => {
+							span.end();
+							return value;
+						})
+						.catch((error) => {
+							span.setStatus({ code: SpanStatusCode.ERROR });
+							if (error instanceof Error) {
+								span.recordException(error);
+							} else {
+								span.recordException(new Error(String(error)));
+							}
+							span.end();
+							throw error;
+						});
+				}
+			} catch (error) {
+				span.setStatus({ code: SpanStatusCode.ERROR });
+				if (error instanceof Error) {
+					span.recordException(error);
+				} else {
+					span.recordException(new Error(String(error)));
+				}
+				throw error;
+			} finally {
+				if (answer && !(answer instanceof Promise)) {
+					span.end();
+				}
+			}
+			return answer;
+		});
+	};
+}
+
 // Class Method Decorator
 export function Span(
 	spanName: string,

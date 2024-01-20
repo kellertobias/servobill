@@ -34,6 +34,7 @@ import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
 import { SettingsRepository } from '@/backend/repositories/settings.repository';
 import { InvoiceSettingsEntity } from '@/backend/entities/settings.entity';
 import { CustomerEntity } from '@/backend/entities/customer.entity';
+import { Span } from '@/backend/instrumentation';
 
 @Service()
 @Resolver(() => Invoice)
@@ -44,6 +45,7 @@ export class InvoiceResolver {
 		@Inject(SettingsRepository) private settingsRepository: SettingsRepository,
 	) {}
 
+	@Span('InvoiceResolver.invoices')
 	@Authorized()
 	@Query(() => [Invoice])
 	async invoices(
@@ -81,12 +83,14 @@ export class InvoiceResolver {
 			});
 	}
 
+	@Span('InvoiceResolver.invoice')
 	@Authorized()
 	@Query(() => Invoice)
 	async invoice(@Arg('id') id: string): Promise<Invoice | null> {
 		return this.invoiceRepository.getById(id);
 	}
 
+	@Span('InvoiceResolver.createInvoice')
 	@Authorized()
 	@Mutation(() => Invoice)
 	async createInvoice(
@@ -119,6 +123,7 @@ export class InvoiceResolver {
 		return invoice;
 	}
 
+	@Span('InvoiceResolver.updateInvoice')
 	@Authorized()
 	@Mutation(() => Invoice)
 	async updateInvoice(
@@ -164,6 +169,7 @@ export class InvoiceResolver {
 		return invoice;
 	}
 
+	@Span('InvoiceResolver.deleteInvoice')
 	@Authorized()
 	@Mutation(() => Invoice)
 	async deleteInvoice(@Arg('id') id: string): Promise<Invoice> {
@@ -178,6 +184,7 @@ export class InvoiceResolver {
 		return invoice;
 	}
 
+	@Span('InvoiceResolver.purgeInvoices')
 	@Authorized()
 	@Mutation(() => Boolean)
 	async purgeInvoices(@Arg('confirm') confirm: string): Promise<boolean> {
@@ -194,6 +201,7 @@ export class InvoiceResolver {
 		return true;
 	}
 
+	@Span('InvoiceResolver.importInvoices')
 	@Authorized()
 	@Mutation(() => [Invoice])
 	async importInvoices(
@@ -276,6 +284,7 @@ export class InvoiceResolver {
 		return invoices;
 	}
 
+	@Span('InvoiceResolver.invoiceAddComment')
 	@Authorized()
 	@Mutation(() => InvoiceChangedResponse)
 	async invoiceAddComment(

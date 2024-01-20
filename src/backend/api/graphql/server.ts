@@ -3,14 +3,14 @@ import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-co
 import { ValidationError } from 'class-validator';
 import chalk from 'chalk';
 import { APIGatewayProxyStructuredResultV2 } from 'aws-lambda';
+import { trace } from '@opentelemetry/api';
 
 import { globalSchema } from '.';
 
 import { Logger } from '@/backend/services/logger.service';
 
-// import { Logger } from '@/backend/services/logger.service';
+const tracer = trace.getTracer('graphql');
 
-// const logger = new Logger('GraphQL');
 const logger = new Logger('GraphQLServer');
 
 export async function getGraphQLServer<E, C, Ctx>(
@@ -26,62 +26,73 @@ export async function getGraphQLServer<E, C, Ctx>(
 	const server = new ApolloServer({
 		schema,
 		formatError: (error) => {
-			logger.warn('Error');
-			const { code, exception } = (error?.extensions || {
-				code: 'UNKNOWN',
-				exception: {},
-			}) as {
-				code: string;
-				exception: {
-					validationErrors: ValidationError[];
-					stacktrace: string[];
+			return tracer.startActiveSpan('formatError', (span) => {
+				logger.warn('Error');
+				const { code, exception } = (error?.extensions || {
+					code: 'UNKNOWN',
+					exception: {},
+				}) as {
+					code: string;
+					exception: {
+						validationErrors: ValidationError[];
+						stacktrace: string[];
+					};
 				};
-			};
 
-			logger.warn('GraphQL Error', {
-				error,
-				code,
-				nodeEnv: process.env.NODE_ENV,
-			});
+				span.setAttribute('code', code);
 
-			if (
-				error.extensions.exception.stacktrace[0].includes(
-					'Session Expired - Refreshable',
-				)
-			) {
-				error.extensions.code = 'SESSION_EXPIRED_REFRESHABLE';
-				return error;
-			} else if (exception.validationErrors) {
-				const message = `Input Data Validation Failed\n${exception.validationErrors
-					.map(
-						(e) =>
-							`- ${e.target?.constructor?.name} ${e.constraints?.[
-								Object.keys(e.constraints)[0]
-							]} (${`${e.value?.toString?.()}`.slice(0, 10)}...) }`,
+				logger.warn('GraphQL Error', {
+					error,
+					code,
+					nodeEnv: process.env.NODE_ENV,
+				});
+
+				if (
+					error.extensions.exception.stacktrace[0].includes(
+						'Session Expired - Refreshable',
 					)
-					.join('\n')}
+				) {
+					span.setAttribute('type', 'SESSION_EXPIRED_REFRESHABLE');
+					error.extensions.code = 'SESSION_EXPIRED_REFRESHABLE';
+					span.end();
+					return error;
+				} else if (exception.validationErrors) {
+					const message = `Input Data Validation Failed\n${exception.validationErrors
+						.map(
+							(e) =>
+								`- ${e.target?.constructor?.name} ${e.constraints?.[
+									Object.keys(e.constraints)[0]
+								]} (${`${e.value?.toString?.()}`.slice(0, 10)}...) }`,
+						)
+						.join('\n')}
 				`;
 
-				if (process.env.NODE_ENV !== 'production') {
-					// eslint-disable-next-line no-console
-					console.log(chalk.yellow(message));
-				}
+					if (process.env.NODE_ENV !== 'production') {
+						// eslint-disable-next-line no-console
+						console.log(chalk.yellow(message));
+					}
 
-				return {
-					message,
-					locations: error.locations,
-					path: error.path,
-				};
-			} else if (code === 'INTERNAL_SERVER_ERROR') {
-				if (process.env.NODE_ENV !== 'production') {
-					// eslint-disable-next-line no-console
-					console.log(
-						chalk.red(error.extensions.exception.stacktrace.join('\n')),
-					);
+					span.setAttribute('type', 'VALIDATION_ERROR');
+					span.end();
+					return {
+						message,
+						locations: error.locations,
+						path: error.path,
+					};
+				} else if (code === 'INTERNAL_SERVER_ERROR') {
+					if (process.env.NODE_ENV !== 'production') {
+						// eslint-disable-next-line no-console
+						console.log(
+							chalk.red(error.extensions.exception.stacktrace.join('\n')),
+						);
+					}
+					span.setAttribute('type', 'INTERNAL_SERVER_ERROR');
+					span.end();
+					throw new Error('Internal server error');
 				}
-				throw new Error('Internal server error');
-			}
-			return error;
+				span.end();
+				return error;
+			});
 		},
 
 		// By default, the GraphQL Playground interface and GraphQL introspection

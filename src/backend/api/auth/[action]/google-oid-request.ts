@@ -7,34 +7,41 @@ import { OAUTH_CLIENT_ID, OAUTH_ENDPOINT } from '../config';
 import { getSiteUrl } from '../../helpers';
 import { APIHandler } from '../../types';
 
-export const googleOidRequestHandler: APIHandler = async (evt, ctx) => {
-	const { url } = getSiteUrl(evt);
-	const nonce = ctx.awsRequestId;
+import { withSpan } from '@/backend/instrumentation';
 
-	const oauthRequest = {
-		client_id: OAUTH_CLIENT_ID,
-		redirect_uri: `${url}/api/auth/callback`,
-		response_type: 'id_token',
-		response_mode: 'form_post',
-		scope: 'openid email profile',
-		state: 'no-state',
-		nonce,
-	};
+export const googleOidRequestHandler: APIHandler = withSpan(
+	{
+		name: 'api.auth.google-oid-request',
+	},
+	async (evt, ctx) => {
+		const { url } = getSiteUrl(evt);
+		const nonce = ctx.awsRequestId;
 
-	// Redirect user
-	return {
-		statusCode: 301,
-		body: 'Forwarding to OAuth provider...',
-		headers: {
-			Location: `${OAUTH_ENDPOINT}?${querystring.stringify(oauthRequest)}`,
-		},
-		cookies: [
-			cookies.serialize('auth-nonce', ctx.awsRequestId, {
-				httpOnly: true,
-				maxAge: 6000,
-				sameSite: 'lax',
-				secure: url.includes('localhost') ? false : true,
-			}),
-		],
-	};
-};
+		const oauthRequest = {
+			client_id: OAUTH_CLIENT_ID,
+			redirect_uri: `${url}/api/auth/callback`,
+			response_type: 'id_token',
+			response_mode: 'form_post',
+			scope: 'openid email profile',
+			state: 'no-state',
+			nonce,
+		};
+
+		// Redirect user
+		return {
+			statusCode: 301,
+			body: 'Forwarding to OAuth provider...',
+			headers: {
+				Location: `${OAUTH_ENDPOINT}?${querystring.stringify(oauthRequest)}`,
+			},
+			cookies: [
+				cookies.serialize('auth-nonce', ctx.awsRequestId, {
+					httpOnly: true,
+					maxAge: 6000,
+					sameSite: 'lax',
+					secure: url.includes('localhost') ? false : true,
+				}),
+			],
+		};
+	},
+);

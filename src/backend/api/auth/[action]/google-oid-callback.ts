@@ -9,6 +9,7 @@ import { SessionRepository } from '@/backend/repositories/session.repository';
 import { DefaultContainer } from '@/common/di';
 import { Logger } from '@/backend/services/logger.service';
 import { S3Service } from '@/backend/services/s3.service';
+import { withSpan } from '@/backend/instrumentation';
 
 const logger = new Logger('GoogleAuth');
 
@@ -43,51 +44,56 @@ const getUserPicture = async (user: TokenPayload) => {
 	return url;
 };
 
-export const googleOidCallbackHandler: APIHandler = async (evt) => {
-	const auth = DefaultContainer.get(AuthenticationService);
+export const googleOidCallbackHandler: APIHandler = withSpan(
+	{
+		name: 'api.auth.google-oid-callback',
+	},
+	async (evt) => {
+		const auth = DefaultContainer.get(AuthenticationService);
 
-	const body = getBody(evt);
-	const { siteUrl } = getSiteUrl(evt);
-	const rawToken = body?.id_token;
-	if (!rawToken) {
-		return auth.generateResponse({
-			statusCode: 400,
-			forwardUrl: `${siteUrl}/login?error=Invalid%20User`,
-		});
-	}
-	let token: TokenPayload | undefined;
-	try {
-		token = await verify(body?.id_token as string);
-		if (!token) {
-			throw new Error('Invalid Token');
+		const body = getBody(evt);
+		const { siteUrl } = getSiteUrl(evt);
+		const rawToken = body?.id_token;
+		if (!rawToken) {
+			return auth.generateResponse({
+				statusCode: 400,
+				forwardUrl: `${siteUrl}/login?error=Invalid%20User`,
+			});
 		}
-	} catch (error) {
-		logger.warn('googleOidCallbackHandler', { error });
-		return auth.generateResponse({
-			statusCode: 400,
-			forwardUrl: `${siteUrl}/login?error=Invalid%20User`,
+		let token: TokenPayload | undefined;
+		try {
+			token = await verify(body?.id_token as string);
+			if (!token) {
+				throw new Error('Invalid Token');
+			}
+		} catch (error) {
+			logger.warn('googleOidCallbackHandler', { error });
+			return auth.generateResponse({
+				statusCode: 400,
+				forwardUrl: `${siteUrl}/login?error=Invalid%20User`,
+			});
+		}
+		const sessionUserRepo = DefaultContainer.get(SessionRepository);
+
+		const profilePicture = await getUserPicture(token);
+
+		const user = await sessionUserRepo.findUserForSession({
+			userId: token?.sub,
+			name: token?.name,
+			email: token?.email,
+			profilePictureUrl: profilePicture || undefined,
 		});
-	}
-	const sessionUserRepo = DefaultContainer.get(SessionRepository);
 
-	const profilePicture = await getUserPicture(token);
+		if (!user) {
+			return auth.generateResponse({
+				statusCode: 401,
+				forwardUrl: `${siteUrl}/login?error=Invalid%20User`,
+			});
+		}
 
-	const user = await sessionUserRepo.findUserForSession({
-		userId: token?.sub,
-		name: token?.name,
-		email: token?.email,
-		profilePictureUrl: profilePicture || undefined,
-	});
-
-	if (!user) {
-		return auth.generateResponse({
-			statusCode: 401,
-			forwardUrl: `${siteUrl}/login?error=Invalid%20User`,
+		return auth.startSession(evt, {
+			user,
+			forwardUrl: `${siteUrl}/login?success=true`,
 		});
-	}
-
-	return auth.startSession(evt, {
-		user,
-		forwardUrl: `${siteUrl}/login?success=true`,
-	});
-};
+	},
+);

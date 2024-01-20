@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 
-import {
+import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyStructuredResultV2,
 } from 'aws-lambda';
@@ -13,6 +13,7 @@ import {
 } from '@/backend/repositories/session.repository';
 import { Inject, Service } from '@/common/di';
 import { Logger } from '@/backend/services/logger.service';
+import { Span } from '@/backend/instrumentation';
 
 const logger = new Logger('Session');
 
@@ -39,6 +40,7 @@ export class AuthenticationService {
 		@Inject(SessionRepository) private sessionRepository: SessionRepository,
 	) {}
 
+	@Span('AuthenticationService.generateResponse')
 	public generateResponse(props: {
 		statusCode: number;
 		body?: Record<string, unknown>;
@@ -69,6 +71,7 @@ export class AuthenticationService {
 		};
 	}
 
+	@Span('AuthenticationService.startSession')
 	public async startSession(
 		event: APIGatewayProxyEventV2,
 		options: {
@@ -104,6 +107,7 @@ export class AuthenticationService {
 		});
 	}
 
+	@Span('AuthenticationService.endSession')
 	public async endSession(
 		event: APIGatewayProxyEventV2,
 		options?: {
@@ -141,6 +145,7 @@ export class AuthenticationService {
 		}
 	}
 
+	@Span('AuthenticationService.renewSession')
 	public async renewSession(
 		event: APIGatewayProxyEventV2,
 		options?: {

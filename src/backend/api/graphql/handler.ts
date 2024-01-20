@@ -43,7 +43,7 @@ export const method = 'ANY';
 export const handlerName = 'handler';
 export const handler = withInstrumentation(
 	{
-		name: 'graphql',
+		name: 'api.graphql',
 	},
 	withSession(async (evt, ctx) => {
 		const gqlHandler = await getGraphQLServer(contextBuilder);
