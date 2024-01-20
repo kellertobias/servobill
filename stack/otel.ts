@@ -97,7 +97,7 @@ export const otelBaseConfig = {
 	AWS_LAMBDA_EXEC_WRAPPER: process.env.OTEL_ENDPOINT
 		? '/opt/otel-handler'
 		: undefined,
-
+	OTEL_NODE_RESOURCE_DETECTORS: 'aws',
 	JSON_LOGS_ENDPOINT: process.env.LOGS_ENDPOINT,
 	JSON_LOGS_HEADERS: process.env.LOGS_HEADERS,
 };

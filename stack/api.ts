@@ -45,6 +45,9 @@ export function StackApi(
 					...(endpoint.layers || []).map((layerPath) => layerCache[layerPath]),
 				],
 				logGroup: makeLogGroup(stack, [endpoint.method, endpoint.path]),
+				environment: {
+					OTEL_SERVICE_NAME: `${stack.stackName}-${endpoint.method}-${endpoint.path}`,
+				},
 			},
 		};
 	}

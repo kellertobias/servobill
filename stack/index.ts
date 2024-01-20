@@ -106,6 +106,9 @@ export function Stack({ stack, ...rest }: StackContext) {
 								'eventhandler',
 								endpoint.eventType,
 							]),
+							environment: {
+								OTEL_SERVICE_NAME: `${stack.stackName}-EVENT-${endpoint.eventType}`,
+							},
 						},
 					},
 				},

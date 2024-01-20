@@ -42,12 +42,12 @@ export const withInstrumentation = <E, R>(
 ): Handler<E, R | void> => {
 	return async (evt: E, ctx: Context, cb: Callback) => {
 		return tracer.startActiveSpan(tracerConfig.name, async (span) => {
-			span.setAttribute('lambda.name', ctx.functionName);
-			span.setAttribute('lambda.version', ctx.functionVersion);
-			span.setAttribute('lambda.memory', ctx.memoryLimitInMB);
-			span.setAttribute('lambda.requestId', ctx.awsRequestId);
-			span.setAttribute('lambda.remainintTime', ctx.getRemainingTimeInMillis());
-
+			span.setAttribute('faas.memory', ctx.memoryLimitInMB);
+			span.setAttribute('faas.requestId', ctx.awsRequestId);
+			span.setAttribute('faas.remainingTime', ctx.getRemainingTimeInMillis());
+			span.setAttribute('process.runtime.version', process.version);
+			span.setAttribute('process.runtime.arch', process.arch);
+			span.setAttribute('process.runtime.name', process.release.name);
 			// If the handler is a API Gateway handler, we get the URL and Method:
 			const apiGatewayEvent = evt as unknown as APIGatewayProxyEventV2;
 			const eventHandlerEvent = evt as unknown as EventBridgeEvent<
@@ -55,13 +55,17 @@ export const withInstrumentation = <E, R>(
 				unknown
 			>;
 			if (apiGatewayEvent.requestContext) {
-				span.setAttribute('lambda.handlerType', 'APIGateway');
+				span.setAttribute('faas.handlerType', 'APIGateway');
 				span.setAttribute(
 					'http.method',
 					apiGatewayEvent?.requestContext?.http?.method,
 				);
 				span.setAttribute(
-					'http.path',
+					'http.host',
+					apiGatewayEvent?.requestContext?.domainName,
+				);
+				span.setAttribute(
+					'http.target',
 					apiGatewayEvent?.requestContext?.http?.path,
 				);
 				span.setAttribute(
@@ -83,7 +87,7 @@ export const withInstrumentation = <E, R>(
 					apiGatewayEvent?.requestContext?.accountId,
 				);
 			} else if (eventHandlerEvent['detail-type']) {
-				span.setAttribute('lambda.handlerType', 'EventBridge');
+				span.setAttribute('faas.handlerType', 'EventBridge');
 				span.setAttribute('event.type', eventHandlerEvent['detail-type']);
 				span.setAttribute('event.id', eventHandlerEvent.id);
 				span.setAttribute('event.source', eventHandlerEvent.source);
