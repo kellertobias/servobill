@@ -43,7 +43,7 @@ export const getLayers = ({
 			? lambda.LayerVersion.fromLayerVersionArn(
 					stack,
 					'LayerLogsCollector',
-					`arn:aws:lambda:eu-central-1:052128734523:layer:LogsCollectorLambdaLayerE1B12DD5:30`,
+					`arn:aws:lambda:eu-central-1:052128734523:layer:LogsCollectorLambdaLayerE1B12DD5:31`,
 				)
 			: undefined,
 	].filter((x) => !!x) as lambda.ILayerVersion[];
