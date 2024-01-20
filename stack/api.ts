@@ -1,5 +1,3 @@
-import fs from 'fs';
-
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import {
 	Api,
@@ -12,6 +10,7 @@ import {
 
 import { makeLogGroup } from './log-group';
 import { ApiEndpoint } from './build-index/api';
+import { prepareHandlerExport } from './functions';
 
 export function StackApi(
 	{ stack }: StackContext,
@@ -30,6 +29,8 @@ export function StackApi(
 	// src/api/graphql/get.ts => GET /api/graphql
 	const endpoints: Record<string, ApiFunctionRouteProps> = {};
 	for (const endpoint of apiEndpoints) {
+		prepareHandlerExport(endpoint);
+
 		endpoints[
 			`${endpoint.method} ${endpoint.path
 				.split('[')
@@ -46,16 +47,6 @@ export function StackApi(
 				logGroup: makeLogGroup(stack, [endpoint.method, endpoint.path]),
 			},
 		};
-
-		fs.writeFileSync(
-			endpoint.file,
-			`${fs.readFileSync(endpoint.file)}
-// Automatically Added. Do not commit this change.
-// This export is required because of a bug in OpenTelemetry
-// eslint-disable-next-line unicorn/prefer-module
-module.exports = { ${endpoint.handler} };
-		`,
-		);
 	}
 
 	const { function: functionDefiniton, ...rootProps } = props || {};

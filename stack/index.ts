@@ -19,6 +19,7 @@ import { prepareNextBuild, restoreAfterNextBuild } from './build-prep';
 import { getDataResources } from './data';
 import { getCleanEnvironment } from './helpers';
 import { getLayers } from './layers';
+import { prepareHandlerExport } from './functions';
 
 export function Stack({ stack, ...rest }: StackContext) {
 	const openTelemetry = makeOtelConfig();
@@ -80,6 +81,8 @@ export function Stack({ stack, ...rest }: StackContext) {
 	});
 
 	for (const endpoint of eventHandlerEndpoints) {
+		prepareHandlerExport(endpoint);
+
 		bus.addRules(stack, {
 			[`rule${endpoint.eventType
 				.split('.')
