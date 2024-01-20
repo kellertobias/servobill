@@ -56,7 +56,7 @@ export function Stack({ stack, ...rest }: StackContext) {
 
 		SERVICE_NAMESPACE: 'servobill',
 		// NODE_OPTIONS: '--enable-source-maps',
-		NODE_OPTIONS: '--enable-source-maps --require ./traces.cjs',
+		NODE_OPTIONS: '--enable-source-maps --require ./tracing.cjs',
 	});
 
 	const bus = new EventBus(stack, 'bus', {
