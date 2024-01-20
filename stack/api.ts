@@ -1,3 +1,5 @@
+import fs from 'fs';
+
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import {
 	Api,
@@ -44,6 +46,16 @@ export function StackApi(
 				logGroup: makeLogGroup(stack, [endpoint.method, endpoint.path]),
 			},
 		};
+
+		fs.writeFileSync(
+			endpoint.file,
+			`${fs.readFileSync(endpoint.file)}
+// Automatically Added. Do not commit this change.
+// This export is required because of a bug in OpenTelemetry
+// eslint-disable-next-line unicorn/prefer-module
+module.exports = { ${endpoint.handler} };
+		`,
+		);
 	}
 
 	const { function: functionDefiniton, ...rootProps } = props || {};

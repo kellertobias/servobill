@@ -56,6 +56,3 @@ export const handler = withInstrumentation(
 		return answer;
 	}),
 );
-
-// eslint-disable-next-line unicorn/prefer-module
-module.exports = { handler };

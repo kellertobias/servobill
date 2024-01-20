@@ -38,8 +38,8 @@ export const withInstrumentation = <E, R>(
 		name: string;
 		onThrow?: (error: Error) => Awaited<R> | null;
 	},
-	handler: Handler<E, R>,
-) => {
+	handler: Handler<E, R | void>,
+): Handler<E, R | void> => {
 	return async (evt: E, ctx: Context, cb: Callback) => {
 		return tracer.startActiveSpan(tracerConfig.name, async (span) => {
 			span.setAttribute('lambda.name', ctx.functionName);

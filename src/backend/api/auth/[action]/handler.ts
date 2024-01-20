@@ -15,20 +15,20 @@ export const handler: APIHandler = withInstrumentation(
 	{
 		name: 'auth',
 	},
-	async (evt, ctx) => {
+	async (evt, ctx, cb) => {
 		const action = evt.pathParameters?.['action'];
 		switch (action) {
 			case 'authorize': {
-				return googleOidRequestHandler(evt, ctx);
+				return googleOidRequestHandler(evt, ctx, cb);
 			}
 			case 'callback': {
-				return googleOidCallbackHandler(evt, ctx);
+				return googleOidCallbackHandler(evt, ctx, cb);
 			}
 			case 'renew': {
-				return tokenRenewalHandler(evt, ctx);
+				return tokenRenewalHandler(evt, ctx, cb);
 			}
 			case 'logout': {
-				return logoutHandler(evt, ctx);
+				return logoutHandler(evt, ctx, cb);
 			}
 		}
 		return {
@@ -37,7 +37,3 @@ export const handler: APIHandler = withInstrumentation(
 		} as Awaited<ReturnType<APIHandler>>;
 	},
 );
-
-// This export is required because of a bug in OpenTelemetry
-// eslint-disable-next-line unicorn/prefer-module
-module.exports = { handler };
