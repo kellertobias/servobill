@@ -16,6 +16,16 @@ We feature a simple, easy-to-use interface for creating and managing invoices. Y
 - Simple reports
 - Manage clients & products
 - OpenTelemetry Traces & Logs Support
+- Developer Experience:
+    - Dependencies in Docker Compose for local development
+    - Modern decorator based codebase
+    - Dependency Injection
+    - Event driven Design
+    - Automatic API Type generation
+    - Automatic adding of new endpoints to infrastructure definition
+    - CQRS (Bus implemented and some commands present)
+    - Entity based approach (vs. database centric)
+    - JWT based authentication workflow with refresh tokens
 
 <img src="/docs/screenshot-1.jpeg" alt="Servobill" width="200"/> <img src="/docs/screenshot-2.jpeg" alt="Servobill" width="200"/> <img src="/docs/screenshot-3.jpeg" alt="Servobill" width="200"/> <img src="/docs/screenshot-4.jpeg" alt="Servobill" width="200"/>
 
@@ -39,7 +49,9 @@ If the deployment fails, you need to delete a few resources manually, especially
 
 ### Via Docker Compose
 
-At the moment we do not have a docker image for servobill yet as it is heavily built on top of the serverless mindset. However as the local development environment is built with docker-compose and does not need online services (besides SES), it might be possible that we will provide a docker image in the future. The main problem is that the app uses dynamodb to store the data and there is no easy way to run dynamodb yourself on a production ready scale. If you want to help us with that, please open an issue or a pull request.
+At the moment we do not have a docker image for servobill yet as it is heavily built on top of the serverless mindset. If you want to help us with that, please open an issue or a pull request
+
+We already have outlined the steps required for adapting the codebase to also work on-premise. See https://trello.com/c/KOAbgN5q 
 
 
 ## Architecture
@@ -79,3 +91,27 @@ If you are done, you can copy the template to the settings in the app.
 ## License
 
 We are currently working with our legal team to pick the right license for this project. Until then, please do not use this project for commercial purposes other than for invoicing your own clients.
+
+The project probably will be licensed under the following modified MIT license:
+
+### Modified MIT License (Planned License)
+
+Permission is hereby granted, free of charge, to any person or organization obtaining a copy of this software, code, and associated documentation files (the "Software"), to use the Software for commercial purposes, including the right to use and modify the Software, subject to the following conditions and restrictions:
+
+1. You may not sell the Software or any derivative works based on the Software.
+
+2. You may not provide the use of the software as a service (Software-as-a-Service).
+
+3. The above restrictions do not apply to the original maintainer or copyright holder of the Software, who may engage in the sale of the Software and provision of related services.
+
+4. If a person or organization adds functionality to the software, they grant the original maintainer a non-exclusive, royalty-free, perpetual, irrevocable license to use, reproduce, modify, sublicense, distribute, and otherwise exploit the added functionality.
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+---
+
+This license is meant to allow everyone get started with Servobill and use it for their own business. However, we want to make sure that no one can take this project and sell it as their own or use it to build a competing product.
+
+For any questions or further permissions, please contact the original maintainer of the Software.
