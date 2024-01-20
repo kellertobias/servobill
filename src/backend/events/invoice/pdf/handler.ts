@@ -20,6 +20,7 @@ export const layers = ['layers/chromium'];
 export const handler: EventHandler = makeEventHandler(
 	InvoiceGeneratePdfEvent,
 	async (event, _, { logger }) => {
+		console.log(event);
 		const invoiceRepository = DefaultContainer.get(InvoiceRepository);
 		const settingsRepository = DefaultContainer.get(SettingsRepository);
 		const cqrs = CqrsBus.forRoot({

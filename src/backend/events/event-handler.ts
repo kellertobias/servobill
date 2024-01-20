@@ -24,7 +24,7 @@ export const makeEventHandler = <T extends object>(
 			const logger = new Logger(EventValidatorClass.name);
 			logger.info(`Start Handler for Event ${event['detail-type']}`, {
 				eventName: event['detail-type'],
-				event: event.detail,
+				event: JSON.stringify(event.detail),
 				eventId: event.id,
 			});
 
