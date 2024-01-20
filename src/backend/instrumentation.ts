@@ -308,4 +308,6 @@ export const withInstrumentation = <E, R>(
 	};
 };
 
-export type { Span as OtelSpan } from '@opentelemetry/api';
+type OtelSpanNullable = OtelSpan | undefined;
+
+export type { OtelSpanNullable as OtelSpan };

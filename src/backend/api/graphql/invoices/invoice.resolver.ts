@@ -57,7 +57,7 @@ export class InvoiceResolver {
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		@Arg('limit', () => Int, { nullable: true }) limit?: number,
 	): Promise<Invoice[]> {
-		span.setAttribute('context.where', JSON.stringify(where));
+		span?.setAttribute('context.where', JSON.stringify(where));
 		const data = await this.invoiceRepository.listByQuery({
 			where: { ...where },
 			skip,
@@ -93,7 +93,7 @@ export class InvoiceResolver {
 		@Arg('id') id: string,
 		@ActiveSpan() span: OtelSpan,
 	): Promise<Invoice | null> {
-		span.setAttribute('context.invoiceId', id);
+		span?.setAttribute('context.invoiceId', id);
 		return this.invoiceRepository.getById(id);
 	}
 
