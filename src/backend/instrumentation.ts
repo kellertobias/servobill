@@ -157,10 +157,41 @@ const withEventBridgeInstrumentation = async <
 	[evt, ctx, cb]: Parameters<Handler<E, R | void>>,
 ): Promise<R | void> => {
 	console.log(evt.detail);
-	const activeContext = propagation.extract(
-		context.active(),
-		(evt.detail as undefined | { tracerContext: unknown })?.tracerContext,
-	);
+	const { traceId, spanId, traceparent } =
+		(evt.detail as
+			| undefined
+			| { traceId: string; traceparent: string; spanId: string }) || {};
+
+	const attributes: Record<string, AttributeValue> = {
+		'faas.handlerType': 'EventBridge',
+		'event.type': evt['detail-type'],
+		'event.id': evt.id,
+		'event.source': evt.source,
+		'event.detail': JSON.stringify(evt.detail),
+		'event.time': evt.time,
+		'event.resources': evt.resources,
+	};
+
+	if (!traceId || !traceparent) {
+		return withWrappedInstrumentation(
+			{
+				...spanInfo,
+				attributes: {
+					...spanInfo.attributes,
+					...attributes,
+					'otel.propagation': 'missing traceId, spanId, or traceparent',
+				},
+			},
+			handler,
+			[evt, ctx, cb],
+		);
+	}
+
+	const activeContext = propagation.extract(context.active(), {
+		traceId,
+		spanId,
+		traceparent,
+	});
 	const span = tracer.startSpan(
 		spanInfo.name,
 		{
@@ -179,7 +210,11 @@ const withEventBridgeInstrumentation = async <
 	);
 	trace.setSpan(activeContext, span);
 
-	return handler(evt, ctx, cb);
+	return handleSpanExecution({ span, onThrow: spanInfo.onThrow }, handler, [
+		evt,
+		ctx,
+		cb,
+	]);
 };
 
 const withApiGatewayInstrumentation = async <
