@@ -134,10 +134,15 @@ const withEventBridgeInstrumentation = async <
 	handler: Handler<E, R | void>,
 	[evt, ctx, cb]: Parameters<Handler<E, R | void>>,
 ): Promise<R | void> => {
-	const { traceId, spanId, traceparent } =
+	const { traceId, spanId, traceparent, tracestate } =
 		(evt.detail as
 			| undefined
-			| { traceId: string; traceparent: string; spanId: string }) || {};
+			| {
+					traceId: string;
+					traceparent: string;
+					spanId: string;
+					tracestate: string;
+			  }) || {};
 
 	const attributes: Record<string, AttributeValue> = {
 		'faas.handlerType': 'EventBridge',
@@ -168,9 +173,9 @@ const withEventBridgeInstrumentation = async <
 		traceId,
 		spanId,
 		traceparent,
+		tracestate,
 		trace_id: traceId,
 		span_id: spanId,
-		trace_parent: traceparent,
 	});
 	const span = tracer.startSpan(
 		spanInfo.name,
