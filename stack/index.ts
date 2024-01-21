@@ -26,6 +26,7 @@ import { prepareHandlerExport } from './functions';
 
 export function Stack({ stack, ...rest }: StackContext) {
 	const openTelemetry = makeOtelConfig();
+	const otelEnabled = openTelemetry.length > 0;
 	const copyFiles = openTelemetry.filter((x) => x !== null) as {
 		from: string;
 	}[];
@@ -47,7 +48,9 @@ export function Stack({ stack, ...rest }: StackContext) {
 		logging: 'combined',
 		cdk: {
 			server: {
-				logRetention: RetentionDays.ONE_DAY,
+				logRetention: otelEnabled
+					? RetentionDays.ONE_DAY
+					: RetentionDays.TWO_WEEKS,
 			},
 		},
 		experimental: {
@@ -76,7 +79,7 @@ export function Stack({ stack, ...rest }: StackContext) {
 			retries: 5,
 			function: {
 				tracing: 'disabled',
-				disableCloudWatchLogs: true,
+				disableCloudWatchLogs: otelEnabled,
 				logRetention: 'one_day',
 				copyFiles,
 				environment: {
@@ -150,7 +153,7 @@ export function Stack({ stack, ...rest }: StackContext) {
 		defaults: {
 			function: {
 				tracing: 'disabled',
-				disableCloudWatchLogs: true,
+				disableCloudWatchLogs: otelEnabled,
 				copyFiles,
 				environment: {
 					...baseEnvironment,
@@ -191,7 +194,7 @@ export function Stack({ stack, ...rest }: StackContext) {
 			},
 			function: {
 				tracing: 'disabled',
-				disableCloudWatchLogs: true,
+				disableCloudWatchLogs: otelEnabled,
 				copyFiles,
 				environment: {
 					...baseEnvironment,
