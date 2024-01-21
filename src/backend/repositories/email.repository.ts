@@ -73,9 +73,9 @@ export class EmailRepository extends AbstractRepository<
 	typeof entitySchema.schema
 > {
 	protected logger = new Logger(EmailRepository.name);
-	protected mainIdName: string = 'productId';
+	protected mainIdName: string = 'emailId';
 
-	protected storeId: string = 'product';
+	protected storeId: string = 'email';
 
 	constructor(@Inject(DBService) private dynamoDb: DBService) {
 		super();
