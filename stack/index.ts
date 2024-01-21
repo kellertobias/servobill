@@ -80,7 +80,6 @@ export function Stack({ stack, ...rest }: StackContext) {
 			function: {
 				tracing: 'disabled',
 				disableCloudWatchLogs: otelEnabled,
-				logRetention: 'one_day',
 				copyFiles,
 				environment: {
 					...baseEnvironment,
