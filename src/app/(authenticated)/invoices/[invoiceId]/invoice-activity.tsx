@@ -59,6 +59,11 @@ const getActivityIcon = (type: InvoiceActivityType) => {
 				<EnvelopeIcon className="h-4 w-4 text-green-600" aria-hidden="true" />
 			);
 		}
+		case InvoiceActivityType.EmailDelivered: {
+			return (
+				<EnvelopeIcon className="h-4 w-4 text-green-600" aria-hidden="true" />
+			);
+		}
 		case InvoiceActivityType.EmailBounced: {
 			return (
 				<EnvelopeIcon className="h-4 w-4 text-red-600" aria-hidden="true" />
@@ -182,6 +187,10 @@ const getActivityText = (
 
 		case InvoiceActivityType.EmailSent: {
 			return <>The email was successfully sent to the client.</>;
+		}
+
+		case InvoiceActivityType.EmailDelivered: {
+			return <>The email was successfully delivered to the client.</>;
 		}
 
 		case InvoiceActivityType.EmailBounced: {
