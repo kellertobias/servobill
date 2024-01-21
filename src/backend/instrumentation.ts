@@ -17,17 +17,26 @@ import {
 const tracer = trace.getTracer('lambda');
 
 export function withSpan<A extends unknown[], R>(
-	spanAttributes: { name: string },
+	spanAttributes: {
+		name: string;
+		attributes?: Record<string, AttributeValue>;
+		thisContext?: unknown;
+	},
 	handler: (...args: A) => R,
 ): (...args: A) => R {
-	return (...args: A) => {
+	return (...args: A): R => {
 		return tracer.startActiveSpan(spanAttributes.name, (span) => {
-			span.setAttributes(spanAttributes);
-			let answer: undefined | R;
+			if (spanAttributes.attributes) {
+				span.setAttributes(spanAttributes.attributes);
+			}
+
+			let wasPromise = false;
+			let answer: unknown;
 			try {
-				answer = handler(...args);
+				answer = handler.apply(spanAttributes.thisContext, args);
 				if (answer instanceof Promise) {
-					answer
+					wasPromise = true;
+					answer = answer
 						.then((value) => {
 							span.end();
 							return value;
@@ -52,33 +61,12 @@ export function withSpan<A extends unknown[], R>(
 				}
 				throw error;
 			} finally {
-				if (answer && !(answer instanceof Promise)) {
+				if (!wasPromise) {
 					span.end();
 				}
 			}
-			return answer;
+			return answer as R;
 		});
-	};
-}
-
-// Method Parameter Decorator that gets the currently active span as a parameter
-export function ActiveSpan() {
-	return function (
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		target: any,
-		propertyKey: string,
-		parameterIndex: number,
-	) {
-		// eslint-disable-next-line @typescript-eslint/ban-types
-		const originalMethod = target[propertyKey] as Function;
-		target[propertyKey] = function (...args: unknown[]) {
-			const span = trace.getSpan(context.active());
-			if (span) {
-				args[parameterIndex] = span;
-			}
-			return originalMethod.apply(this, args);
-		};
-		return target;
 	};
 }
 
@@ -100,47 +88,37 @@ export function Span(
 
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		descriptor.value = function (...args: any[]) {
-			return tracer.startActiveSpan(spanName, (span) => {
-				if (attributes) {
-					span.setAttributes(attributes);
-				}
-				let answer: unknown;
-				try {
-					answer = originalMethod.apply(this, args);
-					if (answer instanceof Promise) {
-						answer = answer
-							.then((value) => {
-								span.end();
-								return value;
-							})
-							.catch((error) => {
-								span.setStatus({ code: SpanStatusCode.ERROR });
-								if (error instanceof Error) {
-									span.recordException(error);
-								} else {
-									span.recordException(new Error(String(error)));
-								}
-								span.end();
-								throw error;
-							});
-					}
-				} catch (error) {
-					span.setStatus({ code: SpanStatusCode.ERROR });
-					if (error instanceof Error) {
-						span.recordException(error);
-					} else {
-						span.recordException(new Error(String(error)));
-					}
-					throw error;
-				} finally {
-					if (!(answer instanceof Promise)) {
-						span.end();
-					}
-				}
-				return answer;
-			});
+			return withSpan(
+				{
+					name: spanName,
+					attributes,
+					thisContext: this,
+				},
+				originalMethod,
+			)(...args);
 		};
 		return descriptor;
+	};
+}
+
+// Method Parameter Decorator that gets the currently active span as a parameter
+export function ActiveSpan() {
+	return function (
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		target: any,
+		propertyKey: string,
+		parameterIndex: number,
+	) {
+		// eslint-disable-next-line @typescript-eslint/ban-types
+		const originalMethod = target[propertyKey] as Function;
+		target[propertyKey] = function (...args: unknown[]) {
+			const span = trace.getSpan(context.active());
+			if (span) {
+				args[parameterIndex] = span;
+			}
+			return originalMethod.apply(this, args);
+		};
+		return target;
 	};
 }
 
