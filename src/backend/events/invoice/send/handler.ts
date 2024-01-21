@@ -195,6 +195,7 @@ export const handler: EventHandler = makeEventHandler(
 			recipient: invoice.customer.email,
 			sentAt: new Date(),
 		});
+		emailRepository.save(emailStatus);
 
 		logger.info('Email sent', { invoiceId: invoice.id, to: redactedTo });
 

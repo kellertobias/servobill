@@ -4,7 +4,7 @@ import { Logger } from '../services/logger.service';
 import { AbstractRepository } from './abstract-repository';
 
 import { Inject, Service } from '@/common/di';
-import { EmailEntity } from '@/backend/entities/product.entity copy';
+import { EmailEntity } from '@/backend/entities/email.entity';
 
 const entitySchema = DBService.getSchema({
 	model: {

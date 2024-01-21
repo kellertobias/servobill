@@ -19,6 +19,13 @@ export class EmailEntity extends DomainEntity {
 			Omit<ObjectProperties<EmailEntity>, 'id' | DomainEntityKeys>
 		>,
 	): void {
-		Object.assign(this, params);
+		Object.assign(this, {
+			id: this.id,
+			entityType: this.entityType,
+			entityId: this.entityId,
+			recipient: this.recipient,
+			sentAt: this.sentAt,
+			...params,
+		});
 	}
 }
