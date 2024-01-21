@@ -134,7 +134,6 @@ const withEventBridgeInstrumentation = async <
 	handler: Handler<E, R | void>,
 	[evt, ctx, cb]: Parameters<Handler<E, R | void>>,
 ): Promise<R | void> => {
-	console.log(evt.detail);
 	const { traceId, spanId, traceparent } =
 		(evt.detail as
 			| undefined
@@ -169,6 +168,9 @@ const withEventBridgeInstrumentation = async <
 		traceId,
 		spanId,
 		traceparent,
+		trace_id: traceId,
+		span_id: spanId,
+		trace_parent: traceparent,
 	});
 	const span = tracer.startSpan(
 		spanInfo.name,

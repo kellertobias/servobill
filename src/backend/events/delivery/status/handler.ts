@@ -10,6 +10,9 @@ import {
 	InvoiceActivityEntity,
 	InvoiceActivityType,
 } from '@/backend/entities/invoice-activity.entity';
+import { Logger } from '@/backend/services/logger.service';
+
+const logger = new Logger('sns.delivery-status');
 
 type SESDeliveryNote = {
 	notificationType: string;
@@ -41,7 +44,7 @@ const handleSingleRecord = withSpan(
 
 		const emailState = await emailRepository.getById(messageId);
 		if (!emailState) {
-			console.log('Email not found', { messageId });
+			logger.info('Email not found', { messageId });
 			return;
 		}
 
@@ -50,7 +53,10 @@ const handleSingleRecord = withSpan(
 				const invoiceRepository = DefaultContainer.get(InvoiceRepository);
 				const invoice = await invoiceRepository.getById(emailState.entityId);
 				if (!invoice) {
-					console.log('Invoice not found', { emailState });
+					logger.info('Invoice not found', {
+						entityType: emailState.entityType,
+						entityId: emailState.entityId,
+					});
 					return;
 				}
 				invoice.addActivity(
@@ -66,7 +72,10 @@ const handleSingleRecord = withSpan(
 				return;
 			}
 			default: {
-				console.log('Unknown entity type', { emailState });
+				logger.info('Unknown entity type', {
+					entityType: emailState.entityType,
+					entityId: emailState.entityId,
+				});
 				return;
 			}
 		}
@@ -83,12 +92,11 @@ export const handler: SNSEventHandler = withInstrumentation(
 		const records = event.Records || [];
 
 		for (const record of records) {
-			console.log(record.Sns);
 			try {
 				const message = JSON.parse(record.Sns.Message);
 				await handleSingleRecord(message);
-			} catch (error) {
-				console.error(error);
+			} catch {
+				// Pass
 			}
 		}
 	},
