@@ -9,6 +9,8 @@ import {
 	StackContext,
 	Topic,
 } from 'sst/constructs';
+import { RetentionDays } from 'aws-cdk-lib/aws-logs';
+
 import './load-environ';
 
 import { StackApi } from './api';
@@ -42,6 +44,15 @@ export function Stack({ stack, ...rest }: StackContext) {
 		environment: {
 			NEXT_PUBLIC_API_URL: domain.publicApiUrl,
 		},
+		logging: 'combined',
+		cdk: {
+			server: {
+				logRetention: RetentionDays.ONE_DAY,
+			},
+		},
+		experimental: {
+			disableDynamoDBCache: true,
+		},
 	});
 	restoreAfterNextBuild();
 
@@ -64,6 +75,9 @@ export function Stack({ stack, ...rest }: StackContext) {
 		defaults: {
 			retries: 5,
 			function: {
+				tracing: 'disabled',
+				disableCloudWatchLogs: true,
+				logRetention: 'one_day',
 				copyFiles,
 				environment: {
 					...baseEnvironment,
@@ -135,6 +149,8 @@ export function Stack({ stack, ...rest }: StackContext) {
 		},
 		defaults: {
 			function: {
+				tracing: 'disabled',
+				disableCloudWatchLogs: true,
 				copyFiles,
 				environment: {
 					...baseEnvironment,
@@ -174,6 +190,8 @@ export function Stack({ stack, ...rest }: StackContext) {
 				allowCredentials: true,
 			},
 			function: {
+				tracing: 'disabled',
+				disableCloudWatchLogs: true,
 				copyFiles,
 				environment: {
 					...baseEnvironment,
