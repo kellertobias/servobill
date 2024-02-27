@@ -206,5 +206,19 @@ export const handler: EventHandler = makeEventHandler(
 		);
 
 		await invoiceRepository.save(invoice);
+
+		await ses.sendEmail({
+			from: template.sendFrom,
+			to: template.replyTo,
+			replyTo: template.replyTo,
+			subject: `Invoice ${invoice.invoiceNumber} sent to Customer ${invoice.customer.name}`,
+			html: emailHtml,
+			attachments: [
+				{
+					filename: 'invoice.pdf',
+					content: pdf,
+				},
+			],
+		});
 	},
 );

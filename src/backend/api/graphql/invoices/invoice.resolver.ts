@@ -19,11 +19,7 @@ import {
 } from './invoice.schema';
 
 import { Inject, Service } from '@/common/di';
-import {
-	InvoiceEntity,
-	InvoiceStatus,
-	InvoiceType,
-} from '@/backend/entities/invoice.entity';
+import { InvoiceEntity, InvoiceType } from '@/backend/entities/invoice.entity';
 import {
 	InvoiceActivityEntity,
 	InvoiceActivityType,
@@ -64,26 +60,28 @@ export class InvoiceResolver {
 			limit,
 		});
 
-		return data
-			.filter((invoice) => {
-				if (where?.search) {
-					return (
-						invoice.invoiceNumber?.includes(where.search) ||
-						invoice.offerNumber?.includes(where.search) ||
-						invoice.customer.name?.includes(where.search)
-					);
-				}
-				return true;
-			})
-			.filter((invoice) => invoice.status !== InvoiceStatus.CANCELLED)
-			.sort((a, b) => {
-				const dateA = a.invoicedAt || a.createdAt;
-				const dateB = b.invoicedAt || b.createdAt;
-				if (dateA && dateB) {
-					return dateB.getTime() - dateA.getTime();
-				}
-				return 0;
-			});
+		return (
+			data
+				.filter((invoice) => {
+					if (where?.search) {
+						return (
+							invoice.invoiceNumber?.includes(where.search) ||
+							invoice.offerNumber?.includes(where.search) ||
+							invoice.customer.name?.includes(where.search)
+						);
+					}
+					return true;
+				})
+				// .filter((invoice) => invoice.status !== InvoiceStatus.CANCELLED)
+				.sort((a, b) => {
+					const dateA = a.invoicedAt || a.createdAt;
+					const dateB = b.invoicedAt || b.createdAt;
+					if (dateA && dateB) {
+						return dateB.getTime() - dateA.getTime();
+					}
+					return 0;
+				})
+		);
 	}
 
 	@Span('InvoiceResolver.invoice')
