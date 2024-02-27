@@ -1,4 +1,5 @@
 import React from 'react';
+import clsx from 'clsx';
 
 import dayjs from 'dayjs';
 import {
@@ -12,7 +13,7 @@ import { API } from '@/api/index';
 import { Table } from './table';
 import { getInvoiceStatusBadge } from './status-badges';
 
-import { InvoiceType } from '@/common/gql/graphql';
+import { InvoiceStatus, InvoiceType } from '@/common/gql/graphql';
 
 export function InvoicesTable({
 	data,
@@ -40,7 +41,11 @@ export function InvoicesTable({
 					className: 'py-5 pr-6',
 					render: (invoice) => (
 						<>
-							<div className="flex gap-x-6">
+							<div
+								className={clsx('flex gap-x-6', {
+									'opacity-25': invoice.status === InvoiceStatus.Cancelled,
+								})}
+							>
 								{invoice.type === InvoiceType.Invoice ? (
 									<DocumentTextIcon
 										className="hidden h-6 w-5 flex-none text-gray-400 sm:block"
@@ -54,7 +59,15 @@ export function InvoicesTable({
 								)}
 								<div className="flex-auto">
 									<div className="flex items-start gap-x-3">
-										<div className="text-sm font-medium leading-6 text-gray-900">
+										<div
+											className={clsx(
+												'text-sm font-medium leading-6 text-gray-900',
+												{
+													'opacity-50':
+														invoice.status === InvoiceStatus.Cancelled,
+												},
+											)}
+										>
 											{API.centsToPrice(invoice.totalCents)} €
 										</div>
 										{getInvoiceStatusBadge(invoice)}
@@ -89,14 +102,18 @@ export function InvoicesTable({
 					title: 'Customer',
 					className: 'hidden py-5 pr-6 sm:table-cell',
 					render: (invoice) => (
-						<>
+						<div
+							className={clsx({
+								'opacity-25': invoice.status === InvoiceStatus.Cancelled,
+							})}
+						>
 							<div className="text-sm font-medium leading-6 text-gray-900">
 								{invoice.customer.name}
 							</div>
 							<div className="mt-1 text-xs leading-5 text-gray-500">
 								{invoice.subject}
 							</div>
-						</>
+						</div>
 					),
 				},
 				{
@@ -104,7 +121,11 @@ export function InvoicesTable({
 					title: 'Action',
 					className: 'py-5 text-right',
 					render: (invoice) => (
-						<>
+						<div
+							className={clsx({
+								'opacity-25': invoice.status === InvoiceStatus.Cancelled,
+							})}
+						>
 							<div className="flex justify-end">
 								<a
 									href={`/invoices/${invoice.id}`}
@@ -126,7 +147,7 @@ export function InvoicesTable({
 									{invoice.invoiceNumber || invoice.offerNumber}
 								</span>
 							</div>
-						</>
+						</div>
 					),
 				},
 			]}

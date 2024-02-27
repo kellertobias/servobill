@@ -20,6 +20,7 @@ import { InvoiceStatusOfferDraft } from './invoice-status/invoice-status-offer-d
 import { InvoiceActivityFeed } from './invoice-activity';
 import { InvoicePositions } from './invoice-positions';
 import { InvoiceHeader } from './invoice-header';
+import { InvoiceStatusCancelled } from './invoice-status/invoice-status-cancelled';
 
 import { InvoiceStatus, InvoiceType } from '@/common/gql/graphql';
 
@@ -185,6 +186,13 @@ export default function InvoiceDetailPage() {
 									hasChanges={hasChanges}
 								/>
 							)}
+						{data.status === InvoiceStatus.Cancelled && (
+							<InvoiceStatusCancelled
+								data={data}
+								reload={reload}
+								hasChanges={hasChanges}
+							/>
+						)}
 					</div>
 
 					{/* Invoice */}
