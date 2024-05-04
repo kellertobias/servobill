@@ -33,7 +33,7 @@
     "@opentelemetry/api": "^1.7.0",
     "@opentelemetry/context-async-hooks": "^1.20.0",
     "@sevenoutman/use-debounced-memo": "^1.0.0",
-    "@sparticuz/chromium": "^109.0.5",
+    "@sparticuz/chromium": "^123.0.1",
     "@uiw/react-textarea-code-editor": "^3.0.2",
     "apollo-server-core": "^3.13.0",
     "apollo-server-lambda": "^3.13.0",
