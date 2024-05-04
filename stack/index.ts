@@ -16,7 +16,7 @@ import './load-environ';
 import { StackApi } from './api';
 import { eventHandlerEndpoints, apiEndpoints } from './build-index';
 import { makeLogGroup } from './log-group';
-import { installOtelPackages, otelBaseConfig } from './otel';
+import { otelBaseConfig } from './otel';
 import { getDomainConfig } from './domain';
 import { prepareNextBuild, restoreAfterNextBuild } from './build-prep';
 import { getDataResources } from './data';
@@ -70,8 +70,8 @@ export function Stack({ stack, ...rest }: StackContext) {
 		BUCKET_FILES: buckets.files.bucketName,
 
 		SERVICE_NAMESPACE: 'servobill',
-		// NODE_OPTIONS: '--enable-source-maps',
-		NODE_OPTIONS: '--enable-source-maps --require ./tracing.cjs',
+		NODE_OPTIONS: '--enable-source-maps',
+		// NODE_OPTIONS: '--enable-source-maps --require ./tracing.cjs',
 	});
 
 	const bus = new EventBus(stack, 'bus', {
@@ -87,7 +87,7 @@ export function Stack({ stack, ...rest }: StackContext) {
 				permissions: [...baseBinds],
 				nodejs: {
 					format: 'cjs',
-					install: [...installOtelPackages],
+					// install: [...installOtelPackages],
 					esbuild: {
 						external: ['@sparticuz/chromium'],
 					},
@@ -160,7 +160,7 @@ export function Stack({ stack, ...rest }: StackContext) {
 				permissions: [...baseBinds],
 				nodejs: {
 					format: 'cjs',
-					install: [...installOtelPackages],
+					// install: [...installOtelPackages],
 					esbuild: {},
 				},
 				runtime: 'nodejs20.x',
