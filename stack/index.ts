@@ -16,7 +16,7 @@ import './load-environ';
 import { StackApi } from './api';
 import { eventHandlerEndpoints, apiEndpoints } from './build-index';
 import { makeLogGroup } from './log-group';
-import { installOtelPackages, makeOtelConfig, otelBaseConfig } from './otel';
+import { installOtelPackages, otelBaseConfig } from './otel';
 import { getDomainConfig } from './domain';
 import { prepareNextBuild, restoreAfterNextBuild } from './build-prep';
 import { getDataResources } from './data';
@@ -25,11 +25,11 @@ import { getLayers } from './layers';
 import { prepareHandlerExport } from './functions';
 
 export function Stack({ stack, ...rest }: StackContext) {
-	const openTelemetry = makeOtelConfig();
-	const otelEnabled = openTelemetry.length > 0;
-	const copyFiles = openTelemetry.filter((x) => x !== null) as {
-		from: string;
-	}[];
+	const openTelemetry = null; // makeOtelConfig();
+	const otelEnabled = false; // openTelemetry.length > 0;
+	const copyFiles: { from: string }[] = []; //openTelemetry.filter((x) => x !== null) as {
+	//from: string;
+	//}[];
 	const domain = getDomainConfig({ stack, ...rest });
 	const { tables, buckets } = getDataResources({ stack, ...rest });
 	const { baseLayers, layerCache } = getLayers({
@@ -92,7 +92,7 @@ export function Stack({ stack, ...rest }: StackContext) {
 						external: ['@sparticuz/chromium'],
 					},
 				},
-				runtime: 'nodejs16.x',
+				runtime: 'nodejs20.x',
 				timeout: 60 * 5, // 5 minutes
 				memorySize: 1024,
 			},
@@ -214,7 +214,7 @@ export function Stack({ stack, ...rest }: StackContext) {
 						'graphql',
 						'graphql-tools',
 						'type-graphql',
-						...installOtelPackages,
+						// ...installOtelPackages,
 					],
 				},
 			},
