@@ -248,6 +248,24 @@ export default function ReportHomePage() {
 										setEndDate(undefined);
 										setTimeout(() => {
 											setStartDate(
+												dayjs().startOf('year').format('YYYY-MM-DD'),
+											);
+											setEndDate(dayjs().endOf('year').format('YYYY-MM-DD'));
+										}, 100);
+									}}
+									className="text-blue-600 hover:text-blue-500 no-underline cursor-pointer"
+								>
+									This Year
+								</a>{' '}
+								&bull;{' '}
+								<a
+									onClick={() => {
+										// eslint-disable-next-line unicorn/no-useless-undefined
+										setStartDate(undefined);
+										// eslint-disable-next-line unicorn/no-useless-undefined
+										setEndDate(undefined);
+										setTimeout(() => {
+											setStartDate(
 												dayjs()
 													.startOf('year')
 													.subtract(1, 'year')

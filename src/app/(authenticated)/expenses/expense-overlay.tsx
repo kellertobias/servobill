@@ -143,7 +143,7 @@ export default function ExpenseOverlay({
 											let taxAmount = current?.taxAmount;
 											if (!taxManuallyChanged) {
 												taxAmount = API.centsToPrice(
-													API.priceToCents(expenditure) * 0.19,
+													(API.priceToCents(expenditure) / 119) * 19,
 												);
 											}
 											return { ...current, expenditure, taxAmount };
