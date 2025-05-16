@@ -19,7 +19,8 @@ export const backoff = <T>(
 					const result = await fn();
 					if (result) {
 						return resolve(result);
-					} else if (attempts < maxAttempts) {
+					}
+					if (attempts < maxAttempts) {
 						// Wait for a while before trying again
 						await new Promise((resolve) => setTimeout(resolve, delay));
 						delay = delay * backoffFactor;

@@ -3,7 +3,7 @@ module.exports = {
     node: true,
     mocha: true,
     browser: true,
-    jest: true,
+    vitest: true,
   },
   plugins: ["@typescript-eslint", "import", "prettier"],
   extends: [
@@ -26,7 +26,6 @@ module.exports = {
     curly: "error",
     "import/extensions": "off",
     "@next/next/no-img-element": "off",
-    "import/prefer-default-export": "warn",
     "unicorn/no-await-expression-member": "warn",
     "import/no-extraneous-dependencies": [
       "error",

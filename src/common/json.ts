@@ -1,5 +1,6 @@
 const isoDateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 
+// biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export class CustomJson {
 	public static toJson(data: unknown): string {
 		return JSON.stringify(data);

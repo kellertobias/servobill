@@ -1,4 +1,4 @@
-import {
+import type {
 	APIGatewayProxyEventV2,
 	Callback,
 	Context,
@@ -6,12 +6,12 @@ import {
 	Handler,
 } from 'aws-lambda';
 import {
-	AttributeValue,
+	type AttributeValue,
 	trace,
 	SpanStatusCode,
 	propagation,
 	context,
-	Span as OtelSpan,
+	type Span as OtelSpan,
 } from '@opentelemetry/api';
 
 const tracer = trace.getTracer('lambda');
@@ -75,6 +75,7 @@ export function Span(
 	spanName: string,
 	attributes?: Record<string, AttributeValue>,
 ) {
+	// biome-ignore lint/complexity/useArrowFunction: <explanation>
 	return function (
 		target: unknown,
 		propertyKey: string,
@@ -83,7 +84,7 @@ export function Span(
 		const originalMethod = descriptor.value;
 
 		if (!originalMethod || typeof originalMethod !== 'function') {
-			throw new Error(`@Span decorator can only be applied to async methods`);
+			throw new Error('@Span decorator can only be applied to async methods');
 		}
 
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any

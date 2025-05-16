@@ -1,3 +1,9 @@
+/**
+ * This test file uses Vitest as the testing framework instead of Jest.
+ * The test API is compatible, but imports are now from 'vitest'.
+ */
+import { describe, it, expect } from 'vitest';
+
 import { Numbering } from './numbers';
 
 describe('Numbers Parser', () => {
