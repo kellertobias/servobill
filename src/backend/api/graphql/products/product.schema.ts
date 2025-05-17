@@ -44,6 +44,15 @@ export class Product implements FilteredObjectProperties<ProductEntity> {
 	})
 	expenseMultiplicator?: number;
 
+	/**
+	 * The expense category ID associated with this product (optional).
+	 */
+	@Field({
+		nullable: true,
+		description: 'The expense category ID for auto-created expenses.',
+	})
+	expenseCategoryId?: string;
+
 	@Field()
 	createdAt!: Date;
 
@@ -86,6 +95,12 @@ export class ProductInput
 		description: 'A multiplicator for the expense (optional, defaults to 1).',
 	})
 	expenseMultiplicator?: number;
+
+	@Field({
+		nullable: true,
+		description: 'The expense category ID for auto-created expenses.',
+	})
+	expenseCategoryId?: string;
 }
 
 @InputType()

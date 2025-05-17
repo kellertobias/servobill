@@ -26,6 +26,11 @@ export class ProductEntity extends DomainEntity {
 	 */
 	public expenseMultiplicator?: number;
 
+	/**
+	 * The expense category ID associated with this product (optional).
+	 */
+	public expenseCategoryId?: string;
+
 	constructor(
 		params: Omit<
 			ObjectProperties<ProductEntity>,
@@ -44,6 +49,9 @@ export class ProductEntity extends DomainEntity {
 		if (!this.updatedAt) {
 			this.updatedAt = new Date();
 		}
+		if (params && 'expenseCategoryId' in params) {
+			this.expenseCategoryId = params.expenseCategoryId;
+		}
 	}
 
 	public update(
@@ -53,6 +61,9 @@ export class ProductEntity extends DomainEntity {
 		>,
 	): void {
 		Object.assign(this, params);
+		if ('expenseCategoryId' in params) {
+			this.expenseCategoryId = params.expenseCategoryId;
+		}
 		this.updatedAt = new Date();
 	}
 }

@@ -5,6 +5,7 @@ import { API, gql } from '@/api/index';
 import { Drawer } from '@/components/drawer';
 import { Input } from '@/components/input';
 import { LoadingSkeleton } from '@/components/loading';
+import { useExpenseCategories } from '@/app/_hooks/use-expense-categories';
 
 export default function ProductOverlay({
 	productId,
@@ -30,6 +31,7 @@ export default function ProductOverlay({
 						expenseMultiplicator: '1',
 						createdAt: null,
 						updatedAt: null,
+						expenseCategoryId: '',
 					}
 				: API.query({
 						query: gql(`
@@ -44,6 +46,7 @@ export default function ProductOverlay({
 									taxPercentage
 									createdAt
 									updatedAt
+									expenseCategoryId
 								}
 							}
 						`),
@@ -68,6 +71,7 @@ export default function ProductOverlay({
 										res.product.expenseMultiplicator !== null
 											? res.product.expenseMultiplicator.toString()
 											: '',
+									expenseCategoryId: res.product.expenseCategoryId || '',
 								}
 							: null,
 					),
@@ -94,9 +98,12 @@ export default function ProductOverlay({
 				expenseMultiplicator: data.expenseMultiplicator
 					? Number.parseFloat(data.expenseMultiplicator)
 					: undefined,
+				expenseCategoryId: data.expenseCategoryId || undefined,
 			};
 		},
 	});
+
+	const categories = useExpenseCategories();
 
 	return (
 		<Drawer
@@ -226,6 +233,34 @@ export default function ProductOverlay({
 								}}
 								displayFirst
 							/>
+
+							{/* Expense Category Dropdown */}
+							<div className="col-span-full">
+								<label className="block text-sm font-medium leading-6 text-gray-900 mb-1">
+									Expense Category
+								</label>
+								<select
+									className="block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent sm:text-sm"
+									value={data.expenseCategoryId || ''}
+									onChange={(e) => {
+										setData((prev) => ({
+											...prev,
+											expenseCategoryId: e.target.value,
+										}));
+									}}
+								>
+									<option value="">No Category</option>
+									{categories.map((cat) => (
+										<option
+											key={cat.id}
+											value={cat.id}
+											title={cat.description || cat.name}
+										>
+											{cat.name}
+										</option>
+									))}
+								</select>
+							</div>
 						</div>
 					</div>
 				</>

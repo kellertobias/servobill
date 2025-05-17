@@ -11,6 +11,7 @@ import { Table } from '@/components/table';
 import { useLoadData } from '@/hooks/load-data';
 import { API, gql } from '@/api/index';
 import { exportExpenses, importExpenses } from '@/api/import-export/expenses';
+import { useExpenseCategories } from '@/app/_hooks/use-expense-categories';
 
 import ExpenseOverlay from './expense-overlay';
 
@@ -20,7 +21,7 @@ export default function ExpensesHomePage() {
 	const [selectedExpenseId, setSelectedExpenseId] = React.useState<
 		null | string
 	>(null);
-	const [categories, setCategories] = React.useState<any[]>([]);
+	const categories = useExpenseCategories();
 
 	const { data, loading, reload } = useLoadData(async () => {
 		const data = await API.query({
@@ -43,17 +44,6 @@ export default function ExpensesHomePage() {
 		}).then((res) => res.expenses);
 		return data;
 	});
-
-	React.useEffect(() => {
-		API.query({
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			query: gql(`
-				query GetSettingsCategories {
-					settings { categories { id name icon color description } }
-				}
-			`) as any,
-		}).then((res) => setCategories((res as any).settings.categories || []));
-	}, []);
 
 	return (
 		<>
