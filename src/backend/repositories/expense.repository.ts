@@ -51,6 +51,9 @@ const entitySchema = DBService.getSchema({
 		notes: {
 			type: 'string',
 		},
+		categoryId: {
+			type: 'string',
+		},
 	},
 	indexes: {
 		byId: {
@@ -72,6 +75,13 @@ const entitySchema = DBService.getSchema({
 			sk: {
 				field: 'gsi1sk',
 				composite: ['expendedAt'],
+			},
+		},
+		byCategory: {
+			index: 'gsi2pk-gsi2sk-index',
+			pk: {
+				field: 'gsi2pk',
+				composite: ['categoryId'],
 			},
 		},
 	},
@@ -109,6 +119,7 @@ export class ExpenseRepository extends AbstractRepository<
 			expendedAt: new Date(entity.expendedAt),
 			expendedCents: entity.expendedCents,
 			taxCents: entity.taxCents,
+			categoryId: entity.categoryId,
 		});
 	}
 
@@ -125,6 +136,7 @@ export class ExpenseRepository extends AbstractRepository<
 			name: domainEntity.name,
 			description: domainEntity.description,
 			notes: domainEntity.notes,
+			categoryId: domainEntity.categoryId,
 		};
 	}
 
@@ -156,6 +168,7 @@ export class ExpenseRepository extends AbstractRepository<
 			expendedAt: new Date(),
 			expendedCents: 0,
 			taxCents: 0,
+			categoryId: undefined,
 		});
 	}
 }

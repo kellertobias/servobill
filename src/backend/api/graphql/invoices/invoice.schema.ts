@@ -50,6 +50,12 @@ export class InvoiceItem implements ObjectProperties<InvoiceItemEntity> {
 
 	@Field(() => Float)
 	quantity!: number;
+
+	@Field({
+		nullable: true,
+		description: 'The ID of the linked expense, if this item generated one.',
+	})
+	expenseId?: string;
 }
 
 @ObjectType()
@@ -244,6 +250,12 @@ export class InvoiceItemInput implements Partial<InvoiceItem> {
 	@IsOptional()
 	@Field(() => Float)
 	quantity!: number;
+
+	@Field({
+		nullable: true,
+		description: 'The ID of the linked expense, if this item generated one.',
+	})
+	expenseId?: string;
 }
 
 @ObjectType()

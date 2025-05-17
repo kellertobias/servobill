@@ -13,10 +13,13 @@ import { SettingsRepository } from '@/backend/repositories/settings.repository';
 import {
 	InvoiceSettingsEntity,
 	PdfTemplateSetting,
+	ExpenseSettingsEntity,
 } from '@/backend/entities/settings.entity';
 import { EventBusService } from '@/backend/services/eventbus.service';
 import { S3Service } from '@/backend/services/s3.service';
 import { GenerateTemplatePreviewEvent } from '@/backend/events/template/event';
+import { ExpenseCategoryType } from './system.schema';
+import { ObjectProperties } from '@/common/ts-helpers';
 
 @Service()
 @Resolver()
@@ -30,6 +33,7 @@ export class SystemResolver {
 	private mapInvoiceSettingsEntityToResponse(
 		data: InvoiceSettingsEntity,
 		emails: PdfTemplateSetting,
+		expenseSettings: ExpenseSettingsEntity,
 	): SettingsResult {
 		return {
 			invoiceNumbersTemplate: data.invoiceNumbers.template || '',
@@ -69,6 +73,7 @@ export class SystemResolver {
 				bankIban: emails.companyData.bank.iban || '',
 				bankBic: emails.companyData.bank.bic || '',
 			},
+			categories: (expenseSettings.categories || []).map((cat) => ({ ...cat })),
 		};
 	}
 
@@ -77,7 +82,14 @@ export class SystemResolver {
 	async settings(): Promise<SettingsResult> {
 		const data = await this.repository.getSetting(InvoiceSettingsEntity);
 		const emails = await this.repository.getSetting(PdfTemplateSetting);
-		return this.mapInvoiceSettingsEntityToResponse(data, emails);
+		const expenseSettings = await this.repository.getSetting(
+			ExpenseSettingsEntity,
+		);
+		return this.mapInvoiceSettingsEntityToResponse(
+			data,
+			emails,
+			expenseSettings,
+		);
 	}
 
 	@Authorized()
@@ -97,6 +109,9 @@ export class SystemResolver {
 	): Promise<SettingsResult> {
 		const data = await this.repository.getSetting(InvoiceSettingsEntity);
 		const emails = await this.repository.getSetting(PdfTemplateSetting);
+		const expenseSettings = await this.repository.getSetting(
+			ExpenseSettingsEntity,
+		);
 
 		data.invoiceNumbers.update({
 			template: nextData.invoiceNumbersTemplate,
@@ -149,7 +164,18 @@ export class SystemResolver {
 
 		await emails.save();
 
-		return this.mapInvoiceSettingsEntityToResponse(data, emails);
+		if (nextData.categories) {
+			expenseSettings.categories = nextData.categories.map((cat) => ({
+				...cat,
+			}));
+			await expenseSettings.save();
+		}
+
+		return this.mapInvoiceSettingsEntityToResponse(
+			data,
+			emails,
+			expenseSettings,
+		);
 	}
 
 	@Authorized()

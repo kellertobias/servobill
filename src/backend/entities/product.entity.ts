@@ -16,6 +16,16 @@ export class ProductEntity extends DomainEntity {
 	public createdAt!: Date;
 	public updatedAt!: Date;
 
+	/**
+	 * The expense in cents associated with this product (optional).
+	 */
+	public expenseCents?: number;
+
+	/**
+	 * A multiplicator for the expense (optional, defaults to 1).
+	 */
+	public expenseMultiplicator?: number;
+
 	constructor(
 		params: Omit<
 			ObjectProperties<ProductEntity>,

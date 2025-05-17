@@ -20,6 +20,7 @@ export default function ExpensesHomePage() {
 	const [selectedExpenseId, setSelectedExpenseId] = React.useState<
 		null | string
 	>(null);
+	const [categories, setCategories] = React.useState<any[]>([]);
 
 	const { data, loading, reload } = useLoadData(async () => {
 		const data = await API.query({
@@ -42,6 +43,17 @@ export default function ExpensesHomePage() {
 		}).then((res) => res.expenses);
 		return data;
 	});
+
+	React.useEffect(() => {
+		API.query({
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			query: gql(`
+				query GetSettingsCategories {
+					settings { categories { id name icon color description } }
+				}
+			`) as any,
+		}).then((res) => setCategories((res as any).settings.categories || []));
+	}, []);
 
 	return (
 		<>
@@ -109,6 +121,29 @@ export default function ExpensesHomePage() {
 					getCategory={(data) => dayjs(data.expendedAt).format('MMMM, YYYY')}
 					getLineLink={(data) => () => setSelectedExpenseId(data.id)}
 					columns={[
+						{
+							key: 'category',
+							title: 'Category',
+							className: 'py-5',
+							render: (expense) => {
+								const cat = categories?.find(
+									(c) => c.id === (expense as any).categoryId,
+								);
+								if (!cat) return null;
+								return (
+									<span
+										className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
+										style={{
+											backgroundColor: cat.color || '#888',
+											color: '#fff',
+										}}
+										title={cat.description || cat.name}
+									>
+										{cat.name}
+									</span>
+								);
+							},
+						},
 						{
 							key: 'name',
 							title: 'Name',

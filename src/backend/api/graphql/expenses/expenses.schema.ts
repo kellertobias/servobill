@@ -28,6 +28,12 @@ export class Expense implements FilteredObjectProperties<ExpenseEntity> {
 	@Field()
 	expendedAt!: Date;
 
+	@Field({
+		nullable: true,
+		description: 'The ID of the expense category assigned to this expense.',
+	})
+	categoryId?: string;
+
 	@Field()
 	createdAt!: Date;
 
@@ -60,6 +66,12 @@ export class ExpenseInput
 
 	@Field()
 	expendedAt!: Date;
+
+	@Field({
+		nullable: true,
+		description: 'The ID of the expense category assigned to this expense.',
+	})
+	categoryId?: string;
 }
 
 @InputType()

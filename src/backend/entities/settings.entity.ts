@@ -238,3 +238,77 @@ export class InvoiceSettingsEntity {
 		await this.saveInner(data);
 	}
 }
+
+/**
+ * Represents a category for expenses, used for tax and reporting purposes.
+ */
+export type ExpenseCategory = {
+	id: string;
+	name: string;
+	color: string;
+	isDefault: boolean;
+	reference?: string;
+	sumForTaxSoftware?: boolean;
+	description?: string;
+};
+
+/**
+ * Stores all expense-related settings, including categories.
+ */
+export class ExpenseSettingsEntity {
+	public static settingId = 'expense-settings';
+	public categories: ExpenseCategory[] = [];
+
+	private saveInner: (data: string) => Promise<void>;
+
+	constructor(
+		params: Partial<ObjectProperties<ExpenseSettingsEntity>> = {},
+		saveInner: (data: string) => Promise<void>,
+	) {
+		Object.assign(this, params);
+		this.saveInner = saveInner;
+		if (!this.categories || this.categories.length === 0) {
+			this.categories = [
+				{
+					id: 'travel',
+					name: 'Travel Expenses (Reisekostenpauschalen)',
+					color: '#3B82F6', // blue-500
+					isDefault: true,
+					reference: 'travel',
+					sumForTaxSoftware: true,
+					description:
+						'Expenses for travel, such as mileage or public transport.',
+				},
+				{
+					id: 'afa',
+					name: 'Wear and Tear Depreciation (AfA)',
+					color: '#F59E42', // orange-400
+					isDefault: false,
+					reference: 'afa',
+					sumForTaxSoftware: false,
+					description: 'Depreciation for wear and tear of assets.',
+				},
+				{
+					id: 'gwg',
+					name: 'Low Value Assets (Geringwertige Wirtschaftsgüter)',
+					color: '#10B981', // green-500
+					isDefault: false,
+					reference: 'gwg',
+					sumForTaxSoftware: false,
+					description: 'Assets with low value, e.g. below 800 EUR.',
+				},
+			];
+		}
+	}
+
+	public serializable() {
+		return {
+			categories: this.categories,
+		};
+	}
+
+	public async save(): Promise<void> {
+		const data = CustomJson.toJson(this.serializable());
+		await this.saveInner(data);
+	}
+}

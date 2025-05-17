@@ -9,6 +9,25 @@ export const onClickCancelInvoice = async (props: {
 	reload: () => void;
 	isOffer?: boolean;
 }) => {
+	// Check if any invoice items have a linked expense
+	const hasLinkedExpenses = props.data.items.some(
+		(item: any) => !!item.expenseId,
+	);
+
+	let cancelExpenses = false;
+	if (hasLinkedExpenses && !props.isOffer) {
+		cancelExpenses = (await confirmDialog({
+			primary: true,
+			title: 'Cancel Linked Expenses?',
+			content: (
+				<>
+					This invoice has linked expenses. Do you also want to cancel (delete)
+					the expenses that were created from this invoice?
+				</>
+			),
+		})) as boolean;
+	}
+
 	if (
 		await confirmDialog({
 			primary: true,

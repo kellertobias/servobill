@@ -8,6 +8,10 @@ export class InvoiceItemEntity {
 	public priceCents!: number;
 	public taxPercentage!: number;
 	public productId?: string;
+	/**
+	 * The ID of the linked expense, if this item generated one.
+	 */
+	public expenseId?: string;
 
 	constructor(props: Partial<InvoiceItemEntity>) {
 		Object.assign(this, props);

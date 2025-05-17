@@ -26,6 +26,8 @@ export default function ProductOverlay({
 						notes: '',
 						price: '',
 						taxPercentage: '0',
+						expenseCents: '',
+						expenseMultiplicator: '1',
 						createdAt: null,
 						updatedAt: null,
 					}
@@ -54,6 +56,18 @@ export default function ProductOverlay({
 									...res.product,
 									price: API.centsToPrice(res.product.priceCents),
 									taxPercentage: `${res.product.taxPercentage || 0}`,
+									expenseCents:
+										'expenseCents' in res.product &&
+										res.product.expenseCents !== undefined &&
+										res.product.expenseCents !== null
+											? res.product.expenseCents.toString()
+											: '',
+									expenseMultiplicator:
+										'expenseMultiplicator' in res.product &&
+										res.product.expenseMultiplicator !== undefined &&
+										res.product.expenseMultiplicator !== null
+											? res.product.expenseMultiplicator.toString()
+											: '',
 								}
 							: null,
 					),
@@ -74,6 +88,12 @@ export default function ProductOverlay({
 				...rest,
 				priceCents: API.priceToCents(price),
 				taxPercentage: Number.parseInt(data.taxPercentage || '0'),
+				expenseCents: data.expenseCents
+					? Number.parseInt(data.expenseCents)
+					: undefined,
+				expenseMultiplicator: data.expenseMultiplicator
+					? Number.parseFloat(data.expenseMultiplicator)
+					: undefined,
 			};
 		},
 	});
@@ -185,6 +205,26 @@ export default function ProductOverlay({
 								}}
 								displayFirst
 								textarea
+							/>
+
+							<Input
+								className="col-span-full"
+								label="Expense (Cents)"
+								value={data.expenseCents || ''}
+								onChange={(expenseCents) => {
+									setData((prev) => ({ ...prev, expenseCents }));
+								}}
+								displayFirst
+							/>
+
+							<Input
+								className="col-span-full"
+								label="Expense Multiplicator"
+								value={data.expenseMultiplicator || ''}
+								onChange={(expenseMultiplicator) => {
+									setData((prev) => ({ ...prev, expenseMultiplicator }));
+								}}
+								displayFirst
 							/>
 						</div>
 					</div>

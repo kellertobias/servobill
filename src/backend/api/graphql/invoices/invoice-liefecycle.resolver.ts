@@ -25,6 +25,9 @@ import {
 } from '@/backend/entities/invoice-activity.entity';
 import { S3Service } from '@/backend/services/s3.service';
 import { Logger } from '@/backend/services/logger.service';
+import { ExpenseRepository } from '@/backend/repositories/expense.repository';
+import { ProductRepository } from '@/backend/repositories/product.repository';
+import { InvoiceEntity } from '@/backend/entities/invoice.entity';
 
 @Service()
 @Resolver(() => Invoice)
@@ -35,6 +38,8 @@ export class InvoiceLifecycleResolver {
 		@Inject(CustomerRepository) private customerRepository: CustomerRepository,
 		@Inject(SettingsRepository) private settingsRepository: SettingsRepository,
 		@Inject(S3Service) private s3Service: S3Service,
+		@Inject(ExpenseRepository) private expenseRepository: ExpenseRepository,
+		@Inject(ProductRepository) private productRepository: ProductRepository,
 	) {}
 
 	@Authorized()
@@ -104,11 +109,18 @@ export class InvoiceLifecycleResolver {
 	@Mutation(() => InvoiceChangedResponse)
 	async invoiceCancelUnpaid(
 		@Arg('id') invoiceId: string,
+		@Arg('deleteExpenses', () => Boolean, { nullable: true })
+		deleteExpenses: boolean = false,
 		@Ctx() context: GqlContext,
 	): Promise<InvoiceChangedResponse> {
 		const invoice = await this.invoiceRepository.getById(invoiceId);
 		if (!invoice) {
 			throw new Error('Invoice not found');
+		}
+
+		// Cancel all linked expenses for this invoice
+		if (deleteExpenses) {
+			await this.cancelLinkedExpensesForInvoice(invoice);
 		}
 
 		const activity = invoice.updateStatus(
@@ -159,6 +171,7 @@ export class InvoiceLifecycleResolver {
 		);
 
 		await this.invoiceRepository.save(invoice);
+		await this.createAndLinkExpensesForInvoice(invoice);
 
 		return {
 			id: invoiceId,
@@ -245,5 +258,68 @@ export class InvoiceLifecycleResolver {
 		this.logger.info('Saved Invoice');
 
 		return null;
+	}
+
+	/**
+	 * Creates expenses for invoice items with products that have expenseCents, and links the expense IDs to the items.
+	 *
+	 * For each invoice item:
+	 *   - If the item references a product (productId), fetch the product.
+	 *   - If the product has an expenseCents value > 0, create an expense for this item.
+	 *   - The expense amount is calculated as: expenseCents * quantity * expenseMultiplicator.
+	 *   - The expense is saved, and its ID is linked to the invoice item (item.expenseId).
+	 *
+	 * @param invoice The invoice entity to process. This method mutates the invoice's items in-place.
+	 */
+	private async createAndLinkExpensesForInvoice(invoice: InvoiceEntity) {
+		// Iterate over all items in the invoice
+		for (const item of invoice.items) {
+			// Only process items that reference a product
+			if (item.productId) {
+				// Fetch the product details
+				const product = await this.productRepository.getById(item.productId);
+				// Only create an expense if the product has a defined expenseCents > 0
+				if (product && product.expenseCents && product.expenseCents > 0) {
+					// Use the product's expenseMultiplicator or default to 1
+					const multiplicator = product.expenseMultiplicator || 1;
+					// Calculate the total expense for this item
+					const expendedCents = Math.round(
+						product.expenseCents * (item.quantity || 1) * multiplicator,
+					);
+					// Create and populate the expense entity
+					const expense = await this.expenseRepository.create();
+					expense.update({
+						name: `Expense for ${item.name}`,
+						description: item.description,
+						expendedCents,
+						expendedAt: invoice.invoicedAt || new Date(),
+						notes: `Auto-created from invoice ${
+							invoice.invoiceNumber || invoice.id
+						}`,
+					});
+					// Save the expense and link its ID to the invoice item
+					await this.expenseRepository.save(expense);
+					item.expenseId = expense.id;
+				}
+			}
+		}
+	}
+
+	/**
+	 * Cancels (deletes) all expenses linked to invoice items by expenseId, and clears the expenseId from the items.
+	 *
+	 * For each invoice item:
+	 *   - If the item has an expenseId, delete the corresponding expense.
+	 *   - Clear the expenseId from the item.
+	 *
+	 * @param invoice The invoice entity to process. This method mutates the invoice's items in-place.
+	 */
+	private async cancelLinkedExpensesForInvoice(invoice: InvoiceEntity) {
+		for (const item of invoice.items) {
+			if (item.expenseId) {
+				await this.expenseRepository.delete(item.expenseId);
+				item.expenseId = undefined;
+			}
+		}
 	}
 }

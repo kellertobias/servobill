@@ -1,9 +1,9 @@
 import { IsOptional, IsString } from 'class-validator';
 import { Field, ObjectType, InputType, Int } from 'type-graphql';
 
-import { FilteredObjectProperties } from '../types';
+import type { FilteredObjectProperties } from '../types';
 
-import { ProductEntity } from '@/backend/entities/product.entity';
+import type { ProductEntity } from '@/backend/entities/product.entity';
 
 @ObjectType()
 export class Product implements FilteredObjectProperties<ProductEntity> {
@@ -30,6 +30,19 @@ export class Product implements FilteredObjectProperties<ProductEntity> {
 
 	@Field(() => Int)
 	taxPercentage!: number;
+
+	@Field(() => Int, {
+		nullable: true,
+		description:
+			'The expense in cents associated with this product (optional).',
+	})
+	expenseCents?: number;
+
+	@Field(() => Int, {
+		nullable: true,
+		description: 'A multiplicator for the expense (optional, defaults to 1).',
+	})
+	expenseMultiplicator?: number;
 
 	@Field()
 	createdAt!: Date;
@@ -60,6 +73,19 @@ export class ProductInput
 
 	@Field(() => Int)
 	taxPercentage!: number;
+
+	@Field(() => Int, {
+		nullable: true,
+		description:
+			'The expense in cents associated with this product (optional).',
+	})
+	expenseCents?: number;
+
+	@Field(() => Int, {
+		nullable: true,
+		description: 'A multiplicator for the expense (optional, defaults to 1).',
+	})
+	expenseMultiplicator?: number;
 }
 
 @InputType()

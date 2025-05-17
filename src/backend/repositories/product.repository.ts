@@ -65,6 +65,12 @@ const entitySchema = DBService.getSchema({
 			type: 'number',
 			required: true,
 		},
+		expenseCents: {
+			type: 'number',
+		},
+		expenseMultiplicator: {
+			type: 'number',
+		},
 	},
 	indexes: {
 		byId: {
@@ -131,6 +137,8 @@ export class ProductRepository extends AbstractRepository<
 			unit: entity.unit,
 			priceCents: entity.priceCents,
 			taxPercentage: entity.taxPercentage,
+			expenseCents: entity.expenseCents || 0,
+			expenseMultiplicator: entity.expenseMultiplicator || 1,
 		});
 	}
 
@@ -149,6 +157,8 @@ export class ProductRepository extends AbstractRepository<
 			searchName: domainEntity.name.toLowerCase(),
 			createdAt: domainEntity.createdAt.toISOString(),
 			updatedAt: domainEntity.updatedAt.toISOString(),
+			expenseCents: domainEntity.expenseCents || 0,
+			expenseMultiplicator: domainEntity.expenseMultiplicator || 1,
 		};
 	}
 
@@ -161,6 +171,8 @@ export class ProductRepository extends AbstractRepository<
 			taxPercentage: 0,
 			createdAt: new Date(),
 			updatedAt: new Date(),
+			expenseCents: 0,
+			expenseMultiplicator: 1,
 		});
 	}
 

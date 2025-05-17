@@ -31,6 +31,8 @@ export const importProducts = async () => {
 							notes: (product.product_key ? '' : product.notes) || '',
 							priceCents: product.priceCents || API.priceToCents(product.price),
 							taxPercentage: product.taxPercentage || 0,
+							expenseCents: product.expenseCents || 0,
+							expenseMultiplicator: product.expenseMultiplicator || 1,
 						},
 					},
 				});
@@ -58,6 +60,8 @@ export const exportProducts = async () => {
 							taxPercentage
 							createdAt
 							updatedAt
+							expenseCents
+							expenseMultiplicator
 						}
 					}
 				`),

@@ -44,6 +44,30 @@ export class SettingsResultCompany {
 }
 
 @ObjectType()
+export class ExpenseCategoryType {
+	@Field()
+	id!: string;
+
+	@Field()
+	name!: string;
+
+	@Field()
+	color!: string;
+
+	@Field()
+	isDefault!: boolean;
+
+	@Field({ nullable: true })
+	reference?: string;
+
+	@Field({ nullable: true })
+	sumForTaxSoftware?: boolean;
+
+	@Field({ nullable: true })
+	description?: string;
+}
+
+@ObjectType()
 export class SettingsResult {
 	@Field()
 	invoiceNumbersTemplate!: string;
@@ -110,6 +134,9 @@ export class SettingsResult {
 
 	@Field(() => SettingsResultCompany)
 	company!: SettingsResultCompany;
+
+	@Field(() => [ExpenseCategoryType])
+	categories!: ExpenseCategoryType[];
 }
 
 @InputType()
@@ -249,6 +276,9 @@ export class SettingsInput implements SettingsResult {
 
 	@Field(() => SettingsCompanyInput)
 	company!: SettingsCompanyInput;
+
+	@Field(() => [ExpenseCategoryType])
+	categories!: ExpenseCategoryType[];
 }
 
 @ObjectType()
