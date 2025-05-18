@@ -1,12 +1,23 @@
 import { Service } from '@/common/di';
 
+export enum DatabaseType {
+	SQLITE = 'sqlite',
+	POSTGRES = 'postgres',
+	DYNAMODB = 'dynamodb',
+}
+
 @Service()
 export class ConfigService {
 	public readonly endpoints: Record<
 		's3' | 'dynamodb' | 'sqs' | 'eventbridge' | 'ses',
 		string | undefined
 	>;
-	public readonly tables: { electordb: string };
+	public readonly tables: {
+		electordb: string | undefined;
+		sqlite: string | undefined;
+		postgres: string | undefined;
+		databaseType: DatabaseType;
+	};
 	public readonly awsCreds: {
 		accessKeyId: string | undefined;
 		secretAccessKey: string | undefined;
@@ -21,10 +32,7 @@ export class ConfigService {
 		accessKeyId: string | undefined;
 		secretAccessKey: string | undefined;
 	};
-	public readonly relationalDatabase?: {
-		sqlite: string | undefined;
-		postgres: string | undefined;
-	};
+	public readonly relationalDatabase?: {};
 
 	constructor() {
 		this.port = process.env.PORT || 3000;
@@ -48,15 +56,19 @@ export class ConfigService {
 		};
 		this.eventBusName = process.env.EVENT_BUS_NAME || 'default';
 		this.tables = {
+			databaseType: (() => {
+				if (process.env.SQLITE_PATH) {
+					return DatabaseType.SQLITE;
+				}
+				if (process.env.POSTGRES_URL) {
+					return DatabaseType.POSTGRES;
+				}
+				return DatabaseType.DYNAMODB;
+			})(),
 			electordb: process.env.TABLE_ELECTRODB!,
+			sqlite: process.env.SQLITE_PATH,
+			postgres: process.env.POSTGRES_URL,
 		};
-		this.relationalDatabase =
-			process.env.SQLITE_PATH || process.env.POSTGRES_URL
-				? {
-						sqlite: process.env.SQLITE_PATH,
-						postgres: process.env.POSTGRES_URL,
-					}
-				: undefined;
 		this.buckets = {
 			files: process.env.BUCKET_FILES!,
 		};

@@ -30,15 +30,21 @@ export class App {
 export { inject as Inject } from 'inversify';
 
 export function Service<T extends new (...args: any[]) => unknown>(
-	nameOrOptions?: string | { name?: string; singleton?: boolean },
+	nameOrOptions?:
+		| string
+		| { name?: string; singleton?: boolean; shouldRegister?: () => boolean },
 ): (target: T) => T {
 	return function (target: T) {
-		const { name, singleton } =
+		const { name, singleton, shouldRegister } =
 			typeof nameOrOptions === 'string'
-				? { name: nameOrOptions, singleton: false }
+				? { name: nameOrOptions, singleton: false, shouldRegister: () => true }
 				: nameOrOptions || {};
+
 		App.defaultLogger.debug(`Registering Service *${name || target.name}*`);
 		const injected = injectable()(target);
+		if (shouldRegister && !shouldRegister()) {
+			return target;
+		}
 		const bound = App.defaultContainer.bind(name || target).to(target);
 		if (singleton === false) {
 			bound.inTransientScope();
