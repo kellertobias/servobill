@@ -21,6 +21,10 @@ export class ConfigService {
 		accessKeyId: string | undefined;
 		secretAccessKey: string | undefined;
 	};
+	public readonly relationalDatabase?: {
+		sqlite: string | undefined;
+		postgres: string | undefined;
+	};
 
 	constructor() {
 		this.port = process.env.PORT || 3000;
@@ -46,6 +50,13 @@ export class ConfigService {
 		this.tables = {
 			electordb: process.env.TABLE_ELECTRODB!,
 		};
+		this.relationalDatabase =
+			process.env.SQLITE_PATH || process.env.POSTGRES_URL
+				? {
+						sqlite: process.env.SQLITE_PATH,
+						postgres: process.env.POSTGRES_URL,
+					}
+				: undefined;
 		this.buckets = {
 			files: process.env.BUCKET_FILES!,
 		};
