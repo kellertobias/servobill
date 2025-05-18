@@ -47,6 +47,8 @@ The javascript `Date` as string. Type represents date and time as the ISO Date s
 scalar DateTime
 
 type Expense {
+  """The ID of the expense category assigned to this expense."""
+  categoryId: String
   createdAt: DateTime!
   description: String
   expendedAt: DateTime!
@@ -58,7 +60,29 @@ type Expense {
   updatedAt: DateTime!
 }
 
+input ExpenseCategoryInputType {
+  color: String!
+  description: String
+  id: String!
+  isDefault: Boolean!
+  name: String!
+  reference: String
+  sumForTaxSoftware: Boolean
+}
+
+type ExpenseCategoryType {
+  color: String!
+  description: String
+  id: String!
+  isDefault: Boolean!
+  name: String!
+  reference: String
+  sumForTaxSoftware: Boolean
+}
+
 input ExpenseInput {
+  """The ID of the expense category assigned to this expense."""
+  categoryId: String
   description: String
   expendedAt: DateTime!
   expendedCents: Int!
@@ -202,6 +226,9 @@ input InvoiceInput {
 
 type InvoiceItem {
   description: String
+
+  """The ID of the linked expense, if this item generated one."""
+  expenseId: String
   id: String!
   name: String!
   priceCents: Int!
@@ -212,6 +239,9 @@ type InvoiceItem {
 
 input InvoiceItemInput {
   description: String
+
+  """The ID of the linked expense, if this item generated one."""
+  expenseId: String
   name: String!
   priceCents: Int!
   productId: String
@@ -293,7 +323,7 @@ type Mutation {
   importInvoices(data: [InvoiceImportInput!]!): [Invoice!]!
   invoiceAddComment(attachment: String, comment: String!, invoiceId: String!): InvoiceChangedResponse!
   invoiceAddPayment(id: String!, payment: InvoicePaymentInput!): InvoiceChangedResponse!
-  invoiceCancelUnpaid(id: String!): InvoiceChangedResponse!
+  invoiceCancelUnpaid(deleteExpenses: Boolean, id: String!): InvoiceChangedResponse!
   invoiceDeleteDraft(id: String!): InvoiceChangedResponse!
   invoicePdf(id: String!): String
   invoiceSend(id: String!, submission: InvoiceSubmissionInput!): InvoiceChangedResponse!
@@ -313,6 +343,15 @@ type Product {
   category: String!
   createdAt: DateTime!
   description: String
+
+  """The expense category ID for auto-created expenses."""
+  expenseCategoryId: String
+
+  """The expense in cents associated with this product (optional)."""
+  expenseCents: Int
+
+  """A multiplicator for the expense (optional, defaults to 1)."""
+  expenseMultiplicator: Int
   id: String!
   name: String!
   notes: String
@@ -325,6 +364,15 @@ type Product {
 input ProductInput {
   category: String!
   description: String
+
+  """The expense category ID for auto-created expenses."""
+  expenseCategoryId: String
+
+  """The expense in cents associated with this product (optional)."""
+  expenseCents: Int
+
+  """A multiplicator for the expense (optional, defaults to 1)."""
+  expenseMultiplicator: Int
   name: String!
   notes: String
   priceCents: Int!
@@ -368,6 +416,7 @@ input SettingsCompanyInput {
 }
 
 input SettingsInput {
+  categories: [ExpenseCategoryInputType!]!
   company: SettingsCompanyInput!
   customerNumbersIncrementTemplate: String!
   customerNumbersLast: String!
@@ -393,6 +442,7 @@ input SettingsInput {
 }
 
 type SettingsResult {
+  categories: [ExpenseCategoryType!]!
   company: SettingsResultCompany!
   customerNumbersIncrementTemplate: String!
   customerNumbersLast: String!

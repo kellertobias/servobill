@@ -32,16 +32,21 @@ const getUserPicture = async (user: TokenPayload) => {
 	const res = await fetch(picture);
 	const buffer = Buffer.from(await res.arrayBuffer());
 
-	// Upload to S3
+	// Upload to S3, but handle errors gracefully (e.g., bucket missing)
 	const s3 = DefaultContainer.get(S3Service);
 	const key = `profile-pictures/${user?.sub}.png`;
-	const url = await s3.putObject({
-		body: buffer,
-		key,
-		public: true,
-	});
-
-	return url;
+	try {
+		const url = await s3.putObject({
+			body: buffer,
+			key,
+			public: true,
+		});
+		return url;
+	} catch (error) {
+		// Log the error and return null so login does not crash
+		logger.warn('Failed to upload profile picture to S3', { error });
+		return null;
+	}
 };
 
 export const googleOidCallbackHandler: APIHandler = withSpan(

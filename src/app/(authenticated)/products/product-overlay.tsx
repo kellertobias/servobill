@@ -46,6 +46,8 @@ export default function ProductOverlay({
 									taxPercentage
 									createdAt
 									updatedAt
+									expenseCents
+									expenseMultiplicator
 									expenseCategoryId
 								}
 							}

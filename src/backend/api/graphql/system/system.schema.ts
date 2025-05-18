@@ -43,6 +43,7 @@ export class SettingsResultCompany {
 	bankBic!: string;
 }
 
+@InputType('ExpenseCategoryInputType')
 @ObjectType()
 export class ExpenseCategoryType {
 	@Field()
