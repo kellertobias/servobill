@@ -6,13 +6,16 @@ import { Query, Resolver, Mutation, Arg, Int, Authorized } from 'type-graphql';
 import { ProductWhereInput, Product, ProductInput } from './product.schema';
 
 import { Inject, Service } from '@/common/di';
-import { ProductRepository } from '@/backend/repositories/product.repository';
+import {
+	PRODUCT_REPOSITORY,
+	type ProductRepository,
+} from '@/backend/repositories/product';
 
 @Service()
 @Resolver(() => Product)
 export class ProductResolver {
 	constructor(
-		@Inject(ProductRepository) private repository: ProductRepository,
+		@Inject(PRODUCT_REPOSITORY) private repository: ProductRepository,
 	) {}
 
 	@Authorized()

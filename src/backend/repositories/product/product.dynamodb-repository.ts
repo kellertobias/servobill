@@ -5,13 +5,16 @@ import {
 	ResponseItem,
 } from 'electrodb';
 
-import { DBService } from '../services/dynamodb.service';
-import { ProductEntity } from '../entities/product.entity';
-import { Logger } from '../services/logger.service';
-
-import { AbstractRepository } from './abstract-repository';
+import { AbstractDynamodbRepository } from '@/backend/repositories/abstract-dynamodb-repository';
+import { DBService } from '@/backend/services/dynamodb.service';
+import { ProductEntity } from '@/backend/entities/product.entity';
+import { Logger } from '@/backend/services/logger.service';
 
 import { Inject, Service } from '@/common/di';
+import { PRODUCT_REPO_NAME, PRODUCT_REPOSITORY } from './di-tokens';
+import { DatabaseType } from '@/backend/services/config.service';
+import { shouldRegister } from '../../services/should-register';
+import type { ProductRepository } from './interface';
 
 const entitySchema = DBService.getSchema({
 	model: {
@@ -107,16 +110,22 @@ type ProductSchemaResponseItem = ResponseItem<
 	string,
 	ProductSchema
 >;
-export type ProductOrmEntity = typeof entitySchema.responseItem;
+type ProductOrmEntity = typeof entitySchema.responseItem;
 
-@Service()
-export class ProductRepository extends AbstractRepository<
-	ProductOrmEntity,
-	ProductEntity,
-	[],
-	typeof entitySchema.schema
-> {
-	protected logger = new Logger(ProductRepository.name);
+@Service({ name: PRODUCT_REPOSITORY, ...shouldRegister(DatabaseType.DYNAMODB) })
+/**
+ * DynamoDB implementation of the ProductRepository interface.
+ */
+export class ProductDynamodbRepository
+	extends AbstractDynamodbRepository<
+		ProductOrmEntity,
+		ProductEntity,
+		[],
+		typeof entitySchema.schema
+	>
+	implements ProductRepository
+{
+	protected logger = new Logger(PRODUCT_REPO_NAME);
 	protected mainIdName: string = 'productId';
 
 	protected storeId: string = 'product';
