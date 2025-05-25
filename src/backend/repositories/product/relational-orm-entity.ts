@@ -1,9 +1,11 @@
 import { Entity, PrimaryColumn, Column } from 'typeorm';
+import { OrmEntity } from '@/common/orm-entity-registry';
 
 /**
  * TypeORM entity for Product, used by Postgres and SQLite repositories.
  * Mirrors the ProductEntity domain model.
  */
+@OrmEntity
 @Entity('products')
 export class ProductOrmEntity {
 	@PrimaryColumn('text')

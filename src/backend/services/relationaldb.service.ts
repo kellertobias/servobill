@@ -1,12 +1,14 @@
 import { DataSource, EntityManager, Repository, ObjectLiteral } from 'typeorm';
 import { Inject, Service } from '@/common/di';
 import { ConfigService, DatabaseType } from './config.service';
-import { ProductOrmEntity } from '@/backend/repositories/product/relational-orm-entity';
 import { shouldRegister } from './should-register';
+import { OrmEntityRegistry } from '@/common/orm-entity-registry';
 
 /**
  * Service to manage relational database (Postgres/SQLite) connections and configuration using TypeORM.
  * Handles authentication, connection, and provides repositories and entity managers for entities.
+ *
+ * Uses the OrmEntityRegistry array to dynamically register all ORM entities decorated with @OrmEntity.
  */
 @Service({
 	singleton: true,
@@ -21,6 +23,7 @@ export class RelationalDbService {
 
 	/**
 	 * Creates and initializes the TypeORM DataSource based on config.
+	 * Uses all entities registered with @OrmEntity.
 	 */
 	private createDataSource(): DataSource {
 		const dbType = this.config.tables.databaseType;
@@ -28,7 +31,7 @@ export class RelationalDbService {
 			return new DataSource({
 				type: 'postgres',
 				url: this.config.tables.postgres,
-				entities: [ProductOrmEntity],
+				entities: OrmEntityRegistry,
 				synchronize: true, // For dev only; use migrations in prod
 			});
 		} else if (dbType === DatabaseType.SQLITE) {
@@ -38,7 +41,7 @@ export class RelationalDbService {
 			return new DataSource({
 				type: 'sqlite',
 				database: this.config.tables.sqlite as string,
-				entities: [ProductOrmEntity],
+				entities: OrmEntityRegistry,
 				synchronize: true,
 			});
 		} else {
