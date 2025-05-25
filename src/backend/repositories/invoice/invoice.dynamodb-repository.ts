@@ -1,23 +1,31 @@
-import { DBService } from '../services/dynamodb.service';
+import {
+	IndexCompositeAttributes,
+	QueryBranches,
+	QueryOperations,
+	ResponseItem,
+} from 'electrodb';
+
+import { AbstractDynamodbRepository } from '@/backend/repositories/abstract-dynamodb-repository';
+import { DBService } from '@/backend/services/dynamodb.service';
 import {
 	InvoiceEntity,
 	InvoiceStatus,
 	InvoiceType,
-} from '../entities/invoice.entity';
-import { InvoiceItemEntity } from '../entities/invoice-item.entity';
+} from '@/backend/entities/invoice.entity';
+import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
 import {
 	InvoiceActivityEntity,
 	InvoiceActivityType,
-} from '../entities/invoice-activity.entity';
-import { InvoiceSubmissionEntity } from '../entities/invoice-submission.entity';
-import { CustomerEntity } from '../entities/customer.entity';
-import { Logger } from '../services/logger.service';
-import { Span } from '../instrumentation';
-
-import { AbstractRepository } from './abstract-repository';
-
+} from '@/backend/entities/invoice-activity.entity';
+import { InvoiceSubmissionEntity } from '@/backend/entities/invoice-submission.entity';
+import { CustomerEntity } from '@/backend/entities/customer.entity';
+import { Logger } from '@/backend/services/logger.service';
 import { Inject, Service } from '@/common/di';
+import { INVOICE_REPO_NAME, INVOICE_REPOSITORY } from './di-tokens';
+import { DatabaseType } from '@/backend/services/config.service';
+import { shouldRegister } from '../../services/should-register';
 import { CustomJson } from '@/common/json';
+import type { InvoiceRepository } from './index';
 
 const entitySchema = DBService.getSchema({
 	model: {
@@ -26,137 +34,82 @@ const entitySchema = DBService.getSchema({
 		service: 'invoice',
 	},
 	attributes: {
-		storeId: {
-			type: 'string',
-			required: true,
-		},
-		invoiceId: {
-			type: 'string',
-			required: true,
-		},
-		invoicedAt: {
-			type: 'string',
-		},
-		offeredAt: {
-			type: 'string',
-		},
-		dueAt: {
-			type: 'string',
-		},
-		paidAt: {
-			type: 'string',
-		},
-		totalCents: {
-			type: 'number',
-		},
-		totalTax: {
-			type: 'number',
-		},
-		paidCents: {
-			type: 'number',
-		},
-		offerNumber: {
-			type: 'string',
-		},
-		invoiceNumber: {
-			type: 'string',
-		},
-		customerId: {
-			type: 'string',
-			required: true,
-		},
-		customer: {
-			type: 'string',
-			required: true,
-		},
-		createdAt: {
-			type: 'string',
-			required: true,
-		},
-		updatedAt: {
-			type: 'string',
-			required: true,
-		},
-		type: {
-			type: 'string',
-			required: true,
-		},
-		status: {
-			type: 'string',
-		},
-		paidVia: {
-			type: 'string',
-		},
-		footerText: {
-			type: 'string',
-		},
-		subject: {
-			type: 'string',
-		},
-		submissions: {
-			type: 'string',
-		},
-		items: {
-			type: 'string',
-		},
-		activity: {
-			type: 'string',
-		},
-		links: {
-			type: 'string',
-		},
-		pdf: {
-			type: 'string',
-		},
-		contentHash: {
-			type: 'string',
-		},
+		storeId: { type: 'string', required: true },
+		invoiceId: { type: 'string', required: true },
+		invoicedAt: { type: 'string' },
+		offeredAt: { type: 'string' },
+		dueAt: { type: 'string' },
+		paidAt: { type: 'string' },
+		totalCents: { type: 'number' },
+		totalTax: { type: 'number' },
+		paidCents: { type: 'number' },
+		offerNumber: { type: 'string' },
+		invoiceNumber: { type: 'string' },
+		customerId: { type: 'string', required: true },
+		customer: { type: 'string', required: true },
+		createdAt: { type: 'string', required: true },
+		updatedAt: { type: 'string', required: true },
+		type: { type: 'string', required: true },
+		status: { type: 'string' },
+		paidVia: { type: 'string' },
+		footerText: { type: 'string' },
+		subject: { type: 'string' },
+		submissions: { type: 'string' },
+		items: { type: 'string' },
+		activity: { type: 'string' },
+		links: { type: 'string' },
+		pdf: { type: 'string' },
+		contentHash: { type: 'string' },
 	},
 	indexes: {
 		byId: {
-			pk: {
-				field: 'pk',
-				composite: ['invoiceId'],
-			},
-			sk: {
-				field: 'sk',
-				composite: ['storeId'],
-			},
+			pk: { field: 'pk', composite: ['invoiceId'] },
+			sk: { field: 'sk', composite: ['storeId'] },
 		},
 		byYear: {
 			index: 'gsi1pk-gsi1sk-index',
-			pk: {
-				field: 'gsi1pk',
-				composite: ['storeId'],
-			},
-			sk: {
-				field: 'gsi1sk',
-				composite: ['createdAt'],
-			},
+			pk: { field: 'gsi1pk', composite: ['storeId'] },
+			sk: { field: 'gsi1sk', composite: ['createdAt'] },
 		},
 	},
 });
 
+type InvoiceSchema = typeof entitySchema.schema;
+type InvoiceSchemaResponseItem = ResponseItem<
+	string,
+	string,
+	string,
+	InvoiceSchema
+>;
 export type InvoiceOrmEntity = typeof entitySchema.responseItem;
 
-@Service()
-export class InvoiceRepository extends AbstractRepository<
-	InvoiceOrmEntity,
-	InvoiceEntity,
-	[InvoiceType, CustomerEntity, string],
-	typeof entitySchema.schema
-> {
-	protected logger = new Logger(InvoiceRepository.name);
+/**
+ * DynamoDB implementation of the InvoiceRepository interface.
+ */
+@Service({ name: INVOICE_REPOSITORY, ...shouldRegister(DatabaseType.DYNAMODB) })
+export class InvoiceDynamodbRepository
+	extends AbstractDynamodbRepository<
+		InvoiceOrmEntity,
+		InvoiceEntity,
+		[InvoiceType, CustomerEntity, string],
+		typeof entitySchema.schema
+	>
+	implements InvoiceRepository
+{
+	protected logger = new Logger(INVOICE_REPO_NAME);
 	protected mainIdName: string = 'invoiceId';
-
 	protected storeId: string = 'invoice';
+	protected store: any;
 
 	constructor(@Inject(DBService) private dynamoDb: DBService) {
 		super();
 		this.store = this.dynamoDb.getEntity(entitySchema.schema);
 	}
 
-	protected ormToDomainEntitySafe(
+	/**
+	 * Converts a DynamoDB entity to a domain InvoiceEntity.
+	 */
+	public ormToDomainEntitySafe(
 		entity: Omit<InvoiceOrmEntity, 'storeId'>,
 	): InvoiceEntity {
 		return new InvoiceEntity({
@@ -202,6 +155,9 @@ export class InvoiceRepository extends AbstractRepository<
 		});
 	}
 
+	/**
+	 * Converts a domain InvoiceEntity to a DynamoDB entity.
+	 */
 	public domainToOrmEntity(
 		domainEntity: InvoiceEntity,
 	): Omit<InvoiceOrmEntity, 'storeId'> {
@@ -239,23 +195,9 @@ export class InvoiceRepository extends AbstractRepository<
 		};
 	}
 
-	@Span('InvoiceRepository.listByQuery')
-	public async listByQuery(query: {
-		where?: { type?: InvoiceType; status?: InvoiceStatus; year?: number };
-		skip?: number;
-		limit?: number;
-		cursor?: string;
-	}): Promise<InvoiceEntity[]> {
-		const year = query.where?.year || new Date().getFullYear() - 10;
-		const data = await this.store.query
-			.byYear({
-				storeId: this.storeId,
-			})
-			.gt({ createdAt: new Date(`${year}-01-01`).toISOString() })
-			.go();
-		return data.data.map((elm) => this.ormToDomainEntity(elm));
-	}
-
+	/**
+	 * Generates an empty InvoiceEntity with the given id, type, customer, and user.
+	 */
 	protected generateEmptyItem(
 		id: string,
 		type: InvoiceType,
@@ -283,5 +225,26 @@ export class InvoiceRepository extends AbstractRepository<
 			totalCents: 0,
 			totalTax: 0,
 		});
+	}
+
+	/**
+	 * Lists invoices by query (type, status, year, skip, limit).
+	 * @param query Query object with optional type, status, year, skip, limit, cursor
+	 * @returns Array of InvoiceEntity
+	 */
+	public async listByQuery(query: {
+		where?: { type?: InvoiceType; status?: InvoiceStatus; year?: number };
+		skip?: number;
+		limit?: number;
+		cursor?: string;
+	}): Promise<InvoiceEntity[]> {
+		const year = query.where?.year || new Date().getFullYear() - 10;
+		const data = await this.store.query
+			.byYear({ storeId: this.storeId })
+			.gt({ createdAt: new Date(`${year}-01-01`).toISOString() })
+			.go();
+		return data.data.map((elm: InvoiceOrmEntity) =>
+			this.ormToDomainEntity(elm),
+		);
 	}
 }
