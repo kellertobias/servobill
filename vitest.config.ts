@@ -8,6 +8,11 @@ export default defineConfig({
 		include: ['src/**/*.e2e.ts', 'src/**/*.spec.ts'],
 		testTimeout: 60000,
 		hookTimeout: 60000,
+		// Run all test files sequentially to avoid DynamoDB table race conditions
+		fileParallelism: false,
+		sequence: {
+			concurrent: false,
+		},
 	},
 	resolve: {
 		alias: {

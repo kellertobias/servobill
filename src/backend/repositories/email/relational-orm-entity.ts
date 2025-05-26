@@ -9,22 +9,22 @@ import { OrmEntity } from '@/common/orm-entity-registry';
 @Entity('email')
 export class EmailOrmEntity {
 	/** Unique identifier for the email */
-	@PrimaryColumn()
+	@PrimaryColumn('text')
 	id!: string;
 
 	/** Type of the related entity (e.g., invoice, customer) */
-	@Column({ nullable: false })
+	@Column('text')
 	entityType!: string;
 
 	/** ID of the related entity */
-	@Column({ nullable: false })
+	@Column('text')
 	entityId!: string;
 
 	/** Recipient email address */
-	@Column({ nullable: false })
+	@Column('text')
 	recipient!: string;
 
 	/** When the email was sent */
-	@Column({ type: 'timestamp', nullable: false })
+	@Column('timestamp', { nullable: false })
 	sentAt!: Date;
 }

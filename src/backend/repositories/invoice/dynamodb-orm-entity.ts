@@ -12,42 +12,113 @@ export const entitySchema = DynamoDBService.getSchema({
 		service: 'invoice',
 	},
 	attributes: {
-		storeId: { type: 'string', required: true },
-		invoiceId: { type: 'string', required: true },
-		createdAt: { type: 'string', required: true },
-		updatedAt: { type: 'string', required: true },
-		type: { type: 'string', required: true },
-		status: { type: 'string' },
-		customerId: { type: 'string', required: true },
-		customer: { type: 'string', required: true },
-		items: { type: 'string' },
-		activity: { type: 'string' },
-		submissions: { type: 'string' },
-		subject: { type: 'string' },
-		offerNumber: { type: 'string' },
-		invoiceNumber: { type: 'string' },
-		offeredAt: { type: 'string' },
-		invoicedAt: { type: 'string' },
-		dueAt: { type: 'string' },
-		paidCents: { type: 'number' },
-		paidAt: { type: 'string' },
-		paidVia: { type: 'string' },
-		footerText: { type: 'string' },
-		totalCents: { type: 'number' },
-		totalTax: { type: 'number' },
-		links: { type: 'string' },
-		contentHash: { type: 'string' },
-		pdf: { type: 'string' },
+		storeId: {
+			type: 'string',
+			required: true,
+		},
+		invoiceId: {
+			type: 'string',
+			required: true,
+		},
+		invoicedAt: {
+			type: 'string',
+		},
+		offeredAt: {
+			type: 'string',
+		},
+		dueAt: {
+			type: 'string',
+		},
+		paidAt: {
+			type: 'string',
+		},
+		totalCents: {
+			type: 'number',
+		},
+		totalTax: {
+			type: 'number',
+		},
+		paidCents: {
+			type: 'number',
+		},
+		offerNumber: {
+			type: 'string',
+		},
+		invoiceNumber: {
+			type: 'string',
+		},
+		customerId: {
+			type: 'string',
+			required: true,
+		},
+		customer: {
+			type: 'string',
+			required: true,
+		},
+		createdAt: {
+			type: 'string',
+			required: true,
+		},
+		updatedAt: {
+			type: 'string',
+			required: true,
+		},
+		type: {
+			type: 'string',
+			required: true,
+		},
+		status: {
+			type: 'string',
+		},
+		paidVia: {
+			type: 'string',
+		},
+		footerText: {
+			type: 'string',
+		},
+		subject: {
+			type: 'string',
+		},
+		submissions: {
+			type: 'string',
+		},
+		items: {
+			type: 'string',
+		},
+		activity: {
+			type: 'string',
+		},
+		links: {
+			type: 'string',
+		},
+		pdf: {
+			type: 'string',
+		},
+		contentHash: {
+			type: 'string',
+		},
 	},
 	indexes: {
 		byId: {
-			pk: { field: 'pk', composite: ['invoiceId'] },
-			sk: { field: 'sk', composite: ['storeId'] },
+			pk: {
+				field: 'pk',
+				composite: ['invoiceId'],
+			},
+			sk: {
+				field: 'sk',
+				composite: ['storeId'],
+			},
 		},
 		byYear: {
 			index: 'gsi1pk-gsi1sk-index',
-			pk: { field: 'gsi1pk', composite: ['storeId'] },
-			sk: { field: 'gsi1sk', composite: ['createdAt'] },
+			pk: {
+				field: 'gsi1pk',
+				composite: ['storeId'],
+			},
+			sk: {
+				field: 'gsi1sk',
+				composite: ['createdAt'],
+			},
 		},
 	},
 });

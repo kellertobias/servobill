@@ -12,22 +12,52 @@ export const entitySchema = DynamoDBService.getSchema({
 		service: 'email',
 	},
 	attributes: {
-		storeId: { type: 'string', required: true },
-		emailId: { type: 'string', required: true },
-		entityType: { type: 'string', required: true },
-		entityId: { type: 'string', required: true },
-		recipient: { type: 'string', required: true },
-		sentAt: { type: 'string', required: true },
+		storeId: {
+			type: 'string',
+			required: true,
+		},
+		emailId: {
+			type: 'string',
+			required: true,
+		},
+		entityType: {
+			type: 'string',
+			required: true,
+		},
+		entityId: {
+			type: 'string',
+			required: true,
+		},
+		recipient: {
+			type: 'string',
+			required: true,
+		},
+		sentAt: {
+			type: 'string',
+			required: true,
+		},
 	},
 	indexes: {
 		byId: {
-			pk: { field: 'pk', composite: ['emailId'] },
-			sk: { field: 'sk', composite: ['storeId'] },
+			pk: {
+				field: 'pk',
+				composite: ['emailId'],
+			},
+			sk: {
+				field: 'sk',
+				composite: ['storeId'],
+			},
 		},
-		byRecipient: {
+		byName: {
 			index: 'gsi1pk-gsi1sk-index',
-			pk: { field: 'gsi1pk', composite: ['storeId'] },
-			sk: { field: 'gsi1sk', composite: ['searchRecipient'] },
+			pk: {
+				field: 'gsi1pk',
+				composite: ['storeId'],
+			},
+			sk: {
+				field: 'gsi1sk',
+				composite: ['sentAt'],
+			},
 		},
 	},
 });

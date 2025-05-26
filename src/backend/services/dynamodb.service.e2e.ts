@@ -12,6 +12,10 @@ import {
 
 // These are imported from the testcontainers setup
 import { DYNAMODB_PORT } from '../../test/vitest.setup-e2e';
+import {
+	DYNAMODB_TABLE_NAME,
+	ensureDynamoTableExists,
+} from '../../test/ensure-dynamo-table';
 
 /**
  * Minimal ElectroDB schema for testing
@@ -41,47 +45,15 @@ const testSchema = {
 	},
 } as any;
 
-const TABLE_NAME = 'test-table';
-
-async function ensureTableExists() {
-	const client = new DynamoDBClient({
-		region: 'eu-central-1',
-		endpoint: `http://localhost:${DYNAMODB_PORT}`,
-		credentials: {
-			accessKeyId: 'AKIAIOSFODNN7EXAMPLE',
-			secretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
-		},
-	});
-	const tables = await client.send(new ListTablesCommand({}));
-	if (!tables.TableNames?.includes(TABLE_NAME)) {
-		await client.send(
-			new CreateTableCommand({
-				TableName: TABLE_NAME,
-				AttributeDefinitions: [
-					{ AttributeName: 'pk', AttributeType: 'S' },
-					{ AttributeName: 'sk', AttributeType: 'S' },
-				],
-				KeySchema: [
-					{ AttributeName: 'pk', KeyType: 'HASH' },
-					{ AttributeName: 'sk', KeyType: 'RANGE' },
-				],
-				BillingMode: 'PAY_PER_REQUEST',
-			}),
-		);
-		// Wait a moment for the table to become active
-		await new Promise((res) => setTimeout(res, 1000));
-	}
-}
-
 describe('DBService (DynamoDB) E2E', () => {
 	let dbService: DynamoDBService;
 	let entity: Entity<any, any, any, any>;
 
 	beforeAll(async () => {
-		await ensureTableExists();
+		await ensureDynamoTableExists();
 		const config = {
 			tables: {
-				electordb: TABLE_NAME,
+				electordb: DYNAMODB_TABLE_NAME,
 				databaseType: DatabaseType.DYNAMODB,
 			},
 			endpoints: {

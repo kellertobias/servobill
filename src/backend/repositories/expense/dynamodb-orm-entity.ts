@@ -12,27 +12,68 @@ export const entitySchema = DynamoDBService.getSchema({
 		service: 'expense',
 	},
 	attributes: {
-		storeId: { type: 'string', required: true },
-		expenseId: { type: 'string', required: true },
-		createdAt: { type: 'string', required: true },
-		updatedAt: { type: 'string', required: true },
-		name: { type: 'string', required: true },
-		description: { type: 'string' },
-		notes: { type: 'string' },
-		expendedCents: { type: 'number', required: true },
-		taxCents: { type: 'number' },
-		expendedAt: { type: 'string', required: true },
-		categoryId: { type: 'string' },
+		storeId: {
+			type: 'string',
+			required: true,
+		},
+		expenseId: {
+			type: 'string',
+			required: true,
+		},
+		expendedAt: {
+			type: 'string',
+			required: true,
+		},
+		createdAt: {
+			type: 'string',
+			required: true,
+		},
+		updatedAt: {
+			type: 'string',
+			required: true,
+		},
+		expendedCents: {
+			type: 'number',
+			required: true,
+		},
+		taxCents: {
+			type: 'number',
+		},
+		name: {
+			type: 'string',
+			required: true,
+		},
+		description: {
+			type: 'string',
+		},
+		notes: {
+			type: 'string',
+		},
+		categoryId: {
+			type: 'string',
+		},
 	},
 	indexes: {
 		byId: {
-			pk: { field: 'pk', composite: ['expenseId'] },
-			sk: { field: 'sk', composite: ['storeId'] },
+			pk: {
+				field: 'pk',
+				composite: ['expenseId'],
+			},
+			sk: {
+				field: 'sk',
+				composite: ['storeId'],
+			},
 		},
-		byName: {
+		byYear: {
 			index: 'gsi1pk-gsi1sk-index',
-			pk: { field: 'gsi1pk', composite: ['storeId'] },
-			sk: { field: 'gsi1sk', composite: ['searchName'] },
+			pk: {
+				field: 'gsi1pk',
+				composite: ['storeId'],
+			},
+			sk: {
+				field: 'gsi1sk',
+				composite: ['expendedAt'],
+			},
 		},
 	},
 });

@@ -9,62 +9,62 @@ import { OrmEntity } from '@/common/orm-entity-registry';
 @Entity('customer')
 export class CustomerOrmEntity {
 	/** Unique identifier for the customer */
-	@PrimaryColumn()
+	@PrimaryColumn('text')
 	id!: string;
 
 	/** Customer number (business logic identifier) */
-	@Column({ nullable: false })
+	@Column('text')
 	customerNumber!: string;
 
 	/** Customer name */
-	@Column({ nullable: false })
+	@Column('text')
 	name!: string;
 
 	/** Lowercase name for search */
-	@Column({ nullable: false })
+	@Column('text')
 	searchName!: string;
 
 	/** Contact name */
-	@Column({ nullable: true })
+	@Column('text', { nullable: true })
 	contactName?: string;
 
 	/** Whether to show contact */
-	@Column({ nullable: false, default: false })
+	@Column('boolean', { nullable: false, default: false })
 	showContact!: boolean;
 
 	/** Email address */
-	@Column({ nullable: true })
+	@Column('text', { nullable: true })
 	email?: string;
 
 	/** Street address */
-	@Column({ nullable: true })
+	@Column('text', { nullable: true })
 	street?: string;
 
 	/** ZIP code */
-	@Column({ nullable: true })
+	@Column('text', { nullable: true })
 	zip?: string;
 
 	/** City */
-	@Column({ nullable: true })
+	@Column('text', { nullable: true })
 	city?: string;
 
 	/** State */
-	@Column({ nullable: true })
+	@Column('text', { nullable: true })
 	state?: string;
 
 	/** Country */
-	@Column({ nullable: true })
+	@Column('text', { nullable: true })
 	country?: string;
 
 	/** Notes */
-	@Column({ nullable: true })
+	@Column('text', { nullable: true })
 	notes?: string;
 
 	/** Creation timestamp */
-	@Column({ type: 'timestamp', nullable: false })
+	@Column('timestamp', { nullable: false })
 	createdAt!: Date;
 
 	/** Last update timestamp */
-	@Column({ type: 'timestamp', nullable: false })
+	@Column('timestamp', { nullable: false })
 	updatedAt!: Date;
 }
