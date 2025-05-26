@@ -1,20 +1,22 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { Entity, ResponseItem, Schema } from 'electrodb';
 
-import { ConfigService, DatabaseType } from './config.service';
+import type { ConfigService } from './config.service';
+import { DatabaseType } from './constants';
 
 import { Inject, Service } from '@/common/di';
 import { shouldRegister } from './should-register';
+import { CONFIG_SERVICE } from './di-tokens';
 
 @Service({
 	singleton: true,
 	...shouldRegister(DatabaseType.DYNAMODB),
 })
-export class DBService {
+export class DynamoDBService {
 	private client: DynamoDBClient;
 	private table: string;
 
-	constructor(@Inject(ConfigService) private readonly config: ConfigService) {
+	constructor(@Inject(CONFIG_SERVICE) private readonly config: ConfigService) {
 		if (!this.config.tables.electordb) {
 			throw new Error('DynamoDB endpoint is not configured');
 		}

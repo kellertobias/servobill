@@ -41,9 +41,15 @@ export class ProductOrmEntity {
 	@Column('text', { nullable: true })
 	expenseCategoryId?: string;
 
-	@Column('datetime')
+	/**
+	 * Date and time when the product was created.
+	 */
+	@Column('timestamp')
 	createdAt!: Date;
 
-	@Column('datetime')
+	/**
+	 * Date and time when the product was last updated.
+	 */
+	@Column('timestamp')
 	updatedAt!: Date;
 }

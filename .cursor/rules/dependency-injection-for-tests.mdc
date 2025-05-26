@@ -1,0 +1,28 @@
+---
+description: 
+globs: *.e2e.ts,*.spec.ts
+alwaysApply: false
+---
+This project uses Dependency Injection.
+This is especially important in test cases, here you can:
+- Override injected dependencies by doing: `DefaultContainer.bind(DI_TOKEN_NAME).to(value)`
+- after registering all dependencies (registering happens automatically by importing them), get the unit under test by doing: `DefaultContainer.get<ClassName>(DI_TOKEN_NAME)`
+
+you can also create a completely new app context like this:
+
+```typescript
+// Import the Dependency Injection framework
+import App from `@/common/di`
+
+// create a new DI App Context and register the required modules
+const app = App.forRoot([
+    {token: MY_DI_TOKEN, module: SomeClass},
+    {token: OTHER_DI_TOKEN, value: {...}},
+    SomeClassToken,
+])
+
+// now register the unit under test
+const uut = app.create(MyUutClass)
+```
+
+Whenever you change or add new test cases, you need to re-run the tests. Do this by running `npm run test`

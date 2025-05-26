@@ -1,3 +1,4 @@
+import '@/backend/services/config.service';
 // Email repository exports: interface, DI tokens, and implementations
 export * from './interface';
 export * from './di-tokens';

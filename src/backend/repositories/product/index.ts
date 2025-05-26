@@ -1,3 +1,4 @@
+import '@/backend/services/config.service';
 export * from './di-tokens';
 
 export * from './product.dynamodb-repository';

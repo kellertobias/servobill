@@ -6,111 +6,21 @@ import {
 } from 'electrodb';
 
 import { AbstractDynamodbRepository } from '@/backend/repositories/abstract-dynamodb-repository';
-import { DBService } from '@/backend/services/dynamodb.service';
+import { DynamoDBService } from '@/backend/services/dynamodb.service';
 import { ProductEntity } from '@/backend/entities/product.entity';
 import { Logger } from '@/backend/services/logger.service';
 
 import { Inject, Service } from '@/common/di';
 import { PRODUCT_REPO_NAME, PRODUCT_REPOSITORY } from './di-tokens';
-import { DatabaseType } from '@/backend/services/config.service';
+import { DatabaseType } from '@/backend/services/constants';
 import { shouldRegister } from '../../services/should-register';
 import type { ProductRepository } from './interface';
-
-const entitySchema = DBService.getSchema({
-	model: {
-		entity: 'product',
-		version: '1',
-		service: 'product',
-	},
-	attributes: {
-		storeId: {
-			type: 'string',
-			required: true,
-		},
-		productId: {
-			type: 'string',
-			required: true,
-		},
-		createdAt: {
-			type: 'string',
-			required: true,
-		},
-		updatedAt: {
-			type: 'string',
-			required: true,
-		},
-		name: {
-			type: 'string',
-			required: true,
-		},
-		category: {
-			type: 'string',
-			required: true,
-		},
-		searchName: {
-			type: 'string',
-			required: true,
-		},
-		description: {
-			type: 'string',
-		},
-		notes: {
-			type: 'string',
-		},
-		unit: {
-			type: 'string',
-		},
-		priceCents: {
-			type: 'number',
-			required: true,
-		},
-		taxPercentage: {
-			type: 'number',
-			required: true,
-		},
-		expenseCents: {
-			type: 'number',
-		},
-		expenseMultiplicator: {
-			type: 'number',
-		},
-		expenseCategoryId: {
-			type: 'string',
-		},
-	},
-	indexes: {
-		byId: {
-			pk: {
-				field: 'pk',
-				composite: ['productId'],
-			},
-			sk: {
-				field: 'sk',
-				composite: ['storeId'],
-			},
-		},
-		byName: {
-			index: 'gsi1pk-gsi1sk-index',
-			pk: {
-				field: 'gsi1pk',
-				composite: ['storeId'],
-			},
-			sk: {
-				field: 'gsi1sk',
-				composite: ['searchName'],
-			},
-		},
-	},
-});
-
-type ProductSchema = typeof entitySchema.schema;
-type ProductSchemaResponseItem = ResponseItem<
-	string,
-	string,
-	string,
-	ProductSchema
->;
-type ProductOrmEntity = typeof entitySchema.responseItem;
+import {
+	entitySchema,
+	ProductOrmEntity,
+	ProductSchema,
+	ProductSchemaResponseItem,
+} from './dynamodb-orm-entity';
 
 @Service({ name: PRODUCT_REPOSITORY, ...shouldRegister(DatabaseType.DYNAMODB) })
 /**
@@ -130,7 +40,7 @@ export class ProductDynamodbRepository
 
 	protected storeId: string = 'product';
 
-	constructor(@Inject(DBService) private dynamoDb: DBService) {
+	constructor(@Inject(DynamoDBService) private dynamoDb: DynamoDBService) {
 		super();
 		this.store = this.dynamoDb.getEntity(entitySchema.schema);
 	}

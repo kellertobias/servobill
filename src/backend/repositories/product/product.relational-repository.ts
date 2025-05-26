@@ -4,7 +4,7 @@ import { ProductEntity } from '@/backend/entities/product.entity';
 import { ProductOrmEntity } from './relational-orm-entity';
 import { Logger } from '@/backend/services/logger.service';
 import { AbstractRelationalRepository } from '@/backend/repositories/abstract-relational-repository';
-import { DatabaseType } from '@/backend/services/config.service';
+import { DatabaseType } from '@/backend/services/constants';
 import { shouldRegister } from '../../services/should-register';
 import { RelationalDbService } from '@/backend/services/relationaldb.service';
 import type { ProductRepository } from './index';
@@ -26,13 +26,13 @@ export class ProductRelationalRepository
 	protected logger = new Logger(PRODUCT_REPO_NAME);
 
 	constructor(@Inject(RelationalDbService) db: RelationalDbService) {
-		super(db, ProductOrmEntity);
+		super({ db, ormEntityClass: ProductOrmEntity });
 	}
 
 	/**
 	 * Converts a TypeORM ProductOrmEntity to a domain ProductEntity.
 	 */
-	public ormToDomainEntitySafe(orm: ProductOrmEntity): ProductEntity {
+	protected ormToDomainEntitySafe(orm: ProductOrmEntity): ProductEntity {
 		return new ProductEntity({
 			id: orm.id,
 			category: orm.category,
@@ -53,7 +53,7 @@ export class ProductRelationalRepository
 	/**
 	 * Converts a domain ProductEntity to a TypeORM ProductOrmEntity.
 	 */
-	public domainToOrmEntity(domain: ProductEntity): ProductOrmEntity {
+	protected domainToOrmEntity(domain: ProductEntity): ProductOrmEntity {
 		return {
 			id: domain.id,
 			category: domain.category,
@@ -100,6 +100,8 @@ export class ProductRelationalRepository
 		limit?: number;
 		cursor?: string;
 	}): Promise<ProductEntity[]> {
+		await this.initialized.promise;
+
 		const qb = this.repository!.createQueryBuilder('product');
 		if (query.where?.search) {
 			qb.where('LOWER(product.name) LIKE :search', {

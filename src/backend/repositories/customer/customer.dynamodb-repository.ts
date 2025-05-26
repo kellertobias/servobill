@@ -6,7 +6,7 @@ import {
 } from 'electrodb';
 
 import { AbstractDynamodbRepository } from '@/backend/repositories/abstract-dynamodb-repository';
-import { DBService } from '@/backend/services/dynamodb.service';
+import { DynamoDBService } from '@/backend/services/dynamodb.service';
 import { CustomerEntity } from '@/backend/entities/customer.entity';
 import { Logger } from '@/backend/services/logger.service';
 import { Inject, Service } from '@/common/di';
@@ -15,7 +15,7 @@ import { DatabaseType } from '@/backend/services/config.service';
 import { shouldRegister } from '../../services/should-register';
 import type { CustomerRepository } from './index';
 
-const entitySchema = DBService.getSchema({
+const entitySchema = DynamoDBService.getSchema({
 	model: {
 		entity: 'customer',
 		version: '1',
@@ -82,7 +82,7 @@ export class CustomerDynamodbRepository
 	protected storeId: string = 'customer';
 	protected store: any;
 
-	constructor(@Inject(DBService) private dynamoDb: DBService) {
+	constructor(@Inject(DynamoDBService) private dynamoDb: DynamoDBService) {
 		super();
 		this.store = this.dynamoDb.getEntity(entitySchema.schema);
 	}

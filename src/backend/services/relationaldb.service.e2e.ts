@@ -1,7 +1,8 @@
 import 'reflect-metadata';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { RelationalDbService } from './relationaldb.service';
-import { ConfigService, DatabaseType } from './config.service';
+import type { ConfigService } from './config.service';
+import { DatabaseType } from './constants';
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 // These are imported from the testcontainers setup
@@ -10,7 +11,7 @@ import {
 	POSTGRES_USER,
 	POSTGRES_PASSWORD,
 	POSTGRES_DB,
-} from '../../../vitest.setup-e2e';
+} from '../../test/vitest.setup-e2e';
 
 /**
  * Minimal TypeORM entity for testing

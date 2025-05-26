@@ -8,16 +8,17 @@ import {
 
 import { Span } from '../instrumentation';
 
-import { ConfigService } from './config.service';
+import type { ConfigService } from './config.service';
 
 import { Inject, Service } from '@/common/di';
+import { CONFIG_SERVICE } from './di-tokens';
 
 @Service()
 export class S3Service {
 	private client: S3Client;
 
 	constructor(
-		@Inject(ConfigService) private readonly configuration: ConfigService,
+		@Inject(CONFIG_SERVICE) private readonly configuration: ConfigService,
 	) {
 		const s3Options = {
 			...(this.configuration.endpoints.s3

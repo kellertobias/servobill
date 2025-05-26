@@ -3,27 +3,72 @@ import { Container, injectable } from 'inversify';
 
 import { Logger } from '@/backend/services/logger.service';
 
+type ModuleToken = new (...args: any[]) => unknown;
+
 export class App {
 	static defaultLogger = new Logger(App.name);
 	static defaultContainer = new Container();
-	static forRoot({ modules }: { modules: (new () => unknown)[] }) {
+	static forRoot({
+		modules,
+	}: {
+		modules: (
+			| ModuleToken
+			| { token: string | symbol | ModuleToken; module: ModuleToken }
+			| { token: string | symbol | ModuleToken; value: any }
+		)[];
+	}) {
 		const container = new Container();
 
 		for (const Module of modules) {
-			container.bind(Module.name).to(Module);
+			if (typeof Module === 'function') {
+				container.bind(Module.name).to(Module);
+			} else if ('module' in Module) {
+				container.bind(Module.token).to(Module.module);
+			} else {
+				container.bind(Module.token).toConstantValue(Module.value);
+			}
 		}
 
 		return new this(container);
 	}
 
-	static get<T>(type: string | symbol | (new (...args: unknown[]) => T)) {
+	static get<T>(type: string | symbol | (new (...args: any[]) => T)) {
 		return this.defaultContainer.get<T>(type);
 	}
 
 	constructor(private readonly container: Container) {}
 
-	get<T>(type: string | symbol | (new (...args: unknown[]) => T)) {
+	get<T>(type: string | symbol | (new (...args: any[]) => T)) {
 		return this.container.get<T>(type);
+	}
+
+	bind<T>(
+		type: string | symbol | (new (...args: any[]) => T),
+		to?:
+			| {
+					module: new () => T;
+					value?: never;
+			  }
+			| {
+					module?: never;
+					value: T;
+			  },
+	) {
+		if (typeof type === 'function') {
+			this.container.bind(type.name).to(type);
+		} else if (to && 'module' in to && to.module) {
+			this.container.bind(type).to(to.module);
+		} else if (to && 'value' in to && to.value) {
+			this.container.bind(type).toConstantValue(to.value);
+		} else {
+			throw new Error('Invalid type or to');
+		}
+	}
+
+	create<T>(type: new (...args: any[]) => T): T {
+		const token = Symbol();
+		this.bind(token, { module: type });
+		return this.get(token);
 	}
 }
 

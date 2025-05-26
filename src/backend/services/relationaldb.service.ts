@@ -1,8 +1,10 @@
 import { DataSource, EntityManager, Repository, ObjectLiteral } from 'typeorm';
 import { Inject, Service } from '@/common/di';
-import { ConfigService, DatabaseType } from './config.service';
+import type { ConfigService } from './config.service';
+import { DatabaseType } from './constants';
 import { shouldRegister } from './should-register';
 import { OrmEntityRegistry } from '@/common/orm-entity-registry';
+import { CONFIG_SERVICE } from './di-tokens';
 
 /**
  * Service to manage relational database (Postgres/SQLite) connections and configuration using TypeORM.
@@ -17,7 +19,7 @@ import { OrmEntityRegistry } from '@/common/orm-entity-registry';
 export class RelationalDbService {
 	private dataSource: DataSource;
 
-	constructor(@Inject(ConfigService) private readonly config: ConfigService) {
+	constructor(@Inject(CONFIG_SERVICE) private readonly config: ConfigService) {
 		this.dataSource = this.createDataSource();
 	}
 

@@ -1,7 +1,8 @@
 import 'reflect-metadata';
 import { describe, it, expect, beforeAll } from 'vitest';
-import { DBService } from './dynamodb.service';
-import { ConfigService, DatabaseType } from './config.service';
+import { DynamoDBService } from './dynamodb.service';
+import type { ConfigService } from './config.service';
+import { DatabaseType } from './constants';
 import { Entity } from 'electrodb';
 import {
 	DynamoDBClient,
@@ -10,7 +11,7 @@ import {
 } from '@aws-sdk/client-dynamodb';
 
 // These are imported from the testcontainers setup
-import { DYNAMODB_PORT } from '../../../vitest.setup-e2e';
+import { DYNAMODB_PORT } from '../../test/vitest.setup-e2e';
 
 /**
  * Minimal ElectroDB schema for testing
@@ -73,7 +74,7 @@ async function ensureTableExists() {
 }
 
 describe('DBService (DynamoDB) E2E', () => {
-	let dbService: DBService;
+	let dbService: DynamoDBService;
 	let entity: Entity<any, any, any, any>;
 
 	beforeAll(async () => {
@@ -92,7 +93,7 @@ describe('DBService (DynamoDB) E2E', () => {
 				secretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
 			},
 		};
-		dbService = new DBService({ ...config } as unknown as ConfigService);
+		dbService = new DynamoDBService({ ...config } as unknown as ConfigService);
 		entity = dbService.getEntity(testSchema);
 	});
 

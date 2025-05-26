@@ -1,11 +1,7 @@
-import { randomUUID } from 'crypto';
-
-import { Entity, Schema } from 'electrodb';
 import { injectable } from 'inversify';
 
 import { DomainEntity as DomainBaseEntity } from '../entities/abstract.entity';
 import { EventBusService } from '../services/eventbus.service';
-import { Span } from '../instrumentation';
 
 import { Logger } from '@/backend/services/logger.service';
 import { DefaultContainer } from '@/common/di';
@@ -39,18 +35,18 @@ export abstract class AbstractRepository<
 		ormEntity: Omit<OrmEntity, 'storeId'>,
 	): DomainEntity;
 
-	public abstract domainToOrmEntity(
+	protected abstract domainToOrmEntity(
 		domainEntity: DomainEntity,
 	): Omit<OrmEntity, 'storeId'>;
 
-	public ormToDomainEntity(
+	protected ormToDomainEntity(
 		ormEntity:
 			| {
 					data: Omit<OrmEntity, 'storeId'>;
 			  }
 			| Omit<OrmEntity, 'storeId'>,
 	): DomainEntity;
-	public ormToDomainEntity(
+	protected ormToDomainEntity(
 		ormEntity?:
 			| {
 					data?: Omit<OrmEntity, 'storeId'> | null;
@@ -58,7 +54,7 @@ export abstract class AbstractRepository<
 			| Omit<OrmEntity, 'storeId'>
 			| null,
 	): DomainEntity | null;
-	public ormToDomainEntity(
+	protected ormToDomainEntity(
 		ormEntity?:
 			| {
 					data?: Omit<OrmEntity, 'storeId'> | null;

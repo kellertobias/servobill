@@ -6,7 +6,7 @@ import {
 } from 'electrodb';
 
 import { AbstractDynamodbRepository } from '@/backend/repositories/abstract-dynamodb-repository';
-import { DBService } from '@/backend/services/dynamodb.service';
+import { DynamoDBService } from '@/backend/services/dynamodb.service';
 import {
 	InvoiceEntity,
 	InvoiceStatus,
@@ -27,7 +27,7 @@ import { shouldRegister } from '../../services/should-register';
 import { CustomJson } from '@/common/json';
 import type { InvoiceRepository } from './index';
 
-const entitySchema = DBService.getSchema({
+const entitySchema = DynamoDBService.getSchema({
 	model: {
 		entity: 'invoice',
 		version: '1',
@@ -101,7 +101,7 @@ export class InvoiceDynamodbRepository
 	protected storeId: string = 'invoice';
 	protected store: any;
 
-	constructor(@Inject(DBService) private dynamoDb: DBService) {
+	constructor(@Inject(DynamoDBService) private dynamoDb: DynamoDBService) {
 		super();
 		this.store = this.dynamoDb.getEntity(entitySchema.schema);
 	}

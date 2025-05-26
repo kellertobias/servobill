@@ -4,11 +4,8 @@ import { Entity, Schema } from 'electrodb';
 import { injectable } from 'inversify';
 
 import { DomainEntity as DomainBaseEntity } from '../entities/abstract.entity';
-import { EventBusService } from '../services/eventbus.service';
 import { Span } from '../instrumentation';
 
-import { Logger } from '@/backend/services/logger.service';
-import { DefaultContainer } from '@/common/di';
 import { AbstractRepository } from './abstract-repository';
 
 @injectable()

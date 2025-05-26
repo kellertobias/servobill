@@ -4,6 +4,7 @@ import { DomainEntity as DomainBaseEntity } from '../entities/abstract.entity';
 import { RelationalDbService } from '@/backend/services/relationaldb.service';
 import { randomUUID } from 'node:crypto';
 import { AbstractRepository } from './abstract-repository';
+import { DeferredPromise } from '@/common/deferred';
 
 /**
  * Abstract base repository for relational DB-backed entities using TypeORM (Postgres/SQLite).
@@ -18,6 +19,7 @@ export abstract class AbstractRelationalRepository<
 	DomainEntity extends DomainBaseEntity,
 	CreateArgs extends unknown[] = [],
 > extends AbstractRepository<OrmEntity, DomainEntity, CreateArgs> {
+	protected initialized = new DeferredPromise<void>();
 	/**
 	 * TypeORM repository for the entity.
 	 */
@@ -33,11 +35,18 @@ export abstract class AbstractRelationalRepository<
 	 * @param db RelationalDbService instance
 	 * @param ormEntityClass The ORM entity class for this repository
 	 */
-	constructor(db: RelationalDbService, ormEntityClass: { new (): OrmEntity }) {
+	constructor({
+		db,
+		ormEntityClass,
+	}: {
+		db: RelationalDbService;
+		ormEntityClass: { new (): OrmEntity };
+	}) {
 		super();
 		db.initialize().then(() => {
 			this.repository = db.getRepository(ormEntityClass);
 			this.entityManager = db.getEntityManager();
+			this.initialized.resolve();
 		});
 	}
 
@@ -45,6 +54,7 @@ export abstract class AbstractRelationalRepository<
 	 * Gets a domain entity by its primary key.
 	 */
 	public async getById(id: string): Promise<DomainEntity | null> {
+		await this.initialized.promise;
 		const ormEntity = await this.repository?.findOneBy({ id } as any);
 		return ormEntity ? this.ormToDomainEntity(ormEntity) : null;
 	}
@@ -53,6 +63,7 @@ export abstract class AbstractRelationalRepository<
 	 * Saves a domain entity to the database.
 	 */
 	public async save(domainEntity: DomainEntity): Promise<void> {
+		await this.initialized.promise;
 		const ormEntity = this.domainToOrmEntity(
 			domainEntity,
 		) as DeepPartial<OrmEntity>;
@@ -63,6 +74,7 @@ export abstract class AbstractRelationalRepository<
 	 * Deletes a domain entity by its primary key.
 	 */
 	public async delete(id: string): Promise<void> {
+		await this.initialized.promise;
 		await this.repository?.delete(id);
 	}
 
@@ -70,6 +82,8 @@ export abstract class AbstractRelationalRepository<
 		entityId: string,
 		...args: CreateArgs
 	): Promise<DomainEntity> {
+		await this.initialized.promise;
+
 		const entity = this.generateEmptyItem(entityId, ...args);
 		const data = this.domainToOrmEntity(entity);
 
@@ -80,6 +94,8 @@ export abstract class AbstractRelationalRepository<
 	}
 
 	public async create(...args: CreateArgs): Promise<DomainEntity> {
+		await this.initialized.promise;
+
 		const entityId = randomUUID().toString();
 
 		const entity = this.generateEmptyItem(entityId, ...args);

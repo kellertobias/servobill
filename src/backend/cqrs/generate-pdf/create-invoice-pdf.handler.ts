@@ -8,9 +8,10 @@ import { CreateInvoicePdfCommand } from './create-invoice-pdf.command';
 import { Inject } from '@/common/di';
 import { CqrsHandler, ICqrsHandler } from '@/backend/services/cqrs.service';
 import { Logger } from '@/backend/services/logger.service';
-import { ConfigService } from '@/backend/services/config.service';
+import type { ConfigService } from '@/backend/services/config.service';
 import { S3Service } from '@/backend/services/s3.service';
 import { Span } from '@/backend/instrumentation';
+import { CONFIG_SERVICE } from '@/backend/services/di-tokens';
 
 // const executablePath = process.env.IS_OFFLINE
 // 	? // eslint-disable-next-line unicorn/no-useless-undefined
@@ -24,7 +25,7 @@ export class CreateInvoicePdfHandler
 	private logger = new Logger(CreateInvoicePdfHandler.name);
 	constructor(
 		@Inject(S3Service) private readonly s3: S3Service,
-		@Inject(ConfigService) private readonly config: ConfigService,
+		@Inject(CONFIG_SERVICE) private readonly config: ConfigService,
 	) {}
 
 	@Span('CreateInvoicePdfHandler.generatePdf')

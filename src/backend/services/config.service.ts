@@ -1,12 +1,8 @@
 import { Service } from '@/common/di';
+import { CONFIG_SERVICE } from './di-tokens';
+import { DatabaseType } from './constants';
 
-export enum DatabaseType {
-	SQLITE = 'sqlite',
-	POSTGRES = 'postgres',
-	DYNAMODB = 'dynamodb',
-}
-
-@Service()
+@Service(CONFIG_SERVICE)
 export class ConfigService {
 	public readonly endpoints: Record<
 		's3' | 'dynamodb' | 'sqs' | 'eventbridge' | 'ses',
