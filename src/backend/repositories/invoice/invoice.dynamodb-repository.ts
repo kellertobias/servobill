@@ -1,10 +1,3 @@
-import {
-	IndexCompositeAttributes,
-	QueryBranches,
-	QueryOperations,
-	ResponseItem,
-} from 'electrodb';
-
 import { AbstractDynamodbRepository } from '@/backend/repositories/abstract-dynamodb-repository';
 import { DynamoDBService } from '@/backend/services/dynamodb.service';
 import {
@@ -22,66 +15,11 @@ import { CustomerEntity } from '@/backend/entities/customer.entity';
 import { Logger } from '@/backend/services/logger.service';
 import { Inject, Service } from '@/common/di';
 import { INVOICE_REPO_NAME, INVOICE_REPOSITORY } from './di-tokens';
-import { DatabaseType } from '@/backend/services/config.service';
 import { shouldRegister } from '../../services/should-register';
 import { CustomJson } from '@/common/json';
 import type { InvoiceRepository } from './index';
-
-const entitySchema = DynamoDBService.getSchema({
-	model: {
-		entity: 'invoice',
-		version: '1',
-		service: 'invoice',
-	},
-	attributes: {
-		storeId: { type: 'string', required: true },
-		invoiceId: { type: 'string', required: true },
-		invoicedAt: { type: 'string' },
-		offeredAt: { type: 'string' },
-		dueAt: { type: 'string' },
-		paidAt: { type: 'string' },
-		totalCents: { type: 'number' },
-		totalTax: { type: 'number' },
-		paidCents: { type: 'number' },
-		offerNumber: { type: 'string' },
-		invoiceNumber: { type: 'string' },
-		customerId: { type: 'string', required: true },
-		customer: { type: 'string', required: true },
-		createdAt: { type: 'string', required: true },
-		updatedAt: { type: 'string', required: true },
-		type: { type: 'string', required: true },
-		status: { type: 'string' },
-		paidVia: { type: 'string' },
-		footerText: { type: 'string' },
-		subject: { type: 'string' },
-		submissions: { type: 'string' },
-		items: { type: 'string' },
-		activity: { type: 'string' },
-		links: { type: 'string' },
-		pdf: { type: 'string' },
-		contentHash: { type: 'string' },
-	},
-	indexes: {
-		byId: {
-			pk: { field: 'pk', composite: ['invoiceId'] },
-			sk: { field: 'sk', composite: ['storeId'] },
-		},
-		byYear: {
-			index: 'gsi1pk-gsi1sk-index',
-			pk: { field: 'gsi1pk', composite: ['storeId'] },
-			sk: { field: 'gsi1sk', composite: ['createdAt'] },
-		},
-	},
-});
-
-type InvoiceSchema = typeof entitySchema.schema;
-type InvoiceSchemaResponseItem = ResponseItem<
-	string,
-	string,
-	string,
-	InvoiceSchema
->;
-export type InvoiceOrmEntity = typeof entitySchema.responseItem;
+import { DatabaseType } from '@/backend/services/constants';
+import { entitySchema, InvoiceOrmEntity } from './dynamodb-orm-entity';
 
 /**
  * DynamoDB implementation of the InvoiceRepository interface.

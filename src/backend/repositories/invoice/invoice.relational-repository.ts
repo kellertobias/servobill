@@ -8,7 +8,7 @@ import {
 import { InvoiceOrmEntity } from './relational-orm-entity';
 import { Logger } from '@/backend/services/logger.service';
 import { AbstractRelationalRepository } from '@/backend/repositories/abstract-relational-repository';
-import { DatabaseType } from '@/backend/services/config.service';
+import { DatabaseType } from '@/backend/services/constants';
 import { shouldRegister } from '../../services/should-register';
 import { RelationalDbService } from '@/backend/services/relationaldb.service';
 import { CustomerEntity } from '@/backend/entities/customer.entity';
@@ -42,7 +42,7 @@ export class InvoiceRelationalRepository
 	protected logger = new Logger(INVOICE_REPO_NAME);
 
 	constructor(@Inject(RelationalDbService) db: RelationalDbService) {
-		super(db, InvoiceOrmEntity);
+		super({ db, ormEntityClass: InvoiceOrmEntity });
 	}
 
 	/**

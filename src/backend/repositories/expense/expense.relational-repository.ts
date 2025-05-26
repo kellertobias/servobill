@@ -4,7 +4,7 @@ import { ExpenseEntity } from '@/backend/entities/expense.entity';
 import { ExpenseOrmEntity } from './relational-orm-entity';
 import { Logger } from '@/backend/services/logger.service';
 import { AbstractRelationalRepository } from '@/backend/repositories/abstract-relational-repository';
-import { DatabaseType } from '@/backend/services/config.service';
+import { DatabaseType } from '@/backend/services/constants';
 import { shouldRegister } from '../../services/should-register';
 import { RelationalDbService } from '@/backend/services/relationaldb.service';
 import type { ExpenseRepository } from './index';
@@ -26,7 +26,7 @@ export class ExpenseRelationalRepository
 	protected logger = new Logger(EXPENSE_REPO_NAME);
 
 	constructor(@Inject(RelationalDbService) db: RelationalDbService) {
-		super(db, ExpenseOrmEntity);
+		super({ db, ormEntityClass: ExpenseOrmEntity });
 	}
 
 	/**

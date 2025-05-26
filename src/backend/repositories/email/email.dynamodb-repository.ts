@@ -11,45 +11,10 @@ import { EmailEntity } from '@/backend/entities/email.entity';
 import { Logger } from '@/backend/services/logger.service';
 import { Inject, Service } from '@/common/di';
 import { EMAIL_REPO_NAME, EMAIL_REPOSITORY } from './di-tokens';
-import { DatabaseType } from '@/backend/services/config.service';
+import { DatabaseType } from '@/backend/services/constants';
 import { shouldRegister } from '../../services/should-register';
 import type { EmailRepository } from './index';
-
-const entitySchema = DynamoDBService.getSchema({
-	model: {
-		entity: 'email',
-		version: '1',
-		service: 'email',
-	},
-	attributes: {
-		storeId: { type: 'string', required: true },
-		emailId: { type: 'string', required: true },
-		entityType: { type: 'string', required: true },
-		entityId: { type: 'string', required: true },
-		recipient: { type: 'string', required: true },
-		sentAt: { type: 'string', required: true },
-	},
-	indexes: {
-		byId: {
-			pk: { field: 'pk', composite: ['emailId'] },
-			sk: { field: 'sk', composite: ['storeId'] },
-		},
-		byName: {
-			index: 'gsi1pk-gsi1sk-index',
-			pk: { field: 'gsi1pk', composite: ['storeId'] },
-			sk: { field: 'gsi1sk', composite: ['sentAt'] },
-		},
-	},
-});
-
-type EmailSchema = typeof entitySchema.schema;
-type EmailSchemaResponseItem = ResponseItem<
-	string,
-	string,
-	string,
-	EmailSchema
->;
-export type EmailOrmEntity = typeof entitySchema.responseItem;
+import { entitySchema, EmailOrmEntity } from './dynamodb-orm-entity';
 
 /**
  * DynamoDB implementation of the EmailRepository interface.

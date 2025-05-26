@@ -4,7 +4,7 @@ import { EmailEntity } from '@/backend/entities/email.entity';
 import { EmailOrmEntity } from './relational-orm-entity';
 import { Logger } from '@/backend/services/logger.service';
 import { AbstractRelationalRepository } from '@/backend/repositories/abstract-relational-repository';
-import { DatabaseType } from '@/backend/services/config.service';
+import { DatabaseType } from '@/backend/services/constants';
 import { shouldRegister } from '../../services/should-register';
 import { RelationalDbService } from '@/backend/services/relationaldb.service';
 import type { EmailRepository } from './index';
@@ -26,7 +26,7 @@ export class EmailRelationalRepository
 	protected logger = new Logger(EMAIL_REPO_NAME);
 
 	constructor(@Inject(RelationalDbService) db: RelationalDbService) {
-		super(db, EmailOrmEntity);
+		super({ db, ormEntityClass: EmailOrmEntity });
 	}
 
 	/**
