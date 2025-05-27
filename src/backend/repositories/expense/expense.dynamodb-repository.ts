@@ -92,6 +92,7 @@ export class ExpenseDynamodbRepository
 
 	/**
 	 * Lists expenses by query (search, year, skip, limit).
+	 * Applies in-memory filtering for DynamoDB due to index limitations.
 	 * @param query Query object with optional search, year, skip, limit, cursor
 	 * @returns Array of ExpenseEntity
 	 */
@@ -106,8 +107,27 @@ export class ExpenseDynamodbRepository
 			.byYear({ storeId: this.storeId })
 			.gt({ expendedAt: new Date(`${year}-01-01`).toISOString() })
 			.go();
-		return data.data.map((elm: ExpenseOrmEntity) =>
+		let results = data.data.map((elm: ExpenseOrmEntity) =>
 			this.ormToDomainEntity(elm),
 		);
+
+		// In-memory filtering for search (name, description, notes)
+		if (query.where?.search) {
+			const search = query.where.search.toLowerCase();
+			results = results.filter(
+				(exp: ExpenseEntity) =>
+					exp.name?.toLowerCase().includes(search) ||
+					exp.description?.toLowerCase().includes(search) ||
+					exp.notes?.toLowerCase().includes(search),
+			);
+		}
+		// Optionally, add skip/limit if needed
+		if (query.skip) {
+			results = results.slice(query.skip);
+		}
+		if (query.limit) {
+			results = results.slice(0, query.limit);
+		}
+		return results;
 	}
 }

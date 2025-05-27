@@ -167,6 +167,7 @@ export class InvoiceDynamodbRepository
 
 	/**
 	 * Lists invoices by query (type, status, year, skip, limit).
+	 * Applies in-memory filtering for DynamoDB due to index limitations.
 	 * @param query Query object with optional type, status, year, skip, limit, cursor
 	 * @returns Array of InvoiceEntity
 	 */
@@ -181,8 +182,28 @@ export class InvoiceDynamodbRepository
 			.byYear({ storeId: this.storeId })
 			.gt({ createdAt: new Date(`${year}-01-01`).toISOString() })
 			.go();
-		return data.data.map((elm: InvoiceOrmEntity) =>
+		let results = data.data.map((elm: InvoiceOrmEntity) =>
 			this.ormToDomainEntity(elm),
 		);
+
+		// In-memory filtering for type and status
+		if (query.where?.type) {
+			results = results.filter(
+				(inv: InvoiceEntity) => inv.type === query.where?.type,
+			);
+		}
+		if (query.where?.status) {
+			results = results.filter(
+				(inv: InvoiceEntity) => inv.status === query.where?.status,
+			);
+		}
+		// Optionally, add skip/limit if needed
+		if (query.skip) {
+			results = results.slice(query.skip);
+		}
+		if (query.limit) {
+			results = results.slice(0, query.limit);
+		}
+		return results;
 	}
 }

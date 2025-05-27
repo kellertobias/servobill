@@ -215,9 +215,7 @@ describe.each([
 			}),
 		];
 		for (const inv of invoices) {
-			if (name === 'InvoiceDynamodbRepository') {
-				await repo.createWithId(inv.id, inv.type, inv.customer, 'test-user');
-			}
+			await repo.createWithId(inv.id, inv.type, inv.customer, 'test-user');
 			await repo.save(inv);
 		}
 		const all = await repo.listByQuery({});

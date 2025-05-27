@@ -84,6 +84,7 @@ export class EmailDynamodbRepository
 
 	/**
 	 * Lists emails by query (search, skip, limit).
+	 * Applies in-memory filtering for DynamoDB due to index limitations.
 	 * @param query Query object with optional search, skip, limit, cursor
 	 * @returns Array of EmailEntity
 	 */
@@ -93,9 +94,25 @@ export class EmailDynamodbRepository
 		limit?: number;
 		cursor?: string;
 	}): Promise<EmailEntity[]> {
-		// For DynamoDB, we can only filter by recipient if needed
-		// This is a placeholder for a more advanced search if required
 		const data = await this.store.query.byName({ storeId: this.storeId }).go();
-		return data.data.map((elm: EmailOrmEntity) => this.ormToDomainEntity(elm));
+		let results = data.data.map((elm: EmailOrmEntity) =>
+			this.ormToDomainEntity(elm),
+		);
+
+		// In-memory filtering for search (recipient)
+		if (query.where?.search) {
+			const search = query.where.search.toLowerCase();
+			results = results.filter(
+				(email: EmailEntity) => email.recipient?.toLowerCase().includes(search),
+			);
+		}
+		// Optionally, add skip/limit if needed
+		if (query.skip) {
+			results = results.slice(query.skip);
+		}
+		if (query.limit) {
+			results = results.slice(0, query.limit);
+		}
+		return results;
 	}
 }
