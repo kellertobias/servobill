@@ -5,8 +5,10 @@ import { makeEventHandler } from '../../event-handler';
 
 import { InvoiceGeneratePdfEvent } from './event';
 
-import { InvoiceRepository } from '@/backend/repositories/invoice.repository';
-import { SettingsRepository } from '@/backend/repositories/settings.repository';
+import { INVOICE_REPOSITORY } from '@/backend/repositories/invoice/di-tokens';
+import { type InvoiceRepository } from '@/backend/repositories/invoice/interface';
+import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
+import { type SettingsRepository } from '@/backend/repositories/settings/interface';
 import { PdfTemplateSetting } from '@/backend/entities/settings.entity';
 import { CqrsBus } from '@/backend/services/cqrs.service';
 import { CreateInvoicePdfCommand } from '@/backend/cqrs/generate-pdf/create-invoice-pdf.command';
@@ -20,8 +22,12 @@ export const layers = ['layers/chromium'];
 export const handler: EventHandler = makeEventHandler(
 	InvoiceGeneratePdfEvent,
 	async (event, { logger }) => {
-		const invoiceRepository = DefaultContainer.get(InvoiceRepository);
-		const settingsRepository = DefaultContainer.get(SettingsRepository);
+		const invoiceRepository = DefaultContainer.get(
+			INVOICE_REPOSITORY,
+		) as InvoiceRepository;
+		const settingsRepository = DefaultContainer.get(
+			SETTINGS_REPOSITORY,
+		) as SettingsRepository;
 		const cqrs = CqrsBus.forRoot({
 			handlers: [CreateInvoicePdfHandler, GenerateInvoiceHtmlHandler],
 			container: DefaultContainer,

@@ -7,10 +7,10 @@ import type {
 
 import { JwtToken, Session, extractToken, makeTokenCookie } from '../session';
 
-import {
-	SessionRepository,
-	UserEntity,
-} from '@/backend/repositories/session.repository';
+import { SESSION_REPOSITORY } from '@/backend/repositories/session/di-tokens';
+import { type SessionRepository } from '@/backend/repositories/session/interface';
+import { UserEntity } from '@/backend/entities/user.entity';
+import { SessionEntity } from '@/backend/entities/session.entity';
 import { Inject, Service } from '@/common/di';
 import { Logger } from '@/backend/services/logger.service';
 import { Span } from '@/backend/instrumentation';
@@ -37,7 +37,7 @@ const makeForwardPage = (url: string) => `<html>
 @Service()
 export class AuthenticationService {
 	constructor(
-		@Inject(SessionRepository) private sessionRepository: SessionRepository,
+		@Inject(SESSION_REPOSITORY) private sessionRepository: SessionRepository,
 	) {}
 
 	@Span('AuthenticationService.generateResponse')
@@ -82,13 +82,17 @@ export class AuthenticationService {
 	): Promise<APIGatewayProxyStructuredResultV2> {
 		const renewalId = randomUUID().toString();
 		const { user } = options;
-		const sessionEntity = await this.sessionRepository.createSession({
-			userId: user.userId,
-			expiresAt: new Date(
-				Date.now() + (options?.expireIn || DEFAULT_SESSION_EXPIRATION),
-			),
-			renewalId,
-		});
+		// Construct a new SessionEntity to satisfy the repository type requirements
+		// TODO: Check if this works
+		const sessionEntity = await this.sessionRepository.createSession(
+			new SessionEntity({
+				userId: user.userId,
+				renewalId,
+				expiresAt: new Date(
+					Date.now() + (options?.expireIn || DEFAULT_SESSION_EXPIRATION),
+				),
+			}),
+		);
 
 		const session = new Session({
 			...user,

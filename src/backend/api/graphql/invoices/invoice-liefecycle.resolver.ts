@@ -12,34 +12,42 @@ import {
 
 import { Inject, Service } from '@/common/di';
 import { InvoiceSubmissionEntity } from '@/backend/entities/invoice-submission.entity';
-import { InvoiceRepository } from '@/backend/repositories/invoice.repository';
-import { InvoiceStatus, InvoiceType } from '@/backend/entities/invoice.entity';
-import { SettingsRepository } from '@/backend/repositories/settings.repository';
-import { InvoiceSettingsEntity } from '@/backend/entities/settings.entity';
-import { CustomerRepository } from '@/backend/repositories/customer.repository';
+import { INVOICE_REPOSITORY } from '@/backend/repositories/invoice/di-tokens';
+import { type InvoiceRepository } from '@/backend/repositories/invoice/interface';
+import { CUSTOMER_REPOSITORY } from '@/backend/repositories/customer/di-tokens';
+import { type CustomerRepository } from '@/backend/repositories/customer/interface';
+import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
+import { type SettingsRepository } from '@/backend/repositories/settings/interface';
+import { EXPENSE_REPOSITORY } from '@/backend/repositories/expense/di-tokens';
+import { type ExpenseRepository } from '@/backend/repositories/expense/interface';
+import { PRODUCT_REPOSITORY } from '@/backend/repositories/product/di-tokens';
+import { type ProductRepository } from '@/backend/repositories/product/interface';
+import { S3Service } from '@/backend/services/s3.service';
+import { Logger } from '@/backend/services/logger.service';
+import {
+	InvoiceEntity,
+	InvoiceStatus,
+	InvoiceType,
+} from '@/backend/entities/invoice.entity';
 import { CustomerEntity } from '@/backend/entities/customer.entity';
 import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
 import {
 	InvoiceActivityEntity,
 	InvoiceActivityType,
 } from '@/backend/entities/invoice-activity.entity';
-import { S3Service } from '@/backend/services/s3.service';
-import { Logger } from '@/backend/services/logger.service';
-import { ExpenseRepository } from '@/backend/repositories/expense.repository';
-import { ProductRepository } from '@/backend/repositories/product.repository';
-import { InvoiceEntity } from '@/backend/entities/invoice.entity';
+import { InvoiceSettingsEntity } from '@/backend/entities/settings.entity';
 
 @Service()
 @Resolver(() => Invoice)
 export class InvoiceLifecycleResolver {
 	private logger = new Logger(InvoiceLifecycleResolver.name);
 	constructor(
-		@Inject(InvoiceRepository) private invoiceRepository: InvoiceRepository,
-		@Inject(CustomerRepository) private customerRepository: CustomerRepository,
-		@Inject(SettingsRepository) private settingsRepository: SettingsRepository,
+		@Inject(INVOICE_REPOSITORY) private invoiceRepository: InvoiceRepository,
+		@Inject(CUSTOMER_REPOSITORY) private customerRepository: CustomerRepository,
+		@Inject(SETTINGS_REPOSITORY) private settingsRepository: SettingsRepository,
+		@Inject(EXPENSE_REPOSITORY) private expenseRepository: ExpenseRepository,
+		@Inject(PRODUCT_REPOSITORY) private productRepository: ProductRepository,
 		@Inject(S3Service) private s3Service: S3Service,
-		@Inject(ExpenseRepository) private expenseRepository: ExpenseRepository,
-		@Inject(ProductRepository) private productRepository: ProductRepository,
 	) {}
 
 	@Authorized()

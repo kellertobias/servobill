@@ -9,7 +9,8 @@ import {
 } from './system.schema';
 
 import { Inject, Service } from '@/common/di';
-import { SettingsRepository } from '@/backend/repositories/settings.repository';
+import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
+import { type SettingsRepository } from '@/backend/repositories/settings/interface';
 import {
 	InvoiceSettingsEntity,
 	PdfTemplateSetting,
@@ -18,14 +19,12 @@ import {
 import { EventBusService } from '@/backend/services/eventbus.service';
 import { S3Service } from '@/backend/services/s3.service';
 import { GenerateTemplatePreviewEvent } from '@/backend/events/template/event';
-import { ExpenseCategoryType } from './system.schema';
-import { ObjectProperties } from '@/common/ts-helpers';
 
 @Service()
 @Resolver()
 export class SystemResolver {
 	constructor(
-		@Inject(SettingsRepository) private repository: SettingsRepository,
+		@Inject(SETTINGS_REPOSITORY) private repository: SettingsRepository,
 		@Inject(EventBusService) private eventBus: EventBusService,
 		@Inject(S3Service) private s3: S3Service,
 	) {}

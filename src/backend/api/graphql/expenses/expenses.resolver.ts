@@ -3,13 +3,14 @@ import { Query, Resolver, Mutation, Arg, Int, Authorized } from 'type-graphql';
 import { ExpenseInput, Expense, ExpenseWhereInput } from './expenses.schema';
 
 import { Inject, Service } from '@/common/di';
-import { ExpenseRepository } from '@/backend/repositories/expense.repository';
+import { EXPENSE_REPOSITORY } from '@/backend/repositories/expense/di-tokens';
+import { type ExpenseRepository } from '@/backend/repositories/expense/interface';
 
 @Service()
 @Resolver(() => Expense)
 export class ExpenseResolver {
 	constructor(
-		@Inject(ExpenseRepository) private repository: ExpenseRepository,
+		@Inject(EXPENSE_REPOSITORY) private repository: ExpenseRepository,
 	) {}
 
 	@Authorized()

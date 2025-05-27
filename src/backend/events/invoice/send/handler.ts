@@ -5,8 +5,12 @@ import { makeEventHandler } from '../../event-handler';
 
 import { InvoiceSendEvent } from './event';
 
-import { InvoiceRepository } from '@/backend/repositories/invoice.repository';
-import { SettingsRepository } from '@/backend/repositories/settings.repository';
+import { INVOICE_REPOSITORY } from '@/backend/repositories/invoice/di-tokens';
+import { type InvoiceRepository } from '@/backend/repositories/invoice/interface';
+import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
+import { type SettingsRepository } from '@/backend/repositories/settings/interface';
+import { EMAIL_REPOSITORY } from '@/backend/repositories/email/di-tokens';
+import { type EmailRepository } from '@/backend/repositories/email/interface';
 import { PdfTemplateSetting } from '@/backend/entities/settings.entity';
 import { CqrsBus } from '@/backend/services/cqrs.service';
 import { CreateInvoicePdfCommand } from '@/backend/cqrs/generate-pdf/create-invoice-pdf.command';
@@ -21,7 +25,6 @@ import {
 	InvoiceActivityEntity,
 	InvoiceActivityType,
 } from '@/backend/entities/invoice-activity.entity';
-import { EmailRepository } from '@/backend/repositories/email.repository';
 
 const getSubject = async (
 	invoice: InvoiceEntity,
@@ -72,9 +75,15 @@ export const layers = ['layers/chromium'];
 export const handler: EventHandler = makeEventHandler(
 	InvoiceSendEvent,
 	async (event, { logger }) => {
-		const invoiceRepository = DefaultContainer.get(InvoiceRepository);
-		const settingsRepository = DefaultContainer.get(SettingsRepository);
-		const emailRepository = DefaultContainer.get(EmailRepository);
+		const invoiceRepository = DefaultContainer.get(
+			INVOICE_REPOSITORY,
+		) as InvoiceRepository;
+		const settingsRepository = DefaultContainer.get(
+			SETTINGS_REPOSITORY,
+		) as SettingsRepository;
+		const emailRepository = DefaultContainer.get(
+			EMAIL_REPOSITORY,
+		) as EmailRepository;
 
 		const ses = DefaultContainer.get(SESService);
 		const cqrs = CqrsBus.forRoot({

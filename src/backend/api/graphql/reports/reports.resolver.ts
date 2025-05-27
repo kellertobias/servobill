@@ -11,8 +11,10 @@ import {
 } from './reports.schema';
 
 import { Inject, Service } from '@/common/di';
-import { InvoiceRepository } from '@/backend/repositories/invoice.repository';
-import { ExpenseRepository } from '@/backend/repositories/expense.repository';
+import { INVOICE_REPOSITORY } from '@/backend/repositories/invoice/di-tokens';
+import { type InvoiceRepository } from '@/backend/repositories/invoice/interface';
+import { EXPENSE_REPOSITORY } from '@/backend/repositories/expense/di-tokens';
+import { type ExpenseRepository } from '@/backend/repositories/expense/interface';
 import {
 	InvoiceEntity,
 	InvoiceStatus,
@@ -29,8 +31,8 @@ type Booking = IncomeSurplusReportItem & {
 @Resolver()
 export class ReportsResolver {
 	constructor(
-		@Inject(InvoiceRepository) private invoiceRepository: InvoiceRepository,
-		@Inject(ExpenseRepository) private expenseRepository: ExpenseRepository,
+		@Inject(INVOICE_REPOSITORY) private invoiceRepository: InvoiceRepository,
+		@Inject(EXPENSE_REPOSITORY) private expenseRepository: ExpenseRepository,
 	) {}
 
 	private async getRelevantData(

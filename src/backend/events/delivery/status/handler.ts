@@ -4,8 +4,10 @@ import { SNSEventHandler } from '../../types';
 
 import { withInstrumentation, withSpan } from '@/backend/instrumentation';
 import { DefaultContainer } from '@/common/di';
-import { EmailRepository } from '@/backend/repositories/email.repository';
-import { InvoiceRepository } from '@/backend/repositories/invoice.repository';
+import { EMAIL_REPOSITORY } from '@/backend/repositories/email/di-tokens';
+import { type EmailRepository } from '@/backend/repositories/email/interface';
+import { INVOICE_REPOSITORY } from '@/backend/repositories/invoice/di-tokens';
+import { type InvoiceRepository } from '@/backend/repositories/invoice/interface';
 import {
 	InvoiceActivityEntity,
 	InvoiceActivityType,
@@ -37,7 +39,9 @@ const handleSingleRecord = withSpan(
 		name: 'sns.delivery-status.record',
 	},
 	async (record: SESDeliveryNote) => {
-		const emailRepository = DefaultContainer.get(EmailRepository);
+		const emailRepository = DefaultContainer.get(
+			EMAIL_REPOSITORY,
+		) as EmailRepository;
 
 		const messageId = record.mail.messageId;
 		const deliveryStatus = record.notificationType;
@@ -50,7 +54,9 @@ const handleSingleRecord = withSpan(
 
 		switch (emailState.entityType) {
 			case 'invoice': {
-				const invoiceRepository = DefaultContainer.get(InvoiceRepository);
+				const invoiceRepository = DefaultContainer.get(
+					INVOICE_REPOSITORY,
+				) as InvoiceRepository;
 				const invoice = await invoiceRepository.getById(emailState.entityId);
 				if (!invoice) {
 					logger.info('Invoice not found', {

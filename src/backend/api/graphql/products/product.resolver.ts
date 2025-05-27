@@ -1,6 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { randomUUID } from 'crypto';
-
 import { Query, Resolver, Mutation, Arg, Int, Authorized } from 'type-graphql';
 
 import { ProductWhereInput, Product, ProductInput } from './product.schema';

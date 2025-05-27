@@ -5,7 +5,8 @@ import { getBody, getSiteUrl } from '../../helpers';
 import { AuthenticationService } from '../authentication';
 import { APIHandler } from '../../types';
 
-import { SessionRepository } from '@/backend/repositories/session.repository';
+import { SESSION_REPOSITORY } from '@/backend/repositories/session/di-tokens';
+import { type SessionRepository } from '@/backend/repositories/session/interface';
 import { DefaultContainer } from '@/common/di';
 import { Logger } from '@/backend/services/logger.service';
 import { S3Service } from '@/backend/services/s3.service';
@@ -78,7 +79,9 @@ export const googleOidCallbackHandler: APIHandler = withSpan(
 				forwardUrl: `${siteUrl}/login?error=Invalid%20User`,
 			});
 		}
-		const sessionUserRepo = DefaultContainer.get(SessionRepository);
+		const sessionUserRepo = DefaultContainer.get(
+			SESSION_REPOSITORY,
+		) as SessionRepository;
 
 		const profilePicture = await getUserPicture(token);
 

@@ -24,10 +24,15 @@ import {
 	InvoiceActivityEntity,
 	InvoiceActivityType,
 } from '@/backend/entities/invoice-activity.entity';
-import { InvoiceRepository } from '@/backend/repositories/invoice.repository';
-import { CustomerRepository } from '@/backend/repositories/customer.repository';
+import {
+	INVOICE_REPOSITORY,
+	type InvoiceRepository,
+} from '@/backend/repositories/invoice';
+import { CUSTOMER_REPOSITORY } from '@/backend/repositories/customer/di-tokens';
+import { type CustomerRepository } from '@/backend/repositories/customer/interface';
+import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
+import { type SettingsRepository } from '@/backend/repositories/settings/interface';
 import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
-import { SettingsRepository } from '@/backend/repositories/settings.repository';
 import { InvoiceSettingsEntity } from '@/backend/entities/settings.entity';
 import { CustomerEntity } from '@/backend/entities/customer.entity';
 import { ActiveSpan, Span } from '@/backend/instrumentation';
@@ -37,9 +42,9 @@ import type { OtelSpan } from '@/backend/instrumentation';
 @Resolver(() => Invoice)
 export class InvoiceResolver {
 	constructor(
-		@Inject(InvoiceRepository) private invoiceRepository: InvoiceRepository,
-		@Inject(CustomerRepository) private customerRepository: CustomerRepository,
-		@Inject(SettingsRepository) private settingsRepository: SettingsRepository,
+		@Inject(INVOICE_REPOSITORY) private invoiceRepository: InvoiceRepository,
+		@Inject(CUSTOMER_REPOSITORY) private customerRepository: CustomerRepository,
+		@Inject(SETTINGS_REPOSITORY) private settingsRepository: SettingsRepository,
 	) {}
 
 	@Span('InvoiceResolver.invoices')
