@@ -1,0 +1,113 @@
+import { Inject, Service } from '@/common/di';
+import { Logger } from '@/backend/services/logger.service';
+import { DynamoDBService } from '@/backend/services/dynamodb.service';
+import { AbstractDynamodbRepository } from '@/backend/repositories/abstract-dynamodb-repository';
+import { SettingsEntity } from '@/backend/entities/settings.entity';
+import { DatabaseType } from '@/backend/services/constants';
+import { shouldRegister } from '../../services/should-register';
+import { entitySchema, SettingsOrmEntity } from './dynamodb-orm-entity';
+import type { SettingsRepository } from './interface';
+import { SETTINGS_REPOSITORY, SETTINGS_REPO_NAME } from './di-tokens';
+import { AbstractSettingsEntity } from '@/backend/entities/settings.entity';
+import { CustomJson } from '@/common/json';
+
+const storeId = 'settings';
+
+@Service({
+	name: SETTINGS_REPOSITORY,
+	...shouldRegister(DatabaseType.DYNAMODB),
+})
+/**
+ * DynamoDB implementation of the SettingsRepository interface.
+ */
+export class SettingsDynamodbRepository
+	extends AbstractDynamodbRepository<
+		SettingsOrmEntity,
+		SettingsEntity,
+		[],
+		typeof entitySchema.schema
+	>
+	implements SettingsRepository
+{
+	protected logger = new Logger(SETTINGS_REPO_NAME);
+	protected mainIdName: string = 'settingId';
+	protected storeId: string = storeId;
+
+	constructor(@Inject(DynamoDBService) private dynamoDb: DynamoDBService) {
+		super();
+		this.store = this.dynamoDb.getEntity(entitySchema.schema);
+	}
+
+	/**
+	 * Converts a DynamoDB ORM entity to a domain SettingsEntity.
+	 */
+	protected ormToDomainEntitySafe(
+		entity: Omit<SettingsOrmEntity, 'storeId'>,
+	): SettingsEntity {
+		return new SettingsEntity({
+			settingId: entity.settingId,
+			data: entity.data,
+		});
+	}
+
+	/**
+	 * Converts a domain SettingsEntity to a DynamoDB ORM entity.
+	 */
+	public domainToOrmEntity(
+		domainEntity: SettingsEntity,
+	): Omit<SettingsOrmEntity, 'storeId'> {
+		return {
+			settingId: domainEntity.settingId,
+			data: domainEntity.data,
+		};
+	}
+
+	/**
+	 * Generates an empty SettingsEntity with the given id.
+	 */
+	protected generateEmptyItem(id: string): SettingsEntity {
+		return new SettingsEntity({
+			settingId: id,
+			data: '',
+		});
+	}
+
+	/**
+	 * Saves a settings record (upsert).
+	 */
+	public async save(setting: SettingsEntity): Promise<void> {
+		await this.store
+			.upsert({
+				settingId: setting.settingId,
+				storeId: this.storeId,
+				data: setting.data,
+			})
+			.go();
+	}
+
+	/**
+	 * Retrieves a settings record as a typed settings class instance (legacy/original API).
+	 * @param SettingsClass The settings class constructor (must extend AbstractSettingsEntity)
+	 * @returns An instance of the settings class, with data and save method.
+	 */
+	public async getSetting<T extends typeof AbstractSettingsEntity>(
+		SettingsClass: T,
+	): Promise<InstanceType<T>> {
+		const { data } = await this.store
+			.get({ settingId: SettingsClass.settingId, storeId: this.storeId })
+			.go();
+
+		const parsed = data && data.data ? CustomJson.fromJson(data.data) : {};
+
+		// @ts-expect-error - this inherits from an abstract class
+		return new SettingsClass(parsed, async (saveData: string) => {
+			await this.store
+				.upsert({
+					settingId: SettingsClass.settingId,
+					storeId: this.storeId,
+					data: saveData,
+				})
+				.go();
+		});
+	}
+}

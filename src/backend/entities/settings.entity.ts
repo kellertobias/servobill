@@ -2,6 +2,7 @@
 import { CustomJson } from '@/common/json';
 import { Numbering } from '@/common/numbers';
 import { ObjectProperties } from '@/common/ts-helpers';
+import { DomainEntity } from './abstract.entity';
 
 export abstract class AbstractSettingsEntity {
 	public async save(): Promise<void> {}
@@ -310,5 +311,27 @@ export class ExpenseSettingsEntity {
 	public async save(): Promise<void> {
 		const data = CustomJson.toJson(this.serializable());
 		await this.saveInner(data);
+	}
+}
+
+/**
+ * Domain entity for a settings record (for repository usage).
+ */
+export class SettingsEntity extends DomainEntity {
+	/** The unique id for the settings record (e.g. 'invoice-numbers', 'stationary-template'). */
+	public settingId!: string;
+	/** The settings data, as a string (JSON) or object. */
+	public data!: string;
+
+	/**
+	 * The unique id for the settings entity (required by DomainEntity).
+	 */
+	public get id(): string {
+		return this.settingId;
+	}
+
+	constructor(props: Partial<SettingsEntity>) {
+		super();
+		Object.assign(this, props);
 	}
 }
