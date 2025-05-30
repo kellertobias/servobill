@@ -21,7 +21,6 @@ export default function ExpensesHomePage() {
 	const [selectedExpenseId, setSelectedExpenseId] = React.useState<
 		null | string
 	>(null);
-	const categories = useExpenseCategories();
 
 	const { data, loading, reload } = useLoadData(async () => {
 		const data = await API.query({
@@ -34,6 +33,12 @@ export default function ExpensesHomePage() {
 						expendedCents
 						expendedAt
 						createdAt
+						category {
+							id
+							name
+							color
+							description
+						}
 					}
 				}
 			`),
@@ -114,25 +119,31 @@ export default function ExpensesHomePage() {
 						{
 							key: 'category',
 							title: 'Category',
-							className: 'py-5',
-							render: (expense) => {
-								const cat = categories?.find(
-									(c) => c.id === (expense as any).categoryId,
-								);
-								if (!cat) return null;
-								return (
-									<span
-										className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
-										style={{
-											backgroundColor: cat.color || '#888',
-											color: '#fff',
-										}}
-										title={cat.description || cat.name}
-									>
-										{cat.name}
-									</span>
-								);
-							},
+							className: 'py-5 w-24',
+							render: (expense) => (
+								<>
+									{expense.category && (
+										<>
+											<span
+												className="inline-flex items-center gap-x-1.5 rounded-full px-2 py-1 text-xs font-medium text-gray-900 ring-1 ring-inset ring-gray-200 w-20 justify-center overflow-clip text-ellipsis"
+												title={
+													expense.category.description || expense.category.name
+												}
+											>
+												<svg
+													viewBox="0 0 6 6"
+													aria-hidden="true"
+													className="w-1.5 h-1.5"
+													style={{ fill: expense.category.color || '#888' }}
+												>
+													<circle r={3} cx={3} cy={3} />
+												</svg>
+												{expense.category.name}
+											</span>
+										</>
+									)}
+								</>
+							),
 						},
 						{
 							key: 'name',

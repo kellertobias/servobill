@@ -1,5 +1,6 @@
 import { IsNotEmpty } from 'class-validator';
 import { Field, ObjectType, InputType, Int } from 'type-graphql';
+import { ExpenseCategoryType } from '../system/system.schema';
 
 @ObjectType()
 export class IncomeSurplusReportExport {
@@ -77,6 +78,12 @@ export class IncomeSurplusReportItem {
 
 	@Field(() => Int)
 	taxCents!: number;
+
+	/**
+	 * The expense category, if available (for expenses only).
+	 */
+	@Field(() => ExpenseCategoryType, { nullable: true })
+	category?: ExpenseCategoryType;
 }
 
 @InputType()

@@ -21,6 +21,10 @@ import {
 	InvoiceType,
 } from '@/backend/entities/invoice.entity';
 import { ExpenseEntity } from '@/backend/entities/expense.entity';
+import { ExpenseCategoryType } from '../system/system.schema';
+import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
+import { type SettingsRepository } from '@/backend/repositories/settings/interface';
+import { ExpenseSettingsEntity } from '@/backend/entities/settings.entity';
 
 type Booking = IncomeSurplusReportItem & {
 	unpaidCents?: number;
@@ -33,6 +37,7 @@ export class ReportsResolver {
 	constructor(
 		@Inject(INVOICE_REPOSITORY) private invoiceRepository: InvoiceRepository,
 		@Inject(EXPENSE_REPOSITORY) private expenseRepository: ExpenseRepository,
+		@Inject(SETTINGS_REPOSITORY) private settingsRepository: SettingsRepository,
 	) {}
 
 	private async getRelevantData(
@@ -99,10 +104,24 @@ export class ReportsResolver {
 					dayjs(invoice.dueAt).isBefore()
 						? invoice.totalCents - (invoice.paidCents || 0)
 						: 0,
+				category: {
+					id: 'invoice',
+					name: 'Income',
+					color: '#000',
+					description: 'Income',
+				},
 			});
 		});
 
+		// Load settings once for all expenses
+		const settings = await this.settingsRepository.getSetting(
+			ExpenseSettingsEntity,
+		);
+
 		expenses.forEach((expense) => {
+			const category = settings.categories.find(
+				(cat) => cat.id === expense.categoryId,
+			);
 			bookings.push({
 				id: expense.id,
 				type: 'expense',
@@ -111,6 +130,7 @@ export class ReportsResolver {
 				valutaDate: expense.expendedAt,
 				surplusCents: -1 * expense.expendedCents,
 				taxCents: -1 * (expense.taxCents || 0),
+				category: category ? { ...category } : undefined,
 			});
 		});
 

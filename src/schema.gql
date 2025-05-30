@@ -47,6 +47,9 @@ The javascript `Date` as string. Type represents date and time as the ISO Date s
 scalar DateTime
 
 type Expense {
+  """The full category object assigned to this expense."""
+  category: ExpenseCategoryType
+
   """The ID of the expense category assigned to this expense."""
   categoryId: String
   createdAt: DateTime!
@@ -116,6 +119,7 @@ type IncomeSurplusReport {
 }
 
 type IncomeSurplusReportItem {
+  category: ExpenseCategoryType
   description: String
   id: String!
   name: String!

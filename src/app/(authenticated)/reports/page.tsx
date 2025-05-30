@@ -38,6 +38,12 @@ function ReportPreview({ start, end }: { start?: string; end?: string }) {
 							valutaDate
 							surplusCents
 							taxCents
+							category {
+								id
+								name
+								color
+								description
+							}
 						}
 					}
 					reference: generateReport(where: {startDate: $startOfLastPeriod, endDate: $startOfPeriod}) {
@@ -161,6 +167,28 @@ function ReportPreview({ start, end }: { start?: string; end?: string }) {
 					keyField="id"
 					getCategory={(data) => dayjs(data.valutaDate).format('MMMM, YYYY')}
 					columns={[
+						{
+							key: 'category',
+							title: 'Category',
+							className: 'py-5 w-24',
+							render: (item) =>
+								item.category ? (
+									<span
+										className="inline-flex items-center gap-x-1.5 rounded-full px-2 py-1 text-xs font-medium text-gray-900 ring-1 ring-inset ring-gray-200 w-20 justify-center overflow-clip text-ellipsis"
+										title={item.category.description || item.category.name}
+									>
+										<svg
+											viewBox="0 0 6 6"
+											aria-hidden="true"
+											className="w-1.5 h-1.5"
+											style={{ fill: item.category.color || '#888' }}
+										>
+											<circle r={3} cx={3} cy={3} />
+										</svg>
+										{item.category.name}
+									</span>
+								) : null,
+						},
 						{
 							key: 'name',
 							title: 'Name',

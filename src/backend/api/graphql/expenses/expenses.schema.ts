@@ -4,6 +4,7 @@ import { Field, ObjectType, InputType, Int } from 'type-graphql';
 import { FilteredObjectProperties } from '../types';
 
 import { ExpenseEntity } from '@/backend/entities/expense.entity';
+import { ExpenseCategoryType } from '../system/system.schema';
 
 @ObjectType()
 export class Expense implements FilteredObjectProperties<ExpenseEntity> {
@@ -28,11 +29,23 @@ export class Expense implements FilteredObjectProperties<ExpenseEntity> {
 	@Field()
 	expendedAt!: Date;
 
+	/**
+	 * The ID of the expense category assigned to this expense.
+	 */
 	@Field({
 		nullable: true,
 		description: 'The ID of the expense category assigned to this expense.',
 	})
 	categoryId?: string;
+
+	/**
+	 * The full category object assigned to this expense (if requested).
+	 */
+	@Field(() => ExpenseCategoryType, {
+		nullable: true,
+		description: 'The full category object assigned to this expense.',
+	})
+	category?: ExpenseCategoryType;
 
 	@Field()
 	createdAt!: Date;
