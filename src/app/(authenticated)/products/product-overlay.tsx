@@ -35,10 +35,10 @@ export default function ProductOverlay({
 						taxPercentage: '0',
 						createdAt: null,
 						updatedAt: null,
-						expenses: [] as (Omit<ProductExpense, 'price' | 'multiplicator'> & {
+						expenses: [] as (Omit<ProductExpense, 'price'> & {
 							price: string;
-							multiplicator: string;
 							id: string;
+							categoryId?: string;
 						})[],
 					}
 				: API.query({
@@ -57,7 +57,6 @@ export default function ProductOverlay({
 								expenses {
 									name
 									price
-									multiplicator
 									categoryId
 								}
 							}
@@ -75,7 +74,6 @@ export default function ProductOverlay({
 									expenses: (res.product.expenses || []).map((e) => ({
 										...e,
 										price: API.centsToPrice(e.price),
-										multiplicator: Number(e.multiplicator).toFixed(2),
 										id: createId(),
 									})),
 								}
@@ -102,7 +100,6 @@ export default function ProductOverlay({
 					name: e.name,
 					categoryId: e.categoryId || null,
 					price: API.priceToCents(e.price) || 0,
-					multiplicator: Number.parseFloat(e.multiplicator || '1'),
 				})),
 			};
 		},
@@ -118,7 +115,6 @@ export default function ProductOverlay({
 				{
 					name: '',
 					price: '0',
-					multiplicator: '1',
 					categoryId: null,
 					id: createId(),
 				},
@@ -292,7 +288,7 @@ export default function ProductOverlay({
 													className="w-full"
 												/>
 											</div>
-											{/* Second row: Price and Multiplicator */}
+											{/* Second row: Price */}
 											<div className="col-span-4">
 												<Input
 													label="Price"
@@ -301,21 +297,6 @@ export default function ProductOverlay({
 														handleExpenseChange(expense.id, 'price', val)
 													}
 													type="text"
-													className="w-full"
-												/>
-											</div>
-											<div className="col-span-4">
-												<Input
-													label="Multiplicator"
-													value={expense.multiplicator.toString()}
-													onChange={(val) =>
-														handleExpenseChange(
-															expense.id,
-															'multiplicator',
-															Number(val),
-														)
-													}
-													type="number"
 													className="w-full"
 												/>
 											</div>

@@ -8,10 +8,17 @@ export class InvoiceItemEntity {
 	public priceCents!: number;
 	public taxPercentage!: number;
 	public productId?: string;
+
 	/**
-	 * The ID of the linked expense, if this item generated one.
+	 * The list of product expenses linked to this invoice item, with enabled/disabled state.
 	 */
-	public expenseId?: string;
+	public linkedExpenses?: Array<{
+		name: string;
+		price: number;
+		categoryId?: string;
+		enabled: boolean;
+		expenseId?: string;
+	}>;
 
 	constructor(props: Partial<InvoiceItemEntity>) {
 		Object.assign(this, props);

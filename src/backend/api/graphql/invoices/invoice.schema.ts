@@ -28,6 +28,39 @@ import {
 import { ObjectProperties } from '@/common/ts-helpers';
 import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
 
+@InputType()
+export class InvoiceItemExpenseInput {
+	@Field()
+	name!: string;
+
+	@Field(() => Int)
+	price!: number;
+
+	@Field({ nullable: true })
+	categoryId?: string;
+
+	@Field(() => Boolean)
+	enabled!: boolean;
+}
+
+@ObjectType()
+export class InvoiceItemExpense {
+	@Field()
+	name!: string;
+
+	@Field(() => Int)
+	price!: number;
+
+	@Field({ nullable: true })
+	categoryId?: string;
+
+	@Field(() => Boolean)
+	enabled!: boolean;
+
+	@Field({ nullable: true })
+	expenseId?: string;
+}
+
 @ObjectType()
 export class InvoiceItem implements ObjectProperties<InvoiceItemEntity> {
 	@Field()
@@ -51,11 +84,12 @@ export class InvoiceItem implements ObjectProperties<InvoiceItemEntity> {
 	@Field(() => Float)
 	quantity!: number;
 
-	@Field({
+	@Field(() => [InvoiceItemExpense], {
 		nullable: true,
-		description: 'The ID of the linked expense, if this item generated one.',
+		description:
+			'The list of product expenses linked to this invoice item, with enabled/disabled state.',
 	})
-	expenseId?: string;
+	linkedExpenses?: InvoiceItemExpense[];
 }
 
 @ObjectType()
@@ -256,6 +290,13 @@ export class InvoiceItemInput implements Partial<InvoiceItem> {
 		description: 'The ID of the linked expense, if this item generated one.',
 	})
 	expenseId?: string;
+
+	@Field(() => [InvoiceItemExpenseInput], {
+		nullable: true,
+		description:
+			'The list of product expenses linked to this invoice item, with enabled/disabled state.',
+	})
+	linkedExpenses?: InvoiceItemExpenseInput[];
 }
 
 @ObjectType()

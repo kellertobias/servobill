@@ -171,8 +171,8 @@ describe.each([
 			description: 'desc',
 			unit: 'pcs',
 			expenses: [
-				{ name: 'Catering', price: 200, multiplicator: 1, categoryId: 'cat1' },
-				{ name: 'Travel', price: 500, multiplicator: 2, categoryId: 'cat2' },
+				{ name: 'Catering', price: 200, categoryId: 'cat1' },
+				{ name: 'Travel', price: 500, categoryId: 'cat2' },
 			],
 		});
 		if (name === 'ProductDynamodbRepository') {
@@ -224,7 +224,6 @@ describe.each([
 					{
 						name: 'Transport',
 						price: 10,
-						multiplicator: 1,
 						categoryId: 'cat1',
 					},
 				],
@@ -253,9 +252,7 @@ describe.each([
 				notes: '',
 				description: '',
 				unit: 'pcs',
-				expenses: [
-					{ name: 'Storage', price: 5, multiplicator: 2, categoryId: 'cat2' },
-				],
+				expenses: [{ name: 'Storage', price: 5, categoryId: 'cat2' }],
 			}),
 		];
 		for (const p of products) {

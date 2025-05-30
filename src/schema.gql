@@ -230,10 +230,12 @@ input InvoiceInput {
 
 type InvoiceItem {
   description: String
-
-  """The ID of the linked expense, if this item generated one."""
-  expenseId: String
   id: String!
+
+  """
+  The list of product expenses linked to this invoice item, with enabled/disabled state.
+  """
+  linkedExpenses: [InvoiceItemExpense!]
   name: String!
   priceCents: Int!
   productId: String
@@ -241,11 +243,31 @@ type InvoiceItem {
   taxPercentage: Int!
 }
 
+type InvoiceItemExpense {
+  categoryId: String
+  enabled: Boolean!
+  expenseId: String
+  name: String!
+  price: Int!
+}
+
+input InvoiceItemExpenseInput {
+  categoryId: String
+  enabled: Boolean!
+  name: String!
+  price: Int!
+}
+
 input InvoiceItemInput {
   description: String
 
   """The ID of the linked expense, if this item generated one."""
   expenseId: String
+
+  """
+  The list of product expenses linked to this invoice item, with enabled/disabled state.
+  """
+  linkedExpenses: [InvoiceItemExpenseInput!]
   name: String!
   priceCents: Int!
   productId: String
@@ -347,15 +369,6 @@ type Product {
   category: String!
   createdAt: DateTime!
   description: String
-
-  """The expense category ID for auto-created expenses."""
-  expenseCategoryId: String
-
-  """The expense in cents associated with this product (optional)."""
-  expenseCents: Int
-
-  """A multiplicator for the expense (optional, defaults to 1)."""
-  expenseMultiplicator: Int
   expenses: [ProductExpense!]
   id: String!
   name: String!
@@ -368,14 +381,12 @@ type Product {
 
 type ProductExpense {
   categoryId: String
-  multiplicator: Float!
   name: String!
   price: Int!
 }
 
 input ProductExpenseInput {
   categoryId: String
-  multiplicator: Float!
   name: String!
   price: Int!
 }
@@ -383,15 +394,6 @@ input ProductExpenseInput {
 input ProductInput {
   category: String!
   description: String
-
-  """The expense category ID for auto-created expenses."""
-  expenseCategoryId: String
-
-  """The expense in cents associated with this product (optional)."""
-  expenseCents: Int
-
-  """A multiplicator for the expense (optional, defaults to 1)."""
-  expenseMultiplicator: Int
   expenses: [ProductExpenseInput!]
   name: String!
   notes: String

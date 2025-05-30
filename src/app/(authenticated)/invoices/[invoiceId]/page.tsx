@@ -43,6 +43,7 @@ export default function InvoiceDetailPage() {
 			priceCents: item.priceCents,
 			quantity: item.quantity,
 			taxPercentage: item.taxPercentage,
+			linkedExpenses: item.linkedExpenses,
 		})),
 	}));
 
@@ -256,6 +257,7 @@ export default function InvoiceDetailPage() {
 													priceCents: Number(item.priceCents),
 													quantity: Number(item.quantity),
 													taxPercentage: Number(item.taxPercentage || '0'),
+													linkedExpenses: item.linkedExpenses,
 												})),
 											};
 

@@ -274,7 +274,7 @@ export class InvoiceLifecycleResolver {
 	 * For each invoice item:
 	 *   - If the item references a product (productId), fetch the product.
 	 *   - If the product has an expenseCents value > 0, create an expense for this item.
-	 *   - The expense amount is calculated as: expenseCents * quantity * expenseMultiplicator.
+	 *   - The expense amount is calculated as: expenseCents * quantity.
 	 *   - The expense is saved, and its ID is linked to the invoice item (item.expenseId).
 	 *
 	 * @param invoice The invoice entity to process. This method mutates the invoice's items in-place.
@@ -286,28 +286,33 @@ export class InvoiceLifecycleResolver {
 			if (item.productId) {
 				// Fetch the product details
 				const product = await this.productRepository.getById(item.productId);
-				// Only create an expense if the product has a defined expenseCents > 0
-				if (product && product.expenseCents && product.expenseCents > 0) {
-					// Use the product's expenseMultiplicator or default to 1
-					const multiplicator = product.expenseMultiplicator || 1;
-					// Calculate the total expense for this item
-					const expendedCents = Math.round(
-						product.expenseCents * (item.quantity || 1) * multiplicator,
-					);
-					// Create and populate the expense entity
-					const expense = await this.expenseRepository.create();
-					expense.update({
-						name: `Expense for ${item.name}`,
-						description: item.description,
-						expendedCents,
-						expendedAt: invoice.invoicedAt || new Date(),
-						notes: `Auto-created from invoice ${
-							invoice.invoiceNumber || invoice.id
-						}`,
-					});
-					// Save the expense and link its ID to the invoice item
-					await this.expenseRepository.save(expense);
-					item.expenseId = expense.id;
+				if (product && Array.isArray(product.expenses)) {
+					// For each expense in the product, check if it should be enabled for this invoice item
+					const linkedExpenses =
+						item.linkedExpenses ||
+						product.expenses.map((e) => ({ ...e, enabled: true }));
+					for (const exp of linkedExpenses) {
+						if (exp.enabled) {
+							const expendedCents = Math.round(
+								exp.price * (item.quantity || 1),
+							);
+							const expense = await this.expenseRepository.create();
+							expense.update({
+								name: exp.name,
+								description: `From invoice ${
+									invoice.invoiceNumber || invoice.id
+								}, item: ${item.name}, quantity: ${item.quantity}`,
+								expendedCents,
+								expendedAt: invoice.invoicedAt || new Date(),
+								notes: `Auto-created from invoice ${
+									invoice.invoiceNumber || invoice.id
+								}`,
+								categoryId: exp.categoryId,
+							});
+							await this.expenseRepository.save(expense);
+							// Optionally, store expense IDs in item if needed
+						}
+					}
 				}
 			}
 		}
@@ -324,9 +329,13 @@ export class InvoiceLifecycleResolver {
 	 */
 	private async cancelLinkedExpensesForInvoice(invoice: InvoiceEntity) {
 		for (const item of invoice.items) {
-			if (item.expenseId) {
-				await this.expenseRepository.delete(item.expenseId);
-				item.expenseId = undefined;
+			if (item.linkedExpenses) {
+				for (const expense of item.linkedExpenses) {
+					if (expense.expenseId) {
+						await this.expenseRepository.delete(expense.expenseId);
+						expense.expenseId = undefined;
+					}
+				}
 			}
 		}
 	}

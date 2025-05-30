@@ -10,7 +10,6 @@ import { ObjectProperties } from '@/common/ts-helpers';
 export type ProductExpense = {
 	name: string;
 	price: number;
-	multiplicator: number;
 	categoryId?: string;
 };
 

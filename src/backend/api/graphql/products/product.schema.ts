@@ -16,9 +16,6 @@ export class ProductExpense {
 	@Field(() => Int)
 	price!: number;
 
-	@Field(() => Number)
-	multiplicator!: number;
-
 	@Field({ nullable: true })
 	categoryId?: string;
 }
@@ -33,9 +30,6 @@ export class ProductExpenseInput {
 
 	@Field(() => Int)
 	price!: number;
-
-	@Field(() => Number)
-	multiplicator!: number;
 
 	@Field({ nullable: true })
 	categoryId?: string;
@@ -66,28 +60,6 @@ export class Product implements FilteredObjectProperties<ProductEntity> {
 
 	@Field(() => Int)
 	taxPercentage!: number;
-
-	@Field(() => Int, {
-		nullable: true,
-		description:
-			'The expense in cents associated with this product (optional).',
-	})
-	expenseCents?: number;
-
-	@Field(() => Int, {
-		nullable: true,
-		description: 'A multiplicator for the expense (optional, defaults to 1).',
-	})
-	expenseMultiplicator?: number;
-
-	/**
-	 * The expense category ID associated with this product (optional).
-	 */
-	@Field({
-		nullable: true,
-		description: 'The expense category ID for auto-created expenses.',
-	})
-	expenseCategoryId?: string;
 
 	@Field(() => [ProductExpense], { nullable: true })
 	expenses?: ProductExpense[];
@@ -121,25 +93,6 @@ export class ProductInput
 
 	@Field(() => Int)
 	taxPercentage!: number;
-
-	@Field(() => Int, {
-		nullable: true,
-		description:
-			'The expense in cents associated with this product (optional).',
-	})
-	expenseCents?: number;
-
-	@Field(() => Int, {
-		nullable: true,
-		description: 'A multiplicator for the expense (optional, defaults to 1).',
-	})
-	expenseMultiplicator?: number;
-
-	@Field({
-		nullable: true,
-		description: 'The expense category ID for auto-created expenses.',
-	})
-	expenseCategoryId?: string;
 
 	@Field(() => [ProductExpenseInput], { nullable: true })
 	expenses?: ProductExpenseInput[];

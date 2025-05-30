@@ -15,7 +15,6 @@ export function Cached({
 	getKey: (...args: any[]) => (string | number | boolean | undefined | null)[];
 	ttl: number;
 }) {
-	console.log('CALLED @CACHED');
 	// The cache is a static Map shared across all decorated methods/classes
 	// Structure: Map<cacheKey, { value: any, expires: number }>
 	const cache = new Map<string, { value: any; expires: number }>();
@@ -25,14 +24,12 @@ export function Cached({
 
 		descriptor.value = async function (this: any, ...args: unknown[]) {
 			const key = getKey(...args).join('::');
-			console.log('CALLED @CACHED', key);
 			const now = Date.now();
 			const cached = cache.get(key);
 			if (cached && cached.expires > now) {
 				return cached.value;
 			}
 			const result = await originalMethod.apply(this, args);
-			console.log('CACHING @CACHED', key, result);
 			cache.set(key, { value: result, expires: now + ttl * 1000 });
 			return result;
 		} as typeof originalMethod;

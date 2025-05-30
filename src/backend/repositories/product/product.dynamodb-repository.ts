@@ -67,7 +67,6 @@ export class ProductDynamodbRepository
 			expenses: (expensesArr || []).map((e: any) => ({
 				name: e.name ?? '',
 				price: e.price ?? 0,
-				multiplicator: e.multiplicator ?? 1,
 				categoryId: e.categoryId,
 			})),
 		});

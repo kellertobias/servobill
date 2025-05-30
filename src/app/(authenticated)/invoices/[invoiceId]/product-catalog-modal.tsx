@@ -29,6 +29,7 @@ export function ProductCatalogModal({
 							unit
 							priceCents
 							taxPercentage
+							expenses { name price categoryId }
                         }
                     }
                 `),
@@ -77,6 +78,10 @@ export function ProductCatalogModal({
 										productId: item.id,
 										price: API.centsToPrice(item.priceCents),
 										quantity: 1,
+										linkedExpenses: (item.expenses || []).map((e: any) => ({
+											...e,
+											enabled: true,
+										})),
 									});
 									onClose();
 								}}

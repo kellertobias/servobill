@@ -45,7 +45,6 @@ export class ProductRelationalRepository
 			expenses: (orm.expenses || []).map((e) => ({
 				name: e.name ?? '',
 				price: e.price ?? 0,
-				multiplicator: e.multiplicator ?? 1,
 				categoryId: e.categoryId,
 			})),
 			createdAt: orm.createdAt,

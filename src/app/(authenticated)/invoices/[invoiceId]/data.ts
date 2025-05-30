@@ -44,7 +44,13 @@ export const useInvoiceData = () =>
 							quantity
 							priceCents
 							taxPercentage
-							expenseId
+							linkedExpenses {
+								name
+								price
+								categoryId
+								enabled
+								expenseId
+							}
 						}
 					}
 				}
@@ -53,11 +59,13 @@ export const useInvoiceData = () =>
 				id: params.invoiceId,
 			},
 		}).then((data) => ({
-			...(data as any).invoice,
-			items: (data as any).invoice.items.map((item: any) => ({
+			...data.invoice,
+			items: data.invoice.items.map((item) => ({
 				...item,
 				price: API.centsToPrice(item.priceCents),
-				expenseId: item.expenseId,
+				linkedExpenses: (item.linkedExpenses || []).map((expense) => ({
+					...expense,
+				})),
 			})),
 		})),
 	);

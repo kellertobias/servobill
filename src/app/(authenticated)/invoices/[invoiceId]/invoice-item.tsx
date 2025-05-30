@@ -76,6 +76,7 @@ export function InvoiceItem({
 								priceCents: 0,
 								quantity: 0,
 								taxPercentage: 0,
+								linkedExpenses: [],
 							},
 							...(data || []).slice(index),
 						],
@@ -122,6 +123,35 @@ export function InvoiceItem({
 								locked={locked}
 							/>
 						</div>
+						{item.linkedExpenses && item.linkedExpenses.length > 0 && (
+							<div className="mt-2">
+								<div className="font-semibold text-xs text-gray-700 mb-1">
+									Linked Expenses
+								</div>
+								{item.linkedExpenses.map((exp, expIdx) => (
+									<label
+										key={expIdx}
+										className="flex items-center gap-2 text-xs"
+									>
+										<input
+											type="checkbox"
+											checked={exp.enabled}
+											disabled={locked}
+											onChange={() => {
+												const newLinkedExpenses = item.linkedExpenses!.map(
+													(e, i) =>
+														i === expIdx ? { ...e, enabled: !e.enabled } : e,
+												);
+												onChangeItem({ linkedExpenses: newLinkedExpenses });
+											}}
+										/>
+										<span>
+											{exp.name} ({API.centsToPrice(exp.price)} €)
+										</span>
+									</label>
+								))}
+							</div>
+						)}
 					</div>
 					<div className={clsx(singleColumn, itemPricePart, 'text-right')}>
 						<div className={itemPricePartName}>Amount</div>
