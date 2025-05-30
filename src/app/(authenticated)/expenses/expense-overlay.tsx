@@ -189,12 +189,16 @@ export default function ExpenseOverlay({
 									label="Category"
 									value={data?.categoryId || ''}
 									onChange={(categoryId) =>
-										setData((current) => ({ ...current, categoryId }))
+										setData((current) => ({
+											...current,
+											categoryId: categoryId || undefined,
+										}))
 									}
 									options={categories.map((cat) => ({
 										value: cat.id,
 										label: cat.name,
 										description: cat.description || '',
+										color: cat.color || undefined,
 									}))}
 									placeholder="Select category"
 									className="w-full"
