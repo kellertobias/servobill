@@ -286,7 +286,7 @@ export default function ProductOverlay({
 														...categories.map((cat) => ({
 															value: cat.id,
 															label: cat.name,
-															description: cat.description,
+															description: cat.description || '',
 														})),
 													]}
 													className="w-full"

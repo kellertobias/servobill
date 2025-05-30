@@ -8,7 +8,7 @@ const getSettingsCategories = async () =>
 			settings { categories { id name color description } }
 		}
 	`),
-	}).then((res) => res.settings.categories);
+	}).then((res) => res.settings?.categories || []);
 
 export type ExpenseCategory = Awaited<
 	ReturnType<typeof getSettingsCategories>
