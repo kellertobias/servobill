@@ -37,7 +37,6 @@ export class InvoiceDynamodbRepository
 	protected logger = new Logger(INVOICE_REPO_NAME);
 	protected mainIdName: string = 'invoiceId';
 	protected storeId: string = 'invoice';
-	protected store: any;
 
 	constructor(@Inject(DynamoDBService) private dynamoDb: DynamoDBService) {
 		super();
@@ -177,11 +176,15 @@ export class InvoiceDynamodbRepository
 		limit?: number;
 		cursor?: string;
 	}): Promise<InvoiceEntity[]> {
-		const year = query.where?.year || new Date().getFullYear() - 10;
-		const data = await this.store.query
-			.byYear({ storeId: this.storeId })
-			.gt({ createdAt: new Date(`${year}-01-01`).toISOString() })
-			.go();
+		const data = query.where?.year
+			? await this.store.query
+					.byYear({ storeId: this.storeId })
+					.gt({
+						createdAt: new Date(`${query.where.year}-01-01`).toISOString(),
+					})
+					.go()
+			: await this.store.query.byYear({ storeId: this.storeId }).go();
+
 		let results = data.data.map((elm: InvoiceOrmEntity) =>
 			this.ormToDomainEntity(elm),
 		);
@@ -197,13 +200,15 @@ export class InvoiceDynamodbRepository
 				(inv: InvoiceEntity) => inv.status === query.where?.status,
 			);
 		}
+
 		// Optionally, add skip/limit if needed
-		if (query.skip) {
+		if (query.skip && query.skip > 0) {
 			results = results.slice(query.skip);
 		}
-		if (query.limit) {
+		if (query.limit && query.limit > 0) {
 			results = results.slice(0, query.limit);
 		}
+
 		return results;
 	}
 }

@@ -1,3 +1,5 @@
+import 'reflect-metadata';
+
 /* eslint-disable unicorn/no-for-loop */
 import { randomUUID } from 'crypto';
 import { type NextRequest } from 'next/server';

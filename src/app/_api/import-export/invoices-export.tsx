@@ -44,6 +44,13 @@ export const exportInvoices = async () => {
 								quantity
 								priceCents
 								taxPercentage
+								linkedExpenses {
+									name
+									price
+									categoryId
+									enabled
+									expenseId
+								}
 							}
 							createdAt
 							updatedAt

@@ -180,6 +180,7 @@ export class InvoiceLifecycleResolver {
 
 		await this.invoiceRepository.save(invoice);
 		await this.createAndLinkExpensesForInvoice(invoice);
+		await this.invoiceRepository.save(invoice);
 
 		return {
 			id: invoiceId,
@@ -282,38 +283,32 @@ export class InvoiceLifecycleResolver {
 	private async createAndLinkExpensesForInvoice(invoice: InvoiceEntity) {
 		// Iterate over all items in the invoice
 		for (const item of invoice.items) {
-			// Only process items that reference a product
-			if (item.productId) {
-				// Fetch the product details
-				const product = await this.productRepository.getById(item.productId);
-				if (product && Array.isArray(product.expenses)) {
-					// For each expense in the product, check if it should be enabled for this invoice item
-					const linkedExpenses =
-						item.linkedExpenses ||
-						product.expenses.map((e) => ({ ...e, enabled: true }));
-					for (const exp of linkedExpenses) {
-						if (exp.enabled) {
-							const expendedCents = Math.round(
-								exp.price * (item.quantity || 1),
-							);
-							const expense = await this.expenseRepository.create();
-							expense.update({
-								name: exp.name,
-								description: `From invoice ${
-									invoice.invoiceNumber || invoice.id
-								}, item: ${item.name}, quantity: ${item.quantity}`,
-								expendedCents,
-								expendedAt: invoice.invoicedAt || new Date(),
-								notes: `Auto-created from invoice ${
-									invoice.invoiceNumber || invoice.id
-								}`,
-								categoryId: exp.categoryId,
-							});
-							await this.expenseRepository.save(expense);
-							// Optionally, store expense IDs in item if needed
-						}
-					}
+			for (const exp of item.linkedExpenses || []) {
+				if (!exp.enabled) {
+					continue;
 				}
+
+				const expendedCents = Math.round(exp.price * (item.quantity || 1));
+
+				const expense = await this.expenseRepository.create();
+
+				expense.update({
+					name: `${exp.name} (For ${invoice.invoiceNumber})`,
+					description: `From invoice ${
+						invoice.invoiceNumber || invoice.id
+					}, item: ${item.name}, quantity: ${item.quantity}`,
+					expendedCents,
+					expendedAt: invoice.invoicedAt || new Date(),
+					notes: `Auto-created from invoice ${
+						invoice.invoiceNumber || invoice.id
+					}`,
+					categoryId: exp.categoryId,
+				});
+				await this.expenseRepository.save(expense);
+
+				// update the expenseId of the item
+				exp.expenseId = expense.id;
+				invoice.updatedAt = new Date();
 			}
 		}
 	}
@@ -329,12 +324,9 @@ export class InvoiceLifecycleResolver {
 	 */
 	private async cancelLinkedExpensesForInvoice(invoice: InvoiceEntity) {
 		for (const item of invoice.items) {
-			if (item.linkedExpenses) {
-				for (const expense of item.linkedExpenses) {
-					if (expense.expenseId) {
-						await this.expenseRepository.delete(expense.expenseId);
-						expense.expenseId = undefined;
-					}
+			for (const expense of item.linkedExpenses || []) {
+				if (expense.expenseId) {
+					await this.expenseRepository.delete(expense.expenseId);
 				}
 			}
 		}

@@ -12,8 +12,8 @@ export const useInvoiceList = ({
 	useLoadData(async () =>
 		API.query({
 			query: gql(`
-        query InvoiceHomePageListData($skip: Int!, $pageSize: Int!) {
-            invoices(limit: $pageSize, skip: $skip) {
+        query InvoiceHomePageListData($skip: Int!, $limit: Int!) {
+            invoices(skip: $skip, limit: $limit) {
                 id
                 invoiceNumber
                 offerNumber
@@ -35,7 +35,7 @@ export const useInvoiceList = ({
     `),
 			variables: {
 				skip: currentPage.current * pageSize,
-				pageSize,
+				limit: pageSize,
 			},
 		}),
 	);

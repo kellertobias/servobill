@@ -42,6 +42,7 @@ export const importExpenses = async () => {
 									'YYYY-MM-DD',
 								).toDate(),
 							taxCents: expense.taxCents || 0,
+							categoryId: expense.category_id || '',
 						},
 					},
 				});
@@ -69,6 +70,7 @@ export const exportExpenses = async () => {
 							taxCents
 							createdAt
 							updatedAt
+							categoryId
 						}
 					}
 				`),

@@ -51,12 +51,10 @@ export class InvoiceResolver {
 	@Authorized()
 	@Query(() => [Invoice])
 	async invoices(
-		@ActiveSpan() span: OtelSpan,
 		@Arg('where', { nullable: true }) where?: InvoiceWhereInput,
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		@Arg('skip', () => Int, { nullable: true }) skip?: number,
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		@Arg('limit', () => Int, { nullable: true }) limit?: number,
+		@ActiveSpan() span?: OtelSpan,
 	): Promise<Invoice[]> {
 		span?.setAttribute('context.where', JSON.stringify(where));
 		const data = await this.invoiceRepository.listByQuery({
