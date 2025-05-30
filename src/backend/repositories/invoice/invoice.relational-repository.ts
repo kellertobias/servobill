@@ -1,15 +1,19 @@
-import { Inject, Service } from '@/common/di';
+import { shouldRegister } from '../../services/should-register';
+
 import { INVOICE_REPOSITORY, INVOICE_REPO_NAME } from './di-tokens';
+import { InvoiceOrmEntity } from './relational-orm-entity';
+
+import type { InvoiceRepository } from './index';
+
+import { Inject, Service } from '@/common/di';
 import {
 	InvoiceEntity,
 	InvoiceStatus,
 	InvoiceType,
 } from '@/backend/entities/invoice.entity';
-import { InvoiceOrmEntity } from './relational-orm-entity';
 import { Logger } from '@/backend/services/logger.service';
 import { AbstractRelationalRepository } from '@/backend/repositories/abstract-relational-repository';
 import { DatabaseType } from '@/backend/services/constants';
-import { shouldRegister } from '../../services/should-register';
 import { RelationalDbService } from '@/backend/services/relationaldb.service';
 import { CustomerEntity } from '@/backend/entities/customer.entity';
 import {
@@ -19,7 +23,6 @@ import {
 import { InvoiceSubmissionEntity } from '@/backend/entities/invoice-submission.entity';
 import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
 import { CustomJson } from '@/common/json';
-import type { InvoiceRepository } from './index';
 
 /**
  * Unified repository for Invoice using TypeORM (Postgres or SQLite).
@@ -183,8 +186,12 @@ export class InvoiceRelationalRepository
 			const yearStart = new Date(`${query.where.year}-01-01`);
 			qb.andWhere('invoice.createdAt >= :yearStart', { yearStart });
 		}
-		if (query.skip) qb.skip(query.skip);
-		if (query.limit) qb.take(query.limit);
+		if (query.skip) {
+			qb.skip(query.skip);
+		}
+		if (query.limit) {
+			qb.take(query.limit);
+		}
 		const results = await qb.getMany();
 		return results.map((orm) => this.ormToDomainEntitySafe(orm));
 	}

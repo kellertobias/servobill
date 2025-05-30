@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+
 import { PageContent } from '@/components/page';
 import { useLoadData } from '@/hooks/load-data';
 import { API, gql } from '@/api/index';
@@ -9,6 +10,7 @@ import SelectInput from '@/components/select-input';
 import { Button } from '@/components/button';
 import { SettingsBlock } from '@/components/settings-block';
 import { doToast } from '@/components/toast';
+
 import { ExpenseCategoryType } from '@/common/gql/graphql';
 
 /**
@@ -25,7 +27,7 @@ function randomColor() {
  */
 export default function CategoriesSettingsPage() {
 	// Load categories from settings
-	const { data, setData, loading, reload } = useLoadData(async () => {
+	const { data, setData, reload } = useLoadData(async () => {
 		const res = await API.query({
 			query: gql(`
         query GetSettingsCategoriesForSettingsPage {
@@ -54,9 +56,11 @@ export default function CategoriesSettingsPage() {
 
 	// Add a new category to the list
 	const handleAddCategory = () => {
-		if (!newCategory.name?.trim()) return;
+		if (!newCategory.name?.trim()) {
+			return;
+		}
 		setData((current) => [
-			...((current ?? []).filter((cat) => cat) as ExpenseCategoryType[]).map(
+			...((current ?? []).filter(Boolean) as ExpenseCategoryType[]).map(
 				(cat) => ({
 					...cat,
 					color: cat.color ?? '#cccccc',

@@ -1,4 +1,5 @@
-import React, { useState, Fragment } from 'react';
+import React, { Fragment } from 'react';
+
 import { Listbox, Transition } from '@headlessui/react';
 import {
 	CheckIcon,
@@ -77,7 +78,7 @@ const SelectInput: React.FC<{
 						{/* Show placeholder with placeholder style if no option is selected */}
 						<span
 							className={`block truncate flex-1 ${
-								!selectedOption ? 'text-gray-400' : ''
+								selectedOption ? '' : 'text-gray-400'
 							} ${selectedOption && selectedOption.color ? '' : ''}`}
 						>
 							{selectedOption
@@ -115,7 +116,7 @@ const SelectInput: React.FC<{
 								<Listbox.Option
 									key={opt.value}
 									value={opt}
-									className={({ active, selected }) =>
+									className={({ active }) =>
 										`relative select-none py-2 pr-10 cursor-pointer ${
 											opt.color ? 'pl-4' : 'pl-4'
 										} ${active ? 'bg-indigo-600 text-white' : 'text-gray-900'}`

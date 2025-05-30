@@ -11,7 +11,6 @@ import { Table } from '@/components/table';
 import { useLoadData } from '@/hooks/load-data';
 import { API, gql } from '@/api/index';
 import { exportExpenses, importExpenses } from '@/api/import-export/expenses';
-import { useExpenseCategories } from '@/app/_hooks/use-expense-categories';
 
 import ExpenseOverlay from './expense-overlay';
 

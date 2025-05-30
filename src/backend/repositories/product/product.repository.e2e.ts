@@ -3,161 +3,37 @@
 
 import 'reflect-metadata';
 import { describe, it, expect, beforeEach } from 'vitest';
-import { ProductEntity } from '@/backend/entities/product.entity';
-import { DatabaseType } from '@/backend/services/constants';
 import { ProductDynamodbRepository } from './product.dynamodb-repository';
 import { ProductRelationalRepository } from './product.relational-repository';
-import { DynamoDBService } from '@/backend/services/dynamodb.service';
-import { RelationalDbService } from '@/backend/services/relationaldb.service';
 import { ProductOrmEntity } from './relational-orm-entity';
-import {
-	DYNAMODB_PORT,
-	POSTGRES_PORT,
-	POSTGRES_USER,
-	POSTGRES_PASSWORD,
-	POSTGRES_DB,
-} from '@/test/vitest.setup-e2e';
-import { App } from '@/common/di';
-import { CONFIG_SERVICE } from '@/backend/services/di-tokens';
-import {
-	ensureDynamoTableExists,
-	DYNAMODB_TABLE_NAME,
-} from '@/test/ensure-dynamo-table';
 import { ProductRepository } from './interface';
-import {
-	DynamoDBClient,
-	ScanCommand,
-	DeleteItemCommand,
-} from '@aws-sdk/client-dynamodb';
+import { prepareRepoTest } from '@/test/repo-test';
+import { ProductEntity } from '@/backend/entities/product.entity';
 
 /**
  * Helper to clear all items from the DynamoDB test table.
  * Only used for DynamoDB E2E tests to avoid data collisions.
  */
-async function clearDynamoTable() {
-	const client = new DynamoDBClient({
-		region: 'eu-central-1',
-		endpoint: `http://localhost:${DYNAMODB_PORT}`,
-		credentials: {
-			accessKeyId: 'AKIAIOSFODNN7EXAMPLE',
-			secretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
-		},
-	});
-	const scan = await client.send(
-		new ScanCommand({ TableName: DYNAMODB_TABLE_NAME }),
-	);
-	if (scan.Items) {
-		for (const item of scan.Items) {
-			await client.send(
-				new DeleteItemCommand({
-					TableName: DYNAMODB_TABLE_NAME,
-					Key: {
-						pk: item.pk,
-						sk: item.sk,
-					},
-				}),
-			);
-		}
-	}
-}
 
-/**
- * Parameterized test suite for both repository implementations.
- */
-describe.each([
-	{
-		dbType: DatabaseType.DYNAMODB,
-		name: 'ProductDynamodbRepository',
-		setup: async () => {
-			await ensureDynamoTableExists();
-			// Prepare config object matching ConfigService shape
-			const config = {
-				tables: {
-					electordb: DYNAMODB_TABLE_NAME,
-					databaseType: DatabaseType.DYNAMODB,
-				},
-				endpoints: {
-					dynamodb: `http://localhost:${DYNAMODB_PORT}`,
-				},
-				region: 'eu-central-1',
-				awsCreds: {
-					accessKeyId: 'AKIAIOSFODNN7EXAMPLE',
-					secretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
-				},
-				port: 0,
-				domains: { api: '', site: '' },
-				eventBusName: '',
-				buckets: { files: '' },
-				isLocal: true,
-				ses: { accessKeyId: '', secretAccessKey: '' },
-			};
-			// Register config in DI context
-			const app = App.forRoot({
-				modules: [
-					{ token: CONFIG_SERVICE, value: config },
-					{ token: DynamoDBService, module: DynamoDBService },
-					DynamoDBService,
-				],
-			});
-			return {
-				app,
-				ProductRepositoryImplementation: ProductDynamodbRepository,
-			};
-		},
-	},
-	{
-		dbType: DatabaseType.POSTGRES,
-		name: 'ProductRelationalRepository',
-		setup: async () => {
-			const { OrmEntityRegistry } = await import(
-				'@/common/orm-entity-registry'
-			);
-			OrmEntityRegistry.push(ProductOrmEntity);
-			await new Promise((res) => setTimeout(res, 1000));
-			// Prepare config object matching ConfigService shape
-			const config = {
-				tables: {
-					databaseType: DatabaseType.POSTGRES,
-					postgres: `postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT}/${POSTGRES_DB}`,
-				},
-				endpoints: {},
-				region: 'eu-central-1',
-				awsCreds: { accessKeyId: '', secretAccessKey: '' },
-				port: 0,
-				domains: { api: '', site: '' },
-				eventBusName: '',
-				buckets: { files: '' },
-				isLocal: true,
-				ses: { accessKeyId: '', secretAccessKey: '' },
-			};
-			// Register config in DI context
-			const app = App.forRoot({
-				modules: [
-					{ token: CONFIG_SERVICE, value: config },
-					{ token: RelationalDbService, module: RelationalDbService },
-				],
-			});
-			return {
-				app,
-				ProductRepositoryImplementation: ProductRelationalRepository,
-			};
-		},
-	},
-])('$name (E2E)', ({ setup, name }) => {
+const repoTestCases = prepareRepoTest({
+	name: 'Product',
+	relational: ProductRelationalRepository,
+	dynamodb: ProductDynamodbRepository,
+	relationalOrmEntity: ProductOrmEntity,
+});
+
+describe.each(repoTestCases)('$name (E2E)', ({ setup, onBeforeEach }) => {
 	/**
 	 * Each test creates its own DI context (App instance) for isolation.
 	 */
 	beforeEach(async () => {
-		if (name === 'ProductDynamodbRepository') {
-			await ensureDynamoTableExists();
-			await clearDynamoTable();
-		}
+		await onBeforeEach();
 	});
 
 	it('should create, get, and delete a product', async () => {
-		const { app, ProductRepositoryImplementation } = await setup();
+		const { app, RepositoryImplementation } = await setup();
 		// Use app.create to instantiate the repository with DI
-		const repo = app.create<ProductRepository>(ProductRepositoryImplementation);
+		const repo = app.create<ProductRepository>(RepositoryImplementation);
 
 		const product = new ProductEntity({
 			id: 'p1',
@@ -175,9 +51,7 @@ describe.each([
 				{ name: 'Travel', price: 500, categoryId: 'cat2' },
 			],
 		});
-		if (name === 'ProductDynamodbRepository') {
-			await repo.createWithId(product.id);
-		}
+		await repo.createWithId(product.id);
 		await repo.save(product);
 		const found = await repo.getById('p1');
 		expect(found).toBeDefined();
@@ -199,15 +73,8 @@ describe.each([
 	 * - Verifies empty result edge case
 	 */
 	it('should list products using listByQuery', async () => {
-		const { app }: { app: App } = await setup();
-		// Use app.create to instantiate the repository with DI
-		const repo =
-			name === 'ProductDynamodbRepository'
-				? (app.create(ProductDynamodbRepository) as ProductDynamodbRepository)
-				: (app.create(
-						ProductRelationalRepository,
-					) as ProductRelationalRepository);
-		// Create multiple products
+		const { app, RepositoryImplementation } = await setup();
+		const repo = app.create<ProductRepository>(RepositoryImplementation);
 		const products = [
 			new ProductEntity({
 				id: 'p2',
@@ -256,15 +123,14 @@ describe.each([
 			}),
 		];
 		for (const p of products) {
-			if (name === 'ProductDynamodbRepository') {
-				await repo.createWithId(p.id);
-			}
+			await repo.createWithId(p.id);
+
 			await repo.save(p);
 		}
 
 		// List all products (should include all created)
 		const all = await repo.listByQuery({});
-		const allIds = all.map((p: ProductEntity) => p.id);
+		const allIds = all.map((p) => p.id);
 		expect(allIds).toEqual(expect.arrayContaining(['p2', 'p3', 'p4']));
 
 		// Search by name (case-insensitive, partial)
@@ -273,10 +139,8 @@ describe.each([
 		expect(searchApple[0].name.toLowerCase()).toContain('apple');
 
 		// Test skip/limit (only for relational)
-		if (name === 'ProductRelationalRepository') {
-			const limited = await repo.listByQuery({ skip: 1, limit: 1 });
-			expect(limited.length).toBe(1);
-		}
+		const limited = await repo.listByQuery({ skip: 1, limit: 1 });
+		expect(limited.length).toBe(1);
 
 		// Search for non-existent product
 		const searchNone = await repo.listByQuery({ where: { search: 'xyz' } });

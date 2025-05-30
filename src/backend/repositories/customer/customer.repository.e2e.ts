@@ -4,122 +4,30 @@
 import 'reflect-metadata';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { CustomerEntity } from '@/backend/entities/customer.entity';
-import { DatabaseType } from '@/backend/services/constants';
 import { CustomerDynamodbRepository } from './customer.dynamodb-repository';
 import { CustomerRelationalRepository } from './customer.relational-repository';
-import { DynamoDBService } from '@/backend/services/dynamodb.service';
-import { RelationalDbService } from '@/backend/services/relationaldb.service';
 import { CustomerOrmEntity } from './relational-orm-entity';
-import {
-	DYNAMODB_PORT,
-	POSTGRES_PORT,
-	POSTGRES_USER,
-	POSTGRES_PASSWORD,
-	POSTGRES_DB,
-} from '@/test/vitest.setup-e2e';
-import { App } from '@/common/di';
-import { CONFIG_SERVICE } from '@/backend/services/di-tokens';
-import {
-	ensureDynamoTableExists,
-	DYNAMODB_TABLE_NAME,
-} from '@/test/ensure-dynamo-table';
 import { CustomerRepository } from './interface';
-import { clearDynamoTable } from '@/test/clear-dynamo-table';
+import { prepareRepoTest } from '@/test/repo-test';
 
 /**
  * Parameterized test suite for both repository implementations.
  */
-describe.each([
-	{
-		dbType: DatabaseType.DYNAMODB,
-		name: 'CustomerDynamodbRepository',
-		setup: async () => {
-			await ensureDynamoTableExists();
-			const config = {
-				tables: {
-					electordb: DYNAMODB_TABLE_NAME,
-					databaseType: DatabaseType.DYNAMODB,
-				},
-				endpoints: {
-					dynamodb: `http://localhost:${DYNAMODB_PORT}`,
-				},
-				region: 'eu-central-1',
-				awsCreds: {
-					accessKeyId: 'AKIAIOSFODNN7EXAMPLE',
-					secretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
-				},
-				port: 0,
-				domains: { api: '', site: '' },
-				eventBusName: '',
-				buckets: { files: '' },
-				isLocal: true,
-				ses: { accessKeyId: '', secretAccessKey: '' },
-			};
-			const app = App.forRoot({
-				modules: [
-					{ token: CONFIG_SERVICE, value: config },
-					{ token: DynamoDBService, module: DynamoDBService },
-					DynamoDBService,
-				],
-			});
-			return {
-				app,
-				CustomerRepositoryImplementation: CustomerDynamodbRepository,
-			};
-		},
-	},
-	{
-		dbType: DatabaseType.POSTGRES,
-		name: 'CustomerRelationalRepository',
-		setup: async () => {
-			const { OrmEntityRegistry } = await import(
-				'@/common/orm-entity-registry'
-			);
-			OrmEntityRegistry.push(CustomerOrmEntity);
-			await new Promise((res) => setTimeout(res, 1000));
-			const config = {
-				tables: {
-					databaseType: DatabaseType.POSTGRES,
-					postgres: `postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT}/${POSTGRES_DB}`,
-				},
-				endpoints: {},
-				region: 'eu-central-1',
-				awsCreds: { accessKeyId: '', secretAccessKey: '' },
-				port: 0,
-				domains: { api: '', site: '' },
-				eventBusName: '',
-				buckets: { files: '' },
-				isLocal: true,
-				ses: { accessKeyId: '', secretAccessKey: '' },
-			};
-			const app = App.forRoot({
-				modules: [
-					{ token: CONFIG_SERVICE, value: config },
-					{ token: RelationalDbService, module: RelationalDbService },
-				],
-			});
-			return {
-				app,
-				CustomerRepositoryImplementation: CustomerRelationalRepository,
-			};
-		},
-	},
-])('$name (E2E)', ({ setup, name }) => {
+const repoTestCases = prepareRepoTest({
+	name: 'Customer',
+	relational: CustomerRelationalRepository,
+	dynamodb: CustomerDynamodbRepository,
+	relationalOrmEntity: CustomerOrmEntity,
+});
+
+describe.each(repoTestCases)('$name (E2E)', ({ setup, onBeforeEach }) => {
 	beforeEach(async () => {
-		if (name === 'CustomerDynamodbRepository') {
-			await ensureDynamoTableExists();
-			await clearDynamoTable({
-				tableName: DYNAMODB_TABLE_NAME,
-				port: DYNAMODB_PORT,
-			});
-		}
+		await onBeforeEach();
 	});
 
 	it('should create, get, and delete a customer', async () => {
-		const { app, CustomerRepositoryImplementation } = await setup();
-		const repo = app.create<CustomerRepository>(
-			CustomerRepositoryImplementation,
-		);
+		const { app, RepositoryImplementation } = await setup();
+		const repo = app.create<CustomerRepository>(RepositoryImplementation);
 
 		const customer = new CustomerEntity({
 			id: 'c1',
@@ -129,9 +37,9 @@ describe.each([
 			createdAt: new Date(),
 			updatedAt: new Date(),
 		});
-		if (name === 'CustomerDynamodbRepository') {
-			await repo.createWithId(customer.id);
-		}
+
+		await repo.createWithId(customer.id);
+
 		await repo.save(customer);
 		const found = await repo.getById('c1');
 		expect(found).toBeDefined();
@@ -142,10 +50,8 @@ describe.each([
 	});
 
 	it('should list customers using listByQuery', async () => {
-		const { app, CustomerRepositoryImplementation } = await setup();
-		const repo = app.create<CustomerRepository>(
-			CustomerRepositoryImplementation,
-		);
+		const { app, RepositoryImplementation } = await setup();
+		const repo = app.create<CustomerRepository>(RepositoryImplementation);
 		const customers = [
 			new CustomerEntity({
 				id: 'c2',
@@ -173,9 +79,8 @@ describe.each([
 			}),
 		];
 		for (const c of customers) {
-			if (name === 'CustomerDynamodbRepository') {
-				await repo.createWithId(c.id);
-			}
+			await repo.createWithId(c.id);
+
 			await repo.save(c);
 		}
 		const all = await repo.listByQuery({});

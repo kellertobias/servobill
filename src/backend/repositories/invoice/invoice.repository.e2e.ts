@@ -10,120 +10,30 @@ import {
 } from '@/backend/entities/invoice.entity';
 import { CustomerEntity } from '@/backend/entities/customer.entity';
 import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
-import { DatabaseType } from '@/backend/services/constants';
 import { InvoiceDynamodbRepository } from './invoice.dynamodb-repository';
 import { InvoiceRelationalRepository } from './invoice.relational-repository';
-import { DynamoDBService } from '@/backend/services/dynamodb.service';
-import { RelationalDbService } from '@/backend/services/relationaldb.service';
 import { InvoiceOrmEntity } from './relational-orm-entity';
-import {
-	DYNAMODB_PORT,
-	POSTGRES_PORT,
-	POSTGRES_USER,
-	POSTGRES_PASSWORD,
-	POSTGRES_DB,
-} from '@/test/vitest.setup-e2e';
-import { App } from '@/common/di';
-import { CONFIG_SERVICE } from '@/backend/services/di-tokens';
-import {
-	ensureDynamoTableExists,
-	DYNAMODB_TABLE_NAME,
-} from '@/test/ensure-dynamo-table';
 import { InvoiceRepository } from './interface';
-import { clearDynamoTable } from '@/test/clear-dynamo-table';
+import { prepareRepoTest } from '@/test/repo-test';
 
 /**
  * Parameterized test suite for both repository implementations.
  */
-describe.each([
-	{
-		dbType: DatabaseType.DYNAMODB,
-		name: 'InvoiceDynamodbRepository',
-		setup: async () => {
-			await ensureDynamoTableExists();
-			const config = {
-				tables: {
-					electordb: DYNAMODB_TABLE_NAME,
-					databaseType: DatabaseType.DYNAMODB,
-				},
-				endpoints: {
-					dynamodb: `http://localhost:${DYNAMODB_PORT}`,
-				},
-				region: 'eu-central-1',
-				awsCreds: {
-					accessKeyId: 'AKIAIOSFODNN7EXAMPLE',
-					secretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
-				},
-				port: 0,
-				domains: { api: '', site: '' },
-				eventBusName: '',
-				buckets: { files: '' },
-				isLocal: true,
-				ses: { accessKeyId: '', secretAccessKey: '' },
-			};
-			const app = App.forRoot({
-				modules: [
-					{ token: CONFIG_SERVICE, value: config },
-					{ token: DynamoDBService, module: DynamoDBService },
-					DynamoDBService,
-				],
-			});
-			return {
-				app,
-				InvoiceRepositoryImplementation: InvoiceDynamodbRepository,
-			};
-		},
-	},
-	{
-		dbType: DatabaseType.POSTGRES,
-		name: 'InvoiceRelationalRepository',
-		setup: async () => {
-			const { OrmEntityRegistry } = await import(
-				'@/common/orm-entity-registry'
-			);
-			OrmEntityRegistry.push(InvoiceOrmEntity);
-			await new Promise((res) => setTimeout(res, 1000));
-			const config = {
-				tables: {
-					databaseType: DatabaseType.POSTGRES,
-					postgres: `postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT}/${POSTGRES_DB}`,
-				},
-				endpoints: {},
-				region: 'eu-central-1',
-				awsCreds: { accessKeyId: '', secretAccessKey: '' },
-				port: 0,
-				domains: { api: '', site: '' },
-				eventBusName: '',
-				buckets: { files: '' },
-				isLocal: true,
-				ses: { accessKeyId: '', secretAccessKey: '' },
-			};
-			const app = App.forRoot({
-				modules: [
-					{ token: CONFIG_SERVICE, value: config },
-					{ token: RelationalDbService, module: RelationalDbService },
-				],
-			});
-			return {
-				app,
-				InvoiceRepositoryImplementation: InvoiceRelationalRepository,
-			};
-		},
-	},
-])('$name (E2E)', ({ setup, name }) => {
+describe.each(
+	prepareRepoTest({
+		name: 'Invoice',
+		relational: InvoiceRelationalRepository,
+		dynamodb: InvoiceDynamodbRepository,
+		relationalOrmEntity: InvoiceOrmEntity,
+	}),
+)('$name (E2E)', ({ setup, name, onBeforeEach }) => {
 	beforeEach(async () => {
-		if (name === 'InvoiceDynamodbRepository') {
-			await ensureDynamoTableExists();
-			await clearDynamoTable({
-				tableName: DYNAMODB_TABLE_NAME,
-				port: DYNAMODB_PORT,
-			});
-		}
+		await onBeforeEach();
 	});
 
 	it('should create, get, and delete an invoice', async () => {
-		const { app, InvoiceRepositoryImplementation } = await setup();
-		const repo = app.create<InvoiceRepository>(InvoiceRepositoryImplementation);
+		const { app, RepositoryImplementation } = await setup();
+		const repo = app.create<InvoiceRepository>(RepositoryImplementation);
 
 		const customer = new CustomerEntity({
 			id: 'cust1',
@@ -171,8 +81,8 @@ describe.each([
 	});
 
 	it('should list invoices using listByQuery', async () => {
-		const { app, InvoiceRepositoryImplementation } = await setup();
-		const repo = app.create<InvoiceRepository>(InvoiceRepositoryImplementation);
+		const { app, RepositoryImplementation } = await setup();
+		const repo = app.create<InvoiceRepository>(RepositoryImplementation);
 		const customer = new CustomerEntity({
 			id: 'cust2',
 			name: 'Customer 2',

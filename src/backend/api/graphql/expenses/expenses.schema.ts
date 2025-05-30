@@ -2,9 +2,9 @@ import { IsInt, IsOptional, IsString } from 'class-validator';
 import { Field, ObjectType, InputType, Int } from 'type-graphql';
 
 import { FilteredObjectProperties } from '../types';
+import { ExpenseCategoryType } from '../system/system.schema';
 
 import { ExpenseEntity } from '@/backend/entities/expense.entity';
-import { ExpenseCategoryType } from '../system/system.schema';
 
 @ObjectType()
 export class Expense implements FilteredObjectProperties<ExpenseEntity> {

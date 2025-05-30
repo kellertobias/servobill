@@ -1,3 +1,10 @@
+import { shouldRegister } from '../../services/should-register';
+
+import { INVOICE_REPO_NAME, INVOICE_REPOSITORY } from './di-tokens';
+import { entitySchema, InvoiceOrmEntity } from './dynamodb-orm-entity';
+
+import type { InvoiceRepository } from './index';
+
 import { AbstractDynamodbRepository } from '@/backend/repositories/abstract-dynamodb-repository';
 import { DynamoDBService } from '@/backend/services/dynamodb.service';
 import {
@@ -14,12 +21,8 @@ import { InvoiceSubmissionEntity } from '@/backend/entities/invoice-submission.e
 import { CustomerEntity } from '@/backend/entities/customer.entity';
 import { Logger } from '@/backend/services/logger.service';
 import { Inject, Service } from '@/common/di';
-import { INVOICE_REPO_NAME, INVOICE_REPOSITORY } from './di-tokens';
-import { shouldRegister } from '../../services/should-register';
 import { CustomJson } from '@/common/json';
-import type { InvoiceRepository } from './index';
 import { DatabaseType } from '@/backend/services/constants';
-import { entitySchema, InvoiceOrmEntity } from './dynamodb-orm-entity';
 
 /**
  * DynamoDB implementation of the InvoiceRepository interface.
