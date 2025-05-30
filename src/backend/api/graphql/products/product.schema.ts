@@ -5,6 +5,42 @@ import type { FilteredObjectProperties } from '../types';
 
 import type { ProductEntity } from '@/backend/entities/product.entity';
 
+/**
+ * Represents an expense associated with a product (for output).
+ */
+@ObjectType()
+export class ProductExpense {
+	@Field()
+	name!: string;
+
+	@Field(() => Int)
+	price!: number;
+
+	@Field(() => Number)
+	multiplicator!: number;
+
+	@Field({ nullable: true })
+	categoryId?: string;
+}
+
+/**
+ * Represents an expense associated with a product (for input).
+ */
+@InputType()
+export class ProductExpenseInput {
+	@Field()
+	name!: string;
+
+	@Field(() => Int)
+	price!: number;
+
+	@Field(() => Number)
+	multiplicator!: number;
+
+	@Field({ nullable: true })
+	categoryId?: string;
+}
+
 @ObjectType()
 export class Product implements FilteredObjectProperties<ProductEntity> {
 	@Field()
@@ -52,6 +88,9 @@ export class Product implements FilteredObjectProperties<ProductEntity> {
 		description: 'The expense category ID for auto-created expenses.',
 	})
 	expenseCategoryId?: string;
+
+	@Field(() => [ProductExpense], { nullable: true })
+	expenses?: ProductExpense[];
 
 	@Field()
 	createdAt!: Date;
@@ -101,6 +140,9 @@ export class ProductInput
 		description: 'The expense category ID for auto-created expenses.',
 	})
 	expenseCategoryId?: string;
+
+	@Field(() => [ProductExpenseInput], { nullable: true })
+	expenses?: ProductExpenseInput[];
 }
 
 @InputType()

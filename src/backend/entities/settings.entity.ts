@@ -246,7 +246,7 @@ export class InvoiceSettingsEntity {
 export type ExpenseCategory = {
 	id: string;
 	name: string;
-	color: string;
+	color?: string;
 	isDefault: boolean;
 	reference?: string;
 	sumForTaxSoftware?: boolean;
@@ -268,38 +268,7 @@ export class ExpenseSettingsEntity {
 	) {
 		Object.assign(this, params);
 		this.saveInner = saveInner;
-		if (!this.categories || this.categories.length === 0) {
-			this.categories = [
-				{
-					id: 'travel',
-					name: 'Travel Expenses (Reisekostenpauschalen)',
-					color: '#3B82F6', // blue-500
-					isDefault: true,
-					reference: 'travel',
-					sumForTaxSoftware: true,
-					description:
-						'Expenses for travel, such as mileage or public transport.',
-				},
-				{
-					id: 'afa',
-					name: 'Wear and Tear Depreciation (AfA)',
-					color: '#F59E42', // orange-400
-					isDefault: false,
-					reference: 'afa',
-					sumForTaxSoftware: false,
-					description: 'Depreciation for wear and tear of assets.',
-				},
-				{
-					id: 'gwg',
-					name: 'Low Value Assets (Geringwertige Wirtschaftsgüter)',
-					color: '#10B981', // green-500
-					isDefault: false,
-					reference: 'gwg',
-					sumForTaxSoftware: false,
-					description: 'Assets with low value, e.g. below 800 EUR.',
-				},
-			];
-		}
+		this.categories = params.categories || [];
 	}
 
 	public serializable() {

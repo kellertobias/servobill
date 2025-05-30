@@ -63,9 +63,9 @@ type Expense {
 input ExpenseCategoryInputType {
   color: String
   description: String
-  id: String
+  id: String!
   isDefault: Boolean
-  name: String
+  name: String!
   reference: String
   sumForTaxSoftware: Boolean
 }
@@ -73,9 +73,9 @@ input ExpenseCategoryInputType {
 type ExpenseCategoryType {
   color: String
   description: String
-  id: String
+  id: String!
   isDefault: Boolean
-  name: String
+  name: String!
   reference: String
   sumForTaxSoftware: Boolean
 }
@@ -352,6 +352,7 @@ type Product {
 
   """A multiplicator for the expense (optional, defaults to 1)."""
   expenseMultiplicator: Int
+  expenses: [ProductExpense!]
   id: String!
   name: String!
   notes: String
@@ -359,6 +360,20 @@ type Product {
   taxPercentage: Int!
   unit: String
   updatedAt: DateTime!
+}
+
+type ProductExpense {
+  categoryId: String
+  multiplicator: Float!
+  name: String!
+  price: Int!
+}
+
+input ProductExpenseInput {
+  categoryId: String
+  multiplicator: Float!
+  name: String!
+  price: Int!
 }
 
 input ProductInput {
@@ -373,6 +388,7 @@ input ProductInput {
 
   """A multiplicator for the expense (optional, defaults to 1)."""
   expenseMultiplicator: Int
+  expenses: [ProductExpenseInput!]
   name: String!
   notes: String
   priceCents: Int!

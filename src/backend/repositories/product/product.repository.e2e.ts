@@ -170,9 +170,10 @@ describe.each([
 			notes: 'note',
 			description: 'desc',
 			unit: 'pcs',
-			expenseCents: 0,
-			expenseMultiplicator: 1,
-			expenseCategoryId: '',
+			expenses: [
+				{ name: 'Catering', price: 200, multiplicator: 1, categoryId: 'cat1' },
+				{ name: 'Travel', price: 500, multiplicator: 2, categoryId: 'cat2' },
+			],
 		});
 		if (name === 'ProductDynamodbRepository') {
 			await repo.createWithId(product.id);
@@ -181,6 +182,10 @@ describe.each([
 		const found = await repo.getById('p1');
 		expect(found).toBeDefined();
 		expect(found?.name).toBe('Test Product');
+		expect(found?.expenses).toBeDefined();
+		expect(found?.expenses?.length).toBe(2);
+		expect(found?.expenses?.[0].name).toBe('Catering');
+		expect(found?.expenses?.[1].name).toBe('Travel');
 		await repo.delete('p1');
 		const afterDelete = await repo.getById('p1');
 		expect(afterDelete).toBeNull();
@@ -215,9 +220,14 @@ describe.each([
 				notes: '',
 				description: '',
 				unit: 'pcs',
-				expenseCents: 0,
-				expenseMultiplicator: 1,
-				expenseCategoryId: '',
+				expenses: [
+					{
+						name: 'Transport',
+						price: 10,
+						multiplicator: 1,
+						categoryId: 'cat1',
+					},
+				],
 			}),
 			new ProductEntity({
 				id: 'p3',
@@ -230,9 +240,7 @@ describe.each([
 				notes: '',
 				description: '',
 				unit: 'pcs',
-				expenseCents: 0,
-				expenseMultiplicator: 1,
-				expenseCategoryId: '',
+				expenses: [],
 			}),
 			new ProductEntity({
 				id: 'p4',
@@ -245,9 +253,9 @@ describe.each([
 				notes: '',
 				description: '',
 				unit: 'pcs',
-				expenseCents: 0,
-				expenseMultiplicator: 1,
-				expenseCategoryId: '',
+				expenses: [
+					{ name: 'Storage', price: 5, multiplicator: 2, categoryId: 'cat2' },
+				],
 			}),
 		];
 		for (const p of products) {

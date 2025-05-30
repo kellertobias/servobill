@@ -48,6 +48,11 @@ export class ProductDynamodbRepository
 	protected ormToDomainEntitySafe(
 		entity: Omit<ProductOrmEntity, 'storeId'>,
 	): ProductEntity {
+		// Parse expenses from JSON string to array
+		const expensesArr =
+			typeof entity.expenses === 'string' && entity.expenses.length > 0
+				? JSON.parse(entity.expenses)
+				: [];
 		return new ProductEntity({
 			id: entity.productId,
 			createdAt: new Date(entity.createdAt),
@@ -59,9 +64,12 @@ export class ProductDynamodbRepository
 			unit: entity.unit,
 			priceCents: entity.priceCents,
 			taxPercentage: entity.taxPercentage,
-			expenseCents: entity.expenseCents || 0,
-			expenseMultiplicator: entity.expenseMultiplicator || 1,
-			expenseCategoryId: entity.expenseCategoryId || '',
+			expenses: (expensesArr || []).map((e: any) => ({
+				name: e.name ?? '',
+				price: e.price ?? 0,
+				multiplicator: e.multiplicator ?? 1,
+				categoryId: e.categoryId,
+			})),
 		});
 	}
 
@@ -80,9 +88,11 @@ export class ProductDynamodbRepository
 			searchName: domainEntity.name.toLowerCase(),
 			createdAt: domainEntity.createdAt.toISOString(),
 			updatedAt: domainEntity.updatedAt.toISOString(),
-			expenseCents: domainEntity.expenseCents || 0,
-			expenseMultiplicator: domainEntity.expenseMultiplicator || 1,
-			expenseCategoryId: domainEntity.expenseCategoryId || '',
+			// Stringify expenses array for storage
+			expenses:
+				domainEntity.expenses && domainEntity.expenses.length > 0
+					? JSON.stringify(domainEntity.expenses)
+					: '',
 		};
 	}
 
@@ -95,9 +105,7 @@ export class ProductDynamodbRepository
 			taxPercentage: 0,
 			createdAt: new Date(),
 			updatedAt: new Date(),
-			expenseCents: 0,
-			expenseMultiplicator: 1,
-			expenseCategoryId: '',
+			expenses: [],
 		});
 	}
 

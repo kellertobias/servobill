@@ -16,6 +16,7 @@
     "lint": "next lint",
     "gql:type": "graphql-codegen --config codegen.ts",
     "gql:type:watch": "graphql-codegen --config codegen.ts --watch | grep -F '[FAILED]'",
+    "gql:type:watch-verbose": "graphql-codegen --config codegen.ts --watch",
     "fix:eslint": "eslint --fix \"**/*.ts(x)\"",
     "fix:prettier": "prettier --write \"**/*.ts(x)\"",
     "vscode-jest": "vitest --passWithNoTests",

@@ -130,42 +130,54 @@ export class SystemResolver {
 			lastNumber: nextData.customerNumbersLast,
 		});
 
-		data.offerValidityDays = nextData.offerValidityDays;
-		data.defaultInvoiceDueDays = nextData.defaultInvoiceDueDays;
-		data.defaultInvoiceFooterText = nextData.defaultInvoiceFooterText;
+		data.offerValidityDays = nextData.offerValidityDays || 14;
+		data.defaultInvoiceDueDays = nextData.defaultInvoiceDueDays || 28;
+		data.defaultInvoiceFooterText =
+			nextData.defaultInvoiceFooterText || 'Created by Servobill';
 
 		await data.save();
 
-		emails.emailTemplate = nextData.emailTemplate;
-		emails.emailSubjectInvoices = nextData.emailSubjectInvoices;
-		emails.emailSubjectOffers = nextData.emailSubjectOffers;
-		emails.emailSubjectReminder = nextData.emailSubjectReminder;
-		emails.emailSubjectWarning = nextData.emailSubjectWarning;
+		emails.emailTemplate = nextData.emailTemplate || '';
+		emails.emailSubjectInvoices =
+			nextData.emailSubjectInvoices || 'Here is your invoice {{number}}';
+		emails.emailSubjectOffers =
+			nextData.emailSubjectOffers || 'Your offer {{number}} is ready';
+		emails.emailSubjectReminder =
+			nextData.emailSubjectReminder || 'Reminder: Invoice {{number}} is due';
+		emails.emailSubjectWarning =
+			nextData.emailSubjectWarning || 'Warning: Invoice {{number}} is over due';
 
-		emails.sendFrom = nextData.sendFrom;
-		emails.replyTo = nextData.replyTo;
+		emails.sendFrom = nextData.sendFrom || 'no-reply@example.com';
+		emails.replyTo = nextData.replyTo || 'no-reply@example.com';
 
-		emails.invoiceCompanyLogo = nextData.invoiceCompanyLogo;
-		emails.emailCompanyLogo = nextData.emailCompanyLogo;
+		emails.invoiceCompanyLogo = nextData.invoiceCompanyLogo || '';
+		emails.emailCompanyLogo = nextData.emailCompanyLogo || '';
 
-		emails.companyData.name = nextData.company.name;
-		emails.companyData.street = nextData.company.street;
-		emails.companyData.zip = nextData.company.zip;
-		emails.companyData.city = nextData.company.city;
-		emails.companyData.phone = nextData.company.phone;
-		emails.companyData.email = nextData.company.email;
-		emails.companyData.web = nextData.company.web;
-		emails.companyData.vatId = nextData.company.vatId;
-		emails.companyData.taxId = nextData.company.taxId;
-		emails.companyData.bank.accountHolder = nextData.company.bankAccountHolder;
-		emails.companyData.bank.iban = nextData.company.bankIban;
-		emails.companyData.bank.bic = nextData.company.bankBic;
+		emails.companyData.name = nextData.company?.name || '';
+		emails.companyData.street = nextData.company?.street || '';
+		emails.companyData.zip = nextData.company?.zip || '';
+		emails.companyData.city = nextData.company?.city || '';
+		emails.companyData.phone = nextData.company?.phone || '';
+		emails.companyData.email = nextData.company?.email || '';
+		emails.companyData.web = nextData.company?.web || '';
+		emails.companyData.vatId = nextData.company?.vatId || '';
+		emails.companyData.taxId = nextData.company?.taxId || '';
+		emails.companyData.bank.accountHolder =
+			nextData.company?.bankAccountHolder || '';
+		emails.companyData.bank.iban = nextData.company?.bankIban || '';
+		emails.companyData.bank.bic = nextData.company?.bankBic || '';
 
 		await emails.save();
 
 		if (nextData.categories) {
 			expenseSettings.categories = nextData.categories.map((cat) => ({
 				...cat,
+				id: cat.id,
+				color: cat.color,
+				isDefault: cat.isDefault || false,
+				reference: cat.reference || '',
+				sumForTaxSoftware: cat.sumForTaxSoftware || false,
+				description: cat.description || '',
 			}));
 			await expenseSettings.save();
 		}

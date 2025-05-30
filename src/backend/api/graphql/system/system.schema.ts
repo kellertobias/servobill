@@ -85,14 +85,14 @@ export class ExpenseCategoryType {
 	/**
 	 * Category ID. Now nullable.
 	 */
-	@Field({ nullable: true })
-	id?: string;
+	@Field()
+	id!: string;
 
 	/**
 	 * Category name. Now nullable.
 	 */
-	@Field({ nullable: true })
-	name?: string;
+	@Field()
+	name!: string;
 
 	/**
 	 * Category color. Now nullable.
@@ -103,25 +103,25 @@ export class ExpenseCategoryType {
 	/**
 	 * Is default category. Now nullable.
 	 */
-	@Field({ nullable: true })
+	@Field(() => Boolean, { nullable: true })
 	isDefault?: boolean;
 
 	/**
 	 * Reference. Now nullable.
 	 */
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	reference?: string;
 
 	/**
 	 * Sum for tax software. Now nullable.
 	 */
-	@Field({ nullable: true })
+	@Field(() => Boolean, { nullable: true })
 	sumForTaxSoftware?: boolean;
 
 	/**
 	 * Description. Now nullable.
 	 */
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	description?: string;
 }
 

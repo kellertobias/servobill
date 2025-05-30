@@ -53,13 +53,7 @@ export const entitySchema = DynamoDBService.getSchema({
 			type: 'number',
 			required: true,
 		},
-		expenseCents: {
-			type: 'number',
-		},
-		expenseMultiplicator: {
-			type: 'number',
-		},
-		expenseCategoryId: {
+		expenses: {
 			type: 'string',
 		},
 	},

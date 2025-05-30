@@ -32,14 +32,8 @@ export class ProductOrmEntity {
 	@Column('integer')
 	taxPercentage!: number;
 
-	@Column('integer', { nullable: true })
-	expenseCents?: number;
-
-	@Column('integer', { nullable: true })
-	expenseMultiplicator?: number;
-
-	@Column('text', { nullable: true })
-	expenseCategoryId?: string;
+	@Column('json', { nullable: true })
+	expenses?: any[];
 
 	/**
 	 * Date and time when the product was created.

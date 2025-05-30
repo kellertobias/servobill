@@ -4,6 +4,16 @@ import { DomainEntity, DomainEntityKeys } from './abstract.entity';
 
 import { ObjectProperties } from '@/common/ts-helpers';
 
+/**
+ * Represents an expense associated with a product.
+ */
+export type ProductExpense = {
+	name: string;
+	price: number;
+	multiplicator: number;
+	categoryId?: string;
+};
+
 export class ProductEntity extends DomainEntity {
 	public id!: string;
 	public category!: string;
@@ -17,19 +27,9 @@ export class ProductEntity extends DomainEntity {
 	public updatedAt!: Date;
 
 	/**
-	 * The expense in cents associated with this product (optional).
+	 * List of expenses associated with this product (optional).
 	 */
-	public expenseCents?: number;
-
-	/**
-	 * A multiplicator for the expense (optional, defaults to 1).
-	 */
-	public expenseMultiplicator?: number;
-
-	/**
-	 * The expense category ID associated with this product (optional).
-	 */
-	public expenseCategoryId?: string;
+	public expenses?: ProductExpense[];
 
 	constructor(
 		params: Omit<
@@ -49,9 +49,6 @@ export class ProductEntity extends DomainEntity {
 		if (!this.updatedAt) {
 			this.updatedAt = new Date();
 		}
-		if (params && 'expenseCategoryId' in params) {
-			this.expenseCategoryId = params.expenseCategoryId;
-		}
 	}
 
 	public update(
@@ -61,9 +58,6 @@ export class ProductEntity extends DomainEntity {
 		>,
 	): void {
 		Object.assign(this, params);
-		if ('expenseCategoryId' in params) {
-			this.expenseCategoryId = params.expenseCategoryId;
-		}
 		this.updatedAt = new Date();
 	}
 }

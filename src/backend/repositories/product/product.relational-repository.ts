@@ -42,9 +42,12 @@ export class ProductRelationalRepository
 			unit: orm.unit,
 			priceCents: orm.priceCents,
 			taxPercentage: orm.taxPercentage,
-			expenseCents: orm.expenseCents ?? 0,
-			expenseMultiplicator: orm.expenseMultiplicator ?? 1,
-			expenseCategoryId: orm.expenseCategoryId ?? '',
+			expenses: (orm.expenses || []).map((e) => ({
+				name: e.name ?? '',
+				price: e.price ?? 0,
+				multiplicator: e.multiplicator ?? 1,
+				categoryId: e.categoryId,
+			})),
 			createdAt: orm.createdAt,
 			updatedAt: orm.updatedAt,
 		});
@@ -63,9 +66,7 @@ export class ProductRelationalRepository
 			unit: domain.unit,
 			priceCents: domain.priceCents,
 			taxPercentage: domain.taxPercentage,
-			expenseCents: domain.expenseCents,
-			expenseMultiplicator: domain.expenseMultiplicator,
-			expenseCategoryId: domain.expenseCategoryId,
+			expenses: domain.expenses || [],
 			createdAt: domain.createdAt,
 			updatedAt: domain.updatedAt,
 		};
@@ -83,9 +84,7 @@ export class ProductRelationalRepository
 			taxPercentage: 0,
 			createdAt: new Date(),
 			updatedAt: new Date(),
-			expenseCents: 0,
-			expenseMultiplicator: 1,
-			expenseCategoryId: '',
+			expenses: [],
 		});
 	}
 

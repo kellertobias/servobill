@@ -4,8 +4,14 @@ import { useLoadData, useSaveCallback } from '@/hooks/load-data';
 import { API, gql } from '@/api/index';
 import { Drawer } from '@/components/drawer';
 import { Input } from '@/components/input';
+import SelectInput from '@/components/select-input';
+import { Button } from '@/components/button';
 import { LoadingSkeleton } from '@/components/loading';
 import { useExpenseCategories } from '@/app/_hooks/use-expense-categories';
+import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { ProductExpense } from '@/common/gql/graphql';
+
+const createId = () => Math.random().toString(36).substring(2, 15);
 
 export default function ProductOverlay({
 	productId,
@@ -17,7 +23,7 @@ export default function ProductOverlay({
 	openCreated: (id: string) => void;
 }) {
 	const { data, setData, initialData, reload } = useLoadData(
-		async ({ productId }) =>
+		async ({ productId }: { productId: string }) =>
 			productId === 'new'
 				? {
 						id: 'new',
@@ -27,31 +33,36 @@ export default function ProductOverlay({
 						notes: '',
 						price: '',
 						taxPercentage: '0',
-						expenseCents: '',
-						expenseMultiplicator: '1',
 						createdAt: null,
 						updatedAt: null,
-						expenseCategoryId: '',
+						expenses: [] as (Omit<ProductExpense, 'price' | 'multiplicator'> & {
+							price: string;
+							multiplicator: string;
+							id: string;
+						})[],
 					}
 				: API.query({
 						query: gql(`
-							query ProductsDetailPageData($id: String!) {
-								product(id: $id) {
-									id
+						query ProductsDetailPageData($id: String!) {
+							product(id: $id) {
+								id
+								name
+								category
+								description
+								notes
+								priceCents
+								taxPercentage
+								createdAt
+								updatedAt
+								expenses {
 									name
-									category
-									description
-									notes
-									priceCents
-									taxPercentage
-									createdAt
-									updatedAt
-									expenseCents
-									expenseMultiplicator
-									expenseCategoryId
+									price
+									multiplicator
+									categoryId
 								}
 							}
-						`),
+						}
+					`),
 						variables: {
 							id: productId,
 						},
@@ -61,19 +72,12 @@ export default function ProductOverlay({
 									...res.product,
 									price: API.centsToPrice(res.product.priceCents),
 									taxPercentage: `${res.product.taxPercentage || 0}`,
-									expenseCents:
-										'expenseCents' in res.product &&
-										res.product.expenseCents !== undefined &&
-										res.product.expenseCents !== null
-											? res.product.expenseCents.toString()
-											: '',
-									expenseMultiplicator:
-										'expenseMultiplicator' in res.product &&
-										res.product.expenseMultiplicator !== undefined &&
-										res.product.expenseMultiplicator !== null
-											? res.product.expenseMultiplicator.toString()
-											: '',
-									expenseCategoryId: res.product.expenseCategoryId || '',
+									expenses: (res.product.expenses || []).map((e) => ({
+										...e,
+										price: API.centsToPrice(e.price),
+										multiplicator: Number(e.multiplicator).toFixed(2),
+										id: createId(),
+									})),
 								}
 							: null,
 					),
@@ -89,23 +93,54 @@ export default function ProductOverlay({
 		reload,
 		mapper: (data) => {
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			const { id, price, createdAt, updatedAt, ...rest } = data;
+			const { id, price, createdAt, updatedAt, expenses, ...rest } = data;
 			return {
 				...rest,
 				priceCents: API.priceToCents(price),
 				taxPercentage: Number.parseInt(data.taxPercentage || '0'),
-				expenseCents: data.expenseCents
-					? Number.parseInt(data.expenseCents)
-					: undefined,
-				expenseMultiplicator: data.expenseMultiplicator
-					? Number.parseFloat(data.expenseMultiplicator)
-					: undefined,
-				expenseCategoryId: data.expenseCategoryId || undefined,
+				expenses: data.expenses.map((e) => ({
+					name: e.name,
+					categoryId: e.categoryId || null,
+					price: API.priceToCents(e.price) || 0,
+					multiplicator: Number.parseFloat(e.multiplicator || '1'),
+				})),
 			};
 		},
 	});
 
 	const categories = useExpenseCategories();
+
+	const handleAddExpense = () => {
+		setData((prev) => ({
+			...prev,
+			expenses: [
+				...(prev?.expenses || []),
+				{
+					name: '',
+					price: '0',
+					multiplicator: '1',
+					categoryId: null,
+					id: createId(),
+				},
+			],
+		}));
+	};
+
+	const handleRemoveExpense = (id: string) => {
+		setData((prev) => ({
+			...prev,
+			expenses: (prev?.expenses || []).filter((e) => e.id !== id),
+		}));
+	};
+
+	const handleExpenseChange = (id: string, field: string, value: any) => {
+		setData((prev) => ({
+			...prev,
+			expenses: (prev?.expenses || []).map((e) =>
+				e.id === id ? { ...e, [field]: value } : e,
+			),
+		}));
+	};
 
 	return (
 		<Drawer
@@ -216,52 +251,90 @@ export default function ProductOverlay({
 								textarea
 							/>
 
-							<Input
-								className="col-span-full"
-								label="Expense (Cents)"
-								value={data.expenseCents || ''}
-								onChange={(expenseCents) => {
-									setData((prev) => ({ ...prev, expenseCents }));
-								}}
-								displayFirst
-							/>
-
-							<Input
-								className="col-span-full"
-								label="Expense Multiplicator"
-								value={data.expenseMultiplicator || ''}
-								onChange={(expenseMultiplicator) => {
-									setData((prev) => ({ ...prev, expenseMultiplicator }));
-								}}
-								displayFirst
-							/>
-
-							{/* Expense Category Dropdown */}
+							{/* Expenses Section */}
 							<div className="col-span-full">
 								<label className="block text-sm font-medium leading-6 text-gray-900 mb-1">
-									Expense Category
+									Product Expenses (optional)
 								</label>
-								<select
-									className="block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent sm:text-sm"
-									value={data.expenseCategoryId || ''}
-									onChange={(e) => {
-										setData((prev) => ({
-											...prev,
-											expenseCategoryId: e.target.value,
-										}));
-									}}
-								>
-									<option value="">No Category</option>
-									{categories.map((cat) => (
-										<option
-											key={cat.id}
-											value={cat.id}
-											title={cat.description || cat.name}
+								{data.expenses.map(
+									(expense: (typeof data.expenses)[number]) => (
+										<div
+											key={expense.id}
+											className="grid grid-cols-12 gap-x-2 gap-y-1 mb-2 p-2 border rounded-md bg-gray-50"
 										>
-											{cat.name}
-										</option>
-									))}
-								</select>
+											{/* First row: Name (span 11 cols) and Delete button (span 1 col) */}
+											<div className="col-span-12 flex items-center">
+												<Input
+													label="Name"
+													value={expense.name}
+													onChange={(val) =>
+														handleExpenseChange(expense.id, 'name', val)
+													}
+													className="w-full"
+												/>
+											</div>
+											{/* Third row: Category selector */}
+											<div className="col-span-12">
+												<SelectInput
+													label="Category"
+													value={expense.categoryId || ''}
+													onChange={(val) =>
+														handleExpenseChange(expense.id, 'categoryId', val)
+													}
+													options={[
+														{ value: '', label: 'No Category' },
+														...categories.map((cat) => ({
+															value: cat.id,
+															label: cat.name,
+															description: cat.description,
+														})),
+													]}
+													className="w-full"
+												/>
+											</div>
+											{/* Second row: Price and Multiplicator */}
+											<div className="col-span-4">
+												<Input
+													label="Price"
+													value={expense.price}
+													onChange={(val) =>
+														handleExpenseChange(expense.id, 'price', val)
+													}
+													type="text"
+													className="w-full"
+												/>
+											</div>
+											<div className="col-span-4">
+												<Input
+													label="Multiplicator"
+													value={expense.multiplicator.toString()}
+													onChange={(val) =>
+														handleExpenseChange(
+															expense.id,
+															'multiplicator',
+															Number(val),
+														)
+													}
+													type="number"
+													className="w-full"
+												/>
+											</div>
+											<div className="col-span-4 pt-8 flex items-center justify-end">
+												<Button
+													icon={TrashIcon}
+													danger
+													onClick={() => handleRemoveExpense(expense.id)}
+													aria-label="Remove expense"
+												>
+													Remove
+												</Button>
+											</div>
+										</div>
+									),
+								)}
+								<Button onClick={handleAddExpense} icon={PlusIcon}>
+									Add Expense
+								</Button>
 							</div>
 						</div>
 					</div>
