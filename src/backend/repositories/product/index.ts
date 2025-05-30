@@ -3,5 +3,4 @@ export * from './di-tokens';
 
 export * from './product.dynamodb-repository';
 export * from './product.relational-repository';
-export * from './relational-orm-entity';
 export * from './interface';

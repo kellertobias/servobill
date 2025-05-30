@@ -20,6 +20,7 @@ export class RelationalDbService {
 	private dataSource: DataSource;
 
 	constructor(@Inject(CONFIG_SERVICE) private readonly config: ConfigService) {
+		console.log('RelationalDbService constructor');
 		this.dataSource = this.createDataSource();
 	}
 

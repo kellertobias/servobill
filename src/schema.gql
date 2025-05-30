@@ -61,21 +61,21 @@ type Expense {
 }
 
 input ExpenseCategoryInputType {
-  color: String!
+  color: String
   description: String
-  id: String!
-  isDefault: Boolean!
-  name: String!
+  id: String
+  isDefault: Boolean
+  name: String
   reference: String
   sumForTaxSoftware: Boolean
 }
 
 type ExpenseCategoryType {
-  color: String!
+  color: String
   description: String
-  id: String!
-  isDefault: Boolean!
-  name: String!
+  id: String
+  isDefault: Boolean
+  name: String
   reference: String
   sumForTaxSoftware: Boolean
 }
@@ -401,83 +401,83 @@ type Query {
 }
 
 input SettingsCompanyInput {
-  bankAccountHolder: String!
-  bankBic: String!
-  bankIban: String!
-  city: String!
-  email: String!
-  name: String!
-  phone: String!
-  street: String!
-  taxId: String!
-  vatId: String!
-  web: String!
-  zip: String!
+  bankAccountHolder: String
+  bankBic: String
+  bankIban: String
+  city: String
+  email: String
+  name: String
+  phone: String
+  street: String
+  taxId: String
+  vatId: String
+  web: String
+  zip: String
 }
 
 input SettingsInput {
-  categories: [ExpenseCategoryInputType!]!
-  company: SettingsCompanyInput!
-  customerNumbersIncrementTemplate: String!
-  customerNumbersLast: String!
-  customerNumbersTemplate: String!
-  defaultInvoiceDueDays: Int!
-  defaultInvoiceFooterText: String!
-  emailCompanyLogo: String!
-  emailSubjectInvoices: String!
-  emailSubjectOffers: String!
-  emailSubjectReminder: String!
-  emailSubjectWarning: String!
-  emailTemplate: String!
-  invoiceCompanyLogo: String!
-  invoiceNumbersIncrementTemplate: String!
-  invoiceNumbersLast: String!
-  invoiceNumbersTemplate: String!
-  offerNumbersIncrementTemplate: String!
-  offerNumbersLast: String!
-  offerNumbersTemplate: String!
-  offerValidityDays: Int!
-  replyTo: String!
-  sendFrom: String!
+  categories: [ExpenseCategoryInputType!]
+  company: SettingsCompanyInput
+  customerNumbersIncrementTemplate: String
+  customerNumbersLast: String
+  customerNumbersTemplate: String
+  defaultInvoiceDueDays: Int
+  defaultInvoiceFooterText: String
+  emailCompanyLogo: String
+  emailSubjectInvoices: String
+  emailSubjectOffers: String
+  emailSubjectReminder: String
+  emailSubjectWarning: String
+  emailTemplate: String
+  invoiceCompanyLogo: String
+  invoiceNumbersIncrementTemplate: String
+  invoiceNumbersLast: String
+  invoiceNumbersTemplate: String
+  offerNumbersIncrementTemplate: String
+  offerNumbersLast: String
+  offerNumbersTemplate: String
+  offerValidityDays: Int
+  replyTo: String
+  sendFrom: String
 }
 
 type SettingsResult {
-  categories: [ExpenseCategoryType!]!
-  company: SettingsResultCompany!
-  customerNumbersIncrementTemplate: String!
-  customerNumbersLast: String!
-  customerNumbersTemplate: String!
-  defaultInvoiceDueDays: Int!
-  defaultInvoiceFooterText: String!
-  emailCompanyLogo: String!
-  emailSubjectInvoices: String!
-  emailSubjectOffers: String!
-  emailSubjectReminder: String!
-  emailSubjectWarning: String!
-  emailTemplate: String!
-  invoiceCompanyLogo: String!
-  invoiceNumbersIncrementTemplate: String!
-  invoiceNumbersLast: String!
-  invoiceNumbersTemplate: String!
-  offerNumbersIncrementTemplate: String!
-  offerNumbersLast: String!
-  offerNumbersTemplate: String!
-  offerValidityDays: Int!
-  replyTo: String!
-  sendFrom: String!
+  categories: [ExpenseCategoryType!]
+  company: SettingsResultCompany
+  customerNumbersIncrementTemplate: String
+  customerNumbersLast: String
+  customerNumbersTemplate: String
+  defaultInvoiceDueDays: Int
+  defaultInvoiceFooterText: String
+  emailCompanyLogo: String
+  emailSubjectInvoices: String
+  emailSubjectOffers: String
+  emailSubjectReminder: String
+  emailSubjectWarning: String
+  emailTemplate: String
+  invoiceCompanyLogo: String
+  invoiceNumbersIncrementTemplate: String
+  invoiceNumbersLast: String
+  invoiceNumbersTemplate: String
+  offerNumbersIncrementTemplate: String
+  offerNumbersLast: String
+  offerNumbersTemplate: String
+  offerValidityDays: Int
+  replyTo: String
+  sendFrom: String
 }
 
 type SettingsResultCompany {
-  bankAccountHolder: String!
-  bankBic: String!
-  bankIban: String!
-  city: String!
-  email: String!
-  name: String!
-  phone: String!
-  street: String!
-  taxId: String!
-  vatId: String!
-  web: String!
-  zip: String!
+  bankAccountHolder: String
+  bankBic: String
+  bankIban: String
+  city: String
+  email: String
+  name: String
+  phone: String
+  street: String
+  taxId: String
+  vatId: String
+  web: String
+  zip: String
 }

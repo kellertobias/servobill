@@ -4,10 +4,11 @@ import { SNSEventHandler } from '../../types';
 
 import { withInstrumentation, withSpan } from '@/backend/instrumentation';
 import { DefaultContainer } from '@/common/di';
-import { EMAIL_REPOSITORY } from '@/backend/repositories/email/di-tokens';
-import { type EmailRepository } from '@/backend/repositories/email/interface';
-import { INVOICE_REPOSITORY } from '@/backend/repositories/invoice/di-tokens';
-import { type InvoiceRepository } from '@/backend/repositories/invoice/interface';
+import { EMAIL_REPOSITORY, INVOICE_REPOSITORY } from '@/backend/repositories';
+import type {
+	EmailRepository,
+	InvoiceRepository,
+} from '@/backend/repositories';
 import {
 	InvoiceActivityEntity,
 	InvoiceActivityType,

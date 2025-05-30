@@ -6,280 +6,409 @@ import { ObjectProperties } from '@/common/ts-helpers';
 
 @ObjectType()
 export class SettingsResultCompany {
-	@Field()
-	name!: string;
+	/**
+	 * Company name. Now nullable.
+	 */
+	@Field({ nullable: true })
+	name?: string;
 
-	@Field()
-	street!: string;
+	/**
+	 * Company street. Now nullable.
+	 */
+	@Field({ nullable: true })
+	street?: string;
 
-	@Field()
-	zip!: string;
+	/**
+	 * Company zip code. Now nullable.
+	 */
+	@Field({ nullable: true })
+	zip?: string;
 
-	@Field()
-	city!: string;
+	/**
+	 * Company city. Now nullable.
+	 */
+	@Field({ nullable: true })
+	city?: string;
 
-	@Field()
-	taxId!: string;
+	/**
+	 * Company tax ID. Now nullable.
+	 */
+	@Field({ nullable: true })
+	taxId?: string;
 
-	@Field()
-	vatId!: string;
+	/**
+	 * Company VAT ID. Now nullable.
+	 */
+	@Field({ nullable: true })
+	vatId?: string;
 
-	@Field()
-	email!: string;
+	/**
+	 * Company email. Now nullable.
+	 */
+	@Field({ nullable: true })
+	email?: string;
 
-	@Field()
-	phone!: string;
+	/**
+	 * Company phone. Now nullable.
+	 */
+	@Field({ nullable: true })
+	phone?: string;
 
-	@Field()
-	web!: string;
+	/**
+	 * Company web. Now nullable.
+	 */
+	@Field({ nullable: true })
+	web?: string;
 
-	@Field()
-	bankAccountHolder!: string;
+	/**
+	 * Bank account holder. Now nullable.
+	 */
+	@Field({ nullable: true })
+	bankAccountHolder?: string;
 
-	@Field()
-	bankIban!: string;
+	/**
+	 * Bank IBAN. Now nullable.
+	 */
+	@Field({ nullable: true })
+	bankIban?: string;
 
-	@Field()
-	bankBic!: string;
+	/**
+	 * Bank BIC. Now nullable.
+	 */
+	@Field({ nullable: true })
+	bankBic?: string;
 }
 
 @InputType('ExpenseCategoryInputType')
 @ObjectType()
 export class ExpenseCategoryType {
-	@Field()
-	id!: string;
+	/**
+	 * Category ID. Now nullable.
+	 */
+	@Field({ nullable: true })
+	id?: string;
 
-	@Field()
-	name!: string;
+	/**
+	 * Category name. Now nullable.
+	 */
+	@Field({ nullable: true })
+	name?: string;
 
-	@Field()
-	color!: string;
+	/**
+	 * Category color. Now nullable.
+	 */
+	@Field({ nullable: true })
+	color?: string;
 
-	@Field()
-	isDefault!: boolean;
+	/**
+	 * Is default category. Now nullable.
+	 */
+	@Field({ nullable: true })
+	isDefault?: boolean;
 
+	/**
+	 * Reference. Now nullable.
+	 */
 	@Field({ nullable: true })
 	reference?: string;
 
+	/**
+	 * Sum for tax software. Now nullable.
+	 */
 	@Field({ nullable: true })
 	sumForTaxSoftware?: boolean;
 
+	/**
+	 * Description. Now nullable.
+	 */
 	@Field({ nullable: true })
 	description?: string;
 }
 
 @ObjectType()
 export class SettingsResult {
-	@Field()
-	invoiceNumbersTemplate!: string;
+	/**
+	 * Template for invoice numbers. Now nullable.
+	 */
+	@Field({ nullable: true })
+	invoiceNumbersTemplate?: string;
 
-	@Field()
-	invoiceNumbersIncrementTemplate!: string;
+	/**
+	 * Increment template for invoice numbers. Now nullable.
+	 */
+	@Field({ nullable: true })
+	invoiceNumbersIncrementTemplate?: string;
 
-	@Field()
-	invoiceNumbersLast!: string;
+	/**
+	 * Last used invoice number. Now nullable.
+	 */
+	@Field({ nullable: true })
+	invoiceNumbersLast?: string;
 
-	@Field()
-	offerNumbersTemplate!: string;
+	/**
+	 * Template for offer numbers. Now nullable.
+	 */
+	@Field({ nullable: true })
+	offerNumbersTemplate?: string;
 
-	@Field()
-	offerNumbersIncrementTemplate!: string;
+	/**
+	 * Increment template for offer numbers. Now nullable.
+	 */
+	@Field({ nullable: true })
+	offerNumbersIncrementTemplate?: string;
 
-	@Field()
-	offerNumbersLast!: string;
+	/**
+	 * Last used offer number. Now nullable.
+	 */
+	@Field({ nullable: true })
+	offerNumbersLast?: string;
 
-	@Field()
-	customerNumbersTemplate!: string;
+	/**
+	 * Template for customer numbers. Now nullable.
+	 */
+	@Field({ nullable: true })
+	customerNumbersTemplate?: string;
 
-	@Field()
-	customerNumbersIncrementTemplate!: string;
+	/**
+	 * Increment template for customer numbers. Now nullable.
+	 */
+	@Field({ nullable: true })
+	customerNumbersIncrementTemplate?: string;
 
-	@Field()
-	customerNumbersLast!: string;
+	/**
+	 * Last used customer number. Now nullable.
+	 */
+	@Field({ nullable: true })
+	customerNumbersLast?: string;
 
-	@Field()
-	emailTemplate!: string;
+	/**
+	 * Email template. Now nullable.
+	 */
+	@Field({ nullable: true })
+	emailTemplate?: string;
 
-	@Field()
-	emailSubjectInvoices!: string;
+	/**
+	 * Email subject for invoices. Now nullable.
+	 */
+	@Field({ nullable: true })
+	emailSubjectInvoices?: string;
 
-	@Field()
-	emailSubjectOffers!: string;
+	/**
+	 * Email subject for offers. Now nullable.
+	 */
+	@Field({ nullable: true })
+	emailSubjectOffers?: string;
 
-	@Field()
-	emailSubjectReminder!: string;
+	/**
+	 * Email subject for reminders. Now nullable.
+	 */
+	@Field({ nullable: true })
+	emailSubjectReminder?: string;
 
-	@Field()
-	emailSubjectWarning!: string;
+	/**
+	 * Email subject for warnings. Now nullable.
+	 */
+	@Field({ nullable: true })
+	emailSubjectWarning?: string;
 
-	@Field()
-	sendFrom!: string;
+	/**
+	 * Sender email address. Now nullable.
+	 */
+	@Field({ nullable: true })
+	sendFrom?: string;
 
-	@Field()
-	replyTo!: string;
+	/**
+	 * Reply-to email address. Now nullable.
+	 */
+	@Field({ nullable: true })
+	replyTo?: string;
 
-	@Field()
-	invoiceCompanyLogo!: string;
+	/**
+	 * Company logo for invoices. Now nullable.
+	 */
+	@Field({ nullable: true })
+	invoiceCompanyLogo?: string;
 
-	@Field()
-	emailCompanyLogo!: string;
+	/**
+	 * Company logo for emails. Now nullable.
+	 */
+	@Field({ nullable: true })
+	emailCompanyLogo?: string;
 
-	@Field(() => Int)
-	offerValidityDays!: number;
+	/**
+	 * Validity days for offers. Now nullable.
+	 */
+	@Field(() => Int, { nullable: true })
+	offerValidityDays?: number;
 
-	@Field(() => Int)
-	defaultInvoiceDueDays!: number;
+	/**
+	 * Default due days for invoices. Now nullable.
+	 */
+	@Field(() => Int, { nullable: true })
+	defaultInvoiceDueDays?: number;
 
-	@Field()
-	defaultInvoiceFooterText!: string;
+	/**
+	 * Default footer text for invoices. Now nullable.
+	 */
+	@Field({ nullable: true })
+	defaultInvoiceFooterText?: string;
 
-	@Field(() => SettingsResultCompany)
-	company!: SettingsResultCompany;
+	/**
+	 * Company settings. Now nullable.
+	 */
+	@Field(() => SettingsResultCompany, { nullable: true })
+	company?: SettingsResultCompany;
 
-	@Field(() => [ExpenseCategoryType])
-	categories!: ExpenseCategoryType[];
+	/**
+	 * Expense categories. Now nullable.
+	 */
+	@Field(() => [ExpenseCategoryType], { nullable: true })
+	categories?: ExpenseCategoryType[];
 }
 
 @InputType()
-export class SettingsCompanyInput implements SettingsResultCompany {
+export class SettingsCompanyInput implements Partial<SettingsResultCompany> {
 	@IsString()
-	@Field()
-	name!: string;
+	@Field({ nullable: true })
+	name?: string;
 
 	@IsString()
-	@Field()
-	street!: string;
+	@Field({ nullable: true })
+	street?: string;
 
 	@IsString()
-	@Field()
-	zip!: string;
+	@Field({ nullable: true })
+	zip?: string;
 
 	@IsString()
-	@Field()
-	city!: string;
+	@Field({ nullable: true })
+	city?: string;
 
 	@IsString()
-	@Field()
-	taxId!: string;
+	@Field({ nullable: true })
+	taxId?: string;
 
 	@IsString()
-	@Field()
-	vatId!: string;
+	@Field({ nullable: true })
+	vatId?: string;
 
 	@IsString()
-	@Field()
-	email!: string;
+	@Field({ nullable: true })
+	email?: string;
 
 	@IsString()
-	@Field()
-	phone!: string;
+	@Field({ nullable: true })
+	phone?: string;
 
 	@IsString()
-	@Field()
-	web!: string;
+	@Field({ nullable: true })
+	web?: string;
 
 	@IsString()
-	@Field()
-	bankAccountHolder!: string;
+	@Field({ nullable: true })
+	bankAccountHolder?: string;
 
 	@IsString()
-	@Field()
-	bankIban!: string;
+	@Field({ nullable: true })
+	bankIban?: string;
 
 	@IsString()
-	@Field()
-	bankBic!: string;
+	@Field({ nullable: true })
+	bankBic?: string;
 }
 
+/**
+ * Input type for settings. All fields are now nullable.
+ */
 @InputType()
-export class SettingsInput implements SettingsResult {
+export class SettingsInput implements Partial<SettingsResult> {
 	@IsString()
-	@Field()
-	invoiceNumbersTemplate!: string;
-
-	@IsString()
-	@Field()
-	invoiceNumbersIncrementTemplate!: string;
+	@Field({ nullable: true })
+	invoiceNumbersTemplate?: string;
 
 	@IsString()
-	@Field()
-	invoiceNumbersLast!: string;
+	@Field({ nullable: true })
+	invoiceNumbersIncrementTemplate?: string;
 
 	@IsString()
-	@Field()
-	offerNumbersTemplate!: string;
+	@Field({ nullable: true })
+	invoiceNumbersLast?: string;
 
 	@IsString()
-	@Field()
-	offerNumbersIncrementTemplate!: string;
+	@Field({ nullable: true })
+	offerNumbersTemplate?: string;
 
 	@IsString()
-	@Field()
-	offerNumbersLast!: string;
+	@Field({ nullable: true })
+	offerNumbersIncrementTemplate?: string;
 
 	@IsString()
-	@Field()
-	customerNumbersTemplate!: string;
+	@Field({ nullable: true })
+	offerNumbersLast?: string;
 
 	@IsString()
-	@Field()
-	customerNumbersIncrementTemplate!: string;
+	@Field({ nullable: true })
+	customerNumbersTemplate?: string;
 
 	@IsString()
-	@Field()
-	customerNumbersLast!: string;
+	@Field({ nullable: true })
+	customerNumbersIncrementTemplate?: string;
 
 	@IsString()
-	@Field()
-	emailTemplate!: string;
+	@Field({ nullable: true })
+	customerNumbersLast?: string;
 
 	@IsString()
-	@Field()
-	emailSubjectInvoices!: string;
+	@Field({ nullable: true })
+	emailTemplate?: string;
 
 	@IsString()
-	@Field()
-	emailSubjectOffers!: string;
+	@Field({ nullable: true })
+	emailSubjectInvoices?: string;
 
 	@IsString()
-	@Field()
-	emailSubjectReminder!: string;
+	@Field({ nullable: true })
+	emailSubjectOffers?: string;
 
 	@IsString()
-	@Field()
-	emailSubjectWarning!: string;
+	@Field({ nullable: true })
+	emailSubjectReminder?: string;
 
 	@IsString()
-	@Field()
-	sendFrom!: string;
+	@Field({ nullable: true })
+	emailSubjectWarning?: string;
 
 	@IsString()
-	@Field()
-	replyTo!: string;
+	@Field({ nullable: true })
+	sendFrom?: string;
 
 	@IsString()
-	@Field()
-	invoiceCompanyLogo!: string;
+	@Field({ nullable: true })
+	replyTo?: string;
 
 	@IsString()
-	@Field()
-	emailCompanyLogo!: string;
-
-	@Field(() => Int)
-	offerValidityDays!: number;
-
-	@Field(() => Int)
-	defaultInvoiceDueDays!: number;
+	@Field({ nullable: true })
+	invoiceCompanyLogo?: string;
 
 	@IsString()
-	@Field()
-	defaultInvoiceFooterText!: string;
+	@Field({ nullable: true })
+	emailCompanyLogo?: string;
 
-	@Field(() => SettingsCompanyInput)
-	company!: SettingsCompanyInput;
+	@Field(() => Int, { nullable: true })
+	offerValidityDays?: number;
 
-	@Field(() => [ExpenseCategoryType])
-	categories!: ExpenseCategoryType[];
+	@Field(() => Int, { nullable: true })
+	defaultInvoiceDueDays?: number;
+
+	@IsString()
+	@Field({ nullable: true })
+	defaultInvoiceFooterText?: string;
+
+	@Field(() => SettingsCompanyInput, { nullable: true })
+	company?: SettingsCompanyInput;
+
+	@Field(() => [ExpenseCategoryType], { nullable: true })
+	categories?: ExpenseCategoryType[];
 }
 
 @ObjectType()

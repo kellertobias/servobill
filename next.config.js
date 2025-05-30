@@ -3,7 +3,7 @@ const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   experimental: {
-    serverComponentsExternalPackages: ["graphql"],
+    serverComponentsExternalPackages: ["graphql", "typeorm"],
   },
   eslint: {
     ignoreDuringBuilds: true,

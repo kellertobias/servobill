@@ -5,12 +5,16 @@ import { makeEventHandler } from '../../event-handler';
 
 import { InvoiceSendEvent } from './event';
 
-import { INVOICE_REPOSITORY } from '@/backend/repositories/invoice/di-tokens';
-import { type InvoiceRepository } from '@/backend/repositories/invoice/interface';
-import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
-import { type SettingsRepository } from '@/backend/repositories/settings/interface';
-import { EMAIL_REPOSITORY } from '@/backend/repositories/email/di-tokens';
-import { type EmailRepository } from '@/backend/repositories/email/interface';
+import {
+	INVOICE_REPOSITORY,
+	SETTINGS_REPOSITORY,
+	EMAIL_REPOSITORY,
+} from '@/backend/repositories';
+import type {
+	InvoiceRepository,
+	SettingsRepository,
+	EmailRepository,
+} from '@/backend/repositories';
 import { PdfTemplateSetting } from '@/backend/entities/settings.entity';
 import { CqrsBus } from '@/backend/services/cqrs.service';
 import { CreateInvoicePdfCommand } from '@/backend/cqrs/generate-pdf/create-invoice-pdf.command';
