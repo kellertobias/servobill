@@ -2,7 +2,7 @@
 
 # Servobill
 
-Servobill is a simple, open-source invoicing app built with Next.js, Tailwind CSS, and TypeScript on top of AWS Serverless technologies. It is extremely cheap to maintain and can be deployed to your own AWS account in minutes.
+Servobill is a simple, open-source invoicing app built with Next.js, Tailwind CSS, and TypeScript on top of AWS Serverless technologies. It is extremely cheap to maintain and can be deployed to your own AWS account in minutes. We now also support a dockerized deployment on your own hardware.
 
 ## Features
 
@@ -12,7 +12,8 @@ We feature a simple, easy-to-use interface for creating and managing invoices. Y
 - Create and manage invoices
 - Generate PDFs from invoices
 - Send invoices to clients
-- Manage expenses
+- Manage expenses with attachments and expenses categories
+- Automatically create expenses when e.g. adding travel to an invoice
 - Simple reports
 - Manage clients & products
 - Developer Experience:
@@ -32,26 +33,11 @@ We feature a simple, easy-to-use interface for creating and managing invoices. Y
 
 ## Deploying
 
-### On your AWS account
+We offer two production ready deployment options and a development setup:
 
-This section is currently being written. Basic Steps:
-
-- Setup your AWS account if you don't have one
-- Setup a Hosted zone in Route53 (or use an existing one)
-- If you have a CAA record, make sure that it allows Amazon to issue certificates for your domain
-- Setup an identity in SES and request production access (or use an existing one)
-- Setup a Google OAuth Client ID (or use an existing one)
-- Generate a random string for the JWT secret (e.g. with `openssl rand -base64 32`)
-- Create your .env file (see .env.example)
-- Run `npm run deploy` in the root directory
-
-If the deployment fails, you need to delete a few resources manually, especially the CloudWatch Log Groups, because we used fixed names for those.
-
-### Via Docker Compose
-
-At the moment we do not have a docker image for servobill yet as it is heavily built on top of the serverless mindset. If you want to help us with that, please open an issue or a pull request
-
-We already have outlined the steps required for adapting the codebase to also work on-premise. See https://trello.com/c/KOAbgN5q 
+- [Serverless on your AWS account](deploy/serverless/README.md)
+- [Dockerized on your own hardware](deploy/dockerized/README.md)
+- [Development setup](README.md#developing)
 
 
 ## Architecture
@@ -60,6 +46,9 @@ Servobill is built with a serverless architecture in mind. It uses AWS Lambda fu
 
 ![Servobill](/docs/aws-architecture.png)
 
+For the dockerized deployment, the nextjs app in one docker container also handles the API requests while another container handles the queue workers. For dockerized deployments, we use a minio instance for S3 storage and postgres rather than dynamoDB. For this we have database adapters in our repository layer for both postgres and dynamoDB.
+
+In theory we also support sqlite or any other database that is supported by typeOrm, you however need to build the configuration for that yourself.
 
 ## Developing
 

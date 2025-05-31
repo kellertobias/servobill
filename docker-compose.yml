@@ -99,7 +99,23 @@ services:
       - .emails:/opt/output
     command: 'aws-ses-local --outputDir /opt/output --port 9330'
 
+  # === Postgres Database for Development ===
+  servobill-postgres:
+    image: postgres:15
+    restart: unless-stopped
+    container_name: servobill-postgres
+    environment:
+      POSTGRES_USER: servobill
+      POSTGRES_PASSWORD: servobill
+      POSTGRES_DB: servobill
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    # You can connect to this DB at localhost:5432 with user/pass servobill/servobill
+
 volumes:
   initializer-modules: {}
   s3-data: {}
   dynamodb-data: {}
+  postgres-data: {}
