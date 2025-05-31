@@ -73,4 +73,8 @@ export class ConfigService {
 			secretAccessKey: process.env.SES_SECRET_ACCESS_KEY,
 		};
 	}
+
+	public get uploadDirectory(): string | undefined {
+		return process.env.UPLOAD_DIRECTORY;
+	}
 }
