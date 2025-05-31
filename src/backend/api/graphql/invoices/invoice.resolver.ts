@@ -37,6 +37,8 @@ import { InvoiceSettingsEntity } from '@/backend/entities/settings.entity';
 import { CustomerEntity } from '@/backend/entities/customer.entity';
 import { ActiveSpan, Span } from '@/backend/instrumentation';
 import type { OtelSpan } from '@/backend/instrumentation';
+import type { AttachmentRepository } from '@/backend/repositories/attachment/interface';
+import { ATTACHMENT_REPOSITORY } from '@/backend/repositories/attachment/di-tokens';
 
 @Service()
 @Resolver(() => Invoice)
@@ -45,6 +47,8 @@ export class InvoiceResolver {
 		@Inject(INVOICE_REPOSITORY) private invoiceRepository: InvoiceRepository,
 		@Inject(CUSTOMER_REPOSITORY) private customerRepository: CustomerRepository,
 		@Inject(SETTINGS_REPOSITORY) private settingsRepository: SettingsRepository,
+		@Inject(ATTACHMENT_REPOSITORY)
+		private attachmentRepository: AttachmentRepository,
 	) {}
 
 	@Span('InvoiceResolver.invoices')
@@ -299,8 +303,8 @@ export class InvoiceResolver {
 		@Arg('invoiceId') invoiceId: string,
 		@Arg('comment') comment: string,
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		@Arg('attachment', () => String, { nullable: true })
-		attachment: string | null,
+		@Arg('attachmentId', () => String, { nullable: true })
+		attachmentId: string | null,
 		@Ctx() context: GqlContext,
 	): Promise<InvoiceChangedResponse> {
 		const invoice = await this.invoiceRepository.getById(invoiceId);
@@ -315,6 +319,12 @@ export class InvoiceResolver {
 			user: context.session?.user?.name,
 		});
 
+		if (attachmentId) {
+			const attachment = await this.attachmentRepository.getById(attachmentId);
+			if (attachment) {
+				activity.attachment = attachment.id;
+			}
+		}
 		invoice.addActivity(activity);
 
 		await this.invoiceRepository.save(invoice);

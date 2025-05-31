@@ -10,9 +10,12 @@ import {
 } from 'type-graphql';
 
 import { ExpenseCategoryType } from '../system/system.schema';
+import { Attachment } from '../attachments/attachment.schema';
 
 import { ExpenseInput, Expense, ExpenseWhereInput } from './expenses.schema';
 
+import { ATTACHMENT_REPOSITORY } from '@/backend/repositories/attachment/di-tokens';
+import { type AttachmentRepository } from '@/backend/repositories/attachment/interface';
 import { Inject, Service } from '@/common/di';
 import { EXPENSE_REPOSITORY } from '@/backend/repositories/expense/di-tokens';
 import { type ExpenseRepository } from '@/backend/repositories/expense/interface';
@@ -27,6 +30,8 @@ export class ExpenseResolver {
 	constructor(
 		@Inject(EXPENSE_REPOSITORY) private repository: ExpenseRepository,
 		@Inject(SETTINGS_REPOSITORY) private settingsRepository: SettingsRepository,
+		@Inject(ATTACHMENT_REPOSITORY)
+		private attachmentRepository: AttachmentRepository,
 	) {}
 
 	@Authorized()
@@ -86,6 +91,17 @@ export class ExpenseResolver {
 		expense.update(data);
 		await this.repository.save(expense);
 
+		// Link attachments
+		if (data.attachmentIds) {
+			for (const id of data.attachmentIds) {
+				const attachment = await this.attachmentRepository.getById(id);
+				if (attachment) {
+					attachment.expenseId = expense.id;
+					await this.attachmentRepository.save(attachment);
+				}
+			}
+		}
+
 		return expense;
 	}
 
@@ -95,13 +111,32 @@ export class ExpenseResolver {
 		@Arg('id') id: string,
 		@Arg('data') data: ExpenseInput,
 	): Promise<Expense> {
+		const { attachmentIds, ...newExpenseData } = data;
 		const expense = await this.repository.getById(id);
 		if (!expense) {
 			throw new Error('Expense not found');
 		}
-		expense.update(data);
+		expense.update(newExpenseData);
 		await this.repository.save(expense);
 
+		// Link attachments
+		for (const attId of attachmentIds || []) {
+			const attachment = await this.attachmentRepository.getById(attId);
+			if (attachment) {
+				attachment.expenseId = expense.id;
+				await this.attachmentRepository.save(attachment);
+			}
+		}
+
+		// Remove orphaned attachments (not in attachmentIds)
+		const existing = await this.attachmentRepository.listByQuery({
+			expenseId: expense.id,
+		});
+		for (const att of existing) {
+			if (!(attachmentIds || []).includes(att.id)) {
+				await this.attachmentRepository.delete(att.id);
+			}
+		}
 		return expense;
 	}
 
@@ -126,8 +161,9 @@ export class ExpenseResolver {
 	async category(
 		@Root() expense: Expense,
 	): Promise<ExpenseCategoryType | null> {
-		if (!expense.categoryId) 
-{return null;}
+		if (!expense.categoryId) {
+			return null;
+		}
 		const settings = await this.settingsRepository.getSetting(
 			ExpenseSettingsEntity,
 		);
@@ -135,5 +171,16 @@ export class ExpenseResolver {
 			(cat) => cat.id === expense.categoryId,
 		);
 		return found ? { ...found } : null;
+	}
+
+	/**
+	 * Field resolver for the attachments field on Expense.
+	 * Fetches all attachments linked to the given expense.
+	 */
+	@FieldResolver(() => [Attachment], { nullable: true })
+	async attachments(
+		@Root() expense: Expense,
+	): Promise<Attachment[] | undefined> {
+		return this.attachmentRepository.listByQuery({ expenseId: expense.id });
 	}
 }

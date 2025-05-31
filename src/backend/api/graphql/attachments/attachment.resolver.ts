@@ -52,9 +52,11 @@ export class AttachmentResolver {
 			s3Bucket: bucket,
 		});
 		await this.repository.save(attachment);
-		// TODO: Implement presigned PUT upload URL in S3Service for direct uploads
-		// For now, uploadUrl is empty and client must use a custom uploader
-		return { uploadUrl: '', attachmentId: attachment.id };
+		const uploadUrl = await this.s3.getSignedUploadUrl({
+			key: s3Key,
+			bucket: bucket,
+		});
+		return { uploadUrl, attachmentId: attachment.id };
 	}
 
 	/**
@@ -152,7 +154,10 @@ export class AttachmentResolver {
 		if (!attachment) {
 			return false;
 		}
-		// S3Service does not have deleteObject; you may want to add it, or handle S3 cleanup elsewhere.
+		await this.s3.deleteObject({
+			key: attachment.s3Key,
+			bucket: attachment.s3Bucket,
+		});
 		await this.repository.delete(attachmentId);
 		return true;
 	}

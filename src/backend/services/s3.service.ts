@@ -4,6 +4,7 @@ import {
 	GetObjectCommand,
 	PutObjectCommand,
 	PutObjectCommandInput,
+	DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
 
 import { Span } from '../instrumentation';
@@ -46,6 +47,33 @@ export class S3Service {
 		this.client = new S3Client(s3Options);
 	}
 
+	/**
+	 * Get a signed upload URL for a given location.
+	 * @param location - The location of the object to upload.
+	 * @returns A signed upload URL.
+	 */
+	public async getSignedUploadUrl(location: {
+		region?: string;
+		bucket?: string;
+		key: string;
+	}) {
+		const command = new PutObjectCommand({
+			Bucket: location.bucket || this.configuration.buckets.files,
+			Key: location.key,
+		});
+
+		const url: string = await getSignedUrl(this.client, command, {
+			expiresIn: 3600,
+		});
+
+		return url;
+	}
+
+	/**
+	 * Get a signed download URL for a given location.
+	 * @param location - The location of the object to download.
+	 * @returns A signed download URL.
+	 */
 	public async getSignedUrl(location: {
 		region?: string;
 		bucket?: string;
@@ -61,6 +89,19 @@ export class S3Service {
 		});
 
 		return url;
+	}
+
+	public async deleteObject(location: {
+		region?: string;
+		bucket?: string;
+		key: string;
+	}) {
+		const command = new DeleteObjectCommand({
+			Bucket: location.bucket || this.configuration.buckets.files,
+			Key: location.key,
+		});
+
+		await this.client.send(command);
 	}
 
 	@Span('S3Service.getObject')

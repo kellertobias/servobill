@@ -3,6 +3,7 @@ import { Field, ObjectType, InputType, Int } from 'type-graphql';
 
 import { FilteredObjectProperties } from '../types';
 import { ExpenseCategoryType } from '../system/system.schema';
+import { Attachment } from '../attachments/attachment.schema';
 
 import { ExpenseEntity } from '@/backend/entities/expense.entity';
 
@@ -52,6 +53,12 @@ export class Expense implements FilteredObjectProperties<ExpenseEntity> {
 
 	@Field()
 	updatedAt!: Date;
+
+	/**
+	 * List of attachments linked to this expense.
+	 */
+	@Field(() => [Attachment], { nullable: true })
+	attachments?: Attachment[];
 }
 
 @InputType()
@@ -85,6 +92,12 @@ export class ExpenseInput
 		description: 'The ID of the expense category assigned to this expense.',
 	})
 	categoryId?: string;
+
+	/**
+	 * List of attachment IDs to link to this expense.
+	 */
+	@Field(() => [String], { nullable: true })
+	attachmentIds?: string[];
 }
 
 @InputType()

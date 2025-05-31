@@ -1,5 +1,6 @@
 import React from 'react';
 
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import dayjs from 'dayjs';
 
 import { useLoadData, useSaveCallback } from '@/hooks/load-data';
@@ -8,6 +9,10 @@ import { Drawer } from '@/components/drawer';
 import { Input } from '@/components/input';
 import { LoadingSkeleton } from '@/components/loading';
 import SelectInput from '@/components/select-input';
+import {
+	AttachmentDropzone,
+	AttachmentFile,
+} from '@/components/attachment-dropzone';
 
 import { useExpenseCategories } from '@/app/_hooks/use-expense-categories';
 
@@ -86,6 +91,41 @@ export default function ExpenseOverlay({
 			};
 		},
 	});
+
+	const [attachments, setAttachments] = React.useState<AttachmentFile[]>([]);
+	React.useEffect(() => {
+		if (expenseId === 'new') {
+			setAttachments([]);
+		} else {
+			// Fetch attachments for this expense
+			(async () => {
+				const ATTACHMENTS_QUERY = gql(`
+					query ExpenseAttachments($expenseId: String!) {
+						attachments(input: { expenseId: $expenseId }) {
+							id
+							fileName
+							mimeType
+							size
+							status
+							s3Key
+							s3Bucket
+							expenseId
+							invoiceId
+							inventoryId
+							createdAt
+							updatedAt
+						}
+					}
+				`);
+				const resRaw = await API.query({
+					query: ATTACHMENTS_QUERY as TypedDocumentNode<unknown, unknown>,
+					variables: { expenseId },
+				});
+				const res = resRaw as { attachments: AttachmentFile[] };
+				setAttachments(res.attachments || []);
+			})();
+		}
+	}, [expenseId]);
 
 	return (
 		<Drawer
@@ -225,6 +265,14 @@ export default function ExpenseOverlay({
 										setData((current) => ({ ...current, notes }))
 									}
 									textarea
+								/>
+							</div>
+							<div>
+								<AttachmentDropzone
+									value={attachments}
+									onChange={setAttachments}
+									expenseId={expenseId === 'new' ? undefined : expenseId}
+									readOnly={expenseId === 'new'}
 								/>
 							</div>
 						</div>
