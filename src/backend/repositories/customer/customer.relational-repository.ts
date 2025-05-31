@@ -101,6 +101,8 @@ export class CustomerRelationalRepository
 		limit?: number;
 		cursor?: string;
 	}): Promise<CustomerEntity[]> {
+		await this.initialized.promise;
+
 		const qb = this.repository!.createQueryBuilder('customer');
 		if (query.where?.search) {
 			qb.where('LOWER(customer.searchName) LIKE :search', {

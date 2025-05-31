@@ -104,6 +104,8 @@ export class AttachmentRelationalRepository extends AbstractRelationalRepository
 		limit?: number;
 		cursor?: string;
 	}): Promise<AttachmentEntity[]> {
+		await this.initialized.promise;
+
 		const qb = this.repository!.createQueryBuilder('attachment');
 		if (query.invoiceId) {
 			qb.andWhere('attachment.invoiceId = :invoiceId', {

@@ -15,7 +15,7 @@ import { prepareRepoTest } from '@/test/repo-test';
 /**
  * Parameterized test suite for both repository implementations.
  */
-const repoTestCases = prepareRepoTest({
+const repoTestCases = prepareRepoTest<CustomerRepository>({
 	name: 'Customer',
 	relational: CustomerRelationalRepository,
 	dynamodb: CustomerDynamodbRepository,

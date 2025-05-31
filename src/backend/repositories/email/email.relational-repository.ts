@@ -81,6 +81,8 @@ export class EmailRelationalRepository
 		limit?: number;
 		cursor?: string;
 	}): Promise<EmailEntity[]> {
+		await this.initialized.promise;
+
 		const qb = this.repository!.createQueryBuilder('email');
 		if (query.where?.search) {
 			qb.andWhere('LOWER(email.recipient) LIKE :search', {

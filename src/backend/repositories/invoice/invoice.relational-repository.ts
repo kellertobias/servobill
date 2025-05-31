@@ -174,6 +174,7 @@ export class InvoiceRelationalRepository
 		limit?: number;
 		cursor?: string;
 	}): Promise<InvoiceEntity[]> {
+		await this.initialized.promise;
 		const qb = this.repository!.createQueryBuilder('invoice');
 		if (query.where?.type) {
 			qb.andWhere('invoice.type = :type', { type: query.where.type });

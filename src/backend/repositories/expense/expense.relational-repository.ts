@@ -96,6 +96,8 @@ export class ExpenseRelationalRepository
 		limit?: number;
 		cursor?: string;
 	}): Promise<ExpenseEntity[]> {
+		await this.initialized.promise;
+
 		const qb = this.repository!.createQueryBuilder('expense');
 		if (query.where?.search) {
 			qb.andWhere('LOWER(expense.name) LIKE :search', {
