@@ -73,6 +73,8 @@ export interface AttachmentDropzoneProps {
 /**
  * Combines AttachmentDropzoneUpload and AttachmentFileList into a single component.
  * Manages file state and provides the same API as before.
+ *
+ * If there is already at least one attachment, the dropzone is rendered in compact mode (smaller UI).
  */
 export const AttachmentDropzone: React.FC<AttachmentDropzoneProps> = ({
 	value = [],
@@ -87,7 +89,6 @@ export const AttachmentDropzone: React.FC<AttachmentDropzoneProps> = ({
 	// Local state for files and error
 	const [files, setFiles] = useState<ListFilePartial[]>(value);
 	const [error, setError] = useState<string | null>(null);
-
 	// Merge value prop and local files (avoid duplicates by id)
 	const allFiles = [
 		...new Map([...value, ...files].map((f) => [f.id, f])).values(),
@@ -118,18 +119,6 @@ export const AttachmentDropzone: React.FC<AttachmentDropzoneProps> = ({
 			>
 				Attachments
 			</label>
-			{error && <div className="text-red-500 text-sm mt-1">{error}</div>}
-			{/* Upload dropzone (hidden if readOnly) */}
-			<AttachmentDropzoneUpload
-				readOnly={readOnly}
-				maxSize={maxSize}
-				accept={accept}
-				invoiceId={invoiceId}
-				expenseId={expenseId}
-				inventoryId={inventoryId}
-				onUpload={handleUpload}
-				onError={handleUploadError}
-			/>
 			{/* Uploaded files list. Deletion is handled internally in AttachmentFileList. */}
 			<AttachmentFileList
 				files={allFiles}
@@ -144,6 +133,20 @@ export const AttachmentDropzone: React.FC<AttachmentDropzoneProps> = ({
 					});
 				}}
 			/>
+
+			{/* Upload dropzone (hidden if readOnly). Compact if there are already attachments. */}
+			<AttachmentDropzoneUpload
+				readOnly={readOnly}
+				maxSize={maxSize}
+				accept={accept}
+				invoiceId={invoiceId}
+				expenseId={expenseId}
+				inventoryId={inventoryId}
+				onUpload={handleUpload}
+				onError={handleUploadError}
+				compact={allFiles.length > 0}
+			/>
+			{error && <div className="text-red-500 text-sm mt-1">{error}</div>}
 		</div>
 	);
 };

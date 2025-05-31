@@ -11,7 +11,6 @@ import { Inject, Service } from '@/common/di';
 import { ATTACHMENT_REPOSITORY } from '@/backend/repositories/attachment/di-tokens';
 import { type AttachmentRepository } from '@/backend/repositories/attachment/interface';
 import { S3Service } from '@/backend/services/s3.service';
-import { AttachmentEntity } from '@/backend/entities/attachment.entity';
 
 /**
  * GraphQL resolver for managing file attachments, including upload, confirmation, listing, deletion, and download URL generation.
@@ -43,15 +42,14 @@ export class AttachmentResolver {
 		const extension = fileName.split('.').pop();
 		const nameHash = crypto.randomUUID();
 		const s3Key = `attachments/${Date.now()}-${nameHash}.${extension}`;
-
-		const attachment = new AttachmentEntity({
-			fileName: fileName,
-			mimeType: mimeType,
-			size: size,
-			status: 'pending',
+		const attachment = await this.repository.create({
+			fileName,
+			mimeType,
+			size,
 			s3Key,
 			s3Bucket: bucket,
 		});
+		attachment.status = 'pending';
 		console.log('Saving attachment');
 		await this.repository.save(attachment);
 		console.log('Saved attachment');
@@ -141,6 +139,7 @@ export class AttachmentResolver {
 		const downloadUrl = await this.s3.getSignedUrl({
 			key: attachment.s3Key,
 			bucket: attachment.s3Bucket,
+			contentDisposition: `attachment; filename="${attachment.fileName}"`,
 		});
 		return { downloadUrl };
 	}

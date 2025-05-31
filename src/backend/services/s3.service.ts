@@ -78,10 +78,12 @@ export class S3Service {
 		region?: string;
 		bucket?: string;
 		key: string;
+		contentDisposition?: string;
 	}) {
 		const command = new GetObjectCommand({
 			Bucket: location.bucket || this.configuration.buckets.files,
 			Key: location.key,
+			ResponseContentDisposition: location.contentDisposition,
 		});
 
 		const url: string = await getSignedUrl(this.client, command, {

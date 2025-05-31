@@ -18,6 +18,10 @@ export interface AttachmentDropzoneUploadProps {
 	inventoryId?: string;
 	onUpload?: (file: AttachmentFilePartial) => void;
 	onError?: (error: string) => void;
+	/**
+	 * If true, renders the dropzone in a compact (smaller) mode.
+	 */
+	compact?: boolean;
 }
 
 /**
@@ -72,6 +76,7 @@ export const AttachmentDropzoneUpload: React.FC<
 	accept = ['image/png', 'image/jpeg', 'image/gif', 'application/pdf'],
 	onUpload,
 	onError,
+	compact = false,
 }) => {
 	const [uploading, setUploading] = useState(false);
 	const fileInputRef = useRef<HTMLInputElement>(null);
@@ -154,7 +159,10 @@ export const AttachmentDropzoneUpload: React.FC<
 	return readOnly ? null : (
 		<div
 			className={clsx(
-				'mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-6',
+				// Use smaller padding and icon if compact mode is enabled
+				compact
+					? 'mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-2 py-2'
+					: 'mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-6',
 				uploading && 'opacity-50 pointer-events-none',
 			)}
 			onDrop={onDrop}
@@ -163,12 +171,24 @@ export const AttachmentDropzoneUpload: React.FC<
 			<div className="text-center">
 				<PhotoIcon
 					aria-hidden="true"
-					className="mx-auto w-12 h-12 text-gray-300"
+					// Use smaller icon if compact mode is enabled
+					className={clsx(
+						'mx-auto text-gray-300',
+						compact ? 'w-6 h-6' : 'w-12 h-12',
+					)}
 				/>
-				<div className="mt-4 flex text-sm/6 text-gray-600">
+				<div
+					className={clsx(
+						'mt-4 flex text-sm/6 text-gray-600',
+						compact && 'mt-2',
+					)}
+				>
 					<label
 						htmlFor="file-upload"
-						className="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
+						className={clsx(
+							'relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500',
+							compact && 'text-xs px-1 py-0.5',
+						)}
 					>
 						<span>Upload a file</span>
 						<input
@@ -183,9 +203,13 @@ export const AttachmentDropzoneUpload: React.FC<
 							disabled={uploading}
 						/>
 					</label>
-					<p className="pl-1">or drag and drop</p>
+					<p className={clsx('pl-1', compact && 'pl-0.5')}>or drag and drop</p>
 				</div>
-				<p className="text-xs/5 text-gray-600">PNG, JPG, GIF, PDF up to 10MB</p>
+				<p
+					className={clsx('text-xs/5 text-gray-600', compact && 'text-[10px]')}
+				>
+					PNG, JPG, GIF, PDF up to 10MB
+				</p>
 			</div>
 		</div>
 	);

@@ -109,17 +109,6 @@ export default function ExpenseOverlay({
 		},
 	});
 
-	const [attachments, setAttachments] = React.useState<AttachmentFilePartial[]>(
-		[],
-	);
-	React.useEffect(() => {
-		if (expenseId === 'new') {
-			setAttachments([]);
-		} else if (data?.attachments) {
-			setAttachments(data.attachments);
-		}
-	}, [expenseId, data?.attachments]);
-
 	return (
 		<Drawer
 			id={expenseId}
@@ -284,8 +273,10 @@ export default function ExpenseOverlay({
 							</div>
 							<div>
 								<AttachmentDropzone
-									value={attachments}
-									onChange={setAttachments}
+									value={data?.attachments}
+									onChange={(attachments) =>
+										setData((current) => ({ ...current, attachments }))
+									}
 									expenseId={expenseId === 'new' ? undefined : expenseId}
 									readOnly={false}
 								/>

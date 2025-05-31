@@ -94,7 +94,7 @@ export default function ProductOverlay({
 		reload,
 		mapper: (data) => {
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			const { id, price, createdAt, updatedAt, expenses, ...rest } = data;
+			const { price, createdAt, updatedAt, expenses, ...rest } = data;
 			return {
 				...rest,
 				priceCents: API.priceToCents(price),
