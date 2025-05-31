@@ -23,9 +23,7 @@ export const entitySchema = DynamoDBService.getSchema({
 		s3Key: { type: 'string', required: true },
 		s3Bucket: { type: 'string', required: true },
 		status: { type: 'string', required: true },
-		invoiceId: { type: 'string' },
-		expenseId: { type: 'string' },
-		inventoryId: { type: 'string' },
+		linkType: { type: 'string', required: true },
 		/**
 		 * Single index field for all linked entity queries.
 		 * This will be set to invoiceId, expenseId, inventoryId, or 'orphaned'.
@@ -39,8 +37,8 @@ export const entitySchema = DynamoDBService.getSchema({
 		},
 		byLinkedId: {
 			index: 'gsi1pk-gsi1sk-index',
-			pk: { field: 'gsi1pk', composite: ['linkedId'] },
-			sk: { field: 'gsi1sk', composite: ['createdAt'] },
+			pk: { field: 'gsi1pk', composite: ['storeId'] },
+			sk: { field: 'gsi1sk', composite: ['linkedId'] },
 		},
 	},
 });

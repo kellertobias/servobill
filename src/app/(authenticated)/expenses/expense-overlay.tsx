@@ -88,8 +88,16 @@ export default function ExpenseOverlay({
 		openCreated,
 		reload,
 		mapper: (data) => {
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			const { expenditure, taxAmount, attachments, ...rest } = data;
+			const {
+				expenditure,
+				taxAmount,
+				attachments,
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
+				createdAt,
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
+				updatedAt,
+				...rest
+			} = data;
 			return {
 				...rest,
 				expendedCents: API.priceToCents(expenditure),

@@ -389,7 +389,7 @@ type Mutation {
   invoiceSend(id: String!, submission: InvoiceSubmissionInput!): InvoiceChangedResponse!
   purgeExpenses(confirm: String!): Boolean!
   purgeInvoices(confirm: String!): Boolean!
-  requestUpload(input: RequestAttachmentUploadUrlInput!): RequestAttachmentUploadUrlResult!
+  requestUpload(fileName: String!, mimeType: String!, size: Int!): RequestAttachmentUploadUrlResult!
   sendTestEvent(data: String!, name: String!): String!
   testRenderTemplate(pdf: Boolean, styles: String!, template: String!): String!
   updateCustomer(data: CustomerInput!, id: String!): Customer!
@@ -459,17 +459,8 @@ type Query {
   template: InvoiceTemplateResult!
 }
 
-input RequestAttachmentUploadUrlInput {
-  expenseId: String
-  fileName: String!
-  inventoryId: String
-  invoiceId: String
-  mimeType: String!
-  size: Int!
-}
-
 type RequestAttachmentUploadUrlResult {
-  attachmentId: ID!
+  attachmentId: String!
   uploadUrl: String!
 }
 

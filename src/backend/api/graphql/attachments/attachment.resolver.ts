@@ -1,8 +1,7 @@
-import { Resolver, Query, Mutation, Arg, Authorized } from 'type-graphql';
+import { Resolver, Query, Mutation, Arg, Authorized, Int } from 'type-graphql';
 
 import {
 	Attachment,
-	RequestAttachmentUploadUrlInput,
 	RequestAttachmentUploadUrlResult,
 	AttachmentDownloadUrlResult,
 	ListAttachmentsInput,
@@ -35,23 +34,29 @@ export class AttachmentResolver {
 	@Authorized()
 	@Mutation(() => RequestAttachmentUploadUrlResult)
 	async requestUpload(
-		@Arg('input') input: RequestAttachmentUploadUrlInput,
+		@Arg('fileName') fileName: string,
+		@Arg('mimeType') mimeType: string,
+		@Arg('size', () => Int) size: number,
 	): Promise<RequestAttachmentUploadUrlResult> {
+		console.log('requestUpload', fileName, mimeType, size);
 		// Create a new attachment entity in DB (status: 'pending')
 		const bucket = this.s3['configuration'].buckets.files;
-		const s3Key = `attachments/${Date.now()}-${input.fileName}`;
+		const extension = fileName.split('.').pop();
+		const nameHash = crypto.randomUUID();
+		const s3Key = `attachments/${Date.now()}-${nameHash}.${extension}`;
+
 		const attachment = new AttachmentEntity({
-			fileName: input.fileName,
-			mimeType: input.mimeType,
-			size: input.size,
+			fileName: fileName,
+			mimeType: mimeType,
+			size: size,
 			status: 'pending',
-			invoiceId: input.invoiceId,
-			expenseId: input.expenseId,
-			inventoryId: input.inventoryId,
 			s3Key,
 			s3Bucket: bucket,
 		});
+		console.log('attachment', attachment);
+		console.log('Saving attachment');
 		await this.repository.save(attachment);
+		console.log('Saved attachment');
 		const uploadUrl = await this.s3.getSignedUploadUrl({
 			key: s3Key,
 			bucket: bucket,

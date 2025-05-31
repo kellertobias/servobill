@@ -43,30 +43,6 @@ export class Attachment {
 }
 
 /**
- * Input for requesting an upload signed URL.
- */
-@InputType()
-export class RequestAttachmentUploadUrlInput {
-	@Field()
-	fileName!: string;
-
-	@Field()
-	mimeType!: string;
-
-	@Field(() => Int)
-	size!: number;
-
-	@Field({ nullable: true })
-	invoiceId?: string;
-
-	@Field({ nullable: true })
-	expenseId?: string;
-
-	@Field({ nullable: true })
-	inventoryId?: string;
-}
-
-/**
  * Output for requesting an upload signed URL.
  */
 @ObjectType()
@@ -74,7 +50,7 @@ export class RequestAttachmentUploadUrlResult {
 	@Field()
 	uploadUrl!: string;
 
-	@Field(() => ID)
+	@Field()
 	attachmentId!: string;
 }
 

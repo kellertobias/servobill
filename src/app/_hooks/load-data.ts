@@ -92,7 +92,7 @@ export const useSaveCallback = <T>({
 	entityName: string;
 	data: T;
 	initialData: T;
-	mapper?: (data: NonNullable<T>) => unknown;
+	mapper?: (data: Omit<NonNullable<T>, 'id'>) => unknown;
 	openCreated?: (id: string) => void;
 	reload?: () => void;
 	hasChanges?: boolean;
@@ -124,7 +124,7 @@ export const useSaveCallback = <T>({
 						query: query as never,
 						variables: {
 							id,
-							data: mapper ? mapper(data) : rest,
+							data: mapper ? mapper(rest) : rest,
 						},
 					})) as { create?: { id: string }; update?: { id: string } };
 

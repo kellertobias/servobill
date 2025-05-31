@@ -30,7 +30,7 @@ export class AttachmentDynamoDBRepository extends AbstractDynamodbRepository<
 > {
 	protected logger = new Logger(ATTACHMENT_REPO_NAME);
 	protected mainIdName = 'attachmentId';
-	protected storeId = 'Attachment';
+	protected storeId = 'attachment';
 
 	constructor(@Inject(DynamoDBService) private dynamoDb: DynamoDBService) {
 		super();
@@ -51,9 +51,9 @@ export class AttachmentDynamoDBRepository extends AbstractDynamodbRepository<
 			s3Key: orm.s3Key,
 			s3Bucket: orm.s3Bucket,
 			status: orm.status as 'pending' | 'finished',
-			invoiceId: orm.invoiceId,
-			expenseId: orm.expenseId,
-			inventoryId: orm.inventoryId,
+			invoiceId: orm.linkType === 'invoice' ? orm.linkedId : undefined,
+			expenseId: orm.linkType === 'expense' ? orm.linkedId : undefined,
+			inventoryId: orm.linkType === 'inventory' ? orm.linkedId : undefined,
 		});
 	}
 
@@ -64,13 +64,6 @@ export class AttachmentDynamoDBRepository extends AbstractDynamodbRepository<
 	public domainToOrmEntity(
 		domain: AttachmentEntity,
 	): Omit<AttachmentOrmEntity, 'storeId'> {
-		let linkedId = 'orphaned';
-		if (domain.invoiceId) 
-{linkedId = domain.invoiceId;}
-		else if (domain.expenseId) 
-{linkedId = domain.expenseId;}
-		else if (domain.inventoryId) 
-{linkedId = domain.inventoryId;}
 		return {
 			attachmentId: domain.id,
 			createdAt: domain.createdAt.toISOString(),
@@ -81,10 +74,30 @@ export class AttachmentDynamoDBRepository extends AbstractDynamodbRepository<
 			s3Key: domain.s3Key,
 			s3Bucket: domain.s3Bucket,
 			status: domain.status,
-			invoiceId: domain.invoiceId,
-			expenseId: domain.expenseId,
-			inventoryId: domain.inventoryId,
-			linkedId,
+			linkType: (() => {
+				if (domain.invoiceId) {
+					return 'invoice';
+				}
+				if (domain.expenseId) {
+					return 'expense';
+				}
+				if (domain.inventoryId) {
+					return 'inventory';
+				}
+				return 'orphaned';
+			})(),
+			linkedId: (() => {
+				if (domain.invoiceId) {
+					return domain.invoiceId;
+				}
+				if (domain.expenseId) {
+					return domain.expenseId;
+				}
+				if (domain.inventoryId) {
+					return domain.inventoryId;
+				}
+				return 'orphaned';
+			})(),
 		};
 	}
 
@@ -121,20 +134,29 @@ export class AttachmentDynamoDBRepository extends AbstractDynamodbRepository<
 		cursor?: string;
 	}): Promise<AttachmentEntity[]> {
 		let linkedId: string | undefined;
-		if (query.invoiceId) 
-{linkedId = query.invoiceId;}
-		else if (query.expenseId) 
-{linkedId = query.expenseId;}
-		else if (query.inventoryId) 
-{linkedId = query.inventoryId;}
+		if (query.invoiceId) {
+			linkedId = query.invoiceId;
+		} else if (query.expenseId) {
+			linkedId = query.expenseId;
+		} else if (query.inventoryId) {
+			linkedId = query.inventoryId;
+		}
 		let data: AttachmentOrmEntity[] = [];
 		if (linkedId) {
-			const result = await this.store.query.byLinkedId({ linkedId }).go();
+			const result = await this.store.query
+				.byLinkedId({
+					storeId: this.storeId,
+					linkedId,
+				})
+				.go();
 			data = result.data;
 		} else {
 			// List all (not recommended for large tables)
 			const result = await this.store.query
-				.byLinkedId({ linkedId: 'orphaned' })
+				.byLinkedId({
+					storeId: this.storeId,
+					linkedId: 'orphaned',
+				})
 				.go();
 			data = result.data;
 		}
@@ -148,7 +170,10 @@ export class AttachmentDynamoDBRepository extends AbstractDynamodbRepository<
 	 */
 	public async deleteOrphaned(): Promise<number> {
 		const result = await this.store.query
-			.byLinkedId({ linkedId: 'orphaned' })
+			.byLinkedId({
+				storeId: this.storeId,
+				linkedId: 'orphaned',
+			})
 			.go();
 		const orphaned = result.data;
 		for (const a of orphaned) {

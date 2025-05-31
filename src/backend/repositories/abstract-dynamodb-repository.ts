@@ -74,6 +74,9 @@ export abstract class AbstractDynamodbRepository<
 		const data = this.domainToOrmEntity(entity);
 
 		delete data[this.mainIdName as keyof typeof data];
+
+		console.log('save', data);
+
 		await store
 			.patch({
 				[this.mainIdName]: entity.id,
