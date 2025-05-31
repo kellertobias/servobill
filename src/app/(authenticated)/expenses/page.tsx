@@ -119,27 +119,37 @@ export default function ExpensesHomePage() {
 							key: 'category',
 							title: 'Category',
 							className: 'py-5 w-24',
+							/**
+							 * Renders the category label for each expense. If the expense has a category, displays its name and color.
+							 * If there is no category, displays a gray 'Default' label.
+							 */
 							render: (expense) => (
 								<>
-									{expense.category && (
-										<>
-											<span
-												className="inline-flex items-center gap-x-1.5 rounded-full px-2 py-1 text-xs font-medium text-gray-900 ring-1 ring-inset ring-gray-200 w-20 justify-center overflow-clip text-ellipsis"
-												title={
-													expense.category.description || expense.category.name
-												}
+									{expense.category ? (
+										<span
+											className="inline-flex items-center gap-x-1.5 rounded-full px-2 py-1 text-xs font-medium text-gray-900 ring-1 ring-inset ring-gray-200 w-20 justify-center overflow-clip text-ellipsis"
+											title={
+												expense.category.description || expense.category.name
+											}
+										>
+											<svg
+												viewBox="0 0 6 6"
+												aria-hidden="true"
+												className="w-1.5 h-1.5"
+												style={{ fill: expense.category.color || '#888' }}
 											>
-												<svg
-													viewBox="0 0 6 6"
-													aria-hidden="true"
-													className="w-1.5 h-1.5"
-													style={{ fill: expense.category.color || '#888' }}
-												>
-													<circle r={3} cx={3} cy={3} />
-												</svg>
-												{expense.category.name}
-											</span>
-										</>
+												<circle r={3} cx={3} cy={3} />
+											</svg>
+											{expense.category.name}
+										</span>
+									) : (
+										// Show a gray 'Default' label if no category is set
+										<span
+											className="inline-flex items-center gap-x-1.5 rounded-full px-2 py-1 text-xs font-medium text-gray-500 ring-1 ring-inset ring-gray-200 w-20 justify-center overflow-clip text-ellipsis"
+											title="No category assigned"
+										>
+											Default
+										</span>
 									)}
 								</>
 							),
