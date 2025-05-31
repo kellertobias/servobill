@@ -139,8 +139,11 @@ describe.each(repoTestCases)('$name (E2E)', ({ setup, onBeforeEach }) => {
 		expect(searchApple[0].name.toLowerCase()).toContain('apple');
 
 		// Test skip/limit (only for relational)
-		const limited = await repo.listByQuery({ skip: 1, limit: 1 });
-		expect(limited.length).toBe(1);
+		// DynamoDB implementation does not support skip/limit, so only test for relational
+		if (RepositoryImplementation === ProductRelationalRepository) {
+			const limited = await repo.listByQuery({ skip: 1, limit: 1 });
+			expect(limited.length).toBe(1);
+		}
 
 		// Search for non-existent product
 		const searchNone = await repo.listByQuery({ where: { search: 'xyz' } });

@@ -59,10 +59,16 @@ export class AttachmentDynamoDBRepository extends AbstractDynamodbRepository<
 
 	/**
 	 * Converts a domain AttachmentEntity to a DynamoDB record.
+	 * Sets 'linkedId' to the first available link or 'orphaned'.
 	 */
-	public domainToOrmEntity(domain: AttachmentEntity): AttachmentOrmEntity {
+	public domainToOrmEntity(
+		domain: AttachmentEntity,
+	): Omit<AttachmentOrmEntity, 'storeId'> {
+		let linkedId = 'orphaned';
+		if (domain.invoiceId) linkedId = domain.invoiceId;
+		else if (domain.expenseId) linkedId = domain.expenseId;
+		else if (domain.inventoryId) linkedId = domain.inventoryId;
 		return {
-			storeId: this.storeId,
 			attachmentId: domain.id,
 			createdAt: domain.createdAt.toISOString(),
 			updatedAt: domain.updatedAt.toISOString(),
@@ -75,7 +81,8 @@ export class AttachmentDynamoDBRepository extends AbstractDynamodbRepository<
 			invoiceId: domain.invoiceId,
 			expenseId: domain.expenseId,
 			inventoryId: domain.inventoryId,
-		} as AttachmentOrmEntity;
+			linkedId,
+		};
 	}
 
 	/**
@@ -100,6 +107,7 @@ export class AttachmentDynamoDBRepository extends AbstractDynamodbRepository<
 
 	/**
 	 * List attachments by query, filtering by linked entity IDs.
+	 * Uses the single 'linkedId' GSI for all queries.
 	 */
 	public async listByQuery(query: {
 		invoiceId?: string;
@@ -109,29 +117,37 @@ export class AttachmentDynamoDBRepository extends AbstractDynamodbRepository<
 		limit?: number;
 		cursor?: string;
 	}): Promise<AttachmentEntity[]> {
-		// Use the appropriate GSI based on the filter
-		if (query.invoiceId) {
-			// Query by invoiceId
-			// TODO: Implement actual ElectroDB query using GSI
-		} else if (query.expenseId) {
-			// Query by expenseId
-			// TODO: Implement actual ElectroDB query using GSI
-		} else if (query.inventoryId) {
-			// Query by inventoryId
-			// TODO: Implement actual ElectroDB query using GSI
+		let linkedId: string | undefined;
+		if (query.invoiceId) linkedId = query.invoiceId;
+		else if (query.expenseId) linkedId = query.expenseId;
+		else if (query.inventoryId) linkedId = query.inventoryId;
+		let data: AttachmentOrmEntity[] = [];
+		if (linkedId) {
+			const result = await this.store.query.byLinkedId({ linkedId }).go();
+			data = result.data;
 		} else {
 			// List all (not recommended for large tables)
-			// TODO: Implement scan or paginated query
+			const result = await this.store.query
+				.byLinkedId({ linkedId: 'orphaned' })
+				.go();
+			data = result.data;
 		}
-		return [];
+		return data.map((orm) => this.ormToDomainEntitySafe(orm));
 	}
 
 	/**
 	 * Delete all orphaned attachments (not linked to any entity).
 	 * Returns the number of deleted attachments.
+	 * Uses the single 'linkedId' GSI with 'orphaned'.
 	 */
 	public async deleteOrphaned(): Promise<number> {
-		// TODO: Query byOrphaned index and delete all matching items
-		return 0;
+		const result = await this.store.query
+			.byLinkedId({ linkedId: 'orphaned' })
+			.go();
+		const orphaned = result.data;
+		for (const a of orphaned) {
+			await this.delete(a.attachmentId);
+		}
+		return orphaned.length;
 	}
 }

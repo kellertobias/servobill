@@ -90,7 +90,8 @@ export abstract class AbstractRelationalRepository<
 		await this.repository?.save([data as DeepPartial<OrmEntity>]);
 		await this.purgeOutbox(entity);
 
-		return this.ormToDomainEntity({ data });
+		// Return the domain entity from the ORM entity
+		return this.ormToDomainEntity(data as OrmEntity);
 	}
 
 	public async create(...args: CreateArgs): Promise<DomainEntity> {
@@ -104,6 +105,7 @@ export abstract class AbstractRelationalRepository<
 		await this.repository?.save([data as DeepPartial<OrmEntity>]);
 		await this.purgeOutbox(entity);
 
-		return this.ormToDomainEntity({ data });
+		// Return the domain entity from the ORM entity
+		return this.ormToDomainEntity(data as OrmEntity);
 	}
 }

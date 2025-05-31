@@ -4,7 +4,7 @@ import { DynamoDBService } from '@/backend/services/dynamodb.service';
 
 /**
  * DynamoDB schema for Attachment entity.
- * Defines attributes and indexes for the Attachment table.
+ * Defines attributes and a single index for the Attachment table.
  */
 export const entitySchema = DynamoDBService.getSchema({
 	model: {
@@ -26,36 +26,21 @@ export const entitySchema = DynamoDBService.getSchema({
 		invoiceId: { type: 'string' },
 		expenseId: { type: 'string' },
 		inventoryId: { type: 'string' },
+		/**
+		 * Single index field for all linked entity queries.
+		 * This will be set to invoiceId, expenseId, inventoryId, or 'orphaned'.
+		 */
+		linkedId: { type: 'string', required: true },
 	},
 	indexes: {
 		byId: {
 			pk: { field: 'pk', composite: ['attachmentId'] },
 			sk: { field: 'sk', composite: ['storeId'] },
 		},
-		byCreatedAt: {
+		byLinkedId: {
 			index: 'gsi1pk-gsi1sk-index',
-			pk: { field: 'gsi1pk', composite: ['storeId'] },
+			pk: { field: 'gsi1pk', composite: ['linkedId'] },
 			sk: { field: 'gsi1sk', composite: ['createdAt'] },
-		},
-		byInvoiceId: {
-			index: 'gsi2pk-gsi2sk-index',
-			pk: { field: 'gsi2pk', composite: ['invoiceId'] },
-			sk: { field: 'gsi2sk', composite: ['createdAt'] },
-		},
-		byExpenseId: {
-			index: 'gsi3pk-gsi3sk-index',
-			pk: { field: 'gsi3pk', composite: ['expenseId'] },
-			sk: { field: 'gsi3sk', composite: ['createdAt'] },
-		},
-		byInventoryId: {
-			index: 'gsi4pk-gsi4sk-index',
-			pk: { field: 'gsi4pk', composite: ['inventoryId'] },
-			sk: { field: 'gsi4sk', composite: ['createdAt'] },
-		},
-		byOrphaned: {
-			index: 'gsi5pk-gsi5sk-index',
-			pk: { field: 'gsi5pk', composite: ['status'] }, // status = 'pending' or 'finished'
-			sk: { field: 'gsi5sk', composite: ['createdAt'] },
 		},
 	},
 });

@@ -1,3 +1,5 @@
+import 'reflect-metadata';
+
 // Register ConfigService in DI container BEFORE any other imports
 import { DefaultContainer } from '@/common/di';
 import { CONFIG_SERVICE } from '@/backend/services/di-tokens';
