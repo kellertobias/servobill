@@ -1,8 +1,11 @@
 import { Entity, PrimaryColumn, Column } from 'typeorm';
 
+import { OrmEntity } from '@/common/orm-entity-registry';
+
 /**
  * TypeORM entity for the Settings table (relational DB).
  */
+@OrmEntity
 @Entity('settings')
 export class SettingsOrmEntity {
 	/** Unique identifier for the settings record. */

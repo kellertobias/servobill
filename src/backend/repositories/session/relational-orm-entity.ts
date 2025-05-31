@@ -1,8 +1,11 @@
 import { Entity, PrimaryColumn, Column } from 'typeorm';
 
+import { OrmEntity } from '@/common/orm-entity-registry';
+
 /**
  * TypeORM entity for the Session table (relational DB).
  */
+@OrmEntity
 @Entity('sessions')
 export class SessionOrmEntity {
 	/** Unique identifier for the session. */

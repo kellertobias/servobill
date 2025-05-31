@@ -1,10 +1,13 @@
 import { Entity, PrimaryColumn, Column } from 'typeorm';
 
+import { OrmEntity } from '@/common/orm-entity-registry';
+
 /**
  * TypeORM entity for Invoice, used in relational databases.
  * Mirrors the InvoiceEntity and DynamoDB schema.
  * JSON fields are stored as strings.
  */
+@OrmEntity
 @Entity('invoice')
 export class InvoiceOrmEntity {
 	/** Unique identifier for the invoice */

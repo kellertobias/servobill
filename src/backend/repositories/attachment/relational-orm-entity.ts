@@ -1,9 +1,12 @@
 import { Entity, PrimaryColumn, Column } from 'typeorm';
 
+import { OrmEntity } from '@/common/orm-entity-registry';
+
 /**
  * TypeORM entity for Attachment, used in relational databases.
  * Mirrors the AttachmentEntity.
  */
+@OrmEntity
 @Entity('attachment')
 export class AttachmentOrmEntity {
 	/** Unique identifier for the attachment */
