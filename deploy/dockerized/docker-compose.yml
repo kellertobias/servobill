@@ -4,7 +4,11 @@ version: '3.8'
 # Includes: MinIO (S3), Postgres, Queue Workers, Next.js App
 
 services:
-  # === Postgres Database ===
+  # ---
+  # Postgres connection URL for local development:
+  # postgres://servobill:servobill@localhost:5432/servobill
+  # Format: postgres://<user>:<password>@<host>:<port>/<database>
+  # ---
   postgres:
     image: postgres:15
     restart: unless-stopped

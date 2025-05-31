@@ -18,8 +18,7 @@ import { shouldRegister } from '@/backend/services/should-register';
  */
 @Service({
 	name: ATTACHMENT_REPOSITORY,
-	...shouldRegister(DatabaseType.POSTGRES),
-	...shouldRegister(DatabaseType.SQLITE),
+	...shouldRegister([DatabaseType.POSTGRES, DatabaseType.SQLITE]),
 })
 export class AttachmentRelationalRepository extends AbstractRelationalRepository<
 	AttachmentOrmEntity,
@@ -121,10 +120,12 @@ export class AttachmentRelationalRepository extends AbstractRelationalRepository
 				inventoryId: query.inventoryId,
 			});
 		}
-		if (query.skip) 
-{qb.skip(query.skip);}
-		if (query.limit) 
-{qb.take(query.limit);}
+		if (query.skip) {
+			qb.skip(query.skip);
+		}
+		if (query.limit) {
+			qb.take(query.limit);
+		}
 		const results = await qb.getMany();
 		return results.map((orm) => this.ormToDomainEntity(orm));
 	}

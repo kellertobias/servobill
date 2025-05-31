@@ -19,8 +19,7 @@ const storeId = 'settings';
 
 @Service({
 	name: SETTINGS_REPOSITORY,
-	...shouldRegister(DatabaseType.POSTGRES),
-	...shouldRegister(DatabaseType.SQLITE),
+	...shouldRegister([DatabaseType.POSTGRES, DatabaseType.SQLITE]),
 })
 /**
  * Relational DB implementation of the SettingsRepository interface.

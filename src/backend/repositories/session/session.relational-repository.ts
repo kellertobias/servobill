@@ -18,8 +18,7 @@ function getAllowedEmails() {
 
 @Service({
 	name: SESSION_REPOSITORY,
-	...shouldRegister(DatabaseType.POSTGRES),
-	...shouldRegister(DatabaseType.SQLITE),
+	...shouldRegister([DatabaseType.POSTGRES, DatabaseType.SQLITE]),
 })
 /**
  * Relational DB implementation of the SessionRepository interface.

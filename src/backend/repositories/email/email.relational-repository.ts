@@ -12,15 +12,13 @@ import { AbstractRelationalRepository } from '@/backend/repositories/abstract-re
 import { DatabaseType } from '@/backend/services/constants';
 import { RelationalDbService } from '@/backend/services/relationaldb.service';
 
-
 /**
  * Unified repository for Email using TypeORM (Postgres or SQLite).
  * Handles mapping between EmailOrmEntity and EmailEntity.
  */
 @Service({
 	name: EMAIL_REPOSITORY,
-	...shouldRegister(DatabaseType.POSTGRES),
-	...shouldRegister(DatabaseType.SQLITE),
+	...shouldRegister([DatabaseType.POSTGRES, DatabaseType.SQLITE]),
 })
 export class EmailRelationalRepository
 	extends AbstractRelationalRepository<EmailOrmEntity, EmailEntity, []>
@@ -89,10 +87,12 @@ export class EmailRelationalRepository
 				search: `%${query.where.search.toLowerCase()}%`,
 			});
 		}
-		if (query.skip) 
-{qb.skip(query.skip);}
-		if (query.limit) 
-{qb.take(query.limit);}
+		if (query.skip) {
+			qb.skip(query.skip);
+		}
+		if (query.limit) {
+			qb.take(query.limit);
+		}
 		const results = await qb.getMany();
 		return results.map((orm) => this.ormToDomainEntitySafe(orm));
 	}

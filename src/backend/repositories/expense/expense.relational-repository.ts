@@ -12,15 +12,13 @@ import { AbstractRelationalRepository } from '@/backend/repositories/abstract-re
 import { DatabaseType } from '@/backend/services/constants';
 import { RelationalDbService } from '@/backend/services/relationaldb.service';
 
-
 /**
  * Unified repository for Expense using TypeORM (Postgres or SQLite).
  * Handles mapping between ExpenseOrmEntity and ExpenseEntity.
  */
 @Service({
 	name: EXPENSE_REPOSITORY,
-	...shouldRegister(DatabaseType.POSTGRES),
-	...shouldRegister(DatabaseType.SQLITE),
+	...shouldRegister([DatabaseType.POSTGRES, DatabaseType.SQLITE]),
 })
 export class ExpenseRelationalRepository
 	extends AbstractRelationalRepository<ExpenseOrmEntity, ExpenseEntity, []>
@@ -108,10 +106,12 @@ export class ExpenseRelationalRepository
 			const yearStart = new Date(`${query.where.year}-01-01`);
 			qb.andWhere('expense.expendedAt >= :yearStart', { yearStart });
 		}
-		if (query.skip) 
-{qb.skip(query.skip);}
-		if (query.limit) 
-{qb.take(query.limit);}
+		if (query.skip) {
+			qb.skip(query.skip);
+		}
+		if (query.limit) {
+			qb.take(query.limit);
+		}
 		const results = await qb.getMany();
 		return results.map((orm) => this.ormToDomainEntitySafe(orm));
 	}

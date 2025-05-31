@@ -86,13 +86,15 @@ export function Service<T extends new (...args: any[]) => unknown>(
 				? { name: nameOrOptions, singleton: false, shouldRegister: () => true }
 				: nameOrOptions || {};
 
-		App.defaultLogger.debug(
-			`Registering Service *${name ? String(name) : target.name}*`,
-		);
 		const injected = injectable()(target);
 		if (shouldRegister && !shouldRegister()) {
 			return target;
 		}
+		App.defaultLogger.debug(
+			`Registering Service *${name ? String(name) : target.name}* ${
+				target.name
+			}`,
+		);
 		const bound = App.defaultContainer.bind(name || target).to(target);
 		if (singleton === false) {
 			bound.inTransientScope();

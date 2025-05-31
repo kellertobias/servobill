@@ -30,8 +30,7 @@ import { CustomJson } from '@/common/json';
  */
 @Service({
 	name: INVOICE_REPOSITORY,
-	...shouldRegister(DatabaseType.POSTGRES),
-	...shouldRegister(DatabaseType.SQLITE),
+	...shouldRegister([DatabaseType.POSTGRES, DatabaseType.SQLITE]),
 })
 export class InvoiceRelationalRepository
 	extends AbstractRelationalRepository<
