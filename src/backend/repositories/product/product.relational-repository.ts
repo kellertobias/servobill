@@ -1,13 +1,17 @@
-import { Inject, Service } from '@/common/di';
+import { shouldRegister } from '../../services/should-register';
+
 import { PRODUCT_REPO_NAME, PRODUCT_REPOSITORY } from './di-tokens';
-import { ProductEntity } from '@/backend/entities/product.entity';
 import { ProductOrmEntity } from './relational-orm-entity';
+
+import type { ProductRepository } from './index';
+
+import { Inject, Service } from '@/common/di';
+import { ProductEntity } from '@/backend/entities/product.entity';
 import { Logger } from '@/backend/services/logger.service';
 import { AbstractRelationalRepository } from '@/backend/repositories/abstract-relational-repository';
 import { DatabaseType } from '@/backend/services/constants';
-import { shouldRegister } from '../../services/should-register';
 import { RelationalDbService } from '@/backend/services/relationaldb.service';
-import type { ProductRepository } from './index';
+
 
 /**
  * Unified repository for Product using TypeORM (Postgres or SQLite).
@@ -106,8 +110,10 @@ export class ProductRelationalRepository
 				search: `%${query.where.search.toLowerCase()}%`,
 			});
 		}
-		if (query.skip) qb.skip(query.skip);
-		if (query.limit) qb.take(query.limit);
+		if (query.skip) 
+{qb.skip(query.skip);}
+		if (query.limit) 
+{qb.take(query.limit);}
 		const results = await qb.getMany();
 		return results.map((orm) => this.ormToDomainEntity(orm));
 	}

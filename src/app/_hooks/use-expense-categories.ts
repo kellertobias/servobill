@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { API, gql } from '@/api/index';
 
 const getSettingsCategories = async () =>
@@ -25,7 +26,10 @@ export function useExpenseCategories() {
 	const [categories, setCategories] = React.useState<ExpenseCategory[]>([]);
 
 	React.useEffect(() => {
-		getSettingsCategories().then((res) => setCategories(res || []));
+		(async () => {
+			const res = await getSettingsCategories();
+			setCategories(res || []);
+		})();
 	}, []);
 
 	return categories;

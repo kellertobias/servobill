@@ -1,4 +1,9 @@
+/* eslint-disable import/no-extraneous-dependencies */
 import 'reflect-metadata';
+
+// Now import the rest of the test dependencies
+import { GenericContainer, StartedTestContainer, Wait } from 'testcontainers';
+import { beforeAll, afterAll } from 'vitest';
 
 // Register ConfigService in DI container BEFORE any other imports
 import { DefaultContainer } from '@/common/di';
@@ -33,12 +38,7 @@ DefaultContainer.bind(CONFIG_SERVICE).toConstantValue({
 	buckets: { files: 'test-bucket' },
 	isLocal: true,
 	ses: { accessKeyId: undefined, secretAccessKey: undefined },
-	relationalDatabase: {},
 });
-
-// Now import the rest of the test dependencies
-import { GenericContainer, StartedTestContainer, Wait } from 'testcontainers';
-import { beforeAll, afterAll } from 'vitest';
 
 // Containers
 let dynamoContainer: StartedTestContainer;
@@ -49,9 +49,9 @@ let postgresContainer: StartedTestContainer;
 export let DYNAMODB_PORT: number;
 export let S3_PORT: number;
 export let POSTGRES_PORT: number;
-export let POSTGRES_USER = 'test';
-export let POSTGRES_PASSWORD = 'test';
-export let POSTGRES_DB = 'test';
+export const POSTGRES_USER = 'test';
+export const POSTGRES_PASSWORD = 'test';
+export const POSTGRES_DB = 'test';
 
 beforeAll(async () => {
 	// Start DynamoDB Local
@@ -102,7 +102,6 @@ beforeAll(async () => {
 		buckets: { files: 'test-bucket' },
 		isLocal: true,
 		ses: { accessKeyId: undefined, secretAccessKey: undefined },
-		relationalDatabase: {},
 	});
 
 	// Start MinIO (S3)

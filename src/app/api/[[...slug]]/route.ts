@@ -256,6 +256,7 @@ async function ALL(
 	try {
 		const result = await execute(lambdaRequest, lambdaContext, callback);
 		if (!result) {
+			// eslint-disable-next-line no-console
 			console.error('No result - Callbacks are not supported', result);
 			return new Response(JSON.stringify({ error: 'no callbacks please!' }), {
 				status: 500,

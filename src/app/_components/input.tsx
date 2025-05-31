@@ -1,7 +1,7 @@
 import React from 'react';
+import clsx from 'clsx';
 
 import { useAutoSizeTextArea } from '@/hooks/use-auto-textarea';
-import clsx from 'clsx';
 
 export const Input: React.FC<{
 	value: string | null | undefined;

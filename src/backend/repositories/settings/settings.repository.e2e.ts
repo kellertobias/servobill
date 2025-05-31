@@ -3,14 +3,16 @@
 
 import 'reflect-metadata';
 import { describe, it, expect, beforeEach } from 'vitest';
-import {
-	SettingsEntity,
-	PdfTemplateSetting,
-} from '@/backend/entities/settings.entity';
+
 import { SettingsDynamodbRepository } from './settings.dynamodb-repository';
 import { SettingsRelationalRepository } from './settings.relational-repository';
 import { SettingsRepository } from './interface';
 import { SettingsOrmEntity } from './relational-orm-entity';
+
+import {
+	SettingsEntity,
+	PdfTemplateSetting,
+} from '@/backend/entities/settings.entity';
 import { prepareRepoTest } from '@/test/repo-test';
 
 const repoTestCases = prepareRepoTest({

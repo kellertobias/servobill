@@ -172,7 +172,7 @@ export const handler: EventHandler = makeEventHandler(
 			throw new Error('No email address');
 		}
 
-		logger.info("Genrating email's subject and body", {
+		logger.info("Generating email's subject and body", {
 			invoiceId: invoice.id,
 		});
 
@@ -198,8 +198,6 @@ export const handler: EventHandler = makeEventHandler(
 				},
 			],
 		});
-
-		console.log(msg);
 
 		const emailStatus = await emailRepository.createWithId(msg.response);
 		emailStatus.update({

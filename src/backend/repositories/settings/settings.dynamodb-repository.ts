@@ -1,13 +1,15 @@
+import { shouldRegister } from '../../services/should-register';
+
+import { entitySchema, SettingsOrmEntity } from './dynamodb-orm-entity';
+import type { SettingsRepository } from './interface';
+import { SETTINGS_REPOSITORY, SETTINGS_REPO_NAME } from './di-tokens';
+
 import { Inject, Service } from '@/common/di';
 import { Logger } from '@/backend/services/logger.service';
 import { DynamoDBService } from '@/backend/services/dynamodb.service';
 import { AbstractDynamodbRepository } from '@/backend/repositories/abstract-dynamodb-repository';
 import { SettingsEntity } from '@/backend/entities/settings.entity';
 import { DatabaseType } from '@/backend/services/constants';
-import { shouldRegister } from '../../services/should-register';
-import { entitySchema, SettingsOrmEntity } from './dynamodb-orm-entity';
-import type { SettingsRepository } from './interface';
-import { SETTINGS_REPOSITORY, SETTINGS_REPO_NAME } from './di-tokens';
 import { AbstractSettingsEntity } from '@/backend/entities/settings.entity';
 import { CustomJson } from '@/common/json';
 

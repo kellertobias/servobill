@@ -1,4 +1,5 @@
 import { Entity, PrimaryColumn, Column } from 'typeorm';
+
 import { OrmEntity } from '@/common/orm-entity-registry';
 
 /**

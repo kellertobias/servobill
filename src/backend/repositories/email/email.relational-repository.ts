@@ -1,13 +1,17 @@
-import { Inject, Service } from '@/common/di';
+import { shouldRegister } from '../../services/should-register';
+
 import { EMAIL_REPOSITORY, EMAIL_REPO_NAME } from './di-tokens';
-import { EmailEntity } from '@/backend/entities/email.entity';
 import { EmailOrmEntity } from './relational-orm-entity';
+
+import type { EmailRepository } from './index';
+
+import { Inject, Service } from '@/common/di';
+import { EmailEntity } from '@/backend/entities/email.entity';
 import { Logger } from '@/backend/services/logger.service';
 import { AbstractRelationalRepository } from '@/backend/repositories/abstract-relational-repository';
 import { DatabaseType } from '@/backend/services/constants';
-import { shouldRegister } from '../../services/should-register';
 import { RelationalDbService } from '@/backend/services/relationaldb.service';
-import type { EmailRepository } from './index';
+
 
 /**
  * Unified repository for Email using TypeORM (Postgres or SQLite).
@@ -85,8 +89,10 @@ export class EmailRelationalRepository
 				search: `%${query.where.search.toLowerCase()}%`,
 			});
 		}
-		if (query.skip) qb.skip(query.skip);
-		if (query.limit) qb.take(query.limit);
+		if (query.skip) 
+{qb.skip(query.skip);}
+		if (query.limit) 
+{qb.take(query.limit);}
 		const results = await qb.getMany();
 		return results.map((orm) => this.ormToDomainEntitySafe(orm));
 	}

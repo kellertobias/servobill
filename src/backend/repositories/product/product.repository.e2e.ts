@@ -3,10 +3,12 @@
 
 import 'reflect-metadata';
 import { describe, it, expect, beforeEach } from 'vitest';
+
 import { ProductDynamodbRepository } from './product.dynamodb-repository';
 import { ProductRelationalRepository } from './product.relational-repository';
 import { ProductOrmEntity } from './relational-orm-entity';
 import { ProductRepository } from './interface';
+
 import { prepareRepoTest } from '@/test/repo-test';
 import { ProductEntity } from '@/backend/entities/product.entity';
 
@@ -15,7 +17,7 @@ import { ProductEntity } from '@/backend/entities/product.entity';
  * Only used for DynamoDB E2E tests to avoid data collisions.
  */
 
-const repoTestCases = prepareRepoTest({
+const repoTestCases = prepareRepoTest<ProductRepository>({
 	name: 'Product',
 	relational: ProductRelationalRepository,
 	dynamodb: ProductDynamodbRepository,

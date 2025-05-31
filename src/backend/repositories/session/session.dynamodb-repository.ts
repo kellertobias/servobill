@@ -1,4 +1,11 @@
 import { randomUUID } from 'crypto';
+
+import { shouldRegister } from '../../services/should-register';
+
+import { entitySchema, SessionOrmEntity } from './dynamodb-orm-entity';
+import type { SessionRepository } from './interface';
+import { SESSION_REPOSITORY, SESSION_REPO_NAME } from './di-tokens';
+
 import { Inject, Service } from '@/common/di';
 import { Logger } from '@/backend/services/logger.service';
 import { DynamoDBService } from '@/backend/services/dynamodb.service';
@@ -6,10 +13,6 @@ import { AbstractDynamodbRepository } from '@/backend/repositories/abstract-dyna
 import { SessionEntity } from '@/backend/entities/session.entity';
 import { UserEntity } from '@/backend/entities/user.entity';
 import { DatabaseType } from '@/backend/services/constants';
-import { shouldRegister } from '../../services/should-register';
-import { entitySchema, SessionOrmEntity } from './dynamodb-orm-entity';
-import type { SessionRepository } from './interface';
-import { SESSION_REPOSITORY, SESSION_REPO_NAME } from './di-tokens';
 
 const storeId = 'sessions';
 
@@ -111,7 +114,9 @@ export class SessionDynamodbRepository
 		const data = await this.store
 			.get({ sessionId, storeId: this.storeId })
 			.go();
-		if (!data || !data.data) return null;
+		if (!data || !data.data) {
+			return null;
+		}
 		return this.ormToDomainEntitySafe(data.data);
 	}
 
@@ -151,6 +156,7 @@ export class SessionDynamodbRepository
 			sessionId,
 			updatedAt: new Date(),
 		} as SessionEntity);
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const { sessionId: _omit, ...patchData } = data;
 		await this.store
 			.patch({ sessionId, storeId: this.storeId })

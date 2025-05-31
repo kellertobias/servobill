@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { DomainEntity } from './abstract.entity';
+
 import { CustomJson } from '@/common/json';
 import { Numbering } from '@/common/numbers';
 import { ObjectProperties } from '@/common/ts-helpers';
-import { DomainEntity } from './abstract.entity';
 
 export abstract class AbstractSettingsEntity {
 	public async save(): Promise<void> {}

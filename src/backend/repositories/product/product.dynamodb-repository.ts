@@ -2,18 +2,11 @@ import {
 	IndexCompositeAttributes,
 	QueryBranches,
 	QueryOperations,
-	ResponseItem,
 } from 'electrodb';
 
-import { AbstractDynamodbRepository } from '@/backend/repositories/abstract-dynamodb-repository';
-import { DynamoDBService } from '@/backend/services/dynamodb.service';
-import { ProductEntity } from '@/backend/entities/product.entity';
-import { Logger } from '@/backend/services/logger.service';
-
-import { Inject, Service } from '@/common/di';
-import { PRODUCT_REPO_NAME, PRODUCT_REPOSITORY } from './di-tokens';
-import { DatabaseType } from '@/backend/services/constants';
 import { shouldRegister } from '../../services/should-register';
+
+import { PRODUCT_REPO_NAME, PRODUCT_REPOSITORY } from './di-tokens';
 import type { ProductRepository } from './interface';
 import {
 	entitySchema,
@@ -21,6 +14,13 @@ import {
 	ProductSchema,
 	ProductSchemaResponseItem,
 } from './dynamodb-orm-entity';
+
+import { AbstractDynamodbRepository } from '@/backend/repositories/abstract-dynamodb-repository';
+import { DynamoDBService } from '@/backend/services/dynamodb.service';
+import { ProductEntity } from '@/backend/entities/product.entity';
+import { Logger } from '@/backend/services/logger.service';
+import { Inject, Service } from '@/common/di';
+import { DatabaseType } from '@/backend/services/constants';
 
 @Service({ name: PRODUCT_REPOSITORY, ...shouldRegister(DatabaseType.DYNAMODB) })
 /**
@@ -37,7 +37,6 @@ export class ProductDynamodbRepository
 {
 	protected logger = new Logger(PRODUCT_REPO_NAME);
 	protected mainIdName: string = 'productId';
-
 	protected storeId: string = 'product';
 
 	constructor(@Inject(DynamoDBService) private dynamoDb: DynamoDBService) {
@@ -51,7 +50,7 @@ export class ProductDynamodbRepository
 		// Parse expenses from JSON string to array
 		const expensesArr =
 			typeof entity.expenses === 'string' && entity.expenses.length > 0
-				? JSON.parse(entity.expenses)
+				? (JSON.parse(entity.expenses) as ProductEntity['expenses'])
 				: [];
 		return new ProductEntity({
 			id: entity.productId,
@@ -64,7 +63,7 @@ export class ProductDynamodbRepository
 			unit: entity.unit,
 			priceCents: entity.priceCents,
 			taxPercentage: entity.taxPercentage,
-			expenses: (expensesArr || []).map((e: any) => ({
+			expenses: (expensesArr || []).map((e) => ({
 				name: e.name ?? '',
 				price: e.price ?? 0,
 				categoryId: e.categoryId,

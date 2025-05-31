@@ -1,5 +1,6 @@
-import { AbstractRelationalRepository } from '../abstract-relational-repository';
 import { IsNull } from 'typeorm';
+
+import { AbstractRelationalRepository } from '../abstract-relational-repository';
 
 import { AttachmentOrmEntity } from './relational-orm-entity';
 import { AttachmentCreateInput } from './interface';
@@ -120,8 +121,10 @@ export class AttachmentRelationalRepository extends AbstractRelationalRepository
 				inventoryId: query.inventoryId,
 			});
 		}
-		if (query.skip) qb.skip(query.skip);
-		if (query.limit) qb.take(query.limit);
+		if (query.skip) 
+{qb.skip(query.skip);}
+		if (query.limit) 
+{qb.take(query.limit);}
 		const results = await qb.getMany();
 		return results.map((orm) => this.ormToDomainEntity(orm));
 	}

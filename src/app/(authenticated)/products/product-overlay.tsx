@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+
 import { useLoadData, useSaveCallback } from '@/hooks/load-data';
 import { API, gql } from '@/api/index';
 import { Drawer } from '@/components/drawer';
@@ -7,11 +9,12 @@ import { Input } from '@/components/input';
 import SelectInput from '@/components/select-input';
 import { Button } from '@/components/button';
 import { LoadingSkeleton } from '@/components/loading';
+
 import { useExpenseCategories } from '@/app/_hooks/use-expense-categories';
-import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+
 import { ProductExpense } from '@/common/gql/graphql';
 
-const createId = () => Math.random().toString(36).substring(2, 15);
+const createId = () => Math.random().toString(36).slice(2, 15);
 
 export default function ProductOverlay({
 	productId,
@@ -129,7 +132,7 @@ export default function ProductOverlay({
 		}));
 	};
 
-	const handleExpenseChange = (id: string, field: string, value: any) => {
+	const handleExpenseChange = (id: string, field: string, value: unknown) => {
 		setData((prev) => ({
 			...prev,
 			expenses: (prev?.expenses || []).map((e) =>

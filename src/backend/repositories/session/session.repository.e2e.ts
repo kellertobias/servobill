@@ -3,15 +3,17 @@
 
 import 'reflect-metadata';
 import { describe, it, expect, beforeEach } from 'vitest';
-import { SessionEntity } from '@/backend/entities/session.entity';
-import { UserEntity } from '@/backend/entities/user.entity';
+
 import { SessionDynamodbRepository } from './session.dynamodb-repository';
 import { SessionRelationalRepository } from './session.relational-repository';
 import { SessionRepository } from './interface';
 import { SessionOrmEntity } from './relational-orm-entity';
+
+import { UserEntity } from '@/backend/entities/user.entity';
+import { SessionEntity } from '@/backend/entities/session.entity';
 import { prepareRepoTest } from '@/test/repo-test';
 
-const repoTestCases = prepareRepoTest({
+const repoTestCases = prepareRepoTest<SessionRepository>({
 	name: 'Session',
 	relational: SessionRelationalRepository,
 	dynamodb: SessionDynamodbRepository,
@@ -44,7 +46,7 @@ describe.each(repoTestCases)('$name (E2E)', ({ setup, onBeforeEach }) => {
 			id: '',
 			events: [],
 			purgeEvents: async () => {},
-		} as any);
+		} as unknown as SessionEntity);
 		expect(created).toBeDefined();
 		expect(created.userId).toBe(session.userId);
 		// Get

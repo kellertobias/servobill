@@ -9,7 +9,7 @@ import { DefaultContainer } from '@/common/di';
 export type AbstractRepositoryInterface<
 	DomainEntity extends DomainBaseEntity,
 	CreateArgs extends unknown[],
-	Interface extends {},
+	Interface extends object,
 > = {
 	getById(id: string): Promise<DomainEntity | null>;
 	createWithId(entityId: string, ...args: CreateArgs): Promise<DomainEntity>;

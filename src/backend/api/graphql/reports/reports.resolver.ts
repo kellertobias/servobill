@@ -3,6 +3,8 @@
 import { Query, Resolver, Arg, Authorized } from 'type-graphql';
 import dayjs from 'dayjs';
 
+import { ExpenseCategoryType } from '../system/system.schema';
+
 import {
 	IncomeSurplusReport,
 	IncomeSurplusReportExport,
@@ -21,7 +23,6 @@ import {
 	InvoiceType,
 } from '@/backend/entities/invoice.entity';
 import { ExpenseEntity } from '@/backend/entities/expense.entity';
-import { ExpenseCategoryType } from '../system/system.schema';
 import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
 import { type SettingsRepository } from '@/backend/repositories/settings/interface';
 import { ExpenseSettingsEntity } from '@/backend/entities/settings.entity';

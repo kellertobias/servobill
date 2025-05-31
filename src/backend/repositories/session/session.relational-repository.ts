@@ -1,3 +1,9 @@
+import { shouldRegister } from '../../services/should-register';
+
+import { SessionOrmEntity } from './relational-orm-entity';
+import type { SessionRepository } from './interface';
+import { SESSION_REPOSITORY, SESSION_REPO_NAME } from './di-tokens';
+
 import { Inject, Service } from '@/common/di';
 import { Logger } from '@/backend/services/logger.service';
 import { RelationalDbService } from '@/backend/services/relationaldb.service';
@@ -5,10 +11,6 @@ import { AbstractRelationalRepository } from '@/backend/repositories/abstract-re
 import { SessionEntity } from '@/backend/entities/session.entity';
 import { UserEntity } from '@/backend/entities/user.entity';
 import { DatabaseType } from '@/backend/services/constants';
-import { shouldRegister } from '../../services/should-register';
-import { SessionOrmEntity } from './relational-orm-entity';
-import type { SessionRepository } from './interface';
-import { SESSION_REPOSITORY, SESSION_REPO_NAME } from './di-tokens';
 
 function getAllowedEmails() {
 	return new Set((process.env.ALLOWED_EMAILS || '').split(','));

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-types */
 /**
  * OrmEntity decorator and registry for TypeORM entities.
  *

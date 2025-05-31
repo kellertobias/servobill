@@ -1,13 +1,17 @@
-import { Inject, Service } from '@/common/di';
+import { shouldRegister } from '../../services/should-register';
+
 import { EXPENSE_REPOSITORY, EXPENSE_REPO_NAME } from './di-tokens';
-import { ExpenseEntity } from '@/backend/entities/expense.entity';
 import { ExpenseOrmEntity } from './relational-orm-entity';
+
+import type { ExpenseRepository } from './index';
+
+import { Inject, Service } from '@/common/di';
+import { ExpenseEntity } from '@/backend/entities/expense.entity';
 import { Logger } from '@/backend/services/logger.service';
 import { AbstractRelationalRepository } from '@/backend/repositories/abstract-relational-repository';
 import { DatabaseType } from '@/backend/services/constants';
-import { shouldRegister } from '../../services/should-register';
 import { RelationalDbService } from '@/backend/services/relationaldb.service';
-import type { ExpenseRepository } from './index';
+
 
 /**
  * Unified repository for Expense using TypeORM (Postgres or SQLite).
@@ -104,8 +108,10 @@ export class ExpenseRelationalRepository
 			const yearStart = new Date(`${query.where.year}-01-01`);
 			qb.andWhere('expense.expendedAt >= :yearStart', { yearStart });
 		}
-		if (query.skip) qb.skip(query.skip);
-		if (query.limit) qb.take(query.limit);
+		if (query.skip) 
+{qb.skip(query.skip);}
+		if (query.limit) 
+{qb.take(query.limit);}
 		const results = await qb.getMany();
 		return results.map((orm) => this.ormToDomainEntitySafe(orm));
 	}

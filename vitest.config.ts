@@ -1,5 +1,7 @@
-import { defineConfig } from 'vitest/config';
+// eslint-disable-next-line unicorn/import-style
 import { join } from 'path';
+
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
 	test: {
@@ -16,6 +18,7 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: {
+			// eslint-disable-next-line unicorn/prefer-module
 			'@': join(__dirname, 'src'),
 		},
 	},

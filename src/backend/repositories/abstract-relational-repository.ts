@@ -1,9 +1,18 @@
-import { Repository, EntityManager, ObjectLiteral, DeepPartial } from 'typeorm';
-import { Logger } from '@/backend/services/logger.service';
-import { DomainEntity as DomainBaseEntity } from '../entities/abstract.entity';
-import { RelationalDbService } from '@/backend/services/relationaldb.service';
 import { randomUUID } from 'node:crypto';
+
+import {
+	Repository,
+	EntityManager,
+	ObjectLiteral,
+	DeepPartial,
+	FindOptionsWhere,
+} from 'typeorm';
+
+import { DomainEntity as DomainBaseEntity } from '../entities/abstract.entity';
+
 import { AbstractRepository } from './abstract-repository';
+
+import { RelationalDbService } from '@/backend/services/relationaldb.service';
 import { DeferredPromise } from '@/common/deferred';
 
 /**
@@ -43,11 +52,17 @@ export abstract class AbstractRelationalRepository<
 		ormEntityClass: { new (): OrmEntity };
 	}) {
 		super();
-		db.initialize().then(() => {
-			this.repository = db.getRepository(ormEntityClass);
-			this.entityManager = db.getEntityManager();
-			this.initialized.resolve();
-		});
+		db.initialize()
+			.then(() => {
+				this.repository = db.getRepository(ormEntityClass);
+				this.entityManager = db.getEntityManager();
+				this.initialized.resolve();
+
+				return;
+			})
+			.catch((error) => {
+				this.initialized.reject(error);
+			});
 	}
 
 	/**
@@ -55,7 +70,9 @@ export abstract class AbstractRelationalRepository<
 	 */
 	public async getById(id: string): Promise<DomainEntity | null> {
 		await this.initialized.promise;
-		const ormEntity = await this.repository?.findOneBy({ id } as any);
+		const ormEntity = await this.repository?.findOneBy({
+			id,
+		} as unknown as FindOptionsWhere<OrmEntity>);
 		return ormEntity ? this.ormToDomainEntity(ormEntity) : null;
 	}
 

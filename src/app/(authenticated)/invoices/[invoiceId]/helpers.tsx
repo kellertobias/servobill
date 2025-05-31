@@ -243,7 +243,6 @@ export function InlineEditableDate({
 				<DateInput
 					value={value || undefined}
 					onChange={(value) => {
-						console.log(value);
 						onChange(value);
 					}}
 					placeholder={placeholder}

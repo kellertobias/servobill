@@ -5,6 +5,7 @@ import {
 	DescribeTableCommand,
 	DeleteTableCommand,
 } from '@aws-sdk/client-dynamodb';
+
 import { DYNAMODB_PORT } from './vitest.setup-e2e';
 
 export const DYNAMODB_TABLE_NAME = 'test-table';
@@ -28,19 +29,24 @@ export async function ensureDynamoTableExists() {
 			await client.send(
 				new DeleteTableCommand({ TableName: DYNAMODB_TABLE_NAME }),
 			);
-		} catch (error: any) {
+		} catch (error: unknown) {
 			// Ignore if the table is already deleted
-			if (error.name !== 'ResourceNotFoundException') throw error;
+			if (
+				error instanceof Error &&
+				error.name !== 'ResourceNotFoundException'
+			) {
+				throw error;
+			}
 		}
 		// Wait for the table to be deleted
 		let exists = true;
 		while (exists) {
-			await new Promise((res) => setTimeout(res, 500));
+			await new Promise((resolve) => setTimeout(resolve, 500));
 			const currentTables = await client.send(new ListTablesCommand({}));
 			exists = currentTables.TableNames?.includes(DYNAMODB_TABLE_NAME) ?? false;
 		}
 		// Add a longer delay to let DynamoDB Local fully clean up (race condition workaround)
-		await new Promise((res) => setTimeout(res, 3000));
+		await new Promise((resolve) => setTimeout(resolve, 3000));
 	}
 	// Now create the table
 	try {
@@ -70,14 +76,16 @@ export async function ensureDynamoTableExists() {
 				],
 			}),
 		);
-	} catch (error: any) {
+	} catch (error: unknown) {
 		// Ignore if the table is already being created
-		if (error.name !== 'ResourceInUseException') throw error;
+		if (error instanceof Error && error.name !== 'ResourceInUseException') {
+			throw error;
+		}
 	}
 	// Wait for the table to become ACTIVE
 	let status = 'CREATING';
 	while (status !== 'ACTIVE') {
-		await new Promise((res) => setTimeout(res, 500));
+		await new Promise((resolve) => setTimeout(resolve, 500));
 		const desc = await client.send(
 			new DescribeTableCommand({ TableName: DYNAMODB_TABLE_NAME }),
 		);

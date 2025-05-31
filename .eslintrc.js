@@ -148,11 +148,11 @@ module.exports = {
         "**/*.*-spec.tsx",
       ],
       env: {
-        vitest: true,
       },
       plugins: ["vitest"],
       rules: {
         "no-restricted-imports": "off",
+        "import/no-extraneous-dependencies": "off",
         "unicorn/no-array-callback-reference": "off",
         "import/no-useless-path-segments": "warn",
       },

@@ -9,7 +9,6 @@ export const onClickCancelInvoice = async (props: {
 	reload: () => void;
 	isOffer?: boolean;
 }) => {
-	console.log({ props });
 	/**
 	 * Checks if any invoice items have a linked expense and prompts the user
 	 * whether to delete those expenses when cancelling the invoice.

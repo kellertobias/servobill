@@ -172,6 +172,7 @@ export class AuthenticationService {
 				});
 			}
 		} catch (error: unknown) {
+			// eslint-disable-next-line no-console
 			console.error(error);
 			return this.generateResponse({
 				statusCode: 401,

@@ -81,8 +81,6 @@ export const loadInvoiceImportData = async (data: {
 		},
 	);
 
-	console.log(invoices);
-
 	// Get Customers
 	const customersImport = ((data?.clients || []) as InNinCustomer[]).map(
 		(cus) => ({

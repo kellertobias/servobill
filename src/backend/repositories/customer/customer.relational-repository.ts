@@ -1,13 +1,17 @@
-import { Inject, Service } from '@/common/di';
+import { shouldRegister } from '../../services/should-register';
+
 import { CUSTOMER_REPOSITORY, CUSTOMER_REPO_NAME } from './di-tokens';
-import { CustomerEntity } from '@/backend/entities/customer.entity';
 import { CustomerOrmEntity } from './relational-orm-entity';
+
+import type { CustomerRepository } from './index';
+
+import { Inject, Service } from '@/common/di';
+import { CustomerEntity } from '@/backend/entities/customer.entity';
 import { Logger } from '@/backend/services/logger.service';
 import { AbstractRelationalRepository } from '@/backend/repositories/abstract-relational-repository';
 import { DatabaseType } from '@/backend/services/constants';
-import { shouldRegister } from '../../services/should-register';
 import { RelationalDbService } from '@/backend/services/relationaldb.service';
-import type { CustomerRepository } from './index';
+
 
 /**
  * Unified repository for Customer using TypeORM (Postgres or SQLite).
@@ -105,8 +109,10 @@ export class CustomerRelationalRepository
 				search: `%${query.where.search.toLowerCase()}%`,
 			});
 		}
-		if (query.skip) qb.skip(query.skip);
-		if (query.limit) qb.take(query.limit);
+		if (query.skip) 
+{qb.skip(query.skip);}
+		if (query.limit) 
+{qb.take(query.limit);}
 		const results = await qb.getMany();
 		return results.map((orm) => this.ormToDomainEntitySafe(orm));
 	}

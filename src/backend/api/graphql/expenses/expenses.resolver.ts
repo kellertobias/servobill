@@ -9,6 +9,8 @@ import {
 	Root,
 } from 'type-graphql';
 
+import { ExpenseCategoryType } from '../system/system.schema';
+
 import { ExpenseInput, Expense, ExpenseWhereInput } from './expenses.schema';
 
 import { Inject, Service } from '@/common/di';
@@ -16,7 +18,6 @@ import { EXPENSE_REPOSITORY } from '@/backend/repositories/expense/di-tokens';
 import { type ExpenseRepository } from '@/backend/repositories/expense/interface';
 import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
 import { type SettingsRepository } from '@/backend/repositories/settings/interface';
-import { ExpenseCategoryType } from '../system/system.schema';
 import { ExpenseSettingsEntity } from '@/backend/entities/settings.entity';
 import { Cached } from '@/backend/services/cache-decorator';
 
@@ -125,7 +126,8 @@ export class ExpenseResolver {
 	async category(
 		@Root() expense: Expense,
 	): Promise<ExpenseCategoryType | null> {
-		if (!expense.categoryId) return null;
+		if (!expense.categoryId) 
+{return null;}
 		const settings = await this.settingsRepository.getSetting(
 			ExpenseSettingsEntity,
 		);

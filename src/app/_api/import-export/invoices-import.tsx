@@ -44,7 +44,6 @@ type InNinPayments = {
 export const importInvoices = async () => {
 	const raw = await requestFile();
 	const data = JSON.parse(raw || '{}');
-	console.log(data);
 
 	doToast({
 		promise: (async () => {
@@ -145,6 +144,7 @@ export const importInvoices = async () => {
 					},
 				});
 			} catch (error) {
+				// eslint-disable-next-line no-console
 				console.error(error);
 				throw error;
 			}

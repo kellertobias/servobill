@@ -3,20 +3,16 @@ import { Container, injectable } from 'inversify';
 
 import { Logger } from '@/backend/services/logger.service';
 
-type ModuleToken = new (...args: any[]) => unknown;
+export type ModuleToken = new (...args: any[]) => unknown;
+export type ModuleBinding =
+	| { token: string | symbol | ModuleToken; module: ModuleToken }
+	| { token: string | symbol | ModuleToken; value: any }
+	| ModuleToken;
 
 export class App {
 	static defaultLogger = new Logger(App.name);
 	static defaultContainer = new Container();
-	static forRoot({
-		modules,
-	}: {
-		modules: (
-			| ModuleToken
-			| { token: string | symbol | ModuleToken; module: ModuleToken }
-			| { token: string | symbol | ModuleToken; value: any }
-		)[];
-	}) {
+	static forRoot({ modules }: { modules: ModuleBinding[] }) {
 		const container = new Container();
 
 		for (const Module of modules) {

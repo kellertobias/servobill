@@ -20,7 +20,6 @@ const requestLink = async (id: string): Promise<string | null> => {
 };
 
 export const onClickDownloadInvoice = async (props: { data: InvoiceData }) => {
-	console.log('onClickDownloadInvoice', props);
 	doToast({
 		promise: (async () => {
 			const url = await backoff(

@@ -1,5 +1,6 @@
-import { DynamoDBService } from '@/backend/services/dynamodb.service';
 import { ResponseItem } from 'electrodb';
+
+import { DynamoDBService } from '@/backend/services/dynamodb.service';
 
 /**
  * DynamoDB schema for Invoice entity.

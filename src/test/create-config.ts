@@ -1,4 +1,3 @@
-import { DatabaseType } from '@/backend/services/constants';
 import { DYNAMODB_TABLE_NAME } from './ensure-dynamo-table';
 import {
 	DYNAMODB_PORT,
@@ -8,12 +7,14 @@ import {
 	POSTGRES_USER,
 } from './vitest.setup-e2e';
 
+import { DatabaseType } from '@/backend/services/constants';
+
 /**
  * Returns a minimal config object for DynamoDB-based tests.
  */
 export function getConfigForDynamodb(
 	tableName?: string,
-	overrides: Partial<any> = {},
+	overrides: Record<string, unknown> = {},
 ) {
 	return {
 		tables: {
@@ -44,7 +45,9 @@ export function getConfigForDynamodb(
 /**
  * Returns a minimal config object for relational DB-based tests.
  */
-export function getConfigForRelationalDb(overrides: Partial<any> = {}) {
+export function getConfigForRelationalDb(
+	overrides: Record<string, unknown> = {},
+) {
 	return {
 		tables: {
 			databaseType: DatabaseType.POSTGRES,

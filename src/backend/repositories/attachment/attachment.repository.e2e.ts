@@ -1,11 +1,13 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { prepareRepoTest } from '@/test/repo-test';
+
 import { AttachmentRelationalRepository } from './attachment.relational-repository';
 import { AttachmentDynamoDBRepository } from './attachment.dynamodb-repository';
 import { AttachmentOrmEntity } from './relational-orm-entity';
 import type { AttachmentCreateInput, AttachmentRepository } from './interface';
 
-const repoTestCases = prepareRepoTest({
+import { prepareRepoTest } from '@/test/repo-test';
+
+const repoTestCases = prepareRepoTest<AttachmentRepository>({
 	name: 'Attachment',
 	relational: AttachmentRelationalRepository,
 	dynamodb: AttachmentDynamoDBRepository,
@@ -73,11 +75,11 @@ describe.each(repoTestCases)('$name', ({ setup, onBeforeEach }) => {
 		await repo.save(a2);
 		await repo.save(a3);
 		const byInvoice = await repo.listByQuery({ invoiceId: 'inv-2' });
-		expect(byInvoice.some((a: any) => a.id === a1.id)).toBe(true);
+		expect(byInvoice.some((a) => a.id === a1.id)).toBe(true);
 		const byExpense = await repo.listByQuery({ expenseId: 'exp-2' });
-		expect(byExpense.some((a: any) => a.id === a2.id)).toBe(true);
+		expect(byExpense.some((a) => a.id === a2.id)).toBe(true);
 		const byInventory = await repo.listByQuery({ inventoryId: 'invtry-2' });
-		expect(byInventory.some((a: any) => a.id === a3.id)).toBe(true);
+		expect(byInventory.some((a) => a.id === a3.id)).toBe(true);
 	});
 
 	it('should delete orphaned attachments', async () => {

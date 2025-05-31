@@ -3,11 +3,13 @@
 
 import 'reflect-metadata';
 import { describe, it, expect, beforeEach } from 'vitest';
-import { EmailEntity } from '@/backend/entities/email.entity';
+
 import { EmailDynamodbRepository } from './email.dynamodb-repository';
 import { EmailRelationalRepository } from './email.relational-repository';
 import { EmailOrmEntity } from './relational-orm-entity';
 import { EmailRepository } from './interface';
+
+import { EmailEntity } from '@/backend/entities/email.entity';
 import { prepareRepoTest } from '@/test/repo-test';
 
 /**

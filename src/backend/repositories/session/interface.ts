@@ -1,6 +1,7 @@
+import { AbstractRepositoryInterface } from '../abstract-repository';
+
 import { SessionEntity } from '@/backend/entities/session.entity';
 import { UserEntity } from '@/backend/entities/user.entity';
-import { AbstractRepositoryInterface } from '../abstract-repository';
 
 /**
  * Interface for all Session repositories (DynamoDB, Postgres, SQLite).

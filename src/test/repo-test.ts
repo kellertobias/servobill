@@ -1,41 +1,42 @@
-import { App } from '@/common/di';
-import { CONFIG_SERVICE } from '@/backend/services/di-tokens';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
 	getConfigForDynamodb,
 	getConfigForRelationalDb,
 } from './create-config';
-import { DatabaseType } from '@/backend/services/constants';
 import {
 	DYNAMODB_TABLE_NAME,
 	ensureDynamoTableExists,
 } from './ensure-dynamo-table';
 import { clearDynamoTable } from './clear-dynamo-table';
 import { DYNAMODB_PORT } from './vitest.setup-e2e';
+
+import { DatabaseType } from '@/backend/services/constants';
+import { CONFIG_SERVICE } from '@/backend/services/di-tokens';
+import { App, ModuleBinding } from '@/common/di';
 import { DynamoDBService } from '@/backend/services/dynamodb.service';
 import { RelationalDbService } from '@/backend/services/relationaldb.service';
 
-interface PrepareRepoTestOptions {
+interface PrepareRepoTestOptions<T> {
 	name: string;
-	relational: any;
-	dynamodb: any;
+	relational: new (...args: any[]) => T;
+	dynamodb: new (...args: any[]) => T;
 	relationalOrmEntity: any;
-	dynamoEntity?: any;
-	modules?: (dbType: DatabaseType) => any[];
+	modules?: (dbType: DatabaseType) => ModuleBinding[];
 }
 
 /**
  * Prepares parameterized repo tests for both relational and dynamodb implementations.
  * Returns an array of { name, setup, onBeforeEach } for use with describe.each.
  *
- * @param options - { name, relational, dynamodb, dynamoEntity, modules }
+ * @param options - { name, relational, dynamodb, modules }
  */
-export function prepareRepoTest({
+export function prepareRepoTest<T>({
 	name,
 	relational,
 	dynamodb,
 	relationalOrmEntity,
 	modules,
-}: PrepareRepoTestOptions) {
+}: PrepareRepoTestOptions<T>) {
 	return [
 		{
 			dbType: DatabaseType.DYNAMODB,
@@ -71,7 +72,8 @@ export function prepareRepoTest({
 				const { OrmEntityRegistry } = await import(
 					'@/common/orm-entity-registry'
 				);
-				OrmEntityRegistry.push(relationalOrmEntity);
+				// eslint-disable-next-line @typescript-eslint/ban-types
+				OrmEntityRegistry.push(relationalOrmEntity as Function);
 				const config = getConfigForRelationalDb();
 				const app = App.forRoot({
 					modules: [

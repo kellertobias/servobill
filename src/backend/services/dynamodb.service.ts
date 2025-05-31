@@ -3,10 +3,10 @@ import { Entity, ResponseItem, Schema } from 'electrodb';
 
 import type { ConfigService } from './config.service';
 import { DatabaseType } from './constants';
-
-import { Inject, Service } from '@/common/di';
 import { shouldRegister } from './should-register';
 import { CONFIG_SERVICE } from './di-tokens';
+
+import { Inject, Service } from '@/common/di';
 
 @Service({
 	singleton: true,

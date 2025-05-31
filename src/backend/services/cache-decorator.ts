@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * A method decorator for caching async function results in memory with a TTL.
  *

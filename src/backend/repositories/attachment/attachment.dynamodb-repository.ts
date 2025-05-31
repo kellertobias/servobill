@@ -65,9 +65,12 @@ export class AttachmentDynamoDBRepository extends AbstractDynamodbRepository<
 		domain: AttachmentEntity,
 	): Omit<AttachmentOrmEntity, 'storeId'> {
 		let linkedId = 'orphaned';
-		if (domain.invoiceId) linkedId = domain.invoiceId;
-		else if (domain.expenseId) linkedId = domain.expenseId;
-		else if (domain.inventoryId) linkedId = domain.inventoryId;
+		if (domain.invoiceId) 
+{linkedId = domain.invoiceId;}
+		else if (domain.expenseId) 
+{linkedId = domain.expenseId;}
+		else if (domain.inventoryId) 
+{linkedId = domain.inventoryId;}
 		return {
 			attachmentId: domain.id,
 			createdAt: domain.createdAt.toISOString(),
@@ -118,9 +121,12 @@ export class AttachmentDynamoDBRepository extends AbstractDynamodbRepository<
 		cursor?: string;
 	}): Promise<AttachmentEntity[]> {
 		let linkedId: string | undefined;
-		if (query.invoiceId) linkedId = query.invoiceId;
-		else if (query.expenseId) linkedId = query.expenseId;
-		else if (query.inventoryId) linkedId = query.inventoryId;
+		if (query.invoiceId) 
+{linkedId = query.invoiceId;}
+		else if (query.expenseId) 
+{linkedId = query.expenseId;}
+		else if (query.inventoryId) 
+{linkedId = query.inventoryId;}
 		let data: AttachmentOrmEntity[] = [];
 		if (linkedId) {
 			const result = await this.store.query.byLinkedId({ linkedId }).go();

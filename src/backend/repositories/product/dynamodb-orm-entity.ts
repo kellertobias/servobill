@@ -1,5 +1,6 @@
-import { DynamoDBService } from '@/backend/services/dynamodb.service';
 import { ResponseItem } from 'electrodb';
+
+import { DynamoDBService } from '@/backend/services/dynamodb.service';
 
 export const entitySchema = DynamoDBService.getSchema({
 	model: {

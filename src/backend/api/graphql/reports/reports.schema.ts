@@ -1,5 +1,6 @@
 import { IsNotEmpty } from 'class-validator';
 import { Field, ObjectType, InputType, Int } from 'type-graphql';
+
 import { ExpenseCategoryType } from '../system/system.schema';
 
 @ObjectType()

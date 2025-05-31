@@ -3,11 +3,13 @@
 
 import 'reflect-metadata';
 import { describe, it, expect, beforeEach } from 'vitest';
-import { CustomerEntity } from '@/backend/entities/customer.entity';
+
 import { CustomerDynamodbRepository } from './customer.dynamodb-repository';
 import { CustomerRelationalRepository } from './customer.relational-repository';
 import { CustomerOrmEntity } from './relational-orm-entity';
 import { CustomerRepository } from './interface';
+
+import { CustomerEntity } from '@/backend/entities/customer.entity';
 import { prepareRepoTest } from '@/test/repo-test';
 
 /**

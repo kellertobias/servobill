@@ -1,6 +1,7 @@
-import { Service } from '@/common/di';
 import { CONFIG_SERVICE } from './di-tokens';
 import { DatabaseType } from './constants';
+
+import { Service } from '@/common/di';
 
 @Service(CONFIG_SERVICE)
 export class ConfigService {
@@ -28,7 +29,6 @@ export class ConfigService {
 		accessKeyId: string | undefined;
 		secretAccessKey: string | undefined;
 	};
-	public readonly relationalDatabase?: {};
 
 	constructor() {
 		this.port = process.env.PORT || 3000;

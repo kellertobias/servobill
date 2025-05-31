@@ -1,8 +1,9 @@
+import { AbstractRepositoryInterface } from '../abstract-repository';
+
 import {
 	SettingsEntity,
 	AbstractSettingsEntity,
 } from '@/backend/entities/settings.entity';
-import { AbstractRepositoryInterface } from '../abstract-repository';
 
 /**
  * Interface for all Settings repositories (DynamoDB, Postgres, SQLite).

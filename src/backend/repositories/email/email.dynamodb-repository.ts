@@ -1,20 +1,16 @@
-import {
-	IndexCompositeAttributes,
-	QueryBranches,
-	QueryOperations,
-	ResponseItem,
-} from 'electrodb';
+import { shouldRegister } from '../../services/should-register';
+
+import { EMAIL_REPO_NAME, EMAIL_REPOSITORY } from './di-tokens';
+import { entitySchema, EmailOrmEntity } from './dynamodb-orm-entity';
+
+import type { EmailRepository } from './index';
 
 import { AbstractDynamodbRepository } from '@/backend/repositories/abstract-dynamodb-repository';
 import { DynamoDBService } from '@/backend/services/dynamodb.service';
 import { EmailEntity } from '@/backend/entities/email.entity';
 import { Logger } from '@/backend/services/logger.service';
 import { Inject, Service } from '@/common/di';
-import { EMAIL_REPO_NAME, EMAIL_REPOSITORY } from './di-tokens';
 import { DatabaseType } from '@/backend/services/constants';
-import { shouldRegister } from '../../services/should-register';
-import type { EmailRepository } from './index';
-import { entitySchema, EmailOrmEntity } from './dynamodb-orm-entity';
 
 /**
  * DynamoDB implementation of the EmailRepository interface.
@@ -32,7 +28,6 @@ export class EmailDynamodbRepository
 	protected logger = new Logger(EMAIL_REPO_NAME);
 	protected mainIdName: string = 'emailId';
 	protected storeId: string = 'email';
-	protected store: any;
 
 	constructor(@Inject(DynamoDBService) private dynamoDb: DynamoDBService) {
 		super();

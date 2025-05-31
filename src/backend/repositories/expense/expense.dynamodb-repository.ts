@@ -1,13 +1,16 @@
+import { shouldRegister } from '../../services/should-register';
+
+import { EXPENSE_REPO_NAME, EXPENSE_REPOSITORY } from './di-tokens';
+import { entitySchema, ExpenseOrmEntity } from './dynamodb-orm-entity';
+
+import type { ExpenseRepository } from './index';
+
 import { AbstractDynamodbRepository } from '@/backend/repositories/abstract-dynamodb-repository';
 import { DynamoDBService } from '@/backend/services/dynamodb.service';
 import { ExpenseEntity } from '@/backend/entities/expense.entity';
 import { Logger } from '@/backend/services/logger.service';
 import { Inject, Service } from '@/common/di';
-import { EXPENSE_REPO_NAME, EXPENSE_REPOSITORY } from './di-tokens';
 import { DatabaseType } from '@/backend/services/constants';
-import { shouldRegister } from '../../services/should-register';
-import type { ExpenseRepository } from './index';
-import { entitySchema, ExpenseOrmEntity } from './dynamodb-orm-entity';
 
 /**
  * DynamoDB implementation of the ExpenseRepository interface.
@@ -25,7 +28,6 @@ export class ExpenseDynamodbRepository
 	protected logger = new Logger(EXPENSE_REPO_NAME);
 	protected mainIdName: string = 'expenseId';
 	protected storeId: string = 'expense';
-	protected store: any;
 
 	constructor(@Inject(DynamoDBService) private dynamoDb: DynamoDBService) {
 		super();

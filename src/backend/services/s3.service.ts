@@ -9,9 +9,9 @@ import {
 import { Span } from '../instrumentation';
 
 import type { ConfigService } from './config.service';
+import { CONFIG_SERVICE } from './di-tokens';
 
 import { Inject, Service } from '@/common/di';
-import { CONFIG_SERVICE } from './di-tokens';
 
 @Service()
 export class S3Service {
