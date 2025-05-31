@@ -66,6 +66,8 @@ The javascript `Date` as string. Type represents date and time as the ISO Date s
 scalar DateTime
 
 type Expense {
+  attachments: [Attachment!]
+
   """The full category object assigned to this expense."""
   category: ExpenseCategoryType
 
@@ -103,6 +105,8 @@ type ExpenseCategoryType {
 }
 
 input ExpenseInput {
+  attachmentIds: [String!]
+
   """The ID of the expense category assigned to this expense."""
   categoryId: String
   description: String
@@ -377,7 +381,7 @@ type Mutation {
   deleteInvoice(id: String!): Invoice!
   deleteProduct(id: String!): Product!
   importInvoices(data: [InvoiceImportInput!]!): [Invoice!]!
-  invoiceAddComment(attachment: String, comment: String!, invoiceId: String!): InvoiceChangedResponse!
+  invoiceAddComment(attachmentId: String, comment: String!, invoiceId: String!): InvoiceChangedResponse!
   invoiceAddPayment(id: String!, payment: InvoicePaymentInput!): InvoiceChangedResponse!
   invoiceCancelUnpaid(deleteExpenses: Boolean, id: String!): InvoiceChangedResponse!
   invoiceDeleteDraft(id: String!): InvoiceChangedResponse!

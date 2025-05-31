@@ -291,7 +291,7 @@ export class InvoiceItemInput implements Partial<InvoiceItem> {
 	})
 	expenseId?: string;
 
-	@Field(() => [InvoiceItemExpense], {
+	@Field(() => [InvoiceItemExpenseInput], {
 		nullable: true,
 		description:
 			'The list of product expenses linked to this invoice item, with enabled/disabled state.',

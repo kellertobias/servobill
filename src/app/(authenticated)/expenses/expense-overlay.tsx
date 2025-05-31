@@ -1,6 +1,5 @@
 import React from 'react';
 
-import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import dayjs from 'dayjs';
 
 import { useLoadData, useSaveCallback } from '@/hooks/load-data';
@@ -11,7 +10,7 @@ import { LoadingSkeleton } from '@/components/loading';
 import SelectInput from '@/components/select-input';
 import {
 	AttachmentDropzone,
-	AttachmentFile,
+	AttachmentFilePartial,
 } from '@/components/attachment-dropzone';
 
 import { useExpenseCategories } from '@/app/_hooks/use-expense-categories';
@@ -41,6 +40,7 @@ export default function ExpenseOverlay({
 						createdAt: null,
 						updatedAt: null,
 						categoryId: '',
+						attachments: [] as AttachmentFilePartial[],
 					}
 				: API.query({
 						query: gql(`
@@ -56,6 +56,13 @@ export default function ExpenseOverlay({
 									createdAt
 									updatedAt
 									categoryId
+									attachments { 
+										id
+										fileName
+										mimeType
+										size
+										createdAt
+									}
 								}
 							}
 						`),
@@ -68,6 +75,7 @@ export default function ExpenseOverlay({
 						taxAmount: API.centsToPrice(res.expense.taxCents),
 						expendedAt: dayjs(res.expense.expendedAt).format('YYYY-MM-DD'),
 						categoryId: res.expense.categoryId || '',
+						attachments: res.expense.attachments || [],
 					})),
 		{ expenseId },
 	);
@@ -81,51 +89,27 @@ export default function ExpenseOverlay({
 		reload,
 		mapper: (data) => {
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			const { id, expenditure, taxAmount, createdAt, updatedAt, ...rest } =
-				data;
+			const { expenditure, taxAmount, attachments, ...rest } = data;
 			return {
 				...rest,
 				expendedCents: API.priceToCents(expenditure),
 				taxCents: API.priceToCents(taxAmount),
 				expendedAt: dayjs(data?.expendedAt).toISOString(),
+				attachmentIds: attachments?.map((a) => a.id) || [],
 			};
 		},
 	});
 
-	const [attachments, setAttachments] = React.useState<AttachmentFile[]>([]);
+	const [attachments, setAttachments] = React.useState<AttachmentFilePartial[]>(
+		[],
+	);
 	React.useEffect(() => {
 		if (expenseId === 'new') {
 			setAttachments([]);
-		} else {
-			// Fetch attachments for this expense
-			(async () => {
-				const ATTACHMENTS_QUERY = gql(`
-					query ExpenseAttachments($expenseId: String!) {
-						attachments(input: { expenseId: $expenseId }) {
-							id
-							fileName
-							mimeType
-							size
-							status
-							s3Key
-							s3Bucket
-							expenseId
-							invoiceId
-							inventoryId
-							createdAt
-							updatedAt
-						}
-					}
-				`);
-				const resRaw = await API.query({
-					query: ATTACHMENTS_QUERY as TypedDocumentNode<unknown, unknown>,
-					variables: { expenseId },
-				});
-				const res = resRaw as { attachments: AttachmentFile[] };
-				setAttachments(res.attachments || []);
-			})();
+		} else if (data?.attachments) {
+			setAttachments(data.attachments);
 		}
-	}, [expenseId]);
+	}, [expenseId, data?.attachments]);
 
 	return (
 		<Drawer
@@ -272,7 +256,7 @@ export default function ExpenseOverlay({
 									value={attachments}
 									onChange={setAttachments}
 									expenseId={expenseId === 'new' ? undefined : expenseId}
-									readOnly={expenseId === 'new'}
+									readOnly={false}
 								/>
 							</div>
 						</div>

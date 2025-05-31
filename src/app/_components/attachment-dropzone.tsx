@@ -24,6 +24,11 @@ export interface AttachmentFile {
 	updatedAt: string;
 }
 
+export type AttachmentFilePartial = Pick<
+	AttachmentFile,
+	'id' | 'fileName' | 'mimeType' | 'size' | 'createdAt'
+>;
+
 /**
  * Props for the AttachmentDropzone component.
  */
@@ -31,11 +36,11 @@ export interface AttachmentDropzoneProps {
 	/**
 	 * Attachments already uploaded (from parent, e.g. loaded from API).
 	 */
-	value?: AttachmentFile[];
+	value?: AttachmentFilePartial[];
 	/**
 	 * Callback when attachments change (upload/delete).
 	 */
-	onChange?: (files: AttachmentFile[]) => void;
+	onChange?: (files: AttachmentFilePartial[]) => void;
 	/**
 	 * If true, disables upload and drag-and-drop.
 	 */
@@ -116,7 +121,7 @@ export const AttachmentDropzone: React.FC<AttachmentDropzoneProps> = ({
 	accept = ['image/png', 'image/jpeg', 'image/gif', 'application/pdf'],
 }) => {
 	const [uploading, setUploading] = useState(false);
-	const [files, setFiles] = useState<AttachmentFile[]>(value);
+	const [files, setFiles] = useState<AttachmentFilePartial[]>(value);
 	const [error, setError] = useState<string | null>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -169,7 +174,7 @@ export const AttachmentDropzone: React.FC<AttachmentDropzoneProps> = ({
 					variables: { attachmentId: requestUpload.attachmentId },
 				});
 				const { confirmUpload } = confirmResultRaw as {
-					confirmUpload: AttachmentFile;
+					confirmUpload: AttachmentFilePartial;
 				};
 				// 4. Add to list
 				setFiles((prev) => {
