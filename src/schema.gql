@@ -3,6 +3,25 @@
 # !!!   DO NOT MODIFY THIS FILE BY YOURSELF   !!!
 # -----------------------------------------------
 
+type Attachment {
+  createdAt: DateTime!
+  expenseId: String
+  fileName: String!
+  id: ID!
+  inventoryId: String
+  invoiceId: String
+  mimeType: String!
+  s3Bucket: String!
+  s3Key: String!
+  size: Int!
+  status: String!
+  updatedAt: DateTime!
+}
+
+type AttachmentDownloadUrlResult {
+  downloadUrl: String!
+}
+
 type AuthCheckResult {
   authenticated: Boolean!
   profilePictureUrl: String
@@ -336,12 +355,23 @@ input InvoiceWhereInput {
   year: Int
 }
 
+input ListAttachmentsInput {
+  expenseId: String
+  inventoryId: String
+  invoiceId: String
+  limit: Int
+  skip: Int
+}
+
 type Mutation {
+  attachUpload(attachmentId: String!, expenseId: String, inventoryId: String, invoiceId: String): Attachment!
+  confirmUpload(attachmentId: String!): Attachment!
   copyInvoice(as: InvoiceType!, id: String!): InvoiceChangedResponse!
   createCustomer(data: CustomerInput!): Customer!
   createExpense(data: ExpenseInput!): Expense!
   createInvoice(customerId: String!, type: InvoiceType): Invoice!
   createProduct(data: ProductInput!): Product!
+  deleteAttachment(attachmentId: String!): Boolean!
   deleteCustomer(id: String!): Customer!
   deleteExpense(id: String!): Expense!
   deleteInvoice(id: String!): Invoice!
@@ -355,6 +385,7 @@ type Mutation {
   invoiceSend(id: String!, submission: InvoiceSubmissionInput!): InvoiceChangedResponse!
   purgeExpenses(confirm: String!): Boolean!
   purgeInvoices(confirm: String!): Boolean!
+  requestUpload(input: RequestAttachmentUploadUrlInput!): RequestAttachmentUploadUrlResult!
   sendTestEvent(data: String!, name: String!): String!
   testRenderTemplate(pdf: Boolean, styles: String!, template: String!): String!
   updateCustomer(data: CustomerInput!, id: String!): Customer!
@@ -407,6 +438,8 @@ input ProductWhereInput {
 }
 
 type Query {
+  attachment(attachmentId: String!): AttachmentDownloadUrlResult!
+  attachments(input: ListAttachmentsInput): [Attachment!]!
   customer(id: String!): Customer
   customers(limit: Int, skip: Int, where: String): [Customer!]!
   expense(id: String!): Expense!
@@ -420,6 +453,20 @@ type Query {
   products(limit: Int, skip: Int, where: ProductWhereInput): [Product!]!
   settings: SettingsResult!
   template: InvoiceTemplateResult!
+}
+
+input RequestAttachmentUploadUrlInput {
+  expenseId: String
+  fileName: String!
+  inventoryId: String
+  invoiceId: String
+  mimeType: String!
+  size: Int!
+}
+
+type RequestAttachmentUploadUrlResult {
+  attachmentId: ID!
+  uploadUrl: String!
 }
 
 input SettingsCompanyInput {

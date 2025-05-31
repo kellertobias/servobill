@@ -21,7 +21,7 @@ export class AttachmentEntity extends DomainEntity {
 	/** S3 object key */
 	public s3Key!: string;
 	/** Status of the upload (pending, finished) */
-	public status!: 'pending' | 'finished';
+	public status!: 'pending' | 'finished' | 'attached';
 	/** Linked invoice ID, if any */
 	public invoiceId?: string;
 	/** Linked expense ID, if any */

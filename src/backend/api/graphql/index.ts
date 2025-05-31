@@ -11,6 +11,7 @@ import { AuthResolver } from './auth/auth.resolver';
 import './enums';
 import { authChecker } from './authorizer';
 import { SystemResolver } from './system/system.resolver';
+import { AttachmentResolver } from './attachments/attachment.resolver';
 
 import { DefaultContainer } from '@/common/di';
 
@@ -31,6 +32,7 @@ export const globalSchema = buildSchema({
 		ReportsResolver,
 		AuthResolver,
 		SystemResolver,
+		AttachmentResolver,
 	],
 	emitSchemaFile:
 		process.env.NODE_ENV === 'development' ? 'src/schema.gql' : false,
