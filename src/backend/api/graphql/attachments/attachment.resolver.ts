@@ -38,7 +38,6 @@ export class AttachmentResolver {
 		@Arg('mimeType') mimeType: string,
 		@Arg('size', () => Int) size: number,
 	): Promise<RequestAttachmentUploadUrlResult> {
-		console.log('requestUpload', fileName, mimeType, size);
 		// Create a new attachment entity in DB (status: 'pending')
 		const bucket = this.s3['configuration'].buckets.files;
 		const extension = fileName.split('.').pop();
@@ -53,7 +52,6 @@ export class AttachmentResolver {
 			s3Key,
 			s3Bucket: bucket,
 		});
-		console.log('attachment', attachment);
 		console.log('Saving attachment');
 		await this.repository.save(attachment);
 		console.log('Saved attachment');

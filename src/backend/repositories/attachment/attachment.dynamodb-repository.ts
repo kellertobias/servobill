@@ -40,7 +40,9 @@ export class AttachmentDynamoDBRepository extends AbstractDynamodbRepository<
 	/**
 	 * Converts a DynamoDB record to a domain AttachmentEntity.
 	 */
-	public ormToDomainEntitySafe(orm: AttachmentOrmEntity): AttachmentEntity {
+	public ormToDomainEntitySafe(
+		orm: Omit<AttachmentOrmEntity, 'storeId'>,
+	): AttachmentEntity {
 		return new AttachmentEntity({
 			id: orm.attachmentId,
 			createdAt: new Date(orm.createdAt),

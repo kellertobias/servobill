@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 
 import dayjs from 'dayjs';
 
@@ -217,26 +218,48 @@ export default function ExpenseOverlay({
 									}
 								/>
 							</div>
-							<div>
-								<SelectInput
-									label="Category"
-									value={data?.categoryId || ''}
-									onChange={(categoryId) =>
-										setData((current) => ({
-											...current,
-											categoryId: categoryId || undefined,
-										}))
-									}
-									options={categories.map((cat) => ({
-										value: cat.id,
-										label: cat.name,
-										description: cat.description || '',
-										color: cat.color || undefined,
-									}))}
-									placeholder="Select category"
-									className="w-full"
-								/>
-							</div>
+							{categories && categories.length > 0 ? (
+								<div>
+									<SelectInput
+										label="Category"
+										value={data?.categoryId || ''}
+										onChange={(categoryId) =>
+											setData((current) => ({
+												...current,
+												categoryId: categoryId || undefined,
+											}))
+										}
+										options={categories.map((cat) => ({
+											value: cat.id,
+											label: cat.name,
+											description: cat.description || '',
+											color: cat.color || undefined,
+										}))}
+										placeholder="Select category"
+										className="w-full"
+									/>
+								</div>
+							) : (
+								<div>
+									<div className="w-full">
+										<div className="block text-sm font-medium leading-6 text-gray-900">
+											Category
+										</div>
+
+										<p className="text-xs text-gray-500 mt-2">
+											No expense categories found. You can create categories in
+											the{' '}
+											<Link
+												href="/settings/categories"
+												className="text-primary hover:underline text-indigo-500"
+											>
+												category settings
+											</Link>
+											.
+										</p>
+									</div>
+								</div>
+							)}
 							<div>
 								<Input
 									label="Description"
