@@ -13,25 +13,11 @@ import {
 import relativeTime from 'dayjs/plugin/relativeTime';
 import dayjs from 'dayjs';
 
-import { Button } from '@/components/button';
-import { useAutoSizeTextArea } from '@/hooks/use-auto-textarea';
-import { doToast } from '@/components/toast';
-import { API, gql } from '@/api/index';
-
-import { AttachmentFilePartial } from '@/app/_components/attachment-dropzone-upload';
-
 import { useInvoiceActivity } from './data';
+import { InvoiceActivityForm } from './invoice-activity-form';
 
 import { InvoiceActivityType } from '@/common/gql/graphql';
 dayjs.extend(relativeTime);
-
-// Local interfaces for GraphQL mutation results
-interface RequestUploadResult {
-	requestUpload: { uploadUrl: string; attachmentId: string };
-}
-interface ConfirmUploadResult {
-	confirmUpload: AttachmentFilePartial;
-}
 
 const getActivityIcon = (type: InvoiceActivityType) => {
 	switch (type) {
@@ -90,6 +76,11 @@ const getActivityIcon = (type: InvoiceActivityType) => {
 					className="h-6 w-6 text-green-600"
 					aria-hidden="true"
 				/>
+			);
+		}
+		case InvoiceActivityType.Attachment: {
+			return (
+				<PaperClipIcon className="h-4 w-4 text-gray-400" aria-hidden="true" />
 			);
 		}
 		default: {
@@ -255,227 +246,6 @@ const getActivityText = (
 		}
 	}
 };
-
-function InvoiceActivityForm({
-	invoiceId,
-	reload,
-}: {
-	invoiceId: string;
-	reload: () => void;
-}) {
-	const [comment, setComment] = React.useState('');
-	const [attachment, setAttachment] =
-		React.useState<AttachmentFilePartial | null>(null);
-	const [attachToEmail, setAttachToEmail] = React.useState(false);
-	const [uploading, setUploading] = React.useState(false);
-	const fileInputRef = React.useRef<HTMLInputElement>(null);
-	const ref = useAutoSizeTextArea(comment || 'Add your comment...');
-
-	/**
-	 * Handles file selection and upload (copied from AttachmentDropzoneUpload logic).
-	 */
-	const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-		const files = e.target.files;
-		if (!files || files.length === 0) {
-			return;
-		}
-		const file = files[0];
-		if (file.size > 10 * 1024 * 1024) {
-			doToast({ message: 'File too large. Max size is 10MB.', type: 'danger' });
-			return;
-		}
-		if (
-			!['image/png', 'image/jpeg', 'image/gif', 'application/pdf'].includes(
-				file.type,
-			)
-		) {
-			doToast({ message: 'File type not allowed.', type: 'danger' });
-			return;
-		}
-		setUploading(true);
-		doToast({ message: 'Uploading file...' });
-		try {
-			// 1. Request upload URL
-			const uploadResultRaw = await API.query({
-				query: gql(`
-					mutation RequestInvoiceActivityAttachmentUpload($fileName: String!, $mimeType: String!, $size: Int!) {
-						requestUpload(fileName: $fileName, mimeType: $mimeType, size: $size) {
-							uploadUrl
-							attachmentId
-						}
-					}
-				`),
-				variables: {
-					fileName: file.name,
-					mimeType: file.type,
-					size: file.size,
-				},
-			});
-			const { requestUpload } = uploadResultRaw as RequestUploadResult;
-			// 2. Upload file to S3
-			await fetch(requestUpload.uploadUrl, {
-				method: 'PUT',
-				body: file,
-				headers: { 'Content-Type': file.type },
-			});
-			// 3. Confirm upload
-			const confirmResultRaw = await API.query({
-				query: gql(`
-					mutation ConfirmInvoiceActivityAttachmentUpload($attachmentId: String!) {
-						confirmUpload(attachmentId: $attachmentId) {
-							id
-							fileName
-							mimeType
-							size
-							createdAt
-						}
-					}
-				`),
-				variables: { attachmentId: requestUpload.attachmentId },
-			});
-			const { confirmUpload } = confirmResultRaw as ConfirmUploadResult;
-			setAttachment(confirmUpload);
-			doToast({ message: 'File uploaded', type: 'success' });
-		} catch {
-			doToast({ message: 'Upload failed', type: 'danger' });
-		} finally {
-			setUploading(false);
-			if (fileInputRef.current) {
-				fileInputRef.current.value = '';
-			}
-		}
-	};
-
-	/**
-	 * Handles form submission for comment and/or attachment.
-	 */
-	const submit = async () => {
-		doToast({
-			promise: (async () => {
-				if (attachment) {
-					// Create ATTACHMENT activity
-					await API.query({
-						query: gql(`
-							mutation AddInvoiceActivityAttachment($invoiceId: String!, $attachmentId: String!) {
-								invoiceAddComment(invoiceId: $invoiceId, attachmentId: $attachmentId) {
-									id
-								}
-							}
-						`),
-						variables: {
-							invoiceId,
-							attachmentId: attachment.id,
-							notes: comment || undefined,
-							attachToEmail,
-						},
-					});
-				} else if (comment) {
-					// Create NOTE activity
-					await API.query({
-						query: gql(`
-							mutation AddInvoiceActivityNote($invoiceId: String!, $comment: String!) {
-								invoiceAddComment(invoiceId: $invoiceId, comment: $comment) {
-									id
-								}
-							}
-						`),
-						variables: {
-							invoiceId,
-							comment,
-						},
-					});
-				}
-				reload();
-				setComment('');
-				setAttachment(null);
-				setAttachToEmail(false);
-			})(),
-			success: 'Activity added',
-			error: 'Failed to add activity',
-			loading: 'Adding activity...',
-		});
-	};
-
-	return (
-		<div className="mt-6 flex gap-x-3">
-			<UserCircleIcon className="h-6 w-6 flex-none rounded-full bg-gray-50 text-gray-300" />
-			<form action="#" className="relative flex-auto">
-				<div className="overflow-hidden rounded-lg pb-12 shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-blue-600">
-					<label htmlFor="comment" className="sr-only">
-						Add your comment
-					</label>
-					<textarea
-						ref={ref}
-						style={{ minHeight: '5rem' }}
-						rows={2}
-						name="comment"
-						id="comment"
-						className="outline outline-transparent block w-full resize-none border-0 bg-transparent mx-2 py-1.5 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
-						placeholder="Add your comment..."
-						value={comment}
-						onChange={(e) => setComment(e.target.value)}
-						defaultValue={''}
-					/>
-					{/* Pending attachment preview */}
-					{attachment && (
-						<div className="flex items-center mt-2 gap-2">
-							<span className="text-xs text-gray-700">
-								{attachment.fileName}
-							</span>
-							<button
-								type="button"
-								className="text-red-500 text-xs"
-								onClick={() => setAttachment(null)}
-							>
-								Remove
-							</button>
-							<label className="ml-2 flex items-center text-xs text-gray-600 cursor-pointer">
-								<input
-									type="checkbox"
-									checked={attachToEmail}
-									onChange={(e) => setAttachToEmail(e.target.checked)}
-									className="mr-1"
-								/>
-								Attach to email
-							</label>
-						</div>
-					)}
-				</div>
-				<div className="absolute border-t border-t-gray-200 bg-gray-100/20 inset-x-0 bottom-0 left-0.5 right-0.5 flex justify-between py-2 pl-3 pr-2">
-					<div className="flex items-center space-x-5">
-						<div className="flex items-center">
-							<button
-								type="button"
-								className="-m-2.5 flex h-10 w-10 items-center justify-center rounded-full text-gray-400 hover:text-gray-500"
-								disabled={uploading}
-								onClick={() => fileInputRef.current?.click()}
-							>
-								<PaperClipIcon className="h-5 w-5" aria-hidden="true" />
-								<span className="sr-only">Attach a file</span>
-							</button>
-							<input
-								type="file"
-								ref={fileInputRef}
-								className="hidden"
-								accept="image/png,image/jpeg,image/gif,application/pdf"
-								onChange={handleFileChange}
-								disabled={uploading}
-							/>
-						</div>
-					</div>
-					<Button
-						secondary={!comment && !attachment}
-						primary={!!comment || !!attachment}
-						onClick={submit}
-						disabled={uploading}
-					>
-						{attachment ? 'Add Attachment' : 'Comment'}
-					</Button>
-				</div>
-			</form>
-		</div>
-	);
-}
 
 export function InvoiceActivityFeed() {
 	const params = useParams();

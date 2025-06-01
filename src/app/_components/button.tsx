@@ -50,6 +50,8 @@ export const Button: React.FC<
 		danger?: boolean;
 		success?: boolean;
 		link?: boolean;
+		className?: string;
+		small?: boolean;
 	}>
 > = ({
 	primary,
@@ -65,6 +67,8 @@ export const Button: React.FC<
 	loading = false,
 	children,
 	grouped = false,
+	className,
+	small = false,
 }) => {
 	const Element = href ? 'a' : 'button';
 	primary = !secondary && !danger && !success;
@@ -91,12 +95,25 @@ export const Button: React.FC<
 					'rounded-md': !grouped,
 					'opacity-50 cursor-not-allowed': disabled || loading,
 				},
+				className,
 			)}
 			onClick={disabled || loading ? undefined : onClick}
 			href={disabled || loading ? undefined : href}
 			disabled={disabled}
 		>
-			{Icon && !loading && <Icon className="-ml-1 mr-2 h-5 w-5" />}
+			{Icon && !loading && (
+				<Icon
+					className={clsx({
+						'-ml-1 mr-2 h-5 w-5': children && !small,
+						'-ml-1 -mr-1 h-5 w-5': !children && !small,
+						'-ml-1 mr-2 h-4 w-4': children && small,
+						'-ml-1 -mr-1 h-4 w-4': !children && small,
+						'text-red-500': danger,
+						'text-green-500': success,
+						'text-blue-500': primary,
+					})}
+				/>
+			)}
 			{loading && <AnimatedLoadingIcon className="-ml-1 mr-2 h-5 w-5" />}
 			{children}
 		</Element>
