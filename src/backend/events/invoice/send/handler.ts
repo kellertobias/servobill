@@ -22,13 +22,16 @@ import { CreateInvoicePdfHandler } from '@/backend/cqrs/generate-pdf/create-invo
 import { DefaultContainer } from '@/common/di';
 import { GenerateInvoiceHtmlHandler } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.handler';
 import { GenerateInvoiceHtmlCommand } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.command';
-import { S3Service } from '@/backend/services/s3.service';
+import { FILE_STORAGE_SERVICE } from '@/backend/services/file-storage.service';
+import type { FileStorageService } from '@/backend/services/file-storage.service';
 import { SESService } from '@/backend/services/ses.service';
 import { InvoiceEntity, InvoiceType } from '@/backend/entities/invoice.entity';
 import {
 	InvoiceActivityEntity,
 	InvoiceActivityType,
 } from '@/backend/entities/invoice-activity.entity';
+import { ATTACHMENT_REPOSITORY } from '@/backend/repositories/attachment/di-tokens';
+import type { AttachmentRepository } from '@/backend/repositories/attachment/interface';
 
 const getSubject = async (
 	invoice: InvoiceEntity,
@@ -88,13 +91,18 @@ export const handler: EventHandler = makeEventHandler(
 		const emailRepository = DefaultContainer.get(
 			EMAIL_REPOSITORY,
 		) as EmailRepository;
+		const attachmentRepository = DefaultContainer.get(
+			ATTACHMENT_REPOSITORY,
+		) as AttachmentRepository;
 
 		const ses = DefaultContainer.get(SESService);
 		const cqrs = CqrsBus.forRoot({
 			handlers: [CreateInvoicePdfHandler, GenerateInvoiceHtmlHandler],
 			container: DefaultContainer,
 		});
-		const s3 = DefaultContainer.get(S3Service);
+		const fileStorage = DefaultContainer.get(
+			FILE_STORAGE_SERVICE,
+		) as FileStorageService;
 
 		const invoice = await invoiceRepository.getById(event.invoiceId);
 
@@ -152,16 +160,11 @@ export const handler: EventHandler = makeEventHandler(
 				invoiceId: invoice.id,
 				key: invoice.pdf.key,
 			});
-			// Get pdf from s3
-			const downloadedPdf = await s3.getObject({
-				bucket: invoice.pdf.bucket,
-				key: invoice.pdf.key,
-			});
-			const bytes = await downloadedPdf?.transformToByteArray();
-			if (!bytes) {
-				throw new Error('Pdf download failed');
+			// Get pdf from storage abstraction
+			if (!invoice.pdf.bucket || !invoice.pdf.key) {
+				throw new Error('PDF bucket or key missing');
 			}
-			pdf = Buffer.from(bytes);
+			pdf = await fileStorage.getFile(invoice.pdf.bucket, invoice.pdf.key);
 		}
 
 		if (!pdf) {
@@ -175,6 +178,45 @@ export const handler: EventHandler = makeEventHandler(
 		logger.info("Generating email's subject and body", {
 			invoiceId: invoice.id,
 		});
+
+		/**
+		 * Collect all attachments flagged for email from invoice activities.
+		 */
+		const flaggedAttachmentActivities = invoice.activity.filter(
+			(a) =>
+				a.type === InvoiceActivityType.ATTACHMENT &&
+				a.attachToEmail &&
+				a.attachmentId,
+		);
+		/**
+		 * Download all flagged attachments from S3.
+		 */
+		const extraAttachments = [];
+		for (const activity of flaggedAttachmentActivities) {
+			const attachment = await attachmentRepository.getById(
+				activity.attachmentId!,
+			);
+			if (!attachment) {
+				continue;
+			}
+			if (!attachment.s3Key || !attachment.s3Bucket) {
+				continue;
+			}
+			// Use FileStorageService to get the file buffer
+			let fileBuffer: Buffer | undefined;
+			try {
+				fileBuffer = await fileStorage.getFile(
+					attachment.s3Bucket,
+					attachment.s3Key,
+				);
+			} catch {
+				continue;
+			}
+			extraAttachments.push({
+				filename: attachment.fileName,
+				content: fileBuffer,
+			});
+		}
 
 		const subject = await getSubject(invoice, template, cqrs);
 		const emailHtml = await getEmail(invoice, template, cqrs);
@@ -196,6 +238,7 @@ export const handler: EventHandler = makeEventHandler(
 					filename: 'invoice.pdf',
 					content: pdf,
 				},
+				...extraAttachments,
 			],
 		});
 
@@ -229,6 +272,7 @@ export const handler: EventHandler = makeEventHandler(
 					filename: 'invoice.pdf',
 					content: pdf,
 				},
+				...extraAttachments,
 			],
 		});
 	},

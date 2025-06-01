@@ -11,6 +11,7 @@ import {
 
 import { Customer, CustomerInput } from '../customers/customers.schema';
 import { FilteredObjectProperties } from '../types';
+import { Attachment } from '../attachments/attachment.schema';
 
 import {
 	InvoiceEntity,
@@ -125,8 +126,15 @@ export class InvoiceActivity
 	@Field({ nullable: true })
 	notes?: string;
 
+	@Field(() => Attachment, {
+		nullable: true,
+		description: 'The linked attachment details, if any',
+	})
+	attachment?: Attachment;
+
+	/** If true, this attachment should be included in outgoing emails */
 	@Field({ nullable: true })
-	attachment?: string;
+	attachToEmail?: boolean;
 }
 
 @ObjectType()

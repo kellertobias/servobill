@@ -185,7 +185,10 @@ type Invoice {
 
 type InvoiceActivity {
   activityAt: DateTime!
-  attachment: String
+  attachToEmail: Boolean
+
+  """The linked attachment details, if any"""
+  attachment: Attachment
   id: String!
   notes: String
   type: InvoiceActivityType!
@@ -196,6 +199,7 @@ type InvoiceActivity {
 enum InvoiceActivityType {
   ARCHIVE_INVOICE
   ARCHIVE_OFFER
+  ATTACHMENT
   CANCEL_INVOICE
   CANCEL_OFFER
   CONVERT_TO_INVOICE
@@ -379,9 +383,10 @@ type Mutation {
   deleteCustomer(id: String!): Customer!
   deleteExpense(id: String!): Expense!
   deleteInvoice(id: String!): Invoice!
+  deleteInvoiceAttachmentActivity(activityId: String!, invoiceId: String!): InvoiceChangedResponse!
   deleteProduct(id: String!): Product!
   importInvoices(data: [InvoiceImportInput!]!): [Invoice!]!
-  invoiceAddComment(attachmentId: String, comment: String!, invoiceId: String!): InvoiceChangedResponse!
+  invoiceAddComment(attachmentId: String, comment: String, invoiceId: String!): InvoiceChangedResponse!
   invoiceAddPayment(id: String!, payment: InvoicePaymentInput!): InvoiceChangedResponse!
   invoiceCancelUnpaid(deleteExpenses: Boolean, id: String!): InvoiceChangedResponse!
   invoiceDeleteDraft(id: String!): InvoiceChangedResponse!
@@ -391,6 +396,7 @@ type Mutation {
   purgeInvoices(confirm: String!): Boolean!
   requestUpload(fileName: String!, mimeType: String!, size: Int!): RequestAttachmentUploadUrlResult!
   sendTestEvent(data: String!, name: String!): String!
+  setInvoiceActivityAttachmentEmailFlag(activityId: String!, attachToEmail: Boolean!, invoiceId: String!): InvoiceChangedResponse!
   testRenderTemplate(pdf: Boolean, styles: String!, template: String!): String!
   updateCustomer(data: CustomerInput!, id: String!): Customer!
   updateExpense(data: ExpenseInput!, id: String!): Expense!

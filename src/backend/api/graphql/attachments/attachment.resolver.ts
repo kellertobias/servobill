@@ -10,7 +10,8 @@ import {
 import { Inject, Service } from '@/common/di';
 import { ATTACHMENT_REPOSITORY } from '@/backend/repositories/attachment/di-tokens';
 import { type AttachmentRepository } from '@/backend/repositories/attachment/interface';
-import { S3Service } from '@/backend/services/s3.service';
+import { FILE_STORAGE_SERVICE } from '@/backend/services/file-storage.service';
+import type { FileStorageService } from '@/backend/services/file-storage.service';
 
 /**
  * GraphQL resolver for managing file attachments, including upload, confirmation, listing, deletion, and download URL generation.
@@ -24,7 +25,7 @@ import { S3Service } from '@/backend/services/s3.service';
 export class AttachmentResolver {
 	constructor(
 		@Inject(ATTACHMENT_REPOSITORY) private repository: AttachmentRepository,
-		@Inject(S3Service) private s3: S3Service,
+		@Inject(FILE_STORAGE_SERVICE) private fileStorage: FileStorageService,
 	) {}
 
 	/**
@@ -38,7 +39,7 @@ export class AttachmentResolver {
 		@Arg('size', () => Int) size: number,
 	): Promise<RequestAttachmentUploadUrlResult> {
 		// Create a new attachment entity in DB (status: 'pending')
-		const bucket = this.s3['configuration'].buckets.files;
+		const bucket = process.env.BUCKETS_FILE_SST || '';
 		const extension = fileName.split('.').pop();
 		const nameHash = crypto.randomUUID();
 		const s3Key = `attachments/${Date.now()}-${nameHash}.${extension}`;
@@ -53,10 +54,11 @@ export class AttachmentResolver {
 		console.log('Saving attachment');
 		await this.repository.save(attachment);
 		console.log('Saved attachment');
-		const uploadUrl = await this.s3.getSignedUploadUrl({
-			key: s3Key,
-			bucket: bucket,
-		});
+		const uploadUrl = await this.fileStorage.getUploadUrl(
+			bucket,
+			s3Key,
+			attachment.id,
+		);
 		return { uploadUrl, attachmentId: attachment.id };
 	}
 
@@ -136,11 +138,12 @@ export class AttachmentResolver {
 			throw new Error('Attachment not found');
 		}
 		// Use S3Service.getSignedUrl for download
-		const downloadUrl = await this.s3.getSignedUrl({
-			key: attachment.s3Key,
-			bucket: attachment.s3Bucket,
-			contentDisposition: `attachment; filename="${attachment.fileName}"`,
-		});
+		const downloadUrl = await this.fileStorage.getDownloadUrl(
+			attachment.s3Bucket,
+			attachment.s3Key,
+			attachment.fileName,
+			attachment.id,
+		);
 		return { downloadUrl };
 	}
 
@@ -156,10 +159,7 @@ export class AttachmentResolver {
 		if (!attachment) {
 			return false;
 		}
-		await this.s3.deleteObject({
-			key: attachment.s3Key,
-			bucket: attachment.s3Bucket,
-		});
+		await this.fileStorage.deleteFile(attachment.s3Bucket, attachment.s3Key);
 		await this.repository.delete(attachmentId);
 		return true;
 	}

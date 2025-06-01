@@ -22,6 +22,8 @@ export enum InvoiceActivityType {
 	PAYMENT = 'PAYMENT',
 	PAID = 'PAID',
 	NOTE = 'NOTE',
+	/** Activity for file attachment (linked to attachmentId) */
+	ATTACHMENT = 'ATTACHMENT',
 }
 
 export class InvoiceActivityEntity {
@@ -30,7 +32,10 @@ export class InvoiceActivityEntity {
 	public type!: InvoiceActivityType;
 	public user?: string;
 	public notes?: string;
-	public attachment?: string;
+	/** The ID of the linked attachment, if any */
+	public attachmentId?: string;
+	/** If true, this attachment should be included in outgoing emails */
+	public attachToEmail?: boolean;
 
 	constructor(props: Partial<InvoiceActivityEntity>) {
 		Object.assign(this, props);
@@ -39,6 +44,12 @@ export class InvoiceActivityEntity {
 		}
 		if (!this.activityAt) {
 			this.activityAt = new Date();
+		}
+		if (
+			this.type === InvoiceActivityType.ATTACHMENT &&
+			this.attachToEmail === undefined
+		) {
+			this.attachToEmail = false;
 		}
 	}
 }

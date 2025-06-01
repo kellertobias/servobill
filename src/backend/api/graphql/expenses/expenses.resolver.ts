@@ -23,13 +23,14 @@ import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
 import { type SettingsRepository } from '@/backend/repositories/settings/interface';
 import { ExpenseSettingsEntity } from '@/backend/entities/settings.entity';
 import { Cached } from '@/backend/services/cache-decorator';
-import { S3Service } from '@/backend/services/s3.service';
+import { FILE_STORAGE_SERVICE } from '@/backend/services/file-storage.service';
+import type { FileStorageService } from '@/backend/services/file-storage.service';
 
 @Service()
 @Resolver(() => Expense)
 export class ExpenseResolver {
 	constructor(
-		@Inject(S3Service) private s3: S3Service,
+		@Inject(FILE_STORAGE_SERVICE) private fileStorage: FileStorageService,
 		@Inject(EXPENSE_REPOSITORY) private repository: ExpenseRepository,
 		@Inject(SETTINGS_REPOSITORY) private settingsRepository: SettingsRepository,
 		@Inject(ATTACHMENT_REPOSITORY)
@@ -136,14 +137,14 @@ export class ExpenseResolver {
 		});
 		for (const att of existing) {
 			if (!(attachmentIds || []).includes(att.id)) {
-				// Get attachment details before deletion to clean up S3
+				// Get attachment details before deletion to clean up storage abstraction
 				const attachment = await this.attachmentRepository.getById(att.id);
 				if (attachment?.s3Key && attachment.s3Bucket) {
-					// Delete file from S3 before removing DB record
-					await this.s3.deleteObject({
-						bucket: attachment.s3Bucket,
-						key: attachment.s3Key,
-					});
+					// Delete file from storage abstraction before removing DB record
+					await this.fileStorage.deleteFile(
+						attachment.s3Bucket,
+						attachment.s3Key,
+					);
 				}
 				await this.attachmentRepository.delete(att.id);
 			}
