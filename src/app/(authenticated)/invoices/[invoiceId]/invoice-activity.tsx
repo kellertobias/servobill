@@ -7,14 +7,14 @@ import {
 	EnvelopeIcon,
 	PaperClipIcon,
 	PlusCircleIcon,
-	TrashIcon,
 	UserCircleIcon,
 } from '@heroicons/react/20/solid';
+import { TrashIcon } from '@heroicons/react/24/outline';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import dayjs from 'dayjs';
 
-import { useInvoiceActivity } from './data';
 import { InvoiceActivityForm } from './invoice-activity-form';
+import { useInvoiceActivity } from './data';
 
 import { InvoiceActivityType } from '@/common/gql/graphql';
 dayjs.extend(relativeTime);
@@ -258,9 +258,15 @@ const getActivityText = (
 	}
 };
 
+/**
+ * InvoiceActivityFeed displays the activity timeline for an invoice, including attachments.
+ * For attachment activities, allows toggling email attachment and deleting the activity.
+ */
 export function InvoiceActivityFeed() {
 	const params = useParams();
-	const { data, reload } = useInvoiceActivity();
+	const { data, reload, toggleAttachToEmail, deleteAttachmentActivity } =
+		useInvoiceActivity();
+
 	if (!data) {
 		return null;
 	}
@@ -303,6 +309,60 @@ export function InvoiceActivityFeed() {
 											<p className="text-sm leading-6 text-gray-500">
 												{activity.notes}
 											</p>
+										</div>
+									</>
+								) : activity.type === InvoiceActivityType.Attachment ? (
+									<>
+										<div className="relative flex h-6 w-6 flex-none items-center justify-center bg-white">
+											{getActivityIcon(activity.type)}
+										</div>
+										<div className="flex-auto">
+											<p className="py-0.5 text-xs leading-5 text-gray-500">
+												{getActivityText(
+													activity.type,
+													activity.user,
+													activity.notes,
+													activity.attachment,
+												)}
+											</p>
+											<div className="flex items-center gap-2 mt-1">
+												{/* Toggle for attachToEmail */}
+												<label className="flex items-center gap-2 text-xs">
+													<input
+														type="checkbox"
+														checked={activity.attachToEmail || false}
+														onChange={async () => {
+															await toggleAttachToEmail({
+																invoiceId: params.invoiceId as string,
+																activityId: activity.id,
+																attachToEmail: !activity.attachToEmail,
+															});
+														}}
+													/>
+													<span>Attach to emails</span>
+												</label>
+											</div>
+										</div>
+										<div className="flex-none flex-col justify-end items-end py-0.5 text-xs leading-5 text-gray-500 text-right">
+											<time
+												dateTime={activity.activityAt}
+												className="w-full inline-block text-right"
+											>
+												{dayjs(activity.activityAt).fromNow()}
+											</time>
+											<span
+												className="flex flex-row items-center gap-1 cursor-pointer hover:text-red-600 justify-end text-right"
+												onClick={async () => {
+													await deleteAttachmentActivity({
+														invoiceId: params.invoiceId as string,
+														activityId: activity.id,
+													});
+												}}
+												aria-label="Delete attachment"
+											>
+												<TrashIcon className="h-3 w-3 text-red-600" />
+												<span>Remove</span>
+											</span>
 										</div>
 									</>
 								) : (

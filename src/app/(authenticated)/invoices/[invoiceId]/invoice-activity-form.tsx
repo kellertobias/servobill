@@ -31,14 +31,15 @@ export function InvoiceActivityForm({
 	 * Handles form submission for comment and/or attachment.
 	 */
 	const submit = async () => {
+		console.log({ attachment, comment, attachToEmail });
 		doToast({
 			promise: (async () => {
 				if (attachment) {
 					// Create ATTACHMENT activity
 					await API.query({
 						query: gql(`
-							mutation AddInvoiceActivityAttachment($invoiceId: String!, $attachmentId: String!) {
-								invoiceAddComment(invoiceId: $invoiceId, attachmentId: $attachmentId) {
+							mutation AddInvoiceActivityAttachment($invoiceId: String!, $attachmentId: String!, $attachToEmail: Boolean) {
+								invoiceAddComment(invoiceId: $invoiceId, attachmentId: $attachmentId, attachToEmail: $attachToEmail) {
 									id
 								}
 							}

@@ -386,7 +386,7 @@ type Mutation {
   deleteInvoiceAttachmentActivity(activityId: String!, invoiceId: String!): InvoiceChangedResponse!
   deleteProduct(id: String!): Product!
   importInvoices(data: [InvoiceImportInput!]!): [Invoice!]!
-  invoiceAddComment(attachmentId: String, comment: String, invoiceId: String!): InvoiceChangedResponse!
+  invoiceAddComment(attachToEmail: Boolean, attachmentId: String, comment: String, invoiceId: String!): InvoiceChangedResponse!
   invoiceAddPayment(id: String!, payment: InvoicePaymentInput!): InvoiceChangedResponse!
   invoiceCancelUnpaid(deleteExpenses: Boolean, id: String!): InvoiceChangedResponse!
   invoiceDeleteDraft(id: String!): InvoiceChangedResponse!

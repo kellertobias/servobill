@@ -326,6 +326,8 @@ export class InvoiceResolver {
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		@Arg('attachmentId', () => String, { nullable: true })
 		attachmentId: string | null,
+		@Arg('attachToEmail', () => Boolean, { nullable: true })
+		attachToEmail: boolean | null,
 		@Ctx() context: GqlContext,
 	): Promise<InvoiceChangedResponse> {
 		const invoice = await this.invoiceRepository.getById(invoiceId);
@@ -346,6 +348,7 @@ export class InvoiceResolver {
 			})(),
 			notes: comment || undefined,
 			user: context.session?.user?.name,
+			attachToEmail: attachToEmail || false,
 		});
 
 		if (attachmentId) {

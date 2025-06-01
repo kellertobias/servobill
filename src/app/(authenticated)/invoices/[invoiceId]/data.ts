@@ -1,5 +1,9 @@
+import React from 'react';
+
 import { API, gql } from '@/api/index';
+import { doToast } from '@/components/toast';
 import { useLoadData } from '@/hooks/load-data';
+import { confirmDialog } from '@/components/dialog';
 
 export const useInvoiceData = () =>
 	useLoadData(async (params) =>
@@ -74,8 +78,8 @@ export type InvoiceData = NonNullable<
 	ReturnType<typeof useInvoiceData>['data']
 >;
 
-export const useInvoiceActivity = () =>
-	useLoadData(async (params) =>
+export const useInvoiceActivity = () => {
+	const { data, reload } = useLoadData(async (params) =>
 		API.query({
 			query: gql(`
 				query InvoicePageActivityData($id: String!) {
@@ -92,6 +96,7 @@ export const useInvoiceActivity = () =>
 								mimeType
 								size
 							}
+							attachToEmail
 						}
 					}
 				}
@@ -101,3 +106,86 @@ export const useInvoiceActivity = () =>
 			},
 		}).then((data) => data.invoice?.activity),
 	);
+
+	/**
+	 * Toggles the attachToEmail flag for an attachment activity.
+	 * Calls the setInvoiceActivityAttachmentEmailFlag mutation.
+	 */
+	const toggleAttachToEmail = React.useCallback(
+		async ({
+			invoiceId,
+			activityId,
+			attachToEmail,
+		}: {
+			invoiceId: string;
+			activityId: string;
+			attachToEmail: boolean;
+		}) => {
+			await doToast({
+				promise: API.query({
+					query: gql(`
+				mutation SetInvoiceActivityAttachmentEmailFlag($invoiceId: String!, $activityId: String!, $attachToEmail: Boolean!) {
+					setInvoiceActivityAttachmentEmailFlag(invoiceId: $invoiceId, activityId: $activityId, attachToEmail: $attachToEmail) {
+						id
+					}
+				}
+			`),
+					variables: { invoiceId, activityId, attachToEmail },
+				}),
+				loading: attachToEmail
+					? 'Enabling email attachment...'
+					: 'Disabling email attachment...',
+				success: 'Attachment email flag updated!',
+				error: 'Failed to update email attachment flag.',
+			});
+			reload();
+		},
+		[reload],
+	);
+
+	/**
+	 * Deletes an attachment activity (and the linked file).
+	 * Calls the deleteInvoiceAttachmentActivity mutation.
+	 */
+	const deleteAttachmentActivity = React.useCallback(
+		async ({
+			invoiceId,
+			activityId,
+		}: {
+			invoiceId: string;
+			activityId: string;
+		}) => {
+			if (
+				!(await confirmDialog({
+					danger: true,
+					title: `Delete attachment?`,
+					content: `
+						Are you sure you want to delete this attachment? This action
+						cannot be undone.
+					`,
+				}))
+			) {
+				return;
+			}
+			await doToast({
+				promise: API.query({
+					query: gql(`
+				mutation DeleteInvoiceAttachmentActivity($invoiceId: String!, $activityId: String!) {
+					deleteInvoiceAttachmentActivity(invoiceId: $invoiceId, activityId: $activityId) {
+						id
+					}
+				}
+			`),
+					variables: { invoiceId, activityId },
+				}),
+				loading: 'Deleting attachment...',
+				success: 'Attachment deleted!',
+				error: 'Failed to delete attachment.',
+			});
+			reload();
+		},
+		[reload],
+	);
+
+	return { data, reload, toggleAttachToEmail, deleteAttachmentActivity };
+};
