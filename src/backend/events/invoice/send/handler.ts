@@ -193,13 +193,16 @@ export const handler: EventHandler = makeEventHandler(
 		 */
 		const extraAttachments = [];
 		for (const activity of flaggedAttachmentActivities) {
+			if (!activity.attachmentId) {
+				continue;
+			}
 			const attachment = await attachmentRepository.getById(
-				activity.attachmentId!,
+				activity.attachmentId,
 			);
 			if (!attachment) {
 				continue;
 			}
-			if (!attachment.s3Key || !attachment.s3Bucket) {
+			if (!attachment.s3Key) {
 				continue;
 			}
 			// Use FileStorageService to get the file buffer

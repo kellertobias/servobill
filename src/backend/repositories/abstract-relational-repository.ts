@@ -85,6 +85,8 @@ export abstract class AbstractRelationalRepository<
 			domainEntity,
 		) as DeepPartial<OrmEntity>;
 		await this.repository?.save([ormEntity]);
+
+		await this.purgeOutbox(domainEntity);
 	}
 
 	/**

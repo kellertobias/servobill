@@ -6,23 +6,89 @@ import { randomUUID } from 'crypto';
 
 import chalk from 'chalk';
 import express from 'express';
+import sqlite3 from 'sqlite3';
+import { open, Database } from 'sqlite';
+import { config as dotenvConfig } from 'dotenv';
 
 import handlers from '@/backend/events';
 import { CustomJson } from '@/common/json';
 const port = process.env.PORT || 9326;
 
+// Load environment variables from .env file for local development
+dotenvConfig();
+
 const app = express();
 app.use(express.json({ type: '*/*' }));
 
-const eventQueue: {
+/**
+ * Initializes and manages the SQLite database for persisting event jobs.
+ * All jobs are stored until they are executed, ensuring durability across restarts.
+ */
+let db: Database<sqlite3.Database, sqlite3.Statement>;
+
+/**
+ * Initialize the SQLite database and create the jobs table if it doesn't exist.
+ */
+async function initDb() {
+	db = await open({
+		filename: './event-queue.db',
+		driver: sqlite3.Database,
+	});
+	await db.run(`
+    CREATE TABLE IF NOT EXISTS jobs (
+      id TEXT PRIMARY KEY,
+      type TEXT NOT NULL,
+      source TEXT,
+      resources TEXT,
+      data TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+}
+
+/**
+ * Enqueue a new job into the database.
+ * @param job The job object to store.
+ */
+async function enqueueJob(job: {
 	eventId: string;
 	data: unknown;
 	type: string;
 	source: string;
 	resources: string[];
-}[] = [];
+}) {
+	await db.run(
+		`INSERT INTO jobs (id, type, source, resources, data) VALUES (?, ?, ?, ?, ?)`,
+		job.eventId,
+		job.type,
+		job.source,
+		JSON.stringify(job.resources),
+		JSON.stringify(job.data),
+	);
+}
 
-app.all('/', (req, res) => {
+/**
+ * Dequeue (fetch and remove) the next job from the database.
+ * @returns The next job or null if none exist.
+ */
+async function dequeueJob() {
+	const row = await db.get(
+		`SELECT * FROM jobs ORDER BY created_at ASC LIMIT 1`,
+	);
+	if (!row) {
+		return null;
+	}
+	await db.run(`DELETE FROM jobs WHERE id = ?`, row.id);
+	return {
+		eventId: row.id,
+		type: row.type,
+		source: row.source,
+		resources: JSON.parse(row.resources),
+		data: JSON.parse(row.data),
+	};
+}
+
+app.all('/', async (req, res) => {
 	if (req.headers['x-amz-target'] !== 'AWSEvents.PutEvents') {
 		console.log(
 			"Received Request that is not 'AWSEvents.PutEvents'",
@@ -48,7 +114,8 @@ app.all('/', (req, res) => {
 		);
 		const eventId = randomUUID().toString();
 		eventIds.push(eventId);
-		eventQueue.push({
+		// Persist the job in the database
+		await enqueueJob({
 			eventId,
 			data: body,
 			type: DetailType,
@@ -64,7 +131,7 @@ app.all('/', (req, res) => {
 });
 
 const handleNextEvent = async () => {
-	const event = eventQueue.shift();
+	const event = await dequeueJob();
 	if (!event) {
 		return;
 	}
@@ -129,13 +196,36 @@ const handleNextEvent = async () => {
 
 const waitForNextEvent = () => {
 	setTimeout(async () => {
-		await handleNextEvent();
+		try {
+			await handleNextEvent();
+		} catch (error: unknown) {
+			console.log(
+				chalk.bgBlue('[EventBus] Error '),
+				chalk.red(`Error while handling event`),
+				error,
+			);
+		}
 		waitForNextEvent();
 	}, 100);
 };
 
-waitForNextEvent();
-
-app.listen(port, () => {
-	console.log(`EventBus Dev Router listening on port ${port}`);
-});
+// Initialize the database and start the event loop
+// NOTE: You must install the 'sqlite' package for this to work:
+// npm install sqlite
+// If using TypeScript, you may also need: npm install --save-dev @types/sqlite3
+// For environments that support top-level await, you can use:
+// (async () => { await initDb(); waitForNextEvent(); app.listen(port, ...); })();
+initDb()
+	.then(() => {
+		waitForNextEvent();
+		app.listen(port, () => {
+			console.log(`EventBus Dev Router listening on port ${port}`);
+		});
+		return;
+	})
+	// eslint-disable-next-line unicorn/prefer-top-level-await
+	.catch((error) => {
+		console.error('Failed to initialize SQLite DB:', error);
+		// eslint-disable-next-line unicorn/no-process-exit
+		process.exit(1);
+	});
