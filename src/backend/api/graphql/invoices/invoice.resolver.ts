@@ -6,12 +6,9 @@ import {
 	Authorized,
 	Mutation,
 	Ctx,
-	FieldResolver,
-	Root,
 } from 'type-graphql';
 
 import { GqlContext } from '../types';
-import { Attachment } from '../attachments/attachment.schema';
 
 import {
 	Invoice,
@@ -19,7 +16,6 @@ import {
 	InvoiceImportInput,
 	InvoiceInput,
 	InvoiceWhereInput,
-	InvoiceActivity,
 } from './invoice.schema';
 
 import { Inject, Service } from '@/common/di';
@@ -43,7 +39,6 @@ import { ActiveSpan, Span } from '@/backend/instrumentation';
 import type { OtelSpan } from '@/backend/instrumentation';
 import type { AttachmentRepository } from '@/backend/repositories/attachment/interface';
 import { ATTACHMENT_REPOSITORY } from '@/backend/repositories/attachment/di-tokens';
-import { AttachmentEntity } from '@/backend/entities/attachment.entity';
 import { FILE_STORAGE_SERVICE } from '@/backend/services/file-storage.service';
 import type { FileStorageService } from '@/backend/services/file-storage.service';
 
@@ -108,7 +103,24 @@ export class InvoiceResolver {
 		@ActiveSpan() span: OtelSpan,
 	): Promise<Invoice | null> {
 		span?.setAttribute('context.invoiceId', id);
-		return this.invoiceRepository.getById(id);
+		const invoice = await this.invoiceRepository.getById(id);
+
+		if (!invoice) {
+			return null;
+		}
+
+		invoice.activity = await Promise.all(
+			invoice.activity.map(async (activity) => {
+				return {
+					...activity,
+					attachment: activity.attachmentId
+						? await this.attachmentRepository.getById(activity.attachmentId)
+						: null,
+				};
+			}),
+		);
+
+		return invoice;
 	}
 
 	@Span('InvoiceResolver.createInvoice')
@@ -323,7 +335,15 @@ export class InvoiceResolver {
 		}
 
 		const activity = new InvoiceActivityEntity({
-			type: InvoiceActivityType.NOTE,
+			type: (() => {
+				if (!comment && !attachmentId) {
+					throw new Error('No comment or attachment provided');
+				}
+				if (!comment && attachmentId) {
+					return InvoiceActivityType.ATTACHMENT;
+				}
+				return InvoiceActivityType.NOTE;
+			})(),
 			notes: comment || undefined,
 			user: context.session?.user?.name,
 		});
@@ -430,27 +450,5 @@ export class InvoiceResolver {
 			updatedAt: new Date(),
 			change: InvoiceActivityType.ATTACHMENT,
 		};
-	}
-}
-
-/**
- * Field resolver for the 'attachment' field on InvoiceActivity.
- * Resolves the linked Attachment entity if attachmentId is present.
- */
-@Resolver(() => InvoiceActivity)
-export class InvoiceActivityFieldResolver {
-	constructor(
-		@Inject(ATTACHMENT_REPOSITORY)
-		private attachmentRepository: AttachmentRepository,
-	) {}
-
-	@FieldResolver(() => Attachment, { nullable: true })
-	async attachment(
-		@Root() activity: InvoiceActivityEntity,
-	): Promise<AttachmentEntity | null> {
-		if (!activity.attachmentId) {
-			return null;
-		}
-		return this.attachmentRepository.getById(activity.attachmentId);
 	}
 }

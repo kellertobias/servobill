@@ -95,6 +95,9 @@ const getActivityText = (
 	type: InvoiceActivityType,
 	user: string | null | undefined,
 	notes: string | null | undefined,
+	attachment: NonNullable<
+		ReturnType<typeof useInvoiceActivity>['data']
+	>[number]['attachment'],
 ) => {
 	switch (type) {
 		case InvoiceActivityType.Imported: {
@@ -244,6 +247,14 @@ const getActivityText = (
 				</>
 			);
 		}
+		case InvoiceActivityType.Attachment: {
+			return (
+				<>
+					<span className="font-medium text-gray-900">{user}</span> added{' '}
+					{attachment?.fileName}
+				</>
+			);
+		}
 	}
 };
 
@@ -304,6 +315,7 @@ export function InvoiceActivityFeed() {
 												activity.type,
 												activity.user,
 												activity.notes,
+												activity.attachment,
 											)}
 										</p>
 										<time

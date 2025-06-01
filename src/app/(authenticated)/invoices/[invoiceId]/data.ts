@@ -86,6 +86,12 @@ export const useInvoiceActivity = () =>
 							type
 							user
 							notes
+							attachment {
+								id
+								fileName
+								mimeType
+								size
+							}
 						}
 					}
 				}
