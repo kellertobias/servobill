@@ -76,12 +76,22 @@ export class InvoiceLifecycleResolver {
 		});
 
 		newInvoice.updateItems(
-			invoice.items.map(
-				(item) =>
-					new InvoiceItemEntity({
-						...item,
-					}),
-			),
+			invoice.items.map((item) => {
+				const newItem = new InvoiceItemEntity({
+					...item,
+				});
+
+				if (newItem.linkedExpenses) {
+					item.linkedExpenses = newItem.linkedExpenses.map((expense) => {
+						return {
+							...expense,
+							expenseId: undefined,
+						};
+					});
+				}
+
+				return newItem;
+			}),
 		);
 
 		if (invoice.type === InvoiceType.OFFER && copyAs === InvoiceType.INVOICE) {

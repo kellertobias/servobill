@@ -50,19 +50,19 @@ services:
   #   working_dir: /src
   #   command: npm run start
 
-  # servobill-dynamodb:
-  #   command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data -port 9321"
-  #   image: "amazon/dynamodb-local:latest"
-  #   restart: unless-stopped
+  servobill-dynamodb:
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data -port 9321"
+    image: "amazon/dynamodb-local:latest"
+    restart: unless-stopped
 
-  #   platform: linux/amd64
-  #   container_name: servobill-dynamodb-local
-  #   user: root
-  #   ports:
-  #     - "9321:9321"
-  #   volumes:
-  #     - dynamodb-data:/home/dynamodblocal/data
-  #   working_dir: /home/dynamodblocal
+    platform: linux/amd64
+    container_name: servobill-dynamodb-local
+    user: root
+    ports:
+      - "9321:9321"
+    volumes:
+      - dynamodb-data:/home/dynamodblocal/data
+    working_dir: /home/dynamodblocal
 
   servobill-s3:
     image: quay.io/minio/minio

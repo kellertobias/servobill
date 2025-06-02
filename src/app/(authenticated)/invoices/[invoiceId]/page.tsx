@@ -257,7 +257,14 @@ export default function InvoiceDetailPage() {
 													priceCents: Number(item.priceCents),
 													quantity: Number(item.quantity),
 													taxPercentage: Number(item.taxPercentage || '0'),
-													linkedExpenses: item.linkedExpenses,
+													linkedExpenses: item.linkedExpenses.map(
+														(expense) => ({
+															name: expense.name,
+															price: expense.price,
+															categoryId: expense.categoryId || undefined,
+															enabled: expense.enabled,
+														}),
+													),
 												})),
 											};
 

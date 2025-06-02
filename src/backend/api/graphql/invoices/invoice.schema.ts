@@ -293,12 +293,6 @@ export class InvoiceItemInput implements Partial<InvoiceItem> {
 	@Field(() => Float)
 	quantity!: number;
 
-	@Field({
-		nullable: true,
-		description: 'The ID of the linked expense, if this item generated one.',
-	})
-	expenseId?: string;
-
 	@Field(() => [InvoiceItemExpenseInput], {
 		nullable: true,
 		description:

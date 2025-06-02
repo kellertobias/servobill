@@ -288,9 +288,6 @@ input InvoiceItemExpenseInput {
 input InvoiceItemInput {
   description: String
 
-  """The ID of the linked expense, if this item generated one."""
-  expenseId: String
-
   """
   The list of product expenses linked to this invoice item, with enabled/disabled state.
   """
