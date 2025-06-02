@@ -8,25 +8,12 @@ Servobill is a simple, open-source invoicing app built with Next.js, Tailwind CS
 
 We feature a simple, easy-to-use interface for creating and managing invoices. You can create an invoice, generate a PDF from it and send it to your client, and get paid all in one place. You can also manage your expenses and build simple reports to see how your business is doing and of course for tax purposes.
 
-- Modern and simple UI
-- Create and manage invoices
-- Generate PDFs from invoices
-- Send invoices to clients
-- Manage expenses with attachments and expenses categories
-- Automatically create expenses when e.g. adding travel to an invoice
-- Simple reports
-- Manage clients & products
-- Developer Experience:
-    - Dependencies in Docker Compose for local development
-    - Modern decorator based codebase
-    - Dependency Injection
-    - Event driven Design
-    - OpenTelemetry Support for Traces & Logs
-    - Automatic API Type generation
-    - Automatic adding of new endpoints to infrastructure definition
-    - CQRS (Bus implemented and some commands present)
-    - Entity based approach (vs. database centric)
-    - JWT based authentication workflow with refresh tokens
+- Modern and simple UI (in-place editing, mobile friendly)
+- Create and manage invoices/ offers & send them to clients via PDF
+- Manage expenses with attachments and expenses categories & automatically create expenses when e.g. adding travel to an invoice
+- Generate reports with all income & expenses in JSON & CSV format
+- Customizable - from templates to invoice number formats
+- Modern Software Architecture: Modern Decorator based Typescript codebase, Serverless, Repository & Adapter Pattern for multiple database types, Folder based API structure (like NextJS), React/ NextJS based frontend, GraphQL based API, JWT based authentication workflow with refresh tokens and more.
 
 <img src="/docs/screenshot-1.jpeg" alt="Servobill" width="200"/> <img src="/docs/screenshot-2.jpeg" alt="Servobill" width="200"/> <img src="/docs/screenshot-3.jpeg" alt="Servobill" width="200"/> <img src="/docs/screenshot-4.jpeg" alt="Servobill" width="200"/>
 
@@ -40,7 +27,7 @@ Planned until end of May 2025:
 - [X] Add support for attachments for invoices, expenses and emails
 - [X] Add categorization of expenses
 - [X] Add support for auto-generated expenses (e.g. travel expenses)
-- [ ] Add support for dockerized deployments (WIP)
+- [ ] Add support for dockerized deployments (WIP, mainly needs testing)
 
 Planned until end of June 2025:
 - [ ] Add support for simple inventory management (expense can create inventory items, history on inventory items, etc.)
@@ -104,6 +91,6 @@ If you are done, you can copy the template to the settings in the app.
 
 ## License
 
-This software is licensed under a modified MIT license that does not allow you to sell the software or host it as a service for others.
+This software is licensed under a modified MIT license that does not allow you to sell the software or host it as a software as a service.
 
-See LICENSE.md for the full license text.
+See [LICENSE.md](LICENSE.md) for the full license text.
