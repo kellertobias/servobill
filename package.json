@@ -23,7 +23,7 @@
     "test": "vitest run",
     "test:ui": "vitest --ui",
     "template": "tsx stack/local/template-builder.ts",
-    "deploy": "echo ''; echo ''; echo ''; echo 'Deploying Servobill...'; echo ''; if [ -n \"$(git status --porcelain)\" ]; then echo 'Repository not Clean. '; read -p 'Clean repository before deployment[y] or abort[n]? (y/N): ' yn; if [ \"$yn\" = \"y\" ]; then git checkout -- .; else echo ''; echo 'Git working directory is not clean. Please commit or stash your changes before deploying.'; echo 'Aborting deployment.'; exit 1; fi; fi; rm -rf ./_ignore_api; ./stack/setup-layers-prod.sh && ./stack/remove-extra-deps.sh && npm run gql:type && sst deploy --stage prod",
+    "deploy": "echo ''; echo ''; echo ''; echo 'Deploying Servobill...'; echo ''; if [ -n \"$(git status --porcelain)\" ]; then echo 'Repository not Clean. '; read -p 'Clean repository before deployment[y] or abort[n]? (y/N): ' yn; if [ \"$yn\" = \"y\" ]; then git checkout -- .; else echo ''; echo 'Git working directory is not clean. Please commit or stash your changes before deploying.'; echo 'Aborting deployment.'; exit 1; fi; fi; rm -rf ./_ignore_api; ./stack/setup-layers-prod.sh && ./stack/remove-extra-deps.sh && npm run gql:type && sst deploy --stage prod; git checkout -- .; rm -rf ./_ignore_api;",
     "clean": "rm -rf ./layers"
   },
   "dependencies": {
