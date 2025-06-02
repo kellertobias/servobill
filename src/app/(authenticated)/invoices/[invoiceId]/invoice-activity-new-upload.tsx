@@ -3,7 +3,7 @@ import React from 'react';
 import { PaperClipIcon } from '@heroicons/react/20/solid';
 import { TrashIcon } from '@heroicons/react/24/outline';
 
-import { AttachmentFilePartial } from '@/components/attachment-file-list';
+import { AttachmentFilePartial } from '@/api/download-attachment';
 import { doToast } from '@/components/toast';
 import { API, gql } from '@/api/index';
 import { Button } from '@/components/button';
