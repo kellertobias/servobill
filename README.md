@@ -30,6 +30,7 @@ Planned until end of May 2025:
 - [ ] Add support for dockerized deployments (WIP, mainly needs testing)
 
 Planned until end of June 2025:
+- [ ] Add support for SMTP mail sending (instead of only allowing SES)
 - [ ] Add support for simple inventory management (expense can create inventory items, history on inventory items, etc.)
 - [ ] Add support for incoming digital invoices (e.g. X-Rechnung/ ZugFeRD)
 - [ ] Add AI Upload of invoices (e.g. from PDF) to automatically create expenses and inventory items
