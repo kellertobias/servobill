@@ -31,7 +31,6 @@ export function InvoiceActivityForm({
 	 * Handles form submission for comment and/or attachment.
 	 */
 	const submit = async () => {
-		console.log({ attachment, comment, attachToEmail });
 		doToast({
 			promise: (async () => {
 				if (attachment) {

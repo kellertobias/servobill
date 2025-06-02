@@ -51,9 +51,7 @@ export class AttachmentResolver {
 			s3Bucket: bucket,
 		});
 		attachment.status = 'pending';
-		console.log('Saving attachment');
 		await this.repository.save(attachment);
-		console.log('Saved attachment');
 		const uploadUrl = await this.fileStorage.getUploadUrl(
 			bucket,
 			s3Key,
