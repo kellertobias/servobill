@@ -17,14 +17,12 @@ export default function ProductsHomePage() {
 	const [selectedProductId, setSelectedProductId] = React.useState<
 		null | string
 	>(null);
-	const pageSize = 10;
-	const currentPage = React.useRef(0);
 
 	const { data, loading, reload } = useLoadData(async () => {
 		const data = await API.query({
 			query: gql(`
-				query ProductsHomePageListData($skip: Int!, $pageSize: Int!) {
-					products(limit: $pageSize, skip: $skip) {
+				query ProductsHomePageListData {
+					products {
 						id
 						name
 						category
@@ -37,10 +35,6 @@ export default function ProductsHomePage() {
 					}
 				}
 			`),
-			variables: {
-				skip: currentPage.current * pageSize,
-				pageSize,
-			},
 		}).then((res) => res.products);
 		return data;
 	});

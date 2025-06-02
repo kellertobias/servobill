@@ -93,10 +93,7 @@ export default function InvoiceHomePage() {
 		<NewInvoiceModal onClose={hideNewInvoiceModal} />
 	));
 
-	const pageSize = 10;
-	const currentPage = React.useRef(0);
-
-	const { data, loading, reload } = useInvoiceList({ pageSize, currentPage });
+	const { data, loading, reload } = useInvoiceList();
 
 	return (
 		<PageContent

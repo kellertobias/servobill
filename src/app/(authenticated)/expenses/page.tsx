@@ -15,8 +15,6 @@ import { exportExpenses, importExpenses } from '@/api/import-export/expenses';
 import ExpenseOverlay from './expense-overlay';
 
 export default function ExpensesHomePage() {
-	const pageSize = 10;
-	const currentPage = React.useRef(0);
 	const [selectedExpenseId, setSelectedExpenseId] = React.useState<
 		null | string
 	>(null);
@@ -24,8 +22,8 @@ export default function ExpensesHomePage() {
 	const { data, loading, reload } = useLoadData(async () => {
 		const data = await API.query({
 			query: gql(`
-				query ExpensesHomePageListData($skip: Int!, $pageSize: Int!) {
-					expenses(limit: $pageSize, skip: $skip) {
+				query ExpensesHomePageListData {
+					expenses {
 						id
 						name
 						description
@@ -41,10 +39,6 @@ export default function ExpensesHomePage() {
 					}
 				}
 			`),
-			variables: {
-				skip: currentPage.current * pageSize,
-				pageSize,
-			},
 		}).then((res) => res.expenses);
 		return data;
 	});

@@ -192,6 +192,11 @@ export class InvoiceDynamodbRepository
 			this.ormToDomainEntity(elm),
 		);
 
+		// sort all data by createdAt, so that the latest invoices are at the top
+		results = results.sort((a, b) => {
+			return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+		});
+
 		// In-memory filtering for type and status
 		if (query.where?.type) {
 			results = results.filter(

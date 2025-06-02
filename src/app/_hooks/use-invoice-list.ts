@@ -8,6 +8,9 @@ export const useInvoiceList = ({
 }: {
 	pageSize: number;
 	currentPage: { current: number };
+} = {
+	pageSize: 100000,
+	currentPage: { current: 0 },
 }) =>
 	useLoadData(async () =>
 		API.query({
