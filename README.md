@@ -32,21 +32,33 @@ We feature a simple, easy-to-use interface for creating and managing invoices. Y
 
 ## Roadmap
 
+Planned until end of 2024:
 - [X] ... basic application: customers, products, invoices, expenses, reports, etc.
+
+Planned until end of May 2025:
 - [X] Add support for on-premise database types (postgres)
 - [X] Add support for attachments for invoices, expenses and emails
 - [X] Add categorization of expenses
 - [X] Add support for auto-generated expenses (e.g. travel expenses)
 - [ ] Add support for dockerized deployments (WIP)
+
+Planned until end of June 2025:
 - [ ] Add support for simple inventory management (expense can create inventory items, history on inventory items, etc.)
 - [ ] Add support for incoming digital invoices (e.g. X-Rechnung/ ZugFeRD)
 - [ ] Add AI Upload of invoices (e.g. from PDF) to automatically create expenses and inventory items
-- [ ] Add support for incoming invoice emails (either parse digital invoice or use AI to parse)
-- [ ] Add support for sending digital invoices (e.g. X-Rechnung/ ZugFeRD)
-- [ ] Add "Projects" to track time and assign inventory items to projects
-- [ ] Add offline mode for: time tracking, inventory items
 - [ ] Add local user management (e.g. for self-hosted deployments)
+
+Planned until end of July 2025:
+- [ ] Add support for sending digital invoices (e.g. X-Rechnung/ ZugFeRD)
+- [ ] Add "Projects" assign inventory items to projects
+- [ ] Add support for incoming invoice emails (either parse digital invoice or use AI to parse)
+
+Planned until end of August 2025:
+- [ ] Add "Time Tracking" to Projects
 - [ ] Add automatic backups of data (e.g. via email or to S3)
+
+Long term:
+- [ ] Add offline mode for: time tracking, inventory items
 - [ ] Add S3 lifecycle rules to automatically archive old data (e.g. glacier to save on storage)
 - [ ] Add pagination to all lists
 - [ ] PDF export of reports (JSON & CSV export already present)
