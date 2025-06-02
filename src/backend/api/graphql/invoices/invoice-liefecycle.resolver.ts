@@ -22,7 +22,10 @@ import { EXPENSE_REPOSITORY } from '@/backend/repositories/expense/di-tokens';
 import { type ExpenseRepository } from '@/backend/repositories/expense/interface';
 import { PRODUCT_REPOSITORY } from '@/backend/repositories/product/di-tokens';
 import { type ProductRepository } from '@/backend/repositories/product/interface';
-import { S3Service } from '@/backend/services/s3.service';
+import {
+	FILE_STORAGE_SERVICE,
+	type FileStorageService,
+} from '@/backend/services/file-storage.service';
 import { Logger } from '@/backend/services/logger.service';
 import {
 	InvoiceEntity,
@@ -47,7 +50,8 @@ export class InvoiceLifecycleResolver {
 		@Inject(SETTINGS_REPOSITORY) private settingsRepository: SettingsRepository,
 		@Inject(EXPENSE_REPOSITORY) private expenseRepository: ExpenseRepository,
 		@Inject(PRODUCT_REPOSITORY) private productRepository: ProductRepository,
-		@Inject(S3Service) private s3Service: S3Service,
+		@Inject(FILE_STORAGE_SERVICE)
+		private fileStorageService: FileStorageService,
 	) {}
 
 	@Authorized()
@@ -250,9 +254,10 @@ export class InvoiceLifecycleResolver {
 		if (invoice.pdf && invoice.contentHash === invoice.pdf?.forContentHash) {
 			const bucket = invoice.pdf.bucket;
 			const key = invoice.pdf.key;
+
 			if (bucket && key) {
 				this.logger.info('Invoice PDF already exists');
-				return await this.s3Service.getSignedUrl({
+				return await this.fileStorageService.getDownloadUrl({
 					bucket,
 					key,
 				});

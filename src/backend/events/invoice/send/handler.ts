@@ -22,8 +22,10 @@ import { CreateInvoicePdfHandler } from '@/backend/cqrs/generate-pdf/create-invo
 import { DefaultContainer } from '@/common/di';
 import { GenerateInvoiceHtmlHandler } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.handler';
 import { GenerateInvoiceHtmlCommand } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.command';
-import { FILE_STORAGE_SERVICE } from '@/backend/services/file-storage.service';
-import type { FileStorageService } from '@/backend/services/file-storage.service';
+import {
+	FILE_STORAGE_SERVICE,
+	type FileStorageService,
+} from '@/backend/services/file-storage.service';
 import { SESService } from '@/backend/services/ses.service';
 import { InvoiceEntity, InvoiceType } from '@/backend/entities/invoice.entity';
 import {
@@ -164,7 +166,9 @@ export const handler: EventHandler = makeEventHandler(
 			if (!invoice.pdf.bucket || !invoice.pdf.key) {
 				throw new Error('PDF bucket or key missing');
 			}
-			pdf = await fileStorage.getFile(invoice.pdf.bucket, invoice.pdf.key);
+			pdf = await fileStorage.getFile(invoice.pdf.key, {
+				bucket: invoice.pdf.bucket,
+			});
 		}
 
 		if (!pdf) {
@@ -189,7 +193,7 @@ export const handler: EventHandler = makeEventHandler(
 				a.attachmentId,
 		);
 		/**
-		 * Download all flagged attachments from S3.
+		 * Download all flagged attachments from file storage.
 		 */
 		const extraAttachments = [];
 		for (const activity of flaggedAttachmentActivities) {
@@ -208,10 +212,9 @@ export const handler: EventHandler = makeEventHandler(
 			// Use FileStorageService to get the file buffer
 			let fileBuffer: Buffer | undefined;
 			try {
-				fileBuffer = await fileStorage.getFile(
-					attachment.s3Bucket,
-					attachment.s3Key,
-				);
+				fileBuffer = await fileStorage.getFile(attachment.s3Key, {
+					bucket: attachment.s3Bucket,
+				});
 			} catch {
 				continue;
 			}

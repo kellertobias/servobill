@@ -52,11 +52,7 @@ export class AttachmentResolver {
 		});
 		attachment.status = 'pending';
 		await this.repository.save(attachment);
-		const uploadUrl = await this.fileStorage.getUploadUrl(
-			bucket,
-			s3Key,
-			attachment.id,
-		);
+		const uploadUrl = await this.fileStorage.getUploadUrl(attachment);
 		return { uploadUrl, attachmentId: attachment.id };
 	}
 
@@ -136,12 +132,7 @@ export class AttachmentResolver {
 			throw new Error('Attachment not found');
 		}
 		// Use S3Service.getSignedUrl for download
-		const downloadUrl = await this.fileStorage.getDownloadUrl(
-			attachment.s3Bucket,
-			attachment.s3Key,
-			attachment.fileName,
-			attachment.id,
-		);
+		const downloadUrl = await this.fileStorage.getDownloadUrl(attachment);
 		return { downloadUrl };
 	}
 
@@ -157,7 +148,9 @@ export class AttachmentResolver {
 		if (!attachment) {
 			return false;
 		}
-		await this.fileStorage.deleteFile(attachment.s3Bucket, attachment.s3Key);
+		await this.fileStorage.deleteFile(attachment.s3Key, {
+			bucket: attachment.s3Bucket,
+		});
 		await this.repository.delete(attachmentId);
 		return true;
 	}

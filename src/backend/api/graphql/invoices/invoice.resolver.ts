@@ -439,10 +439,9 @@ export class InvoiceResolver {
 				activity.attachmentId,
 			);
 			if (attachment && attachment.s3Bucket && attachment.s3Key) {
-				await this.fileStorage.deleteFile(
-					attachment.s3Bucket,
-					attachment.s3Key,
-				);
+				await this.fileStorage.deleteFile(attachment.s3Key, {
+					bucket: attachment.s3Bucket,
+				});
 			}
 			await this.attachmentRepository.delete(activity.attachmentId);
 		}

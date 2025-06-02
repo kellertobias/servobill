@@ -9,8 +9,11 @@ import { SESSION_REPOSITORY } from '@/backend/repositories/session/di-tokens';
 import { type SessionRepository } from '@/backend/repositories/session/interface';
 import { DefaultContainer } from '@/common/di';
 import { Logger } from '@/backend/services/logger.service';
-import { S3Service } from '@/backend/services/s3.service';
 import { withSpan } from '@/backend/instrumentation';
+import {
+	FILE_STORAGE_SERVICE,
+	FileStorageService,
+} from '@/backend/services/file-storage.service';
 
 const logger = new Logger('GoogleAuth');
 
@@ -34,14 +37,11 @@ const getUserPicture = async (user: TokenPayload) => {
 	const buffer = Buffer.from(await res.arrayBuffer());
 
 	// Upload to S3, but handle errors gracefully (e.g., bucket missing)
-	const s3 = DefaultContainer.get(S3Service);
+	const fileStorageService =
+		DefaultContainer.get<FileStorageService>(FILE_STORAGE_SERVICE);
 	const key = `profile-pictures/${user?.sub}.png`;
 	try {
-		const url = await s3.putObject({
-			body: buffer,
-			key,
-			public: true,
-		});
+		const url = await fileStorageService.saveFile(key, buffer);
 		return url;
 	} catch (error) {
 		// Log the error and return null so login does not crash

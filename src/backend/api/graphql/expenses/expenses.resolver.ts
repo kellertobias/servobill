@@ -141,10 +141,9 @@ export class ExpenseResolver {
 				const attachment = await this.attachmentRepository.getById(att.id);
 				if (attachment?.s3Key && attachment.s3Bucket) {
 					// Delete file from storage abstraction before removing DB record
-					await this.fileStorage.deleteFile(
-						attachment.s3Bucket,
-						attachment.s3Key,
-					);
+					await this.fileStorage.deleteFile(attachment.s3Key, {
+						bucket: attachment.s3Bucket,
+					});
 				}
 				await this.attachmentRepository.delete(att.id);
 			}

@@ -1,5 +1,5 @@
 import { CONFIG_SERVICE } from './di-tokens';
-import { DatabaseType } from './constants';
+import { DatabaseType, FileStorageType } from './constants';
 
 import { Service } from '@/common/di';
 
@@ -29,6 +29,15 @@ export class ConfigService {
 		accessKeyId: string | undefined;
 		secretAccessKey: string | undefined;
 	};
+
+	public readonly fileStorage:
+		| {
+				type: FileStorageType;
+				baseDirectory: string;
+		  }
+		| {
+				type: FileStorageType.S3;
+		  };
 
 	constructor() {
 		this.port = process.env.PORT || 3000;
@@ -72,6 +81,15 @@ export class ConfigService {
 			accessKeyId: process.env.SES_ACCESS_KEY_ID,
 			secretAccessKey: process.env.SES_SECRET_ACCESS_KEY,
 		};
+
+		this.fileStorage = process.env.UPLOAD_DIRECTORY
+			? {
+					type: FileStorageType.LOCAL,
+					baseDirectory: process.env.UPLOAD_DIRECTORY,
+				}
+			: {
+					type: FileStorageType.S3,
+				};
 	}
 
 	public get uploadDirectory(): string | undefined {

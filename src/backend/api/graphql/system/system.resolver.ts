@@ -17,8 +17,11 @@ import {
 	ExpenseSettingsEntity,
 } from '@/backend/entities/settings.entity';
 import { EventBusService } from '@/backend/services/eventbus.service';
-import { S3Service } from '@/backend/services/s3.service';
 import { GenerateTemplatePreviewEvent } from '@/backend/events/template/event';
+import {
+	FILE_STORAGE_SERVICE,
+	type FileStorageService,
+} from '@/backend/services/file-storage.service';
 
 @Service()
 @Resolver()
@@ -26,7 +29,8 @@ export class SystemResolver {
 	constructor(
 		@Inject(SETTINGS_REPOSITORY) private repository: SettingsRepository,
 		@Inject(EventBusService) private eventBus: EventBusService,
-		@Inject(S3Service) private s3: S3Service,
+		@Inject(FILE_STORAGE_SERVICE)
+		private fileStorageService: FileStorageService,
 	) {}
 
 	private mapInvoiceSettingsEntityToResponse(
@@ -238,9 +242,7 @@ export class SystemResolver {
 			}),
 		);
 
-		const url = await this.s3.getSignedUrl({
-			key,
-		});
+		const url = await this.fileStorageService.getDownloadUrl({ key });
 
 		return url;
 	}

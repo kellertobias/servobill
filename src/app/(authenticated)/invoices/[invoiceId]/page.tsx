@@ -94,8 +94,8 @@ export default function InvoiceDetailPage() {
 										content: (
 											<>
 												Are you sure you want to delete this {name}? This action
-												cannot be undone and does not yet delete the PDF files
-												on S3. Also, Invoice Numbers won't be reset.
+												cannot be undone and does not yet delete the PDF files.
+												Also, Invoice Numbers won't be reset.
 											</>
 										),
 									})) &&
