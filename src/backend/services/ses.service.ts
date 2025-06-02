@@ -1,9 +1,11 @@
 import * as ses from '@aws-sdk/client-ses';
 import nodemailer from 'nodemailer';
+import SESTransport from 'nodemailer/lib/ses-transport';
 
 import { Span } from '../instrumentation';
 
-import { ConfigService } from './config.service';
+import type { ConfigService } from './config.service';
+import { CONFIG_SERVICE } from './di-tokens';
 
 import { Inject, Service } from '@/common/di';
 
@@ -12,7 +14,7 @@ export class SESService {
 	private client: ses.SESClient;
 
 	constructor(
-		@Inject(ConfigService) private readonly configuration: ConfigService,
+		@Inject(CONFIG_SERVICE) private readonly configuration: ConfigService,
 	) {
 		const sesOptions = {
 			...(this.configuration.endpoints.ses
@@ -51,7 +53,7 @@ export class SESService {
 			filename: string;
 			content: Buffer | string;
 		}[];
-	}) {
+	}): Promise<SESTransport.SentMessageInfo> {
 		const transporter = nodemailer.createTransport({
 			SES: { ses: this.client, aws: ses },
 		});

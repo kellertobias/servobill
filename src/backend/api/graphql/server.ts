@@ -26,6 +26,19 @@ export async function getGraphQLServer<E, C, Ctx>(
 	const server = new ApolloServer({
 		schema,
 		formatError: (error) => {
+			if (
+				error.extensions.exception.stacktrace[0].includes(
+					'Session Expired - Refreshable',
+				)
+			) {
+				return {
+					message: 'Session Expired - Refreshable',
+					extensions: {
+						code: 'SESSION_EXPIRED_REFRESHABLE',
+					},
+				};
+			}
+
 			return tracer.startActiveSpan('formatError', (span) => {
 				logger.warn('Error');
 				const { code, exception } = (error?.extensions || {
@@ -47,16 +60,7 @@ export async function getGraphQLServer<E, C, Ctx>(
 					nodeEnv: process.env.NODE_ENV,
 				});
 
-				if (
-					error.extensions.exception.stacktrace[0].includes(
-						'Session Expired - Refreshable',
-					)
-				) {
-					span.setAttribute('type', 'SESSION_EXPIRED_REFRESHABLE');
-					error.extensions.code = 'SESSION_EXPIRED_REFRESHABLE';
-					span.end();
-					return error;
-				} else if (exception.validationErrors) {
+				if (exception.validationErrors) {
 					const message = `Input Data Validation Failed\n${exception.validationErrors
 						.map(
 							(e) =>

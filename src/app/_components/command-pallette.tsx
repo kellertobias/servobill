@@ -88,7 +88,7 @@ export default function CommandPallette<T extends { id: string | number }>({
 					<div className="fixed inset-0 bg-gray-500 bg-opacity-70 transition-opacity backdrop-blur" />
 				</Transition.Child>
 
-				<div className="fixed inset-0 z-10 w-screen overflow-y-auto p-4 sm:p-6 md:p-20">
+				<div className="fixed inset-0 z-10 w-screen overflow-y-auto overflow-x-hidden p-4 sm:p-6 md:p-20">
 					<Transition.Child
 						as={Fragment}
 						enter="ease-out duration-300"
@@ -119,7 +119,7 @@ export default function CommandPallette<T extends { id: string | number }>({
 									<div className="flex transform-gpu divide-x divide-gray-100">
 										<div
 											className={clsx(
-												'sm:max-h-[28rem] min-w-0 flex-auto scroll-py-4 overflow-y-auto px-6 py-4',
+												'sm:max-h-[28rem] min-w-0 flex-auto scroll-py-4 overflow-y-auto overflow-x-hidden px-6 py-4',
 												{
 													'hidden sm:block sm:h-96': showItem,
 												},

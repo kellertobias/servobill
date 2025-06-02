@@ -19,43 +19,50 @@ import {
 } from './invoice.schema';
 
 import { Inject, Service } from '@/common/di';
-import {
-	InvoiceEntity,
-	InvoiceStatus,
-	InvoiceType,
-} from '@/backend/entities/invoice.entity';
+import { InvoiceEntity, InvoiceType } from '@/backend/entities/invoice.entity';
 import {
 	InvoiceActivityEntity,
 	InvoiceActivityType,
 } from '@/backend/entities/invoice-activity.entity';
-import { InvoiceRepository } from '@/backend/repositories/invoice.repository';
-import { CustomerRepository } from '@/backend/repositories/customer.repository';
+import {
+	INVOICE_REPOSITORY,
+	type InvoiceRepository,
+} from '@/backend/repositories/invoice';
+import { CUSTOMER_REPOSITORY } from '@/backend/repositories/customer/di-tokens';
+import { type CustomerRepository } from '@/backend/repositories/customer/interface';
+import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
+import { type SettingsRepository } from '@/backend/repositories/settings/interface';
 import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
-import { SettingsRepository } from '@/backend/repositories/settings.repository';
 import { InvoiceSettingsEntity } from '@/backend/entities/settings.entity';
 import { CustomerEntity } from '@/backend/entities/customer.entity';
 import { ActiveSpan, Span } from '@/backend/instrumentation';
 import type { OtelSpan } from '@/backend/instrumentation';
+import type { AttachmentRepository } from '@/backend/repositories/attachment/interface';
+import { ATTACHMENT_REPOSITORY } from '@/backend/repositories/attachment/di-tokens';
+import { FILE_STORAGE_SERVICE } from '@/backend/services/file-storage.service';
+import type { FileStorageService } from '@/backend/services/file-storage.service';
 
 @Service()
 @Resolver(() => Invoice)
 export class InvoiceResolver {
 	constructor(
-		@Inject(InvoiceRepository) private invoiceRepository: InvoiceRepository,
-		@Inject(CustomerRepository) private customerRepository: CustomerRepository,
-		@Inject(SettingsRepository) private settingsRepository: SettingsRepository,
+		@Inject(INVOICE_REPOSITORY) private invoiceRepository: InvoiceRepository,
+		@Inject(CUSTOMER_REPOSITORY) private customerRepository: CustomerRepository,
+		@Inject(SETTINGS_REPOSITORY) private settingsRepository: SettingsRepository,
+		@Inject(ATTACHMENT_REPOSITORY)
+		private attachmentRepository: AttachmentRepository,
+		@Inject(FILE_STORAGE_SERVICE)
+		private fileStorage: FileStorageService,
 	) {}
 
 	@Span('InvoiceResolver.invoices')
 	@Authorized()
 	@Query(() => [Invoice])
 	async invoices(
-		@ActiveSpan() span: OtelSpan,
 		@Arg('where', { nullable: true }) where?: InvoiceWhereInput,
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		@Arg('skip', () => Int, { nullable: true }) skip?: number,
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		@Arg('limit', () => Int, { nullable: true }) limit?: number,
+		@ActiveSpan() span?: OtelSpan,
 	): Promise<Invoice[]> {
 		span?.setAttribute('context.where', JSON.stringify(where));
 		const data = await this.invoiceRepository.listByQuery({
@@ -64,26 +71,28 @@ export class InvoiceResolver {
 			limit,
 		});
 
-		return data
-			.filter((invoice) => {
-				if (where?.search) {
-					return (
-						invoice.invoiceNumber?.includes(where.search) ||
-						invoice.offerNumber?.includes(where.search) ||
-						invoice.customer.name?.includes(where.search)
-					);
-				}
-				return true;
-			})
-			.filter((invoice) => invoice.status !== InvoiceStatus.CANCELLED)
-			.sort((a, b) => {
-				const dateA = a.invoicedAt || a.createdAt;
-				const dateB = b.invoicedAt || b.createdAt;
-				if (dateA && dateB) {
-					return dateB.getTime() - dateA.getTime();
-				}
-				return 0;
-			});
+		return (
+			data
+				.filter((invoice) => {
+					if (where?.search) {
+						return (
+							invoice.invoiceNumber?.includes(where.search) ||
+							invoice.offerNumber?.includes(where.search) ||
+							invoice.customer.name?.includes(where.search)
+						);
+					}
+					return true;
+				})
+				// .filter((invoice) => invoice.status !== InvoiceStatus.CANCELLED)
+				.sort((a, b) => {
+					const dateA = a.invoicedAt || a.createdAt;
+					const dateB = b.invoicedAt || b.createdAt;
+					if (dateA && dateB) {
+						return dateB.getTime() - dateA.getTime();
+					}
+					return 0;
+				})
+		);
 	}
 
 	@Span('InvoiceResolver.invoice')
@@ -94,7 +103,24 @@ export class InvoiceResolver {
 		@ActiveSpan() span: OtelSpan,
 	): Promise<Invoice | null> {
 		span?.setAttribute('context.invoiceId', id);
-		return this.invoiceRepository.getById(id);
+		const invoice = await this.invoiceRepository.getById(id);
+
+		if (!invoice) {
+			return null;
+		}
+
+		invoice.activity = await Promise.all(
+			invoice.activity.map(async (activity) => {
+				return {
+					...activity,
+					attachment: activity.attachmentId
+						? await this.attachmentRepository.getById(activity.attachmentId)
+						: null,
+				};
+			}),
+		);
+
+		return invoice;
 	}
 
 	@Span('InvoiceResolver.createInvoice')
@@ -296,10 +322,12 @@ export class InvoiceResolver {
 	@Mutation(() => InvoiceChangedResponse)
 	async invoiceAddComment(
 		@Arg('invoiceId') invoiceId: string,
-		@Arg('comment') comment: string,
+		@Arg('comment', () => String, { nullable: true }) comment: string | null,
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		@Arg('attachment', () => String, { nullable: true })
-		attachment: string | null,
+		@Arg('attachmentId', () => String, { nullable: true })
+		attachmentId: string | null,
+		@Arg('attachToEmail', () => Boolean, { nullable: true })
+		attachToEmail: boolean | null,
 		@Ctx() context: GqlContext,
 	): Promise<InvoiceChangedResponse> {
 		const invoice = await this.invoiceRepository.getById(invoiceId);
@@ -309,11 +337,28 @@ export class InvoiceResolver {
 		}
 
 		const activity = new InvoiceActivityEntity({
-			type: InvoiceActivityType.NOTE,
-			notes: comment,
+			type: (() => {
+				if (!comment && !attachmentId) {
+					throw new Error('No comment or attachment provided');
+				}
+				if (!comment && attachmentId) {
+					return InvoiceActivityType.ATTACHMENT;
+				}
+				return InvoiceActivityType.NOTE;
+			})(),
+			notes: comment || undefined,
 			user: context.session?.user?.name,
+			attachToEmail: attachToEmail || false,
 		});
 
+		if (attachmentId) {
+			const attachment = await this.attachmentRepository.getById(attachmentId);
+			if (attachment) {
+				activity.attachmentId = attachment.id;
+				attachment.invoiceId = invoiceId;
+				await this.attachmentRepository.save(attachment);
+			}
+		}
 		invoice.addActivity(activity);
 
 		await this.invoiceRepository.save(invoice);
@@ -323,6 +368,90 @@ export class InvoiceResolver {
 			activityId: activity.id,
 			updatedAt: activity.activityAt,
 			change: activity.type,
+		};
+	}
+
+	/**
+	 * Sets or unsets the 'attachToEmail' flag for an ATTACHMENT activity.
+	 *
+	 * @param activityId The ID of the activity to update.
+	 * @param attachToEmail Whether to attach the file to outgoing emails.
+	 * @returns The changed invoice response.
+	 */
+	@Authorized()
+	@Mutation(() => InvoiceChangedResponse)
+	async setInvoiceActivityAttachmentEmailFlag(
+		@Arg('invoiceId') invoiceId: string,
+		@Arg('activityId') activityId: string,
+		@Arg('attachToEmail') attachToEmail: boolean,
+	): Promise<InvoiceChangedResponse> {
+		const invoice = await this.invoiceRepository.getById(invoiceId);
+		if (!invoice) {
+			throw new Error('Invoice not found');
+		}
+		const activity = invoice.activity.find((a) => a.id === activityId);
+		if (!activity) {
+			throw new Error('Activity not found');
+		}
+		if (activity.type !== InvoiceActivityType.ATTACHMENT) {
+			throw new Error('Not an attachment activity');
+		}
+		activity.attachToEmail = attachToEmail;
+		await this.invoiceRepository.save(invoice);
+		return {
+			id: invoiceId,
+			activityId: activity.id,
+			updatedAt: activity.activityAt,
+			change: activity.type,
+		};
+	}
+
+	/**
+	 * Deletes an ATTACHMENT activity and the linked attachment.
+	 *
+	 * @param invoiceId The ID of the invoice.
+	 * @param activityId The ID of the activity to delete.
+	 * @returns The changed invoice response.
+	 */
+	@Authorized()
+	@Mutation(() => InvoiceChangedResponse)
+	async deleteInvoiceAttachmentActivity(
+		@Arg('invoiceId') invoiceId: string,
+		@Arg('activityId') activityId: string,
+	): Promise<InvoiceChangedResponse> {
+		const invoice = await this.invoiceRepository.getById(invoiceId);
+		if (!invoice) {
+			throw new Error('Invoice not found');
+		}
+		const idx = invoice.activity.findIndex((a) => a.id === activityId);
+		if (idx === -1) {
+			throw new Error('Activity not found');
+		}
+		const activity = invoice.activity[idx];
+		if (activity.type !== InvoiceActivityType.ATTACHMENT) {
+			throw new Error('Not an attachment activity');
+		}
+		// Remove the activity
+		invoice.activity.splice(idx, 1);
+		// Delete the file from storage before removing the DB record
+		if (activity.attachmentId) {
+			const attachment = await this.attachmentRepository.getById(
+				activity.attachmentId,
+			);
+			if (attachment && attachment.s3Bucket && attachment.s3Key) {
+				await this.fileStorage.deleteFile(
+					attachment.s3Bucket,
+					attachment.s3Key,
+				);
+			}
+			await this.attachmentRepository.delete(activity.attachmentId);
+		}
+		await this.invoiceRepository.save(invoice);
+		return {
+			id: invoiceId,
+			activityId: activityId,
+			updatedAt: new Date(),
+			change: InvoiceActivityType.ATTACHMENT,
 		};
 	}
 }

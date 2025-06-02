@@ -12,28 +12,41 @@ import {
 
 import { Inject, Service } from '@/common/di';
 import { InvoiceSubmissionEntity } from '@/backend/entities/invoice-submission.entity';
-import { InvoiceRepository } from '@/backend/repositories/invoice.repository';
-import { InvoiceStatus, InvoiceType } from '@/backend/entities/invoice.entity';
-import { SettingsRepository } from '@/backend/repositories/settings.repository';
-import { InvoiceSettingsEntity } from '@/backend/entities/settings.entity';
-import { CustomerRepository } from '@/backend/repositories/customer.repository';
+import { INVOICE_REPOSITORY } from '@/backend/repositories/invoice/di-tokens';
+import { type InvoiceRepository } from '@/backend/repositories/invoice/interface';
+import { CUSTOMER_REPOSITORY } from '@/backend/repositories/customer/di-tokens';
+import { type CustomerRepository } from '@/backend/repositories/customer/interface';
+import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
+import { type SettingsRepository } from '@/backend/repositories/settings/interface';
+import { EXPENSE_REPOSITORY } from '@/backend/repositories/expense/di-tokens';
+import { type ExpenseRepository } from '@/backend/repositories/expense/interface';
+import { PRODUCT_REPOSITORY } from '@/backend/repositories/product/di-tokens';
+import { type ProductRepository } from '@/backend/repositories/product/interface';
+import { S3Service } from '@/backend/services/s3.service';
+import { Logger } from '@/backend/services/logger.service';
+import {
+	InvoiceEntity,
+	InvoiceStatus,
+	InvoiceType,
+} from '@/backend/entities/invoice.entity';
 import { CustomerEntity } from '@/backend/entities/customer.entity';
 import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
 import {
 	InvoiceActivityEntity,
 	InvoiceActivityType,
 } from '@/backend/entities/invoice-activity.entity';
-import { S3Service } from '@/backend/services/s3.service';
-import { Logger } from '@/backend/services/logger.service';
+import { InvoiceSettingsEntity } from '@/backend/entities/settings.entity';
 
 @Service()
 @Resolver(() => Invoice)
 export class InvoiceLifecycleResolver {
 	private logger = new Logger(InvoiceLifecycleResolver.name);
 	constructor(
-		@Inject(InvoiceRepository) private invoiceRepository: InvoiceRepository,
-		@Inject(CustomerRepository) private customerRepository: CustomerRepository,
-		@Inject(SettingsRepository) private settingsRepository: SettingsRepository,
+		@Inject(INVOICE_REPOSITORY) private invoiceRepository: InvoiceRepository,
+		@Inject(CUSTOMER_REPOSITORY) private customerRepository: CustomerRepository,
+		@Inject(SETTINGS_REPOSITORY) private settingsRepository: SettingsRepository,
+		@Inject(EXPENSE_REPOSITORY) private expenseRepository: ExpenseRepository,
+		@Inject(PRODUCT_REPOSITORY) private productRepository: ProductRepository,
 		@Inject(S3Service) private s3Service: S3Service,
 	) {}
 
@@ -63,12 +76,22 @@ export class InvoiceLifecycleResolver {
 		});
 
 		newInvoice.updateItems(
-			invoice.items.map(
-				(item) =>
-					new InvoiceItemEntity({
-						...item,
-					}),
-			),
+			invoice.items.map((item) => {
+				const newItem = new InvoiceItemEntity({
+					...item,
+				});
+
+				if (newItem.linkedExpenses) {
+					item.linkedExpenses = newItem.linkedExpenses.map((expense) => {
+						return {
+							...expense,
+							expenseId: undefined,
+						};
+					});
+				}
+
+				return newItem;
+			}),
 		);
 
 		if (invoice.type === InvoiceType.OFFER && copyAs === InvoiceType.INVOICE) {
@@ -104,11 +127,18 @@ export class InvoiceLifecycleResolver {
 	@Mutation(() => InvoiceChangedResponse)
 	async invoiceCancelUnpaid(
 		@Arg('id') invoiceId: string,
+		@Arg('deleteExpenses', () => Boolean, { nullable: true })
+		deleteExpenses: boolean = false,
 		@Ctx() context: GqlContext,
 	): Promise<InvoiceChangedResponse> {
 		const invoice = await this.invoiceRepository.getById(invoiceId);
 		if (!invoice) {
 			throw new Error('Invoice not found');
+		}
+
+		// Cancel all linked expenses for this invoice
+		if (deleteExpenses) {
+			await this.cancelLinkedExpensesForInvoice(invoice);
 		}
 
 		const activity = invoice.updateStatus(
@@ -158,6 +188,8 @@ export class InvoiceLifecycleResolver {
 			},
 		);
 
+		await this.invoiceRepository.save(invoice);
+		await this.createAndLinkExpensesForInvoice(invoice);
 		await this.invoiceRepository.save(invoice);
 
 		return {
@@ -245,5 +277,68 @@ export class InvoiceLifecycleResolver {
 		this.logger.info('Saved Invoice');
 
 		return null;
+	}
+
+	/**
+	 * Creates expenses for invoice items with products that have expenseCents, and links the expense IDs to the items.
+	 *
+	 * For each invoice item:
+	 *   - If the item references a product (productId), fetch the product.
+	 *   - If the product has an expenseCents value > 0, create an expense for this item.
+	 *   - The expense amount is calculated as: expenseCents * quantity.
+	 *   - The expense is saved, and its ID is linked to the invoice item (item.expenseId).
+	 *
+	 * @param invoice The invoice entity to process. This method mutates the invoice's items in-place.
+	 */
+	private async createAndLinkExpensesForInvoice(invoice: InvoiceEntity) {
+		// Iterate over all items in the invoice
+		for (const item of invoice.items) {
+			for (const exp of item.linkedExpenses || []) {
+				if (!exp.enabled) {
+					continue;
+				}
+
+				const expendedCents = Math.round(exp.price * (item.quantity || 1));
+
+				const expense = await this.expenseRepository.create();
+
+				expense.update({
+					name: `${exp.name} (For ${invoice.invoiceNumber})`,
+					description: `From invoice ${
+						invoice.invoiceNumber || invoice.id
+					}, item: ${item.name}, quantity: ${item.quantity}`,
+					expendedCents,
+					expendedAt: invoice.invoicedAt || new Date(),
+					notes: `Auto-created from invoice ${
+						invoice.invoiceNumber || invoice.id
+					}`,
+					categoryId: exp.categoryId,
+				});
+				await this.expenseRepository.save(expense);
+
+				// update the expenseId of the item
+				exp.expenseId = expense.id;
+				invoice.updatedAt = new Date();
+			}
+		}
+	}
+
+	/**
+	 * Cancels (deletes) all expenses linked to invoice items by expenseId, and clears the expenseId from the items.
+	 *
+	 * For each invoice item:
+	 *   - If the item has an expenseId, delete the corresponding expense.
+	 *   - Clear the expenseId from the item.
+	 *
+	 * @param invoice The invoice entity to process. This method mutates the invoice's items in-place.
+	 */
+	private async cancelLinkedExpensesForInvoice(invoice: InvoiceEntity) {
+		for (const item of invoice.items) {
+			for (const expense of item.linkedExpenses || []) {
+				if (expense.expenseId) {
+					await this.expenseRepository.delete(expense.expenseId);
+				}
+			}
+		}
 	}
 }

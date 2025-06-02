@@ -38,6 +38,12 @@ function ReportPreview({ start, end }: { start?: string; end?: string }) {
 							valutaDate
 							surplusCents
 							taxCents
+							category {
+								id
+								name
+								color
+								description
+							}
 						}
 					}
 					reference: generateReport(where: {startDate: $startOfLastPeriod, endDate: $startOfPeriod}) {
@@ -162,6 +168,28 @@ function ReportPreview({ start, end }: { start?: string; end?: string }) {
 					getCategory={(data) => dayjs(data.valutaDate).format('MMMM, YYYY')}
 					columns={[
 						{
+							key: 'category',
+							title: 'Category',
+							className: 'py-5 w-24',
+							render: (item) =>
+								item.category ? (
+									<span
+										className="inline-flex items-center gap-x-1.5 rounded-full px-2 py-1 text-xs font-medium text-gray-900 ring-1 ring-inset ring-gray-200 w-20 justify-center overflow-clip text-ellipsis"
+										title={item.category.description || item.category.name}
+									>
+										<svg
+											viewBox="0 0 6 6"
+											aria-hidden="true"
+											className="w-1.5 h-1.5"
+											style={{ fill: item.category.color || '#888' }}
+										>
+											<circle r={3} cx={3} cy={3} />
+										</svg>
+										{item.category.name}
+									</span>
+								) : null,
+						},
+						{
 							key: 'name',
 							title: 'Name',
 							className: 'py-5',
@@ -240,6 +268,24 @@ export default function ReportHomePage() {
 								generate.
 								<br />
 								Quick Range select:{' '}
+								<a
+									onClick={() => {
+										// eslint-disable-next-line unicorn/no-useless-undefined
+										setStartDate(undefined);
+										// eslint-disable-next-line unicorn/no-useless-undefined
+										setEndDate(undefined);
+										setTimeout(() => {
+											setStartDate(
+												dayjs().startOf('year').format('YYYY-MM-DD'),
+											);
+											setEndDate(dayjs().endOf('year').format('YYYY-MM-DD'));
+										}, 100);
+									}}
+									className="text-blue-600 hover:text-blue-500 no-underline cursor-pointer"
+								>
+									This Year
+								</a>{' '}
+								&bull;{' '}
 								<a
 									onClick={() => {
 										// eslint-disable-next-line unicorn/no-useless-undefined

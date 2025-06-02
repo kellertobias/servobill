@@ -6,6 +6,7 @@ import { doToast } from '@/components/toast';
 import { API, gql } from '../index';
 
 import { downloadFile, requestFile } from './helper';
+import { Exporters } from './exporters/exporters';
 
 export const importExpenses = async () => {
 	const raw = await requestFile();
@@ -42,6 +43,7 @@ export const importExpenses = async () => {
 									'YYYY-MM-DD',
 								).toDate(),
 							taxCents: expense.taxCents || 0,
+							categoryId: expense.category_id || '',
 						},
 					},
 				});
@@ -56,23 +58,7 @@ export const importExpenses = async () => {
 export const exportExpenses = async () => {
 	doToast({
 		promise: (async () => {
-			const { expenses } = await API.query({
-				query: gql(`
-					query ExportExpenses {
-						expenses {
-							id
-							name
-							description
-							notes
-							expendedCents
-							expendedAt
-							taxCents
-							createdAt
-							updatedAt
-						}
-					}
-				`),
-			});
+			const expenses = await Exporters.expenses();
 
 			const data = {
 				expenses,

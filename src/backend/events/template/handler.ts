@@ -10,10 +10,11 @@ import { DefaultContainer } from '@/common/di';
 import { S3Service } from '@/backend/services/s3.service';
 import { GenerateInvoiceHtmlCommand } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.command';
 import { InvoiceEntity, InvoiceType } from '@/backend/entities/invoice.entity';
-import { ConfigService } from '@/backend/services/config.service';
+import type { ConfigService } from '@/backend/services/config.service';
 import { GenerateInvoiceHtmlHandler } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.handler';
 import { CreateInvoicePdfCommand } from '@/backend/cqrs/generate-pdf/create-invoice-pdf.command';
 import { CreateInvoicePdfHandler } from '@/backend/cqrs/generate-pdf/create-invoice-pdf.handler';
+import { CONFIG_SERVICE } from '@/backend/services/di-tokens';
 
 export const handlerName = 'handler';
 export const layers = ['layers/chromium'];
@@ -22,7 +23,7 @@ export const handler: EventHandler = makeEventHandler(
 	async (event, { logger }) => {
 		const { template, styles } = event;
 
-		const config = DefaultContainer.get(ConfigService);
+		const config = DefaultContainer.get<ConfigService>(CONFIG_SERVICE);
 		const s3 = DefaultContainer.get(S3Service);
 		const bus = CqrsBus.forRoot({
 			handlers: [GenerateInvoiceHtmlHandler, CreateInvoicePdfHandler],

@@ -6,8 +6,9 @@ import { trace, context, propagation } from '@opentelemetry/api';
 
 import { Span } from '../instrumentation';
 
-import { ConfigService } from './config.service';
+import type { ConfigService } from './config.service';
 import { Logger } from './logger.service';
+import { CONFIG_SERVICE } from './di-tokens';
 
 import { CustomJson } from '@/common/json';
 import { Inject, Service } from '@/common/di';
@@ -18,7 +19,7 @@ export class EventBusService {
 	private logger = new Logger(EventBusService.name);
 	private client: EventBridgeClient;
 	constructor(
-		@Inject(ConfigService) private readonly configuration: ConfigService,
+		@Inject(CONFIG_SERVICE) private readonly configuration: ConfigService,
 	) {
 		const eventBridgeOptions = {
 			...(this.configuration.endpoints.eventbridge

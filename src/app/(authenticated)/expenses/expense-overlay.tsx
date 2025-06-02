@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 
 import dayjs from 'dayjs';
 
@@ -7,6 +8,13 @@ import { API, gql } from '@/api/index';
 import { Drawer } from '@/components/drawer';
 import { Input } from '@/components/input';
 import { LoadingSkeleton } from '@/components/loading';
+import SelectInput from '@/components/select-input';
+import {
+	AttachmentDropzone,
+	AttachmentFilePartial,
+} from '@/components/attachment-dropzone';
+
+import { useExpenseCategories } from '@/app/_hooks/use-expense-categories';
 
 export default function ExpenseOverlay({
 	expenseId,
@@ -18,6 +26,7 @@ export default function ExpenseOverlay({
 	openCreated?: (id: string) => void;
 }) {
 	const [taxManuallyChanged, setTaxManuallyChanged] = React.useState(false);
+	const categories = useExpenseCategories();
 	const { data, setData, initialData, reload } = useLoadData(
 		async ({ expenseId }) =>
 			expenseId === 'new'
@@ -31,6 +40,8 @@ export default function ExpenseOverlay({
 						expendedAt: dayjs().format('YYYY-MM-DD'),
 						createdAt: null,
 						updatedAt: null,
+						categoryId: '',
+						attachments: [] as AttachmentFilePartial[],
 					}
 				: API.query({
 						query: gql(`
@@ -45,6 +56,14 @@ export default function ExpenseOverlay({
 									taxCents
 									createdAt
 									updatedAt
+									categoryId
+									attachments { 
+										id
+										fileName
+										mimeType
+										size
+										createdAt
+									}
 								}
 							}
 						`),
@@ -56,6 +75,8 @@ export default function ExpenseOverlay({
 						expenditure: API.centsToPrice(res.expense.expendedCents),
 						taxAmount: API.centsToPrice(res.expense.taxCents),
 						expendedAt: dayjs(res.expense.expendedAt).format('YYYY-MM-DD'),
+						categoryId: res.expense.categoryId || '',
+						attachments: res.expense.attachments || [],
 					})),
 		{ expenseId },
 	);
@@ -68,14 +89,22 @@ export default function ExpenseOverlay({
 		openCreated,
 		reload,
 		mapper: (data) => {
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			const { id, expenditure, taxAmount, createdAt, updatedAt, ...rest } =
-				data;
+			const {
+				expenditure,
+				taxAmount,
+				attachments,
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
+				createdAt,
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
+				updatedAt,
+				...rest
+			} = data;
 			return {
 				...rest,
 				expendedCents: API.priceToCents(expenditure),
 				taxCents: API.priceToCents(taxAmount),
 				expendedAt: dayjs(data?.expendedAt).toISOString(),
+				attachmentIds: attachments?.map((a) => a.id) || [],
 			};
 		},
 	});
@@ -128,51 +157,102 @@ export default function ExpenseOverlay({
 							<div>
 								<Input
 									label="Expense Name"
+									placeholder="Name of the expense"
 									value={data?.name}
 									onChange={(name) =>
 										setData((current) => ({ ...current, name }))
 									}
 								/>
 							</div>
-							<div>
-								<Input
-									label="Expenditure (Amount)"
-									value={data?.expenditure}
-									onChange={(expenditure) =>
-										setData((current) => {
-											let taxAmount = current?.taxAmount;
-											if (!taxManuallyChanged) {
-												taxAmount = API.centsToPrice(
-													API.priceToCents(expenditure) * 0.19,
-												);
-											}
-											return { ...current, expenditure, taxAmount };
-										})
-									}
-								/>
-							</div>
-							<div>
-								<Input
-									label="Included Tax (Amount)"
-									value={data?.taxAmount}
-									onChange={(taxAmount) => {
-										setTaxManuallyChanged(true);
-										setData((current) => ({ ...current, taxAmount }));
-									}}
-								/>
+							<div className="flex flex-row gap-2">
+								<div>
+									<Input
+										label="Expenditure (Amount)"
+										value={data?.expenditure}
+										placeholder="0.00"
+										onChange={(expenditure) =>
+											setData((current) => {
+												let taxAmount = current?.taxAmount;
+												if (!taxManuallyChanged) {
+													taxAmount = API.centsToPrice(
+														Math.round(
+															(API.priceToCents(expenditure) / 119) * 19,
+														),
+													);
+												}
+												return { ...current, expenditure, taxAmount };
+											})
+										}
+									/>
+								</div>
+								<div>
+									<Input
+										label="Included Tax (Amount)"
+										value={data?.taxAmount}
+										placeholder="0.00"
+										onChange={(taxAmount) => {
+											setTaxManuallyChanged(true);
+											setData((current) => ({ ...current, taxAmount }));
+										}}
+									/>
+								</div>
 							</div>
 							<div>
 								<Input
 									label="Expended At"
+									placeholder="YYYY-MM-DD"
 									value={data?.expendedAt}
 									onChange={(expendedAt) =>
 										setData((current) => ({ ...current, expendedAt }))
 									}
 								/>
 							</div>
+							{categories && categories.length > 0 ? (
+								<div>
+									<SelectInput
+										label="Category"
+										value={data?.categoryId || ''}
+										onChange={(categoryId) =>
+											setData((current) => ({
+												...current,
+												categoryId: categoryId || undefined,
+											}))
+										}
+										options={categories.map((cat) => ({
+											value: cat.id,
+											label: cat.name,
+											description: cat.description || '',
+											color: cat.color || undefined,
+										}))}
+										placeholder="Select category"
+										className="w-full"
+									/>
+								</div>
+							) : (
+								<div>
+									<div className="w-full">
+										<div className="block text-sm font-medium leading-6 text-gray-900">
+											Category
+										</div>
+
+										<p className="text-xs text-gray-500 mt-2">
+											No expense categories found. You can create categories in
+											the{' '}
+											<Link
+												href="/settings/categories"
+												className="text-primary hover:underline text-indigo-500"
+											>
+												category settings
+											</Link>
+											.
+										</p>
+									</div>
+								</div>
+							)}
 							<div>
 								<Input
 									label="Description"
+									placeholder="Description of the expense, shown on tax export"
 									value={data?.description}
 									onChange={(description) =>
 										setData((current) => ({ ...current, description }))
@@ -184,10 +264,21 @@ export default function ExpenseOverlay({
 								<Input
 									label="Notes (Private)"
 									value={data?.notes}
+									placeholder="Private notes about the expense. For internal reference."
 									onChange={(notes) =>
 										setData((current) => ({ ...current, notes }))
 									}
 									textarea
+								/>
+							</div>
+							<div>
+								<AttachmentDropzone
+									value={data?.attachments}
+									onChange={(attachments) =>
+										setData((current) => ({ ...current, attachments }))
+									}
+									expenseId={expenseId === 'new' ? undefined : expenseId}
+									readOnly={false}
 								/>
 							</div>
 						</div>

@@ -228,9 +228,6 @@ export class InvoiceEntity extends DomainEntity {
 	) {
 		this.submissions.push(submission);
 
-		if (this.status === InvoiceStatus.CANCELLED) {
-			throw new Error('Invoice is closed');
-		}
 		let justSent = false;
 		const settings = await getSettings();
 		if (this.status === InvoiceStatus.DRAFT) {

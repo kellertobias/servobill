@@ -11,6 +11,7 @@ import {
 
 import { Customer, CustomerInput } from '../customers/customers.schema';
 import { FilteredObjectProperties } from '../types';
+import { Attachment } from '../attachments/attachment.schema';
 
 import {
 	InvoiceEntity,
@@ -27,6 +28,39 @@ import {
 } from '@/backend/entities/invoice-activity.entity';
 import { ObjectProperties } from '@/common/ts-helpers';
 import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
+
+@InputType()
+export class InvoiceItemExpenseInput {
+	@Field()
+	name!: string;
+
+	@Field(() => Int)
+	price!: number;
+
+	@Field({ nullable: true })
+	categoryId?: string;
+
+	@Field(() => Boolean)
+	enabled!: boolean;
+}
+
+@ObjectType()
+export class InvoiceItemExpense {
+	@Field()
+	name!: string;
+
+	@Field(() => Int)
+	price!: number;
+
+	@Field({ nullable: true })
+	categoryId?: string;
+
+	@Field(() => Boolean)
+	enabled!: boolean;
+
+	@Field({ nullable: true })
+	expenseId?: string;
+}
 
 @ObjectType()
 export class InvoiceItem implements ObjectProperties<InvoiceItemEntity> {
@@ -50,6 +84,13 @@ export class InvoiceItem implements ObjectProperties<InvoiceItemEntity> {
 
 	@Field(() => Float)
 	quantity!: number;
+
+	@Field(() => [InvoiceItemExpense], {
+		nullable: true,
+		description:
+			'The list of product expenses linked to this invoice item, with enabled/disabled state.',
+	})
+	linkedExpenses?: InvoiceItemExpense[];
 }
 
 @ObjectType()
@@ -85,8 +126,15 @@ export class InvoiceActivity
 	@Field({ nullable: true })
 	notes?: string;
 
+	@Field(() => Attachment, {
+		nullable: true,
+		description: 'The linked attachment details, if any',
+	})
+	attachment?: Attachment;
+
+	/** If true, this attachment should be included in outgoing emails */
 	@Field({ nullable: true })
-	attachment?: string;
+	attachToEmail?: boolean;
 }
 
 @ObjectType()
@@ -244,6 +292,13 @@ export class InvoiceItemInput implements Partial<InvoiceItem> {
 	@IsOptional()
 	@Field(() => Float)
 	quantity!: number;
+
+	@Field(() => [InvoiceItemExpenseInput], {
+		nullable: true,
+		description:
+			'The list of product expenses linked to this invoice item, with enabled/disabled state.',
+	})
+	linkedExpenses?: InvoiceItemExpenseInput[];
 }
 
 @ObjectType()

@@ -1,15 +1,40 @@
-import { Query, Resolver, Mutation, Arg, Int, Authorized } from 'type-graphql';
+import {
+	Query,
+	Resolver,
+	Mutation,
+	Arg,
+	Int,
+	Authorized,
+	FieldResolver,
+	Root,
+} from 'type-graphql';
+
+import { ExpenseCategoryType } from '../system/system.schema';
+import { Attachment } from '../attachments/attachment.schema';
 
 import { ExpenseInput, Expense, ExpenseWhereInput } from './expenses.schema';
 
+import { ATTACHMENT_REPOSITORY } from '@/backend/repositories/attachment/di-tokens';
+import { type AttachmentRepository } from '@/backend/repositories/attachment/interface';
 import { Inject, Service } from '@/common/di';
-import { ExpenseRepository } from '@/backend/repositories/expense.repository';
+import { EXPENSE_REPOSITORY } from '@/backend/repositories/expense/di-tokens';
+import { type ExpenseRepository } from '@/backend/repositories/expense/interface';
+import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
+import { type SettingsRepository } from '@/backend/repositories/settings/interface';
+import { ExpenseSettingsEntity } from '@/backend/entities/settings.entity';
+import { Cached } from '@/backend/services/cache-decorator';
+import { FILE_STORAGE_SERVICE } from '@/backend/services/file-storage.service';
+import type { FileStorageService } from '@/backend/services/file-storage.service';
 
 @Service()
 @Resolver(() => Expense)
 export class ExpenseResolver {
 	constructor(
-		@Inject(ExpenseRepository) private repository: ExpenseRepository,
+		@Inject(FILE_STORAGE_SERVICE) private fileStorage: FileStorageService,
+		@Inject(EXPENSE_REPOSITORY) private repository: ExpenseRepository,
+		@Inject(SETTINGS_REPOSITORY) private settingsRepository: SettingsRepository,
+		@Inject(ATTACHMENT_REPOSITORY)
+		private attachmentRepository: AttachmentRepository,
 	) {}
 
 	@Authorized()
@@ -69,6 +94,17 @@ export class ExpenseResolver {
 		expense.update(data);
 		await this.repository.save(expense);
 
+		// Link attachments
+		if (data.attachmentIds) {
+			for (const id of data.attachmentIds) {
+				const attachment = await this.attachmentRepository.getById(id);
+				if (attachment) {
+					attachment.expenseId = expense.id;
+					await this.attachmentRepository.save(attachment);
+				}
+			}
+		}
+
 		return expense;
 	}
 
@@ -78,13 +114,41 @@ export class ExpenseResolver {
 		@Arg('id') id: string,
 		@Arg('data') data: ExpenseInput,
 	): Promise<Expense> {
+		const { attachmentIds, ...newExpenseData } = data;
 		const expense = await this.repository.getById(id);
 		if (!expense) {
 			throw new Error('Expense not found');
 		}
-		expense.update(data);
+		expense.update(newExpenseData);
 		await this.repository.save(expense);
 
+		// Link attachments
+		for (const attId of attachmentIds || []) {
+			const attachment = await this.attachmentRepository.getById(attId);
+			if (attachment) {
+				attachment.expenseId = expense.id;
+				await this.attachmentRepository.save(attachment);
+			}
+		}
+
+		// Remove orphaned attachments (not in attachmentIds)
+		const existing = await this.attachmentRepository.listByQuery({
+			expenseId: expense.id,
+		});
+		for (const att of existing) {
+			if (!(attachmentIds || []).includes(att.id)) {
+				// Get attachment details before deletion to clean up storage abstraction
+				const attachment = await this.attachmentRepository.getById(att.id);
+				if (attachment?.s3Key && attachment.s3Bucket) {
+					// Delete file from storage abstraction before removing DB record
+					await this.fileStorage.deleteFile(
+						attachment.s3Bucket,
+						attachment.s3Key,
+					);
+				}
+				await this.attachmentRepository.delete(att.id);
+			}
+		}
 		return expense;
 	}
 
@@ -98,5 +162,37 @@ export class ExpenseResolver {
 		await this.repository.delete(id);
 
 		return expense;
+	}
+
+	/**
+	 * Resolves the full category object for an expense, if requested.
+	 * Returns null if no categoryId is set or if the category is not found.
+	 */
+	@FieldResolver(() => ExpenseCategoryType, { nullable: true })
+	@Cached({ getKey: (expense: Expense) => [expense.categoryId], ttl: 60 })
+	async category(
+		@Root() expense: Expense,
+	): Promise<ExpenseCategoryType | null> {
+		if (!expense.categoryId) {
+			return null;
+		}
+		const settings = await this.settingsRepository.getSetting(
+			ExpenseSettingsEntity,
+		);
+		const found = settings.categories.find(
+			(cat) => cat.id === expense.categoryId,
+		);
+		return found ? { ...found } : null;
+	}
+
+	/**
+	 * Field resolver for the attachments field on Expense.
+	 * Fetches all attachments linked to the given expense.
+	 */
+	@FieldResolver(() => [Attachment], { nullable: true })
+	async attachments(
+		@Root() expense: Expense,
+	): Promise<Attachment[] | undefined> {
+		return this.attachmentRepository.listByQuery({ expenseId: expense.id });
 	}
 }

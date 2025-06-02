@@ -3,27 +3,27 @@ version: '3.8'
 
 services:
 
-  init:
+  servobill-init:
     image: node:lts
-    container_name: 'init'
+    container_name: 'servobill-init'
     # # This image stops after it has done it's job
     # restart: never
     environment:
       AWS_DEFAULT_REGION: eu-central-1
       AWS_ACCESS_KEY_ID: AKIAIOSFODNN7EXAMPLE
       AWS_SECRET_ACCESS_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-      ENDPOINT_S3: http://s3:9000
-      ENDPOINT_SQS: http://sqs:9324
-      ENDPOINT_DYNAMODB: http://dynamodb:9321
-      ENDPOINT_SES: http://ses:9330
+      ENDPOINT_S3: http://servobill-s3:9000
+      ENDPOINT_SQS: http://servobill-sqs:9324
+      ENDPOINT_DYNAMODB: http://servobill-dynamodb:9321
+      ENDPOINT_SES: http://servobill-ses:9330
     volumes:
       - ./stack/local/initialize:/src
       - initializer-modules:/src/node_modules
 
     depends_on:
-      - dynamodb
-      - s3
-      - sqs
+      # - servobill-dynamodb
+      - servobill-s3
+      - servobill-sqs
     working_dir: /src
     entrypoint: /bin/bash -c "export NODE_ENV=development && echo 'npm install' && npm i && echo 'npm install done' && echo 'Starting Script' && npm run start"
 
@@ -50,13 +50,13 @@ services:
   #   working_dir: /src
   #   command: npm run start
 
-  dynamodb:
+  servobill-dynamodb:
     command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data -port 9321"
     image: "amazon/dynamodb-local:latest"
     restart: unless-stopped
 
     platform: linux/amd64
-    container_name: dynamodb-local
+    container_name: servobill-dynamodb-local
     user: root
     ports:
       - "9321:9321"
@@ -64,10 +64,10 @@ services:
       - dynamodb-data:/home/dynamodblocal/data
     working_dir: /home/dynamodblocal
 
-  s3:
+  servobill-s3:
     image: quay.io/minio/minio
     restart: unless-stopped
-    container_name: 'aws-s3'
+    container_name: 'servobill-s3'
     environment:
       MINIO_ACCESS_KEY: AKIAIOSFODNN7EXAMPLE
       MINIO_SECRET_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
@@ -80,26 +80,46 @@ services:
       - s3-data:/data
 
   # === SQS Simulation - Checkout: https://hub.docker.com/r/roribio16/alpine-sqs/
-  sqs:
+  servobill-sqs:
     image: softwaremill/elasticmq-native
     restart: unless-stopped
-    container_name: 'aws-sqs'
+    container_name: 'servobill-sqs'
     ports:
       - "9324:9324"
       - "9325:9325"
 
-  ses:
+  servobill-ses:
     image: bh42/aws-ses-local
     platform: linux/amd64
     restart: unless-stopped
-    container_name: 'aws-ses'
+    container_name: 'servobill-ses'
     ports:
       - "9330:9330"
     volumes:
       - .emails:/opt/output
     command: 'aws-ses-local --outputDir /opt/output --port 9330'
 
+  # ---
+  # Postgres connection URL for local development:
+  # postgres://servobill:servobill@localhost:5432/servobill
+  # Format: postgres://<user>:<password>@<host>:<port>/<database>
+  # ---
+  servobill-postgres:
+    image: postgres:15
+    restart: unless-stopped
+    container_name: servobill-postgres
+    environment:
+      POSTGRES_USER: servobill
+      POSTGRES_PASSWORD: servobill
+      POSTGRES_DB: servobill
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    # You can connect to this DB at localhost:5432 with user/pass servobill/servobill
+
 volumes:
   initializer-modules: {}
   s3-data: {}
   dynamodb-data: {}
+  postgres-data: {}

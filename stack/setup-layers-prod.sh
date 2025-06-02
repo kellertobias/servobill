@@ -9,7 +9,7 @@ if [ -d ./layers/chromium ]; then
 else
     mkdir -p layers/chromium
     echo "Downloading chromium"
-    wget https://github.com/Sparticuz/chromium/releases/download/v114.0.0/chromium-v114.0.0-layer.zip -O layers/chromium.zip
+    wget https://github.com/Sparticuz/chromium/releases/download/v123.0.1/chromium-v123.0.1-layer.zip -O layers/chromium.zip
 
     echo "Unzipping chromium"
     unzip layers/chromium.zip -d layers/chromium

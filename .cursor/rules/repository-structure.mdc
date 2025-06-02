@@ -1,0 +1,83 @@
+---
+description: 
+globs: src/backend/repositories/*.ts
+alwaysApply: false
+---
+# Repository Structure Guide
+
+This project uses a consistent repository pattern for all domain entities (e.g., Product, Invoice, Settings), supporting both Relational (Postgres/SQLite) and DynamoDB backends. Below are the key conventions and structure rules:
+
+## 1. Relational vs. DynamoDB Repositories
+- **Relational repositories** (e.g., [product.relational-repository.ts](mdc:src/backend/repositories/product/product.relational-repository.ts))
+  - Extend [`AbstractRelationalRepository`](mdc:src/backend/repositories/abstract-relational-repository.ts).
+  - Use TypeORM entities (see [relational-orm-entity.ts](mdc:src/backend/repositories/product/relational-orm-entity.ts)).
+  - Registered with DI using `@Service` and `shouldRegister(DatabaseType.POSTGRES)`/`shouldRegister(DatabaseType.SQLITE)`.
+- **DynamoDB repositories** (e.g., [product.dynamodb-repository.ts](mdc:src/backend/repositories/product/product.dynamodb-repository.ts))
+  - Extend [`AbstractDynamodbRepository`](mdc:src/backend/repositories/abstract-dynamodb-repository.ts).
+  - Use ElectroDB schemas/types (see [dynamodb-orm-entity.ts](mdc:src/backend/repositories/product/dynamodb-orm-entity.ts)).
+  - Registered with DI using `@Service` and `shouldRegister(DatabaseType.DYNAMODB)`.
+
+## 2. Dependency Injection (DI)
+- Use custom DI decorators from [di.ts](mdc:src/common/di.ts):
+  - `@Service({ name, ...shouldRegister(...) })` registers a class as a service, optionally conditionally.
+  - `@Inject(Token)` injects a dependency by token.
+  - DI tokens are defined in `di-tokens.ts` (e.g., [product/di-tokens.ts](mdc:src/backend/repositories/product/di-tokens.ts)).
+- Example usage:
+  ```ts
+  @Service({ name: PRODUCT_REPOSITORY, ...shouldRegister(DatabaseType.POSTGRES) })
+  export class ProductRelationalRepository { ... }
+  ```
+- See [dependency-injection-for-tests.mdc](mdc:.cursor/rules/dependency-injection-for-tests.mdc) for test DI patterns.
+
+## 3. Abstract Base Classes
+- All repositories extend abstract base classes:
+  - [`AbstractRepository`](mdc:src/backend/repositories/abstract-repository.ts) (core contract)
+  - [`AbstractRelationalRepository`](mdc:src/backend/repositories/abstract-relational-repository.ts) (for relational DBs)
+  - [`AbstractDynamodbRepository`](mdc:src/backend/repositories/abstract-dynamodb-repository.ts) (for DynamoDB)
+- These base classes enforce methods like `getById`, `create`, `save`, `delete`, and entity conversion methods.
+
+## 4. Interfaces
+- Each repository defines a TypeScript type alias for its interface, extending `AbstractRepositoryInterface`.
+- Example: [product/interface.ts](mdc:src/backend/repositories/product/interface.ts)
+  ```ts
+  export type ProductRepository = AbstractRepositoryInterface<ProductEntity, [], { listByQuery(...): ... }>;
+  ```
+- The interface is re-exported in the repository's `index.ts`.
+
+## 5. ORM Entities and Types
+- **Relational:** TypeORM entities are defined in `relational-orm-entity.ts` (see [product/relational-orm-entity.ts](mdc:src/backend/repositories/product/relational-orm-entity.ts)).
+- **DynamoDB:** ElectroDB schemas and types are defined in `dynamodb-orm-entity.ts` (see [product/dynamodb-orm-entity.ts](mdc:src/backend/repositories/product/dynamodb-orm-entity.ts)).
+- Domain entities (business logic) are separate from ORM entities.
+
+## 6. Tests
+- Tests use dependency injection to override or mock dependencies.
+- See [dependency-injection-for-tests.mdc](mdc:.cursor/rules/dependency-injection-for-tests.mdc) for test DI patterns.
+- Test setup files (e.g., `vitest.setup-e2e.ts`) configure the environment and DI container.
+
+## 7. Index Files
+- Each repository folder has an `index.ts` that re-exports:
+  - The interface
+  - DI tokens
+  - All implementations (relational, dynamodb)
+- Example: [product/index.ts](mdc:src/backend/repositories/product/index.ts)
+  ```ts
+  export * from './di-tokens';
+  export * from './product.dynamodb-repository';
+  export * from './product.relational-repository';
+  export * from './interface';
+  ```
+
+---
+
+**References:**
+- [product.relational-repository.ts](mdc:src/backend/repositories/product/product.relational-repository.ts)
+- [product.dynamodb-repository.ts](mdc:src/backend/repositories/product/product.dynamodb-repository.ts)
+- [product/interface.ts](mdc:src/backend/repositories/product/interface.ts)
+- [product/relational-orm-entity.ts](mdc:src/backend/repositories/product/relational-orm-entity.ts)
+- [product/dynamodb-orm-entity.ts](mdc:src/backend/repositories/product/dynamodb-orm-entity.ts)
+- [product/di-tokens.ts](mdc:src/backend/repositories/product/di-tokens.ts)
+- [product/index.ts](mdc:src/backend/repositories/product/index.ts)
+- [abstract-repository.ts](mdc:src/backend/repositories/abstract-repository.ts)
+- [abstract-relational-repository.ts](mdc:src/backend/repositories/abstract-relational-repository.ts)
+- [abstract-dynamodb-repository.ts](mdc:src/backend/repositories/abstract-dynamodb-repository.ts)
+- [dependency-injection-for-tests.mdc](mdc:.cursor/rules/dependency-injection-for-tests.mdc)

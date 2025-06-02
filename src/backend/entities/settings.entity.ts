@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { DomainEntity } from './abstract.entity';
+
 import { CustomJson } from '@/common/json';
 import { Numbering } from '@/common/numbers';
 import { ObjectProperties } from '@/common/ts-helpers';
@@ -236,5 +238,70 @@ export class InvoiceSettingsEntity {
 	public async save(): Promise<void> {
 		const data = CustomJson.toJson(this.serializable());
 		await this.saveInner(data);
+	}
+}
+
+/**
+ * Represents a category for expenses, used for tax and reporting purposes.
+ */
+export type ExpenseCategory = {
+	id: string;
+	name: string;
+	color?: string;
+	isDefault: boolean;
+	reference?: string;
+	sumForTaxSoftware?: boolean;
+	description?: string;
+};
+
+/**
+ * Stores all expense-related settings, including categories.
+ */
+export class ExpenseSettingsEntity {
+	public static settingId = 'expense-settings';
+	public categories: ExpenseCategory[] = [];
+
+	private saveInner: (data: string) => Promise<void>;
+
+	constructor(
+		params: Partial<ObjectProperties<ExpenseSettingsEntity>> = {},
+		saveInner: (data: string) => Promise<void>,
+	) {
+		Object.assign(this, params);
+		this.saveInner = saveInner;
+		this.categories = params.categories || [];
+	}
+
+	public serializable() {
+		return {
+			categories: this.categories,
+		};
+	}
+
+	public async save(): Promise<void> {
+		const data = CustomJson.toJson(this.serializable());
+		await this.saveInner(data);
+	}
+}
+
+/**
+ * Domain entity for a settings record (for repository usage).
+ */
+export class SettingsEntity extends DomainEntity {
+	/** The unique id for the settings record (e.g. 'invoice-numbers', 'stationary-template'). */
+	public settingId!: string;
+	/** The settings data, as a string (JSON) or object. */
+	public data!: string;
+
+	/**
+	 * The unique id for the settings entity (required by DomainEntity).
+	 */
+	public get id(): string {
+		return this.settingId;
+	}
+
+	constructor(props: Partial<SettingsEntity>) {
+		super();
+		Object.assign(this, props);
 	}
 }

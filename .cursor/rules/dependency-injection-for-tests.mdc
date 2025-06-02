@@ -1,0 +1,36 @@
+---
+description: 
+globs: *.e2e.ts,*.spec.ts
+alwaysApply: false
+---
+This project uses Dependency Injection.
+
+```typescript
+// Import the Dependency Injection framework
+import App from `@/common/di`
+
+// create a new DI App Context and register the required modules
+const app = App.forRoot([
+    {token: MY_DI_TOKEN, module: SomeClass},
+    {token: OTHER_DI_TOKEN, value: {...}},
+    SomeClassToken,
+])
+
+// now register the unit under test
+const uut = app.create(MyUutClass)
+```
+
+**In tests, do NOT use `DefaultContainer.get`.**
+Instead, use `App.forRoot` to create a new DI context for each test or test suite, registering all required modules and config.
+Use `app.create(MyUnitUnderTest)` to get the instance for the test.
+This ensures test isolation and correct dependency registration.
+
+See the invoice repository test for a full example.
+
+Whenever you change or add new test cases, you need to re-run the tests. Do this by running `npm run test`
+
+also our tests are based on vitest and you need to import the test globals with 
+
+```typescript
+import { describe, it, expect, beforeEach } from 'vitest';
+``` 

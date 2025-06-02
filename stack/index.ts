@@ -7,13 +7,16 @@ import {
 	Permissions,
 	EventBus,
 	StackContext,
+	Topic,
 } from 'sst/constructs';
+import { RetentionDays } from 'aws-cdk-lib/aws-logs';
+
 import './load-environ';
 
 import { StackApi } from './api';
 import { eventHandlerEndpoints, apiEndpoints } from './build-index';
 import { makeLogGroup } from './log-group';
-import { installOtelPackages, makeOtelConfig, otelBaseConfig } from './otel';
+import { otelBaseConfig } from './otel';
 import { getDomainConfig } from './domain';
 import { prepareNextBuild, restoreAfterNextBuild } from './build-prep';
 import { getDataResources } from './data';
@@ -22,10 +25,11 @@ import { getLayers } from './layers';
 import { prepareHandlerExport } from './functions';
 
 export function Stack({ stack, ...rest }: StackContext) {
-	const openTelemetry = makeOtelConfig();
-	const copyFiles = openTelemetry.filter((x) => x !== null) as {
-		from: string;
-	}[];
+	const openTelemetry = null; // makeOtelConfig();
+	const otelEnabled = false; // openTelemetry.length > 0;
+	const copyFiles: { from: string }[] = []; //openTelemetry.filter((x) => x !== null) as {
+	//from: string;
+	//}[];
 	const domain = getDomainConfig({ stack, ...rest });
 	const { tables, buckets } = getDataResources({ stack, ...rest });
 	const { baseLayers, layerCache } = getLayers({
@@ -41,6 +45,17 @@ export function Stack({ stack, ...rest }: StackContext) {
 		environment: {
 			NEXT_PUBLIC_API_URL: domain.publicApiUrl,
 		},
+		logging: 'combined',
+		cdk: {
+			server: {
+				logRetention: otelEnabled
+					? RetentionDays.ONE_DAY
+					: RetentionDays.TWO_WEEKS,
+			},
+		},
+		experimental: {
+			disableDynamoDBCache: true,
+		},
 	});
 	restoreAfterNextBuild();
 
@@ -55,14 +70,16 @@ export function Stack({ stack, ...rest }: StackContext) {
 		BUCKET_FILES: buckets.files.bucketName,
 
 		SERVICE_NAMESPACE: 'servobill',
-		// NODE_OPTIONS: '--enable-source-maps',
-		NODE_OPTIONS: '--enable-source-maps --require ./tracing.cjs',
+		NODE_OPTIONS: '--enable-source-maps',
+		// NODE_OPTIONS: '--enable-source-maps --require ./tracing.cjs',
 	});
 
 	const bus = new EventBus(stack, 'bus', {
 		defaults: {
 			retries: 5,
 			function: {
+				tracing: 'disabled',
+				disableCloudWatchLogs: otelEnabled,
 				copyFiles,
 				environment: {
 					...baseEnvironment,
@@ -70,12 +87,12 @@ export function Stack({ stack, ...rest }: StackContext) {
 				permissions: [...baseBinds],
 				nodejs: {
 					format: 'cjs',
-					install: [...installOtelPackages],
+					// install: [...installOtelPackages],
 					esbuild: {
 						external: ['@sparticuz/chromium'],
 					},
 				},
-				runtime: 'nodejs16.x',
+				runtime: 'nodejs20.x',
 				timeout: 60 * 5, // 5 minutes
 				memorySize: 1024,
 			},
@@ -120,6 +137,39 @@ export function Stack({ stack, ...rest }: StackContext) {
 		});
 	}
 
+	const deliveryTopic = new Topic(stack, 'DeliveryTopic', {
+		subscribers: {
+			EmailDelivery: {
+				function: {
+					handler: 'src/backend/events/delivery/status/handler.handler',
+					layers: [...baseLayers],
+					environment: {
+						OTEL_SERVICE_NAME: `${stack.stackName}-DELIVERY-EMAIL`,
+					},
+				},
+			},
+		},
+		defaults: {
+			function: {
+				tracing: 'disabled',
+				disableCloudWatchLogs: otelEnabled,
+				copyFiles,
+				environment: {
+					...baseEnvironment,
+				},
+				permissions: [...baseBinds],
+				nodejs: {
+					format: 'cjs',
+					// install: [...installOtelPackages],
+					esbuild: {},
+				},
+				runtime: 'nodejs20.x',
+				timeout: 60 * 1, // 5 minutes
+				memorySize: 1024,
+			},
+		},
+	});
+
 	const api = StackApi(
 		{ stack, ...rest },
 		baseLayers,
@@ -142,6 +192,8 @@ export function Stack({ stack, ...rest }: StackContext) {
 				allowCredentials: true,
 			},
 			function: {
+				tracing: 'disabled',
+				disableCloudWatchLogs: otelEnabled,
 				copyFiles,
 				environment: {
 					...baseEnvironment,
@@ -162,7 +214,7 @@ export function Stack({ stack, ...rest }: StackContext) {
 						'graphql',
 						'graphql-tools',
 						'type-graphql',
-						...installOtelPackages,
+						// ...installOtelPackages,
 					],
 				},
 			},
@@ -176,10 +228,11 @@ export function Stack({ stack, ...rest }: StackContext) {
 	api.attachPermissions(permissions);
 	bus.attachPermissions(permissions);
 
-	// stack.addOutputs({
-	// 	SiteUrl: site.url,
-	// 	SiteCustomUrl: site.customDomainUrl,
-	// 	ApiUrl: api.url,
-	// 	ApiCustomUrl: api.customDomainUrl,
-	// });
+	stack.addOutputs({
+		// SiteUrl: site.url,
+		// SiteCustomUrl: site.customDomainUrl,
+		// ApiUrl: api.url,
+		// ApiCustomUrl: api.customDomainUrl,
+		DeliveryTopicArn: deliveryTopic.topicArn,
+	});
 }

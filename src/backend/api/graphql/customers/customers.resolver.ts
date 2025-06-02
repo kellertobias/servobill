@@ -7,18 +7,19 @@ import { Query, Resolver, Mutation, Arg, Int, Authorized } from 'type-graphql';
 
 import { Customer, CustomerInput } from './customers.schema';
 
-import { CustomerRepository } from '@/backend/repositories/customer.repository';
-import { CustomerEntity } from '@/backend/entities/customer.entity';
-import { SettingsRepository } from '@/backend/repositories/settings.repository';
-import { InvoiceSettingsEntity } from '@/backend/entities/settings.entity';
+import { CUSTOMER_REPOSITORY } from '@/backend/repositories/customer/di-tokens';
+import { type CustomerRepository } from '@/backend/repositories/customer/interface';
+import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
+import { type SettingsRepository } from '@/backend/repositories/settings/interface';
 import { Inject, Service } from '@/common/di';
+import { InvoiceSettingsEntity } from '@/backend/entities/settings.entity';
 
 @Service()
 @Resolver(() => Customer)
 export class CustomerResolver {
 	constructor(
-		@Inject(CustomerRepository) private repository: CustomerRepository,
-		@Inject(SettingsRepository) private settingsRepository: SettingsRepository,
+		@Inject(CUSTOMER_REPOSITORY) private repository: CustomerRepository,
+		@Inject(SETTINGS_REPOSITORY) private settingsRepository: SettingsRepository,
 	) {}
 
 	@Authorized()

@@ -1,4 +1,4 @@
-import {
+import type {
 	APIGatewayProxyEventV2,
 	Callback,
 	Context,
@@ -6,28 +6,37 @@ import {
 	Handler,
 } from 'aws-lambda';
 import {
-	AttributeValue,
+	type AttributeValue,
 	trace,
 	SpanStatusCode,
 	propagation,
 	context,
-	Span as OtelSpan,
+	type Span as OtelSpan,
 } from '@opentelemetry/api';
 
 const tracer = trace.getTracer('lambda');
 
 export function withSpan<A extends unknown[], R>(
-	spanAttributes: { name: string },
+	spanAttributes: {
+		name: string;
+		attributes?: Record<string, AttributeValue>;
+		thisContext?: unknown;
+	},
 	handler: (...args: A) => R,
 ): (...args: A) => R {
-	return (...args: A) => {
+	return (...args: A): R => {
 		return tracer.startActiveSpan(spanAttributes.name, (span) => {
-			span.setAttributes(spanAttributes);
-			let answer: undefined | R;
+			if (spanAttributes.attributes) {
+				span.setAttributes(spanAttributes.attributes);
+			}
+
+			let wasPromise = false;
+			let answer: unknown;
 			try {
-				answer = handler(...args);
+				answer = handler.apply(spanAttributes.thisContext, args);
 				if (answer instanceof Promise) {
-					answer
+					wasPromise = true;
+					answer = answer
 						.then((value) => {
 							span.end();
 							return value;
@@ -52,12 +61,44 @@ export function withSpan<A extends unknown[], R>(
 				}
 				throw error;
 			} finally {
-				if (answer && !(answer instanceof Promise)) {
+				if (!wasPromise) {
 					span.end();
 				}
 			}
-			return answer;
+			return answer as R;
 		});
+	};
+}
+
+// Class Method Decorator
+export function Span(
+	spanName: string,
+	attributes?: Record<string, AttributeValue>,
+) {
+	// biome-ignore lint/complexity/useArrowFunction: <explanation>
+	return function (
+		target: unknown,
+		propertyKey: string,
+		descriptor: PropertyDescriptor,
+	) {
+		const originalMethod = descriptor.value;
+
+		if (!originalMethod || typeof originalMethod !== 'function') {
+			throw new Error('@Span decorator can only be applied to async methods');
+		}
+
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		descriptor.value = function (...args: any[]) {
+			return withSpan(
+				{
+					name: spanName,
+					attributes,
+					thisContext: this,
+				},
+				originalMethod,
+			)(...args);
+		};
+		return descriptor;
 	};
 }
 
@@ -82,68 +123,6 @@ export function ActiveSpan() {
 	};
 }
 
-// Class Method Decorator
-export function Span(
-	spanName: string,
-	attributes?: Record<string, AttributeValue>,
-) {
-	return function (
-		target: unknown,
-		propertyKey: string,
-		descriptor: PropertyDescriptor,
-	) {
-		const originalMethod = descriptor.value;
-
-		if (!originalMethod || typeof originalMethod !== 'function') {
-			throw new Error(`@Span decorator can only be applied to async methods`);
-		}
-
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		descriptor.value = function (...args: any[]) {
-			return tracer.startActiveSpan(spanName, (span) => {
-				if (attributes) {
-					span.setAttributes(attributes);
-				}
-				let answer: unknown;
-				try {
-					answer = originalMethod.apply(this, args);
-					if (answer instanceof Promise) {
-						answer = answer
-							.then((value) => {
-								span.end();
-								return value;
-							})
-							.catch((error) => {
-								span.setStatus({ code: SpanStatusCode.ERROR });
-								if (error instanceof Error) {
-									span.recordException(error);
-								} else {
-									span.recordException(new Error(String(error)));
-								}
-								span.end();
-								throw error;
-							});
-					}
-				} catch (error) {
-					span.setStatus({ code: SpanStatusCode.ERROR });
-					if (error instanceof Error) {
-						span.recordException(error);
-					} else {
-						span.recordException(new Error(String(error)));
-					}
-					throw error;
-				} finally {
-					if (!(answer instanceof Promise)) {
-						span.end();
-					}
-				}
-				return answer;
-			});
-		};
-		return descriptor;
-	};
-}
-
 const withEventBridgeInstrumentation = async <
 	E extends EventBridgeEvent<string, unknown>,
 	R,
@@ -156,11 +135,15 @@ const withEventBridgeInstrumentation = async <
 	handler: Handler<E, R | void>,
 	[evt, ctx, cb]: Parameters<Handler<E, R | void>>,
 ): Promise<R | void> => {
-	console.log(evt.detail);
-	const { traceId, spanId, traceparent } =
+	const { traceId, spanId, traceparent, tracestate } =
 		(evt.detail as
 			| undefined
-			| { traceId: string; traceparent: string; spanId: string }) || {};
+			| {
+					traceId: string;
+					traceparent: string;
+					spanId: string;
+					tracestate: string;
+			  }) || {};
 
 	const attributes: Record<string, AttributeValue> = {
 		'faas.handlerType': 'EventBridge',
@@ -191,6 +174,9 @@ const withEventBridgeInstrumentation = async <
 		traceId,
 		spanId,
 		traceparent,
+		tracestate,
+		trace_id: traceId,
+		span_id: spanId,
 	});
 	const span = tracer.startSpan(
 		spanInfo.name,

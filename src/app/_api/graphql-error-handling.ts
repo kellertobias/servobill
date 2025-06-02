@@ -76,11 +76,13 @@ export const handleGqlError = (
 		let errorMessage = `Error in GraphQL Query.\n\n`;
 
 		error.response.errors.forEach(({ message }) => {
-			errorMessage += `${message}\n`;
+			const messageParts = message.split('\n at');
+			errorMessage +=
+				messageParts.length > 1 ? `${messageParts[0]}\n` : `${message}\n`;
 		});
 
 		// eslint-disable-next-line no-console
-		console.error(error);
+		console.error(errorMessage);
 		// eslint-disable-next-line no-console
 		console.log({ query, variables });
 

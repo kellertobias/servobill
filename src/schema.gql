@@ -3,6 +3,25 @@
 # !!!   DO NOT MODIFY THIS FILE BY YOURSELF   !!!
 # -----------------------------------------------
 
+type Attachment {
+  createdAt: DateTime!
+  expenseId: String
+  fileName: String!
+  id: ID!
+  inventoryId: String
+  invoiceId: String
+  mimeType: String!
+  s3Bucket: String!
+  s3Key: String!
+  size: Int!
+  status: String!
+  updatedAt: DateTime!
+}
+
+type AttachmentDownloadUrlResult {
+  downloadUrl: String!
+}
+
 type AuthCheckResult {
   authenticated: Boolean!
   profilePictureUrl: String
@@ -47,6 +66,13 @@ The javascript `Date` as string. Type represents date and time as the ISO Date s
 scalar DateTime
 
 type Expense {
+  attachments: [Attachment!]
+
+  """The full category object assigned to this expense."""
+  category: ExpenseCategoryType
+
+  """The ID of the expense category assigned to this expense."""
+  categoryId: String
   createdAt: DateTime!
   description: String
   expendedAt: DateTime!
@@ -58,7 +84,31 @@ type Expense {
   updatedAt: DateTime!
 }
 
+input ExpenseCategoryInputType {
+  color: String
+  description: String
+  id: String!
+  isDefault: Boolean
+  name: String!
+  reference: String
+  sumForTaxSoftware: Boolean
+}
+
+type ExpenseCategoryType {
+  color: String
+  description: String
+  id: String!
+  isDefault: Boolean
+  name: String!
+  reference: String
+  sumForTaxSoftware: Boolean
+}
+
 input ExpenseInput {
+  attachmentIds: [String!]
+
+  """The ID of the expense category assigned to this expense."""
+  categoryId: String
   description: String
   expendedAt: DateTime!
   expendedCents: Int!
@@ -92,6 +142,7 @@ type IncomeSurplusReport {
 }
 
 type IncomeSurplusReportItem {
+  category: ExpenseCategoryType
   description: String
   id: String!
   name: String!
@@ -134,7 +185,10 @@ type Invoice {
 
 type InvoiceActivity {
   activityAt: DateTime!
-  attachment: String
+  attachToEmail: Boolean
+
+  """The linked attachment details, if any"""
+  attachment: Attachment
   id: String!
   notes: String
   type: InvoiceActivityType!
@@ -145,12 +199,14 @@ type InvoiceActivity {
 enum InvoiceActivityType {
   ARCHIVE_INVOICE
   ARCHIVE_OFFER
+  ATTACHMENT
   CANCEL_INVOICE
   CANCEL_OFFER
   CONVERT_TO_INVOICE
   CREATED_INVOICE
   CREATED_OFFER
   EMAIL_BOUNCED
+  EMAIL_DELIVERED
   EMAIL_SENT
   IMPORTED
   NOTE
@@ -202,6 +258,11 @@ input InvoiceInput {
 type InvoiceItem {
   description: String
   id: String!
+
+  """
+  The list of product expenses linked to this invoice item, with enabled/disabled state.
+  """
+  linkedExpenses: [InvoiceItemExpense!]
   name: String!
   priceCents: Int!
   productId: String
@@ -209,8 +270,28 @@ type InvoiceItem {
   taxPercentage: Int!
 }
 
+type InvoiceItemExpense {
+  categoryId: String
+  enabled: Boolean!
+  expenseId: String
+  name: String!
+  price: Int!
+}
+
+input InvoiceItemExpenseInput {
+  categoryId: String
+  enabled: Boolean!
+  name: String!
+  price: Int!
+}
+
 input InvoiceItemInput {
   description: String
+
+  """
+  The list of product expenses linked to this invoice item, with enabled/disabled state.
+  """
+  linkedExpenses: [InvoiceItemExpenseInput!]
   name: String!
   priceCents: Int!
   productId: String
@@ -279,26 +360,40 @@ input InvoiceWhereInput {
   year: Int
 }
 
+input ListAttachmentsInput {
+  expenseId: String
+  inventoryId: String
+  invoiceId: String
+  limit: Int
+  skip: Int
+}
+
 type Mutation {
+  attachUpload(attachmentId: String!, expenseId: String, inventoryId: String, invoiceId: String): Attachment!
+  confirmUpload(attachmentId: String!): Attachment!
   copyInvoice(as: InvoiceType!, id: String!): InvoiceChangedResponse!
   createCustomer(data: CustomerInput!): Customer!
   createExpense(data: ExpenseInput!): Expense!
   createInvoice(customerId: String!, type: InvoiceType): Invoice!
   createProduct(data: ProductInput!): Product!
+  deleteAttachment(attachmentId: String!): Boolean!
   deleteCustomer(id: String!): Customer!
   deleteExpense(id: String!): Expense!
   deleteInvoice(id: String!): Invoice!
+  deleteInvoiceAttachmentActivity(activityId: String!, invoiceId: String!): InvoiceChangedResponse!
   deleteProduct(id: String!): Product!
   importInvoices(data: [InvoiceImportInput!]!): [Invoice!]!
-  invoiceAddComment(attachment: String, comment: String!, invoiceId: String!): InvoiceChangedResponse!
+  invoiceAddComment(attachToEmail: Boolean, attachmentId: String, comment: String, invoiceId: String!): InvoiceChangedResponse!
   invoiceAddPayment(id: String!, payment: InvoicePaymentInput!): InvoiceChangedResponse!
-  invoiceCancelUnpaid(id: String!): InvoiceChangedResponse!
+  invoiceCancelUnpaid(deleteExpenses: Boolean, id: String!): InvoiceChangedResponse!
   invoiceDeleteDraft(id: String!): InvoiceChangedResponse!
   invoicePdf(id: String!): String
   invoiceSend(id: String!, submission: InvoiceSubmissionInput!): InvoiceChangedResponse!
   purgeExpenses(confirm: String!): Boolean!
   purgeInvoices(confirm: String!): Boolean!
+  requestUpload(fileName: String!, mimeType: String!, size: Int!): RequestAttachmentUploadUrlResult!
   sendTestEvent(data: String!, name: String!): String!
+  setInvoiceActivityAttachmentEmailFlag(activityId: String!, attachToEmail: Boolean!, invoiceId: String!): InvoiceChangedResponse!
   testRenderTemplate(pdf: Boolean, styles: String!, template: String!): String!
   updateCustomer(data: CustomerInput!, id: String!): Customer!
   updateExpense(data: ExpenseInput!, id: String!): Expense!
@@ -312,6 +407,7 @@ type Product {
   category: String!
   createdAt: DateTime!
   description: String
+  expenses: [ProductExpense!]
   id: String!
   name: String!
   notes: String
@@ -321,9 +417,22 @@ type Product {
   updatedAt: DateTime!
 }
 
+type ProductExpense {
+  categoryId: String
+  name: String!
+  price: Int!
+}
+
+input ProductExpenseInput {
+  categoryId: String
+  name: String!
+  price: Int!
+}
+
 input ProductInput {
   category: String!
   description: String
+  expenses: [ProductExpenseInput!]
   name: String!
   notes: String
   priceCents: Int!
@@ -336,6 +445,8 @@ input ProductWhereInput {
 }
 
 type Query {
+  attachment(attachmentId: String!): AttachmentDownloadUrlResult!
+  attachments(input: ListAttachmentsInput): [Attachment!]!
   customer(id: String!): Customer
   customers(limit: Int, skip: Int, where: String): [Customer!]!
   expense(id: String!): Expense!
@@ -351,82 +462,89 @@ type Query {
   template: InvoiceTemplateResult!
 }
 
+type RequestAttachmentUploadUrlResult {
+  attachmentId: String!
+  uploadUrl: String!
+}
+
 input SettingsCompanyInput {
-  bankAccountHolder: String!
-  bankBic: String!
-  bankIban: String!
-  city: String!
-  email: String!
-  name: String!
-  phone: String!
-  street: String!
-  taxId: String!
-  vatId: String!
-  web: String!
-  zip: String!
+  bankAccountHolder: String
+  bankBic: String
+  bankIban: String
+  city: String
+  email: String
+  name: String
+  phone: String
+  street: String
+  taxId: String
+  vatId: String
+  web: String
+  zip: String
 }
 
 input SettingsInput {
-  company: SettingsCompanyInput!
-  customerNumbersIncrementTemplate: String!
-  customerNumbersLast: String!
-  customerNumbersTemplate: String!
-  defaultInvoiceDueDays: Int!
-  defaultInvoiceFooterText: String!
-  emailCompanyLogo: String!
-  emailSubjectInvoices: String!
-  emailSubjectOffers: String!
-  emailSubjectReminder: String!
-  emailSubjectWarning: String!
-  emailTemplate: String!
-  invoiceCompanyLogo: String!
-  invoiceNumbersIncrementTemplate: String!
-  invoiceNumbersLast: String!
-  invoiceNumbersTemplate: String!
-  offerNumbersIncrementTemplate: String!
-  offerNumbersLast: String!
-  offerNumbersTemplate: String!
-  offerValidityDays: Int!
-  replyTo: String!
-  sendFrom: String!
+  categories: [ExpenseCategoryInputType!]
+  company: SettingsCompanyInput
+  customerNumbersIncrementTemplate: String
+  customerNumbersLast: String
+  customerNumbersTemplate: String
+  defaultInvoiceDueDays: Int
+  defaultInvoiceFooterText: String
+  emailCompanyLogo: String
+  emailSubjectInvoices: String
+  emailSubjectOffers: String
+  emailSubjectReminder: String
+  emailSubjectWarning: String
+  emailTemplate: String
+  invoiceCompanyLogo: String
+  invoiceNumbersIncrementTemplate: String
+  invoiceNumbersLast: String
+  invoiceNumbersTemplate: String
+  offerNumbersIncrementTemplate: String
+  offerNumbersLast: String
+  offerNumbersTemplate: String
+  offerValidityDays: Int
+  replyTo: String
+  sendFrom: String
 }
 
 type SettingsResult {
-  company: SettingsResultCompany!
-  customerNumbersIncrementTemplate: String!
-  customerNumbersLast: String!
-  customerNumbersTemplate: String!
-  defaultInvoiceDueDays: Int!
-  defaultInvoiceFooterText: String!
-  emailCompanyLogo: String!
-  emailSubjectInvoices: String!
-  emailSubjectOffers: String!
-  emailSubjectReminder: String!
-  emailSubjectWarning: String!
-  emailTemplate: String!
-  invoiceCompanyLogo: String!
-  invoiceNumbersIncrementTemplate: String!
-  invoiceNumbersLast: String!
-  invoiceNumbersTemplate: String!
-  offerNumbersIncrementTemplate: String!
-  offerNumbersLast: String!
-  offerNumbersTemplate: String!
-  offerValidityDays: Int!
-  replyTo: String!
-  sendFrom: String!
+  categories: [ExpenseCategoryType!]
+  company: SettingsResultCompany
+  customerNumbersIncrementTemplate: String
+  customerNumbersLast: String
+  customerNumbersTemplate: String
+  defaultInvoiceDueDays: Int
+  defaultInvoiceFooterText: String
+  emailCompanyLogo: String
+  emailSubjectInvoices: String
+  emailSubjectOffers: String
+  emailSubjectReminder: String
+  emailSubjectWarning: String
+  emailTemplate: String
+  invoiceCompanyLogo: String
+  invoiceNumbersIncrementTemplate: String
+  invoiceNumbersLast: String
+  invoiceNumbersTemplate: String
+  offerNumbersIncrementTemplate: String
+  offerNumbersLast: String
+  offerNumbersTemplate: String
+  offerValidityDays: Int
+  replyTo: String
+  sendFrom: String
 }
 
 type SettingsResultCompany {
-  bankAccountHolder: String!
-  bankBic: String!
-  bankIban: String!
-  city: String!
-  email: String!
-  name: String!
-  phone: String!
-  street: String!
-  taxId: String!
-  vatId: String!
-  web: String!
-  zip: String!
+  bankAccountHolder: String
+  bankBic: String
+  bankIban: String
+  city: String
+  email: String
+  name: String
+  phone: String
+  street: String
+  taxId: String
+  vatId: String
+  web: String
+  zip: String
 }

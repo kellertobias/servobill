@@ -1,0 +1,103 @@
+---
+description: 
+globs: *.tsx
+alwaysApply: false
+---
+# UI Components & Design Rule
+
+**IMPORTANT:** No UI code (anything in `src/app` except for `src/app/api`) is allowed to import anything from `src/backend`. All backend logic, data access, and business rules must be accessed via API utilities or GraphQL only. This ensures a clean separation between frontend and backend code.
+
+## Component Location & Importing
+- All shared UI components are located in [`src/app/_components`](mdc:src/app/_components).
+- When importing, use the alias `@/components/` (e.g., `import { Button } from '@/components/button'`), as configured in [`tsconfig.json`](mdc:tsconfig.json).
+
+## Existing Components
+The following components are available in `@/components/`:
+
+- `button.tsx` — Button component
+- `command-pallette.tsx` — Command palette dialog
+- `date.tsx` — Date picker and input
+- `dialog.tsx` — Modal dialog
+- `drawer.tsx` — Side drawer panel
+- `input.tsx` — Input and textarea
+- `invoices-table.tsx` — Table for invoices
+- `loading.tsx` — Loading skeletons/spinners
+- `navbar.tsx` — Navigation bar
+- `not-found.tsx` — Not found/404 message
+- `page.tsx` — Page layout wrappers
+- `select-input.tsx` — Select/dropdown input
+- `settings-block.tsx` — Settings section block
+- `stats.tsx` — Statistics display
+- `status-badges.tsx` — Status indicator badges
+- `table.tsx` — Generic table
+- `toast.tsx` — Toast notifications
+- `toggle.tsx` — Toggle switch
+
+## Existing Hooks
+All custom hooks are located in [`src/app/_hooks`](mdc:src/app/_hooks) and imported via `@/hooks/`:
+
+- `load-data.ts` — Data loading utilities
+- `require-login.ts` — Login and user context hooks
+- `use-auto-textarea.tsx` — Autosizing textarea hook
+- `use-expense-categories.ts` — Expense category data hook
+- `use-invoice-list.ts` — Invoice list data hook
+
+## API Utilities
+All API utilities are located in [`src/app/_api`](mdc:src/app/_api) and imported via `@/api/`:
+
+- `graphql.ts` — GraphQL query/mutation helpers
+- `graphql-connection.ts` — GraphQL client connection
+- `graphql-error-handling.ts` — Error handling for GraphQL
+- `index.ts` — API index/exports
+
+### Import/Export API Modules
+Located in [`src/app/_api/import-export`](mdc:src/app/_api/import-export):
+- `customers.tsx` — Customer import/export
+- `expenses.tsx` — Expense import/export
+- `helper.ts` — Shared import/export helpers
+- `invoices-export.tsx` — Invoice export
+- `invoices-import-helper.tsx` — Invoice import helpers
+- `invoices-import.tsx` — Invoice import
+- `products.tsx` — Product import/export
+- `settings.tsx` — Settings import/export
+
+## Data Loading System
+The project uses a custom data loading system based on React hooks:
+
+- **`useLoadData`**: Generic hook for loading, tracking, and updating data. Handles loading state, error state, and provides `reload` and `setData` methods. Accepts a loader function (usually an async API call) and optional parameters. Returns `{ error, initialData, loading, data, setData, reload }`.
+- **`useHasChanges`**: Utility hook to detect if the current data differs from the initial data, with optional mapping and debounce.
+- **`useSaveCallback`**: Utility hook to generate a save callback for forms, handling both create and update mutations based on entity type and ID. Integrates with the API and GraphQL system.
+
+These hooks are designed to simplify data fetching, editing, and saving in UI components, and to encourage a consistent pattern for data-driven UIs.
+
+## Price Representation Utilities
+All prices are represented as integer cents in the backend and API, and converted to/from user-facing strings in the UI:
+
+- **`centsToPrice(cents: number)`**: Converts an integer number of cents to a string in euro format (e.g., `1234` → `'12.34'`).
+- **`priceToCents(price: string)`**: Converts a euro string (e.g., `'12.34'` or `'12,34'`) to an integer number of cents (`1234`).
+
+These utilities are available via the API object (`API.centsToPrice`, `API.priceToCents`) and should be used for all price display and input handling in the UI.
+
+## Styling
+- The project uses [Tailwind CSS](mdc:https:/tailwindcss.com) for all styling.
+- Tailwind is configured in [`tailwind.config.ts`](mdc:tailwind.config.ts), with custom safelists and plugins (typography, aspect-ratio).
+- All component styles should use Tailwind utility classes. Custom classes should be avoided unless absolutely necessary.
+- Responsive and dark mode support is handled via Tailwind.
+
+## Component Patterns
+- Components are written as functional React components, often with TypeScript generics for flexibility.
+- Use `clsx` for conditional class names.
+- Many components are composed with Headless UI and Heroicons for accessibility and icons.
+- Components are documented with JSDoc-style comments describing their props and usage.
+
+## GraphQL Usage
+- All GraphQL queries and mutations must have a **distinct, named operation** (e.g., `query CustomerDetailPageData { ... }`).
+- Do **not** use `as` for type assertions with GraphQL queries; types are generated automatically based on the query name.
+- Use the `gql` helper from [`@/common/gql`](mdc:src/common/gql/gql.ts) to define queries.
+- Types for GraphQL operations are auto-generated and available for use in components.
+
+## Best Practices
+- Always add doc blocks and inline comments to components and functions for clarity.
+- Prefer composition and reuse of components from `@/components/` rather than duplicating UI logic.
+- Use Tailwind for all layout, spacing, and color—avoid inline styles.
+- When adding new components, ensure they are generic and reusable where possible.

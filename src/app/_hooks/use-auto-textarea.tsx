@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 // Updates the height of a <textarea> when the value changes.
-export const useAutoSizeTextArea = (value: string) => {
+export const useAutoSizeTextArea = (value: string, minHeight: number = 10) => {
 	const [textArea, setTextArea] = useState<HTMLTextAreaElement | null>(null);
 
 	useEffect(() => {
@@ -12,7 +12,7 @@ export const useAutoSizeTextArea = (value: string) => {
 
 			// We then set the height directly, outside of the render loop
 			// Trying to set this with state or a ref will product an incorrect value.
-			textArea.style.height = scrollHeight + 'px';
+			textArea.style.height = Math.max(scrollHeight, minHeight) + 'px';
 		}
 	}, [textArea, value]);
 

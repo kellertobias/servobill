@@ -1,0 +1,90 @@
+version: '3.8'
+
+# Dockerized deployment for Servobill
+# Includes: MinIO (S3), Postgres, Queue Workers, Next.js App
+
+services:
+  # ---
+  # Postgres connection URL for local development:
+  # postgres://servobill:servobill@localhost:5432/servobill
+  # Format: postgres://<user>:<password>@<host>:<port>/<database>
+  # ---
+  postgres:
+    image: postgres:15
+    restart: unless-stopped
+    container_name: servobill-postgres
+    environment:
+      POSTGRES_USER: servobill
+      POSTGRES_PASSWORD: servobill
+      POSTGRES_DB: servobill
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  # === MinIO (S3-compatible storage) ===
+  minio:
+    image: quay.io/minio/minio
+    restart: unless-stopped
+    container_name: servobill-minio
+    environment:
+      MINIO_ACCESS_KEY: servobill
+      MINIO_SECRET_KEY: servobillsecret
+      MINIO_API_CORS_ALLOW_ORIGIN: '*'
+    ports:
+      - "9000:9000" # API Port
+      - "9320:9320" # Web Console Port
+    command: server /data --console-address ":9320"
+    volumes:
+      - minio-data:/data
+
+  # === Queue Workers ===
+  queue-workers:
+    build:
+      context: ../..
+      dockerfile: workers/lambda/Dockerfile.dev
+    container_name: servobill-queue-workers
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: servobill
+      POSTGRES_PASSWORD: servobill
+      POSTGRES_DB: servobill
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: servobill
+      MINIO_SECRET_KEY: servobillsecret
+    depends_on:
+      - postgres
+      - minio
+    working_dir: /src
+    command: npm run start
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ../../stack/local/queue:/src
+
+  # === Next.js Application ===
+  app:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    container_name: servobill-app
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: servobill
+      POSTGRES_PASSWORD: servobill
+      POSTGRES_DB: servobill
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: servobill
+      MINIO_SECRET_KEY: servobillsecret
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - minio
+    working_dir: /app
+    command: npm run start
+    volumes:
+      - ../../src:/app
+
+volumes:
+  postgres-data: {}
+  minio-data: {} 

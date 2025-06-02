@@ -1,10 +1,20 @@
 import React from 'react';
 
+import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+
 import { useLoadData, useSaveCallback } from '@/hooks/load-data';
 import { API, gql } from '@/api/index';
 import { Drawer } from '@/components/drawer';
 import { Input } from '@/components/input';
+import SelectInput from '@/components/select-input';
+import { Button } from '@/components/button';
 import { LoadingSkeleton } from '@/components/loading';
+
+import { useExpenseCategories } from '@/app/_hooks/use-expense-categories';
+
+import { ProductExpense } from '@/common/gql/graphql';
+
+const createId = () => Math.random().toString(36).slice(2, 15);
 
 export default function ProductOverlay({
 	productId,
@@ -16,7 +26,7 @@ export default function ProductOverlay({
 	openCreated: (id: string) => void;
 }) {
 	const { data, setData, initialData, reload } = useLoadData(
-		async ({ productId }) =>
+		async ({ productId }: { productId: string }) =>
 			productId === 'new'
 				? {
 						id: 'new',
@@ -28,23 +38,33 @@ export default function ProductOverlay({
 						taxPercentage: '0',
 						createdAt: null,
 						updatedAt: null,
+						expenses: [] as (Omit<ProductExpense, 'price'> & {
+							price: string;
+							id: string;
+							categoryId?: string;
+						})[],
 					}
 				: API.query({
 						query: gql(`
-							query ProductsDetailPageData($id: String!) {
-								product(id: $id) {
-									id
+						query ProductsDetailPageData($id: String!) {
+							product(id: $id) {
+								id
+								name
+								category
+								description
+								notes
+								priceCents
+								taxPercentage
+								createdAt
+								updatedAt
+								expenses {
 									name
-									category
-									description
-									notes
-									priceCents
-									taxPercentage
-									createdAt
-									updatedAt
+									price
+									categoryId
 								}
 							}
-						`),
+						}
+					`),
 						variables: {
 							id: productId,
 						},
@@ -54,6 +74,11 @@ export default function ProductOverlay({
 									...res.product,
 									price: API.centsToPrice(res.product.priceCents),
 									taxPercentage: `${res.product.taxPercentage || 0}`,
+									expenses: (res.product.expenses || []).map((e) => ({
+										...e,
+										price: API.centsToPrice(e.price),
+										id: createId(),
+									})),
 								}
 							: null,
 					),
@@ -69,14 +94,52 @@ export default function ProductOverlay({
 		reload,
 		mapper: (data) => {
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			const { id, price, createdAt, updatedAt, ...rest } = data;
+			const { price, createdAt, updatedAt, expenses, ...rest } = data;
 			return {
 				...rest,
 				priceCents: API.priceToCents(price),
 				taxPercentage: Number.parseInt(data.taxPercentage || '0'),
+				expenses: data.expenses.map((e) => ({
+					name: e.name,
+					categoryId: e.categoryId || null,
+					price: API.priceToCents(e.price) || 0,
+				})),
 			};
 		},
 	});
+
+	const categories = useExpenseCategories();
+
+	const handleAddExpense = () => {
+		setData((prev) => ({
+			...prev,
+			expenses: [
+				...(prev?.expenses || []),
+				{
+					name: '',
+					price: '0',
+					categoryId: null,
+					id: createId(),
+				},
+			],
+		}));
+	};
+
+	const handleRemoveExpense = (id: string) => {
+		setData((prev) => ({
+			...prev,
+			expenses: (prev?.expenses || []).filter((e) => e.id !== id),
+		}));
+	};
+
+	const handleExpenseChange = (id: string, field: string, value: unknown) => {
+		setData((prev) => ({
+			...prev,
+			expenses: (prev?.expenses || []).map((e) =>
+				e.id === id ? { ...e, [field]: value } : e,
+			),
+		}));
+	};
 
 	return (
 		<Drawer
@@ -186,6 +249,77 @@ export default function ProductOverlay({
 								displayFirst
 								textarea
 							/>
+
+							{/* Expenses Section */}
+							<div className="col-span-full">
+								<label className="block text-sm font-medium leading-6 text-gray-900 mb-1">
+									Product Expenses (optional)
+								</label>
+								{data.expenses.map(
+									(expense: (typeof data.expenses)[number]) => (
+										<div
+											key={expense.id}
+											className="grid grid-cols-12 gap-x-2 gap-y-1 mb-2 p-2 border rounded-md bg-gray-50"
+										>
+											{/* First row: Name (span 11 cols) and Delete button (span 1 col) */}
+											<div className="col-span-12 flex items-center">
+												<Input
+													label="Name"
+													value={expense.name}
+													onChange={(val) =>
+														handleExpenseChange(expense.id, 'name', val)
+													}
+													className="w-full"
+												/>
+											</div>
+											{/* Third row: Category selector */}
+											<div className="col-span-12">
+												<SelectInput
+													label="Category"
+													value={expense.categoryId || ''}
+													onChange={(val) =>
+														handleExpenseChange(expense.id, 'categoryId', val)
+													}
+													options={[
+														{ value: '', label: 'No Category' },
+														...categories.map((cat) => ({
+															value: cat.id,
+															label: cat.name,
+															description: cat.description || '',
+														})),
+													]}
+													className="w-full"
+												/>
+											</div>
+											{/* Second row: Price */}
+											<div className="col-span-4">
+												<Input
+													label="Price"
+													value={expense.price}
+													onChange={(val) =>
+														handleExpenseChange(expense.id, 'price', val)
+													}
+													type="text"
+													className="w-full"
+												/>
+											</div>
+											<div className="col-span-4 pt-8 flex items-center justify-end">
+												<Button
+													icon={TrashIcon}
+													danger
+													onClick={() => handleRemoveExpense(expense.id)}
+													aria-label="Remove expense"
+												>
+													Remove
+												</Button>
+											</div>
+										</div>
+									),
+								)}
+								<Button onClick={handleAddExpense} icon={PlusIcon}>
+									Add Expense
+								</Button>
+							</div>
 						</div>
 					</div>
 				</>

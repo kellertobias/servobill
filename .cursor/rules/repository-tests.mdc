@@ -1,0 +1,31 @@
+---
+description: 
+globs: src/backend/repository/**/*.e2e.ts
+alwaysApply: false
+---
+When you write repository tests make sure to cover both implementations (relational and dynamodb).
+To achieve this use the following pattern with the prepareRepoTest pattern:
+
+```typescript
+import { prepareRepoTest } from '@/test/repo-test';
+
+describe.each(
+	prepareRepoTest({
+		name: 'Invoice',
+		relational: InvoiceRelationalRepository,
+		dynamodb: InvoiceDynamodbRepository,
+		relationalOrmEntity: InvoiceOrmEntity,
+	}),
+)('$name (E2E)', ({ setup, name, onBeforeEach }) => {
+	beforeEach(async () => {
+		await onBeforeEach();
+	});
+
+	it('should create, get, and delete an invoice', async () => {
+		const { app, RepositoryImplementation } = await setup();
+		const repo = app.create<InvoiceRepository>(RepositoryImplementation);
+
+        expect(...).toBe(...)
+    })
+})
+```

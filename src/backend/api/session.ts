@@ -154,6 +154,7 @@ const extractTokenInternal = (
 				message: 'Token is not valid yet',
 			};
 		}
+		// eslint-disable-next-line no-console
 		console.error(error);
 		if (error instanceof jwt.JsonWebTokenError) {
 			return { ...invalidToken, invalid: true, message: error.message, error };

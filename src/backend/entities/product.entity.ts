@@ -4,6 +4,15 @@ import { DomainEntity, DomainEntityKeys } from './abstract.entity';
 
 import { ObjectProperties } from '@/common/ts-helpers';
 
+/**
+ * Represents an expense associated with a product.
+ */
+export type ProductExpense = {
+	name: string;
+	price: number;
+	categoryId?: string;
+};
+
 export class ProductEntity extends DomainEntity {
 	public id!: string;
 	public category!: string;
@@ -15,6 +24,11 @@ export class ProductEntity extends DomainEntity {
 	public taxPercentage!: number;
 	public createdAt!: Date;
 	public updatedAt!: Date;
+
+	/**
+	 * List of expenses associated with this product (optional).
+	 */
+	public expenses?: ProductExpense[];
 
 	constructor(
 		params: Omit<

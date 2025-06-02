@@ -3,7 +3,6 @@ module.exports = {
     node: true,
     mocha: true,
     browser: true,
-    jest: true,
   },
   plugins: ["@typescript-eslint", "import", "prettier"],
   extends: [
@@ -26,7 +25,6 @@ module.exports = {
     curly: "error",
     "import/extensions": "off",
     "@next/next/no-img-element": "off",
-    "import/prefer-default-export": "warn",
     "unicorn/no-await-expression-member": "warn",
     "import/no-extraneous-dependencies": [
       "error",
@@ -142,14 +140,19 @@ module.exports = {
   overrides: [
     {
       files: [
+        "**/*.e2e.ts",
         "**/*.spec.tsx",
         "**/*.spec.ts",
         "**/*.stories.tsx",
         "**/*.*-spec.ts",
         "**/*.*-spec.tsx",
       ],
+      env: {
+      },
+      plugins: ["vitest"],
       rules: {
         "no-restricted-imports": "off",
+        "import/no-extraneous-dependencies": "off",
         "unicorn/no-array-callback-reference": "off",
         "import/no-useless-path-segments": "warn",
       },

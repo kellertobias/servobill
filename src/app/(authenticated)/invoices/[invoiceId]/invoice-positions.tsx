@@ -75,6 +75,7 @@ export function InvoicePositions({
 								priceCents: 0,
 								quantity: 0,
 								taxPercentage: 0,
+								linkedExpenses: [],
 							},
 						],
 					});

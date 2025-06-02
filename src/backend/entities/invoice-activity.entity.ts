@@ -17,10 +17,13 @@ export enum InvoiceActivityType {
 	SENT_INVOICE_EMAIL = 'SENT_INVOICE_EMAIL',
 	SENT_INVOICE_LETTER = 'SENT_INVOICE_LETTER',
 	EMAIL_SENT = 'EMAIL_SENT',
+	EMAIL_DELIVERED = 'EMAIL_DELIVERED',
 	EMAIL_BOUNCED = 'EMAIL_BOUNCED',
 	PAYMENT = 'PAYMENT',
 	PAID = 'PAID',
 	NOTE = 'NOTE',
+	/** Activity for file attachment (linked to attachmentId) */
+	ATTACHMENT = 'ATTACHMENT',
 }
 
 export class InvoiceActivityEntity {
@@ -29,7 +32,10 @@ export class InvoiceActivityEntity {
 	public type!: InvoiceActivityType;
 	public user?: string;
 	public notes?: string;
-	public attachment?: string;
+	/** The ID of the linked attachment, if any */
+	public attachmentId?: string;
+	/** If true, this attachment should be included in outgoing emails */
+	public attachToEmail?: boolean;
 
 	constructor(props: Partial<InvoiceActivityEntity>) {
 		Object.assign(this, props);
@@ -38,6 +44,12 @@ export class InvoiceActivityEntity {
 		}
 		if (!this.activityAt) {
 			this.activityAt = new Date();
+		}
+		if (
+			this.type === InvoiceActivityType.ATTACHMENT &&
+			this.attachToEmail === undefined
+		) {
+			this.attachToEmail = false;
 		}
 	}
 }

@@ -2,6 +2,8 @@ import { IsInt, IsOptional, IsString } from 'class-validator';
 import { Field, ObjectType, InputType, Int } from 'type-graphql';
 
 import { FilteredObjectProperties } from '../types';
+import { ExpenseCategoryType } from '../system/system.schema';
+import { Attachment } from '../attachments/attachment.schema';
 
 import { ExpenseEntity } from '@/backend/entities/expense.entity';
 
@@ -28,11 +30,35 @@ export class Expense implements FilteredObjectProperties<ExpenseEntity> {
 	@Field()
 	expendedAt!: Date;
 
+	/**
+	 * The ID of the expense category assigned to this expense.
+	 */
+	@Field({
+		nullable: true,
+		description: 'The ID of the expense category assigned to this expense.',
+	})
+	categoryId?: string;
+
+	/**
+	 * The full category object assigned to this expense (if requested).
+	 */
+	@Field(() => ExpenseCategoryType, {
+		nullable: true,
+		description: 'The full category object assigned to this expense.',
+	})
+	category?: ExpenseCategoryType;
+
 	@Field()
 	createdAt!: Date;
 
 	@Field()
 	updatedAt!: Date;
+
+	/**
+	 * List of attachments linked to this expense.
+	 */
+	@Field(() => [Attachment], { nullable: true })
+	attachments?: Attachment[];
 }
 
 @InputType()
@@ -60,6 +86,18 @@ export class ExpenseInput
 
 	@Field()
 	expendedAt!: Date;
+
+	@Field({
+		nullable: true,
+		description: 'The ID of the expense category assigned to this expense.',
+	})
+	categoryId?: string;
+
+	/**
+	 * List of attachment IDs to link to this expense.
+	 */
+	@Field(() => [String], { nullable: true })
+	attachmentIds?: string[];
 }
 
 @InputType()

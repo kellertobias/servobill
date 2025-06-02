@@ -1,31 +1,30 @@
-import { randomUUID } from 'crypto';
-
-import { Entity, Schema } from 'electrodb';
 import { injectable } from 'inversify';
 
 import { DomainEntity as DomainBaseEntity } from '../entities/abstract.entity';
 import { EventBusService } from '../services/eventbus.service';
-import { Span } from '../instrumentation';
 
 import { Logger } from '@/backend/services/logger.service';
 import { DefaultContainer } from '@/common/di';
+
+export type AbstractRepositoryInterface<
+	DomainEntity extends DomainBaseEntity,
+	CreateArgs extends unknown[],
+	Interface extends object,
+> = {
+	getById(id: string): Promise<DomainEntity | null>;
+	createWithId(entityId: string, ...args: CreateArgs): Promise<DomainEntity>;
+	create(...args: CreateArgs): Promise<DomainEntity>;
+	save(entity: DomainEntity): Promise<void>;
+	delete(id: string): Promise<void>;
+} & Interface;
 
 @injectable()
 export abstract class AbstractRepository<
 	OrmEntity,
 	DomainEntity extends DomainBaseEntity,
 	CreateArgs extends unknown[],
-	S extends Schema<A, F, C>,
-	A extends string = string,
-	F extends string = string,
-	C extends string = string,
 > {
 	protected abstract logger: Logger;
-	protected store!: Entity<string, string, string, S>;
-
-	protected abstract mainIdName: string;
-
-	protected abstract storeId: string;
 
 	protected abstract generateEmptyItem(
 		id: string,
@@ -36,18 +35,18 @@ export abstract class AbstractRepository<
 		ormEntity: Omit<OrmEntity, 'storeId'>,
 	): DomainEntity;
 
-	public abstract domainToOrmEntity(
+	protected abstract domainToOrmEntity(
 		domainEntity: DomainEntity,
 	): Omit<OrmEntity, 'storeId'>;
 
-	public ormToDomainEntity(
+	protected ormToDomainEntity(
 		ormEntity:
 			| {
 					data: Omit<OrmEntity, 'storeId'>;
 			  }
 			| Omit<OrmEntity, 'storeId'>,
 	): DomainEntity;
-	public ormToDomainEntity(
+	protected ormToDomainEntity(
 		ormEntity?:
 			| {
 					data?: Omit<OrmEntity, 'storeId'> | null;
@@ -55,7 +54,7 @@ export abstract class AbstractRepository<
 			| Omit<OrmEntity, 'storeId'>
 			| null,
 	): DomainEntity | null;
-	public ormToDomainEntity(
+	protected ormToDomainEntity(
 		ormEntity?:
 			| {
 					data?: Omit<OrmEntity, 'storeId'> | null;
@@ -84,21 +83,7 @@ export abstract class AbstractRepository<
 		return this.ormToDomainEntitySafe(entity);
 	}
 
-	@Span('Repository.getById')
-	public async getById(id: string): Promise<DomainEntity | null> {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const store = this.store as Entity<string, string, string, any>;
-		const ormEntity = await store
-			.get({
-				[this.mainIdName]: id,
-				storeId: this.storeId,
-			})
-			.go();
-		const data = this.ormToDomainEntity(ormEntity as OrmEntity);
-		return data;
-	}
-
-	private async purgeOutbox(entity: DomainEntity): Promise<void> {
+	protected async purgeOutbox(entity: DomainEntity): Promise<void> {
 		this.logger.debug('Purging Outbox');
 		const eventBus = DefaultContainer.get(EventBusService);
 		entity.purgeEvents(async (event) => {
@@ -111,52 +96,12 @@ export abstract class AbstractRepository<
 		});
 	}
 
-	@Span('Repository.create')
-	public async create(...args: CreateArgs): Promise<DomainEntity> {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const store = this.store as Entity<string, string, string, any>;
-		const entityId = randomUUID().toString();
-		const entity = this.generateEmptyItem(entityId, ...args);
-
-		const data = this.domainToOrmEntity(entity);
-		await store.create({ ...data, storeId: this.storeId }).go();
-		await this.purgeOutbox(entity);
-		return this.ormToDomainEntity({ data });
-	}
-
-	@Span('Repository.save')
-	public async save(entity: DomainEntity): Promise<void> {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const store = this.store as Entity<string, string, string, any>;
-
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const data = this.domainToOrmEntity(entity);
-
-		delete data[this.mainIdName as keyof typeof data];
-		await store
-			.patch({
-				[this.mainIdName]: entity.id,
-				storeId: this.storeId,
-			})
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			.set(data as any)
-			.go();
-		await this.purgeOutbox(entity);
-	}
-
-	@Span('Repository.delete')
-	public async delete(id: string): Promise<void> {
-		const entity = await this.getById(id);
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const store = this.store as Entity<string, string, string, any>;
-		await store
-			.delete({
-				[this.mainIdName]: id,
-				storeId: this.storeId,
-			})
-			.go();
-		if (entity) {
-			await this.purgeOutbox(entity);
-		}
-	}
+	public abstract getById(id: string): Promise<DomainEntity | null>;
+	public abstract createWithId(
+		entityId: string,
+		...args: CreateArgs
+	): Promise<DomainEntity>;
+	public abstract create(...args: CreateArgs): Promise<DomainEntity>;
+	public abstract save(entity: DomainEntity): Promise<void>;
+	public abstract delete(id: string): Promise<void>;
 }

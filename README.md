@@ -2,7 +2,7 @@
 
 # Servobill
 
-Servobill is a simple, open-source invoicing app built with Next.js, Tailwind CSS, and TypeScript on top of AWS Serverless technologies. It is extremely cheap to maintain and can be deployed to your own AWS account in minutes.
+Servobill is a simple, open-source invoicing app built with Next.js, Tailwind CSS, and TypeScript on top of AWS Serverless technologies. It is extremely cheap to maintain and can be deployed to your own AWS account in minutes. We now also support a dockerized deployment on your own hardware.
 
 ## Features
 
@@ -12,15 +12,16 @@ We feature a simple, easy-to-use interface for creating and managing invoices. Y
 - Create and manage invoices
 - Generate PDFs from invoices
 - Send invoices to clients
-- Manage expenses
+- Manage expenses with attachments and expenses categories
+- Automatically create expenses when e.g. adding travel to an invoice
 - Simple reports
 - Manage clients & products
-- OpenTelemetry Traces & Logs Support
 - Developer Experience:
     - Dependencies in Docker Compose for local development
     - Modern decorator based codebase
     - Dependency Injection
     - Event driven Design
+    - OpenTelemetry Support for Traces & Logs
     - Automatic API Type generation
     - Automatic adding of new endpoints to infrastructure definition
     - CQRS (Bus implemented and some commands present)
@@ -32,26 +33,11 @@ We feature a simple, easy-to-use interface for creating and managing invoices. Y
 
 ## Deploying
 
-### On your AWS account
+We offer two production ready deployment options and a development setup:
 
-This section is currently being written. Basic Steps:
-
-- Setup your AWS account if you don't have one
-- Setup a Hosted zone in Route53 (or use an existing one)
-- If you have a CAA record, make sure that it allows Amazon to issue certificates for your domain
-- Setup an identity in SES and request production access (or use an existing one)
-- Setup a Google OAuth Client ID (or use an existing one)
-- Generate a random string for the JWT secret (e.g. with `openssl rand -base64 32`)
-- Create your .env file (see .env.example)
-- Run `npm run deploy` in the root directory
-
-If the deployment fails, you need to delete a few resources manually, especially the CloudWatch Log Groups, because we used fixed names for those.
-
-### Via Docker Compose
-
-At the moment we do not have a docker image for servobill yet as it is heavily built on top of the serverless mindset. If you want to help us with that, please open an issue or a pull request
-
-We already have outlined the steps required for adapting the codebase to also work on-premise. See https://trello.com/c/KOAbgN5q 
+- [Serverless on your AWS account](deploy/serverless/README.md)
+- [Dockerized on your own hardware](deploy/dockerized/README.md)
+- [Development setup](README.md#developing)
 
 
 ## Architecture
@@ -60,6 +46,9 @@ Servobill is built with a serverless architecture in mind. It uses AWS Lambda fu
 
 ![Servobill](/docs/aws-architecture.png)
 
+For the dockerized deployment, the nextjs app in one docker container also handles the API requests while another container handles the queue workers. For dockerized deployments, we use a minio instance for S3 storage and postgres rather than dynamoDB. For this we have database adapters in our repository layer for both postgres and dynamoDB.
+
+In theory we also support sqlite or any other database that is supported by typeOrm, you however need to build the configuration for that yourself.
 
 ## Developing
 
@@ -90,28 +79,6 @@ If you are done, you can copy the template to the settings in the app.
 
 ## License
 
-We are currently working with our legal team to pick the right license for this project. Until then, please do not use this project for commercial purposes other than for invoicing your own clients.
+This software is licensed under a modified MIT license that does not allow you to sell the software or host it as a service for others.
 
-The project probably will be licensed under the following modified MIT license:
-
-### Modified MIT License (Planned License)
-
-Permission is hereby granted, free of charge, to any person or organization obtaining a copy of this software, code, and associated documentation files (the "Software"), to use the Software for commercial purposes, including the right to use and modify the Software, subject to the following conditions and restrictions:
-
-1. You may not sell the Software or any derivative works based on the Software.
-
-2. You may not provide the use of the software as a service (Software-as-a-Service).
-
-3. The above restrictions do not apply to the original maintainer or copyright holder of the Software, who may engage in the sale of the Software and provision of related services.
-
-4. If a person or organization adds functionality to the software, they grant the original maintainer a non-exclusive, royalty-free, perpetual, irrevocable license to use, reproduce, modify, sublicense, distribute, and otherwise exploit the added functionality.
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
----
-
-This license is meant to allow everyone get started with Servobill and use it for their own business. However, we want to make sure that no one can take this project and sell it as their own or use it to build a competing product.
-
-For any questions or further permissions, please contact the original maintainer of the Software.
+See LICENSE.md for the full license text.

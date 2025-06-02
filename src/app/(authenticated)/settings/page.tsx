@@ -98,18 +98,18 @@ export default function SettingsHomePage() {
 				company: undefined,
 				defaultInvoiceDueDays: String(res.settings.defaultInvoiceDueDays),
 				offerValidityDays: String(res.settings.offerValidityDays),
-				companyName: res.settings.company.name || '',
-				companyStreet: res.settings.company.street || '',
-				companyZip: res.settings.company.zip || '',
-				companyCity: res.settings.company.city || '',
-				companyTaxId: res.settings.company.taxId || '',
-				companyVatId: res.settings.company.vatId || '',
-				companyEmail: res.settings.company.email || '',
-				companyPhone: res.settings.company.phone || '',
-				companyWeb: res.settings.company.web || '',
-				companyBankAccountHolder: res.settings.company.bankAccountHolder || '',
-				companyBankIban: res.settings.company.bankIban || '',
-				companyBankBic: res.settings.company.bankBic || '',
+				companyName: res.settings.company?.name || '',
+				companyStreet: res.settings.company?.street || '',
+				companyZip: res.settings.company?.zip || '',
+				companyCity: res.settings.company?.city || '',
+				companyTaxId: res.settings.company?.taxId || '',
+				companyVatId: res.settings.company?.vatId || '',
+				companyEmail: res.settings.company?.email || '',
+				companyPhone: res.settings.company?.phone || '',
+				companyWeb: res.settings.company?.web || '',
+				companyBankAccountHolder: res.settings.company?.bankAccountHolder || '',
+				companyBankIban: res.settings.company?.bankIban || '',
+				companyBankBic: res.settings.company?.bankBic || '',
 			}));
 			return data;
 		},
@@ -398,8 +398,8 @@ export default function SettingsHomePage() {
 							}}
 						/>
 						<NumberValidity
-							template={data?.invoiceNumbersTemplate}
-							number={data?.invoiceNumbersLast}
+							template={data?.invoiceNumbersTemplate || ''}
+							number={data?.invoiceNumbersLast || ''}
 						/>
 					</SettingsBlock>
 					<SettingsBlock
@@ -455,8 +455,8 @@ export default function SettingsHomePage() {
 							}}
 						/>
 						<NumberValidity
-							template={data?.offerNumbersTemplate}
-							number={data?.offerNumbersLast}
+							template={data?.offerNumbersTemplate || ''}
+							number={data?.offerNumbersLast || ''}
 						/>
 					</SettingsBlock>
 					<SettingsBlock
@@ -512,8 +512,8 @@ export default function SettingsHomePage() {
 							}}
 						/>
 						<NumberValidity
-							template={data?.customerNumbersTemplate}
-							number={data?.customerNumbersLast}
+							template={data?.customerNumbersTemplate || ''}
+							number={data?.customerNumbersLast || ''}
 						/>
 					</SettingsBlock>
 					<SettingsBlock
@@ -725,6 +725,21 @@ export default function SettingsHomePage() {
 							</label>
 							<Button secondary href="/settings/templates">
 								Open PDF Template
+							</Button>
+						</div>
+					</SettingsBlock>
+					<SettingsBlock
+						title="Categories"
+						subtitle={
+							<div className="prose prose-sm leading-4 text-xs text-gray-500/80">
+								Manage the categories used for expenses and products. You can
+								add, edit, or remove categories here.
+							</div>
+						}
+					>
+						<div>
+							<Button secondary href="/settings/categories">
+								Manage Categories
 							</Button>
 						</div>
 					</SettingsBlock>

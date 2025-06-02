@@ -1,4 +1,5 @@
 import React from 'react';
+import clsx from 'clsx';
 
 import { useAutoSizeTextArea } from '@/hooks/use-auto-textarea';
 
@@ -24,7 +25,7 @@ export const Input: React.FC<{
 	displayFirst = false,
 	textarea = false,
 }) => {
-	const ref = useAutoSizeTextArea(value || placeholder || '');
+	const ref = useAutoSizeTextArea(value || placeholder || '', 64);
 
 	if (textarea) {
 		InputComponent = 'textarea';
@@ -40,7 +41,8 @@ export const Input: React.FC<{
 				</label>
 			)}
 			<div
-				className="
+				className={clsx(
+					`
 				mt-2
 				relative block
 				w-full
@@ -50,7 +52,11 @@ export const Input: React.FC<{
 				focus-within:ring-2 focus:ring-inset 
 				focus-within:ring-indigo-600 
 				focus-within:border-transparent
-				sm:text-sm sm:leading-6"
+				sm:text-sm sm:leading-6`,
+					{
+						'min-h-10': textarea,
+					},
+				)}
 			>
 				<InputComponent
 					id={label}
@@ -58,13 +64,19 @@ export const Input: React.FC<{
 					onChange={(e) => onChange?.(e.target.value)}
 					placeholder={placeholder}
 					type={type}
-					className="
+					rows={textarea ? 3 : undefined}
+					className={clsx(
+						`
 						placeholder:text-gray-400
 						outline outline-transparent
 						py-1.5 px-2
            				block w-full
 						sm:text-sm
-						border-0 rounded-md"
+						border-0 rounded-md`,
+						{
+							'min-h-10': textarea,
+						},
+					)}
 					// eslint-disable-next-line @typescript-eslint/no-explicit-any
 					{...((InputComponent === 'textarea' ? { ref } : {}) as any)}
 				/>

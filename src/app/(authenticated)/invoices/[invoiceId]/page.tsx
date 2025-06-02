@@ -20,6 +20,7 @@ import { InvoiceStatusOfferDraft } from './invoice-status/invoice-status-offer-d
 import { InvoiceActivityFeed } from './invoice-activity';
 import { InvoicePositions } from './invoice-positions';
 import { InvoiceHeader } from './invoice-header';
+import { InvoiceStatusCancelled } from './invoice-status/invoice-status-cancelled';
 
 import { InvoiceStatus, InvoiceType } from '@/common/gql/graphql';
 
@@ -42,6 +43,7 @@ export default function InvoiceDetailPage() {
 			priceCents: item.priceCents,
 			quantity: item.quantity,
 			taxPercentage: item.taxPercentage,
+			linkedExpenses: item.linkedExpenses,
 		})),
 	}));
 
@@ -92,8 +94,8 @@ export default function InvoiceDetailPage() {
 										content: (
 											<>
 												Are you sure you want to delete this {name}? This action
-												cannot be undone and does not yet cancel delete the PDF
-												files on S3. Also, Invoice Numbers won't be reset.
+												cannot be undone and does not yet delete the PDF files
+												on S3. Also, Invoice Numbers won't be reset.
 											</>
 										),
 									})) &&
@@ -185,6 +187,13 @@ export default function InvoiceDetailPage() {
 									hasChanges={hasChanges}
 								/>
 							)}
+						{data.status === InvoiceStatus.Cancelled && (
+							<InvoiceStatusCancelled
+								data={data}
+								reload={reload}
+								hasChanges={hasChanges}
+							/>
+						)}
 					</div>
 
 					{/* Invoice */}
@@ -248,6 +257,14 @@ export default function InvoiceDetailPage() {
 													priceCents: Number(item.priceCents),
 													quantity: Number(item.quantity),
 													taxPercentage: Number(item.taxPercentage || '0'),
+													linkedExpenses: item.linkedExpenses.map(
+														(expense) => ({
+															name: expense.name,
+															price: expense.price,
+															categoryId: expense.categoryId || undefined,
+															enabled: expense.enabled,
+														}),
+													),
 												})),
 											};
 

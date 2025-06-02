@@ -15,6 +15,11 @@ export class ExpenseEntity extends DomainEntity {
 	public updatedAt!: Date;
 	public expendedAt!: Date;
 
+	/**
+	 * The ID of the expense category assigned to this expense.
+	 */
+	public categoryId?: string;
+
 	constructor(
 		params: Omit<
 			ObjectProperties<ExpenseEntity>,

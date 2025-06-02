@@ -21,14 +21,11 @@ export default function CustomersHomePage() {
 		null | string
 	>(null);
 
-	const pageSize = 10;
-	const currentPage = React.useRef(0);
-
 	const { data, loading, reload } = useLoadData(async () => {
 		const data = await API.query({
 			query: gql(`
-				query CustomersHomePageListData($skip: Int!, $pageSize: Int!) {
-					customers(limit: $pageSize, skip: $skip) {
+				query CustomersHomePageListData {
+					customers {
 						id
 						customerNumber
 						name
@@ -41,10 +38,6 @@ export default function CustomersHomePage() {
 					}
 				}
 			`),
-			variables: {
-				skip: currentPage.current * pageSize,
-				pageSize,
-			},
 		}).then((res) => res.customers);
 		return data;
 	});

@@ -3,6 +3,7 @@ import 'reflect-metadata';
 import { APIGatewayProxyEventV2 } from 'aws-lambda';
 import cookie from 'cookie';
 
+import '@/backend/repositories';
 import { SessionLambdaContext, withSession } from '../session';
 
 import { getGraphQLServer } from './server';

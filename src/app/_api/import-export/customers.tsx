@@ -5,6 +5,7 @@ import { doToast } from '@/components/toast';
 import { API, gql } from '../index';
 
 import { downloadFile, requestFile } from './helper';
+import { Exporters } from './exporters/exporters';
 
 import { Customer } from '@/common/gql/graphql';
 
@@ -108,26 +109,7 @@ export const importCustomers = async () => {
 export const exportCustomers = async () => {
 	doToast({
 		promise: (async () => {
-			const { customers } = await API.query({
-				query: gql(`
-					query ExportCustomers {
-						customers {
-							id
-							name
-							contactName
-							customerNumber
-							email
-							street
-							zip
-							city
-							country
-							state
-							notes
-							showContact
-						}
-					}
-				`),
-			});
+			const customers = await Exporters.customers();
 
 			const data = {
 				customers,

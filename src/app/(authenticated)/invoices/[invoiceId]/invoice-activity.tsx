@@ -7,17 +7,13 @@ import {
 	EnvelopeIcon,
 	PaperClipIcon,
 	PlusCircleIcon,
-	TrashIcon,
 	UserCircleIcon,
 } from '@heroicons/react/20/solid';
+import { TrashIcon } from '@heroicons/react/24/outline';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import dayjs from 'dayjs';
 
-import { Button } from '@/components/button';
-import { useAutoSizeTextArea } from '@/hooks/use-auto-textarea';
-import { doToast } from '@/components/toast';
-import { API, gql } from '@/api/index';
-
+import { InvoiceActivityForm } from './invoice-activity-form';
 import { useInvoiceActivity } from './data';
 
 import { InvoiceActivityType } from '@/common/gql/graphql';
@@ -59,6 +55,11 @@ const getActivityIcon = (type: InvoiceActivityType) => {
 				<EnvelopeIcon className="h-4 w-4 text-green-600" aria-hidden="true" />
 			);
 		}
+		case InvoiceActivityType.EmailDelivered: {
+			return (
+				<EnvelopeIcon className="h-4 w-4 text-green-600" aria-hidden="true" />
+			);
+		}
 		case InvoiceActivityType.EmailBounced: {
 			return (
 				<EnvelopeIcon className="h-4 w-4 text-red-600" aria-hidden="true" />
@@ -77,6 +78,11 @@ const getActivityIcon = (type: InvoiceActivityType) => {
 				/>
 			);
 		}
+		case InvoiceActivityType.Attachment: {
+			return (
+				<PaperClipIcon className="h-4 w-4 text-gray-400" aria-hidden="true" />
+			);
+		}
 		default: {
 			return (
 				<div className="h-1.5 w-1.5 rounded-full bg-gray-100 ring-1 ring-gray-300" />
@@ -89,6 +95,9 @@ const getActivityText = (
 	type: InvoiceActivityType,
 	user: string | null | undefined,
 	notes: string | null | undefined,
+	attachment: NonNullable<
+		ReturnType<typeof useInvoiceActivity>['data']
+	>[number]['attachment'],
 ) => {
 	switch (type) {
 		case InvoiceActivityType.Imported: {
@@ -184,6 +193,10 @@ const getActivityText = (
 			return <>The email was successfully sent to the client.</>;
 		}
 
+		case InvoiceActivityType.EmailDelivered: {
+			return <>The email was successfully delivered to the client.</>;
+		}
+
 		case InvoiceActivityType.EmailBounced: {
 			return <>The email bounced and could not be delivered.</>;
 		}
@@ -234,91 +247,26 @@ const getActivityText = (
 				</>
 			);
 		}
+		case InvoiceActivityType.Attachment: {
+			return (
+				<>
+					<span className="font-medium text-gray-900">{user}</span> added{' '}
+					{attachment?.fileName}
+				</>
+			);
+		}
 	}
 };
 
-function InvoiceActivityForm({
-	invoiceId,
-	reload,
-}: {
-	invoiceId: string;
-	reload: () => void;
-}) {
-	const [comment, setComment] = React.useState('');
-	const ref = useAutoSizeTextArea(comment || 'Add your comment...');
-
-	const submit = async () => {
-		doToast({
-			promise: (async () => {
-				await API.query({
-					query: gql(`
-							mutation InvoiceAddComment($invoiceId: String!, $comment: String!) {
-								invoiceAddComment(invoiceId: $invoiceId, comment: $comment) {
-									id
-								}
-							}
-						`),
-					variables: {
-						invoiceId,
-						comment,
-					},
-				});
-				reload();
-			})(),
-			success: 'Comment added',
-			error: 'Failed to add comment',
-			loading: 'Adding comment...',
-		});
-	};
-
-	return (
-		<div className="mt-6 flex gap-x-3">
-			<UserCircleIcon className="h-6 w-6 flex-none rounded-full bg-gray-50 text-gray-300" />
-			<form action="#" className="relative flex-auto">
-				<div className="overflow-hidden rounded-lg pb-12 shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-blue-600">
-					<label htmlFor="comment" className="sr-only">
-						Add your comment
-					</label>
-					<textarea
-						ref={ref}
-						style={{
-							minHeight: '5rem',
-						}}
-						rows={2}
-						name="comment"
-						id="comment"
-						className="outline outline-transparent block w-full resize-none border-0 bg-transparent mx-2 py-1.5 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
-						placeholder="Add your comment..."
-						value={comment}
-						onChange={(e) => setComment(e.target.value)}
-						defaultValue={''}
-					/>
-				</div>
-
-				<div className="absolute border-t border-t-gray-200 bg-gray-100/20 inset-x-0 bottom-0 left-0.5 right-0.5 flex justify-between py-2 pl-3 pr-2">
-					<div className="flex items-center space-x-5">
-						<div className="flex items-center">
-							<button
-								type="button"
-								className="-m-2.5 flex h-10 w-10 items-center justify-center rounded-full text-gray-400 hover:text-gray-500 opacity-50 cursor-not-allowed"
-							>
-								<PaperClipIcon className="h-5 w-5" aria-hidden="true" />
-								<span className="sr-only">Attach a file</span>
-							</button>
-						</div>
-					</div>
-					<Button secondary={!comment} primary={!!comment} onClick={submit}>
-						Comment
-					</Button>
-				</div>
-			</form>
-		</div>
-	);
-}
-
+/**
+ * InvoiceActivityFeed displays the activity timeline for an invoice, including attachments.
+ * For attachment activities, allows toggling email attachment and deleting the activity.
+ */
 export function InvoiceActivityFeed() {
 	const params = useParams();
-	const { data, reload } = useInvoiceActivity();
+	const { data, reload, toggleAttachToEmail, deleteAttachmentActivity } =
+		useInvoiceActivity();
+
 	if (!data) {
 		return null;
 	}
@@ -363,6 +311,60 @@ export function InvoiceActivityFeed() {
 											</p>
 										</div>
 									</>
+								) : activity.type === InvoiceActivityType.Attachment ? (
+									<>
+										<div className="relative flex h-6 w-6 flex-none items-center justify-center bg-white">
+											{getActivityIcon(activity.type)}
+										</div>
+										<div className="flex-auto">
+											<p className="py-0.5 text-xs leading-5 text-gray-500">
+												{getActivityText(
+													activity.type,
+													activity.user,
+													activity.notes,
+													activity.attachment,
+												)}
+											</p>
+											<div className="flex items-center gap-2 mt-1">
+												{/* Toggle for attachToEmail */}
+												<label className="flex items-center gap-2 text-xs">
+													<input
+														type="checkbox"
+														checked={activity.attachToEmail || false}
+														onChange={async () => {
+															await toggleAttachToEmail({
+																invoiceId: params.invoiceId as string,
+																activityId: activity.id,
+																attachToEmail: !activity.attachToEmail,
+															});
+														}}
+													/>
+													<span>Attach to emails</span>
+												</label>
+											</div>
+										</div>
+										<div className="flex-none flex-col justify-end items-end py-0.5 text-xs leading-5 text-gray-500 text-right">
+											<time
+												dateTime={activity.activityAt}
+												className="w-full inline-block text-right"
+											>
+												{dayjs(activity.activityAt).fromNow()}
+											</time>
+											<span
+												className="flex flex-row items-center gap-1 cursor-pointer hover:text-red-600 justify-end text-right"
+												onClick={async () => {
+													await deleteAttachmentActivity({
+														invoiceId: params.invoiceId as string,
+														activityId: activity.id,
+													});
+												}}
+												aria-label="Delete attachment"
+											>
+												<TrashIcon className="h-3 w-3 text-red-600" />
+												<span>Remove</span>
+											</span>
+										</div>
+									</>
 								) : (
 									<>
 										<div className="relative flex h-6 w-6 flex-none items-center justify-center bg-white">
@@ -373,6 +375,7 @@ export function InvoiceActivityFeed() {
 												activity.type,
 												activity.user,
 												activity.notes,
+												activity.attachment,
 											)}
 										</p>
 										<time

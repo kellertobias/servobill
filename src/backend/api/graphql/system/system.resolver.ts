@@ -9,10 +9,12 @@ import {
 } from './system.schema';
 
 import { Inject, Service } from '@/common/di';
-import { SettingsRepository } from '@/backend/repositories/settings.repository';
+import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
+import { type SettingsRepository } from '@/backend/repositories/settings/interface';
 import {
 	InvoiceSettingsEntity,
 	PdfTemplateSetting,
+	ExpenseSettingsEntity,
 } from '@/backend/entities/settings.entity';
 import { EventBusService } from '@/backend/services/eventbus.service';
 import { S3Service } from '@/backend/services/s3.service';
@@ -22,7 +24,7 @@ import { GenerateTemplatePreviewEvent } from '@/backend/events/template/event';
 @Resolver()
 export class SystemResolver {
 	constructor(
-		@Inject(SettingsRepository) private repository: SettingsRepository,
+		@Inject(SETTINGS_REPOSITORY) private repository: SettingsRepository,
 		@Inject(EventBusService) private eventBus: EventBusService,
 		@Inject(S3Service) private s3: S3Service,
 	) {}
@@ -30,6 +32,7 @@ export class SystemResolver {
 	private mapInvoiceSettingsEntityToResponse(
 		data: InvoiceSettingsEntity,
 		emails: PdfTemplateSetting,
+		expenseSettings: ExpenseSettingsEntity,
 	): SettingsResult {
 		return {
 			invoiceNumbersTemplate: data.invoiceNumbers.template || '',
@@ -69,6 +72,7 @@ export class SystemResolver {
 				bankIban: emails.companyData.bank.iban || '',
 				bankBic: emails.companyData.bank.bic || '',
 			},
+			categories: (expenseSettings.categories || []).map((cat) => ({ ...cat })),
 		};
 	}
 
@@ -77,7 +81,14 @@ export class SystemResolver {
 	async settings(): Promise<SettingsResult> {
 		const data = await this.repository.getSetting(InvoiceSettingsEntity);
 		const emails = await this.repository.getSetting(PdfTemplateSetting);
-		return this.mapInvoiceSettingsEntityToResponse(data, emails);
+		const expenseSettings = await this.repository.getSetting(
+			ExpenseSettingsEntity,
+		);
+		return this.mapInvoiceSettingsEntityToResponse(
+			data,
+			emails,
+			expenseSettings,
+		);
 	}
 
 	@Authorized()
@@ -97,6 +108,9 @@ export class SystemResolver {
 	): Promise<SettingsResult> {
 		const data = await this.repository.getSetting(InvoiceSettingsEntity);
 		const emails = await this.repository.getSetting(PdfTemplateSetting);
+		const expenseSettings = await this.repository.getSetting(
+			ExpenseSettingsEntity,
+		);
 
 		data.invoiceNumbers.update({
 			template: nextData.invoiceNumbersTemplate,
@@ -116,40 +130,63 @@ export class SystemResolver {
 			lastNumber: nextData.customerNumbersLast,
 		});
 
-		data.offerValidityDays = nextData.offerValidityDays;
-		data.defaultInvoiceDueDays = nextData.defaultInvoiceDueDays;
-		data.defaultInvoiceFooterText = nextData.defaultInvoiceFooterText;
+		data.offerValidityDays = nextData.offerValidityDays || 14;
+		data.defaultInvoiceDueDays = nextData.defaultInvoiceDueDays || 28;
+		data.defaultInvoiceFooterText =
+			nextData.defaultInvoiceFooterText || 'Created by Servobill';
 
 		await data.save();
 
-		emails.emailTemplate = nextData.emailTemplate;
-		emails.emailSubjectInvoices = nextData.emailSubjectInvoices;
-		emails.emailSubjectOffers = nextData.emailSubjectOffers;
-		emails.emailSubjectReminder = nextData.emailSubjectReminder;
-		emails.emailSubjectWarning = nextData.emailSubjectWarning;
+		emails.emailTemplate = nextData.emailTemplate || '';
+		emails.emailSubjectInvoices =
+			nextData.emailSubjectInvoices || 'Here is your invoice {{number}}';
+		emails.emailSubjectOffers =
+			nextData.emailSubjectOffers || 'Your offer {{number}} is ready';
+		emails.emailSubjectReminder =
+			nextData.emailSubjectReminder || 'Reminder: Invoice {{number}} is due';
+		emails.emailSubjectWarning =
+			nextData.emailSubjectWarning || 'Warning: Invoice {{number}} is over due';
 
-		emails.sendFrom = nextData.sendFrom;
-		emails.replyTo = nextData.replyTo;
+		emails.sendFrom = nextData.sendFrom || 'no-reply@example.com';
+		emails.replyTo = nextData.replyTo || 'no-reply@example.com';
 
-		emails.invoiceCompanyLogo = nextData.invoiceCompanyLogo;
-		emails.emailCompanyLogo = nextData.emailCompanyLogo;
+		emails.invoiceCompanyLogo = nextData.invoiceCompanyLogo || '';
+		emails.emailCompanyLogo = nextData.emailCompanyLogo || '';
 
-		emails.companyData.name = nextData.company.name;
-		emails.companyData.street = nextData.company.street;
-		emails.companyData.zip = nextData.company.zip;
-		emails.companyData.city = nextData.company.city;
-		emails.companyData.phone = nextData.company.phone;
-		emails.companyData.email = nextData.company.email;
-		emails.companyData.web = nextData.company.web;
-		emails.companyData.vatId = nextData.company.vatId;
-		emails.companyData.taxId = nextData.company.taxId;
-		emails.companyData.bank.accountHolder = nextData.company.bankAccountHolder;
-		emails.companyData.bank.iban = nextData.company.bankIban;
-		emails.companyData.bank.bic = nextData.company.bankBic;
+		emails.companyData.name = nextData.company?.name || '';
+		emails.companyData.street = nextData.company?.street || '';
+		emails.companyData.zip = nextData.company?.zip || '';
+		emails.companyData.city = nextData.company?.city || '';
+		emails.companyData.phone = nextData.company?.phone || '';
+		emails.companyData.email = nextData.company?.email || '';
+		emails.companyData.web = nextData.company?.web || '';
+		emails.companyData.vatId = nextData.company?.vatId || '';
+		emails.companyData.taxId = nextData.company?.taxId || '';
+		emails.companyData.bank.accountHolder =
+			nextData.company?.bankAccountHolder || '';
+		emails.companyData.bank.iban = nextData.company?.bankIban || '';
+		emails.companyData.bank.bic = nextData.company?.bankBic || '';
 
 		await emails.save();
 
-		return this.mapInvoiceSettingsEntityToResponse(data, emails);
+		if (nextData.categories) {
+			expenseSettings.categories = nextData.categories.map((cat) => ({
+				...cat,
+				id: cat.id,
+				color: cat.color,
+				isDefault: cat.isDefault || false,
+				reference: cat.reference || '',
+				sumForTaxSoftware: cat.sumForTaxSoftware || false,
+				description: cat.description || '',
+			}));
+			await expenseSettings.save();
+		}
+
+		return this.mapInvoiceSettingsEntityToResponse(
+			data,
+			emails,
+			expenseSettings,
+		);
 	}
 
 	@Authorized()

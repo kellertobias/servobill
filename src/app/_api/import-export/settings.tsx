@@ -4,6 +4,7 @@ import { doToast } from '@/components/toast';
 import { API, gql } from '../index';
 
 import { downloadFile, requestFile } from './helper';
+import { Exporters } from './exporters/exporters';
 
 export const importSettings = async () => {
 	const raw = await requestFile();
@@ -32,53 +33,7 @@ export const importSettings = async () => {
 export const exportSettings = async () => {
 	doToast({
 		promise: (async () => {
-			const data = await API.query({
-				query: gql(`
-					query ExportSettings {
-						settings {
-							invoiceNumbersTemplate
-							invoiceNumbersIncrementTemplate
-							invoiceNumbersLast
-							offerNumbersTemplate
-							offerNumbersIncrementTemplate
-							offerNumbersLast
-							customerNumbersTemplate
-							customerNumbersIncrementTemplate
-							customerNumbersLast
-							emailTemplate
-							emailSubjectInvoices
-							emailSubjectOffers
-							emailSubjectReminder
-							emailSubjectWarning
-							sendFrom
-							replyTo
-							invoiceCompanyLogo
-							emailCompanyLogo
-							offerValidityDays
-							defaultInvoiceDueDays
-							defaultInvoiceFooterText
-							company {
-								name
-								street
-								zip
-								city
-								taxId
-								vatId
-								email
-								phone
-								web
-								bankAccountHolder
-								bankIban
-								bankBic
-							}
-						}
-						template {
-							pdfTemplate
-							pdfStyles
-						}
-					}
-				`),
-			});
+			const data = await Exporters.settings();
 
 			const dataStr = JSON.stringify(data);
 

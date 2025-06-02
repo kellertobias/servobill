@@ -1,0 +1,49 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# API Endpoints Rule
+
+## Overview
+- API endpoints are defined in the `/src/backend/api` directory.
+- The folder and file structure under `/src/backend/api` determines the API path, similar to how routing works in Next.js.
+- Each API endpoint must have an entrypoint file named `handler.ts` in its respective directory.
+
+## Handler Entrypoint Convention
+- The entrypoint for each API endpoint is a file named `handler.ts`.
+- This file **must** export:
+  - A variable `method` (string) specifying the HTTP verb (e.g., `GET`, `POST`, `ANY`).
+  - A variable `handlerName` (string, usually `'handler'`), and a function or variable named `handler` which is the actual handler function.
+- The handler should be of type `APIHandler` (see [`types.ts`](mdc:src/backend/api/types.ts)), which is compatible with AWS Lambda's `Handler<APIGatewayProxyEventV2, APIGatewayProxyStructuredResultV2 | void>`.
+- Example:
+  ```ts
+  export const method = 'ANY';
+  export const handlerName = 'handler';
+  export const handler: APIHandler = async (evt, ctx, cb) => {
+    // ...implementation...
+  };
+  ```
+
+## Routing and Request Forwarding
+- In development, requests to `/api/*` are forwarded from Next.js (`src/app/api/[[...slug]]/route.ts`) to the appropriate handler in `/src/backend/api`.
+- The path structure in `/src/backend/api` mirrors the API route (e.g., `/src/backend/api/auth/[action]/handler.ts` handles `/api/auth/:action`).
+- The handler is dynamically loaded and invoked based on the HTTP method and path.
+
+## Adding a New API Endpoint
+1. Create a new directory under `/src/backend/api` that matches your desired API path.
+2. Add a `handler.ts` file in that directory, exporting `method`, `handlerName`, and `handler` as described above.
+3. If your endpoint has dynamic path segments, use `[param]` in the directory name (e.g., `[userId]`).
+4. Restart the development environment or run `npx tsx stack/build-api-index.ts` to update the API index.
+
+## Example
+For an endpoint `/api/auth/renew`, the structure would be:
+```
+/src/backend/api/auth/[action]/handler.ts
+```
+And the handler would route based on the `action` path parameter.
+
+## References
+- [src/backend/api/types.ts](mdc:src/backend/api/types.ts) — APIHandler type definition
+- [src/backend/api/README.md](mdc:src/backend/api/README.md) — Additional documentation
+- [src/app/api/[[...slug]]/route.ts](mdc:src/app/api/[[...slug]]/route.ts) — Next.js API forwarding logic

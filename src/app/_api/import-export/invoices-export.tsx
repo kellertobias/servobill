@@ -2,55 +2,13 @@
 
 import { doToast } from '@/components/toast';
 
-import { API, gql } from '../index';
-
 import { downloadFile } from './helper';
+import { Exporters } from './exporters/exporters';
 
 export const exportInvoices = async () => {
 	doToast({
 		promise: (async () => {
-			const { invoices } = await API.query({
-				query: gql(`
-					query ExportInvoices {
-						invoices {
-							id
-							invoiceNumber
-							offerNumber
-							invoicedAt
-							offeredAt
-							dueAt
-							status
-							type
-							subject
-							footerText
-							customer {
-								id
-								name
-								contactName
-								customerNumber
-								email
-								street
-								zip
-								city
-								country
-								state
-								notes
-								showContact
-							}
-							items {
-								id
-								name
-								description
-								quantity
-								priceCents
-								taxPercentage
-							}
-							createdAt
-							updatedAt
-						}
-					}
-				`),
-			});
+			const invoices = await Exporters.invoices();
 
 			const data = {
 				invoices,

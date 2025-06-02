@@ -1,0 +1,164 @@
+import { Resolver, Query, Mutation, Arg, Authorized, Int } from 'type-graphql';
+
+import {
+	Attachment,
+	RequestAttachmentUploadUrlResult,
+	AttachmentDownloadUrlResult,
+	ListAttachmentsInput,
+} from './attachment.schema';
+
+import { Inject, Service } from '@/common/di';
+import { ATTACHMENT_REPOSITORY } from '@/backend/repositories/attachment/di-tokens';
+import { type AttachmentRepository } from '@/backend/repositories/attachment/interface';
+import { FILE_STORAGE_SERVICE } from '@/backend/services/file-storage.service';
+import type { FileStorageService } from '@/backend/services/file-storage.service';
+
+/**
+ * GraphQL resolver for managing file attachments, including upload, confirmation, listing, deletion, and download URL generation.
+ *
+ * This resolver uses dependency injection for the repository and S3 service.
+ *
+ * TODO: Implement presigned PUT upload URL in S3Service for direct client uploads.
+ */
+@Service()
+@Resolver(() => Attachment)
+export class AttachmentResolver {
+	constructor(
+		@Inject(ATTACHMENT_REPOSITORY) private repository: AttachmentRepository,
+		@Inject(FILE_STORAGE_SERVICE) private fileStorage: FileStorageService,
+	) {}
+
+	/**
+	 * Request a signed S3 upload URL for a new attachment.
+	 */
+	@Authorized()
+	@Mutation(() => RequestAttachmentUploadUrlResult)
+	async requestUpload(
+		@Arg('fileName') fileName: string,
+		@Arg('mimeType') mimeType: string,
+		@Arg('size', () => Int) size: number,
+	): Promise<RequestAttachmentUploadUrlResult> {
+		// Create a new attachment entity in DB (status: 'pending')
+		const bucket = process.env.BUCKETS_FILE_SST || '';
+		const extension = fileName.split('.').pop();
+		const nameHash = crypto.randomUUID();
+		const s3Key = `attachments/${Date.now()}-${nameHash}.${extension}`;
+		const attachment = await this.repository.create({
+			fileName,
+			mimeType,
+			size,
+			s3Key,
+			s3Bucket: bucket,
+		});
+		attachment.status = 'pending';
+		await this.repository.save(attachment);
+		const uploadUrl = await this.fileStorage.getUploadUrl(
+			bucket,
+			s3Key,
+			attachment.id,
+		);
+		return { uploadUrl, attachmentId: attachment.id };
+	}
+
+	/**
+	 * Confirm that the upload has finished and mark the attachment as 'finished'.
+	 */
+	@Authorized()
+	@Mutation(() => Attachment)
+	async confirmUpload(
+		@Arg('attachmentId') attachmentId: string,
+	): Promise<Attachment> {
+		const attachment = await this.repository.getById(attachmentId);
+		if (!attachment) {
+			throw new Error('Attachment not found');
+		}
+		attachment.status = 'finished';
+		await this.repository.save(attachment);
+		return attachment as Attachment;
+	}
+
+	/**
+	 * Confirm that the upload has finished and mark the attachment as 'finished'.
+	 */
+	@Authorized()
+	@Mutation(() => Attachment)
+	async attachUpload(
+		@Arg('attachmentId') attachmentId: string,
+		@Arg('invoiceId', { nullable: true }) invoiceId?: string,
+		@Arg('expenseId', { nullable: true }) expenseId?: string,
+		@Arg('inventoryId', { nullable: true }) inventoryId?: string,
+	): Promise<Attachment> {
+		const attachment = await this.repository.getById(attachmentId);
+		if (!attachment) {
+			throw new Error('Attachment not found');
+		}
+		if (invoiceId) {
+			attachment.invoiceId = invoiceId;
+		}
+		if (expenseId) {
+			attachment.expenseId = expenseId;
+		}
+		if (inventoryId) {
+			attachment.inventoryId = inventoryId;
+		}
+		attachment.status = 'attached';
+		await this.repository.save(attachment);
+		return attachment as Attachment;
+	}
+
+	/**
+	 * List attachments for a given entity (invoice, expense, or inventory).
+	 */
+	@Authorized()
+	@Query(() => [Attachment])
+	async attachments(
+		@Arg('input', { nullable: true }) input?: ListAttachmentsInput,
+	): Promise<Attachment[]> {
+		return this.repository.listByQuery({
+			invoiceId: input?.invoiceId,
+			expenseId: input?.expenseId,
+			inventoryId: input?.inventoryId,
+			skip: input?.skip,
+			limit: input?.limit,
+		});
+	}
+
+	/**
+	 * Get a signed S3 download URL for an attachment.
+	 */
+	@Authorized()
+	@Query(() => AttachmentDownloadUrlResult)
+	async attachment(
+		@Arg('attachmentId') attachmentId: string,
+	): Promise<AttachmentDownloadUrlResult> {
+		const attachment = await this.repository.getById(attachmentId);
+		if (!attachment) {
+			throw new Error('Attachment not found');
+		}
+		// Use S3Service.getSignedUrl for download
+		const downloadUrl = await this.fileStorage.getDownloadUrl(
+			attachment.s3Bucket,
+			attachment.s3Key,
+			attachment.fileName,
+			attachment.id,
+		);
+		return { downloadUrl };
+	}
+
+	/**
+	 * Delete an attachment by ID (removes from DB, but S3 deletion must be handled elsewhere if needed).
+	 */
+	@Authorized()
+	@Mutation(() => Boolean)
+	async deleteAttachment(
+		@Arg('attachmentId') attachmentId: string,
+	): Promise<boolean> {
+		const attachment = await this.repository.getById(attachmentId);
+		if (!attachment) {
+			return false;
+		}
+		await this.fileStorage.deleteFile(attachment.s3Bucket, attachment.s3Key);
+		await this.repository.delete(attachmentId);
+		return true;
+	}
+}
