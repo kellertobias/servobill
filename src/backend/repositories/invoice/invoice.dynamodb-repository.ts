@@ -179,14 +179,14 @@ export class InvoiceDynamodbRepository
 		limit?: number;
 		cursor?: string;
 	}): Promise<InvoiceEntity[]> {
-		const data = query.where?.year
-			? await this.store.query
-					.byYear({ storeId: this.storeId })
-					.gt({
-						createdAt: new Date(`${query.where.year}-01-01`).toISOString(),
-					})
-					.go()
-			: await this.store.query.byYear({ storeId: this.storeId }).go();
+		const data = await this.store.query
+			.byYear({ storeId: this.storeId })
+			.gt({
+				createdAt: new Date(
+					`${query.where?.year || new Date().getFullYear() - 20}-01-01`,
+				).toISOString(),
+			})
+			.go();
 
 		let results = data.data.map((elm: InvoiceOrmEntity) =>
 			this.ormToDomainEntity(elm),
