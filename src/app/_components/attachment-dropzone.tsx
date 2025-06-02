@@ -1,13 +1,9 @@
 import React, { useState } from 'react';
 
-import {
-	AttachmentDropzoneUpload,
-	AttachmentFilePartial as UploadFilePartial,
-} from './attachment-dropzone-upload';
-import {
-	AttachmentFileList,
-	AttachmentFilePartial as ListFilePartial,
-} from './attachment-file-list';
+import { AttachmentFilePartial } from '@/api/download-attachment';
+
+import { AttachmentDropzoneUpload } from './attachment-dropzone-upload';
+import { AttachmentFileList } from './attachment-file-list';
 
 /**
  * Type representing an attachment file.
@@ -27,11 +23,6 @@ export interface AttachmentFile {
 	updatedAt: string;
 }
 
-export type AttachmentFilePartial = Pick<
-	AttachmentFile,
-	'id' | 'fileName' | 'mimeType' | 'size' | 'createdAt'
->;
-
 /**
  * Props for the AttachmentDropzone component.
  */
@@ -39,11 +30,11 @@ export interface AttachmentDropzoneProps {
 	/**
 	 * Attachments already uploaded (from parent, e.g. loaded from API).
 	 */
-	value?: ListFilePartial[];
+	value?: AttachmentFilePartial[];
 	/**
 	 * Callback when attachments change (upload/delete).
 	 */
-	onChange?: (files: ListFilePartial[]) => void;
+	onChange?: (files: AttachmentFilePartial[]) => void;
 	/**
 	 * If true, disables upload and drag-and-drop.
 	 */
@@ -87,7 +78,7 @@ export const AttachmentDropzone: React.FC<AttachmentDropzoneProps> = ({
 	accept = ['image/png', 'image/jpeg', 'image/gif', 'application/pdf'],
 }) => {
 	// Local state for files and error
-	const [files, setFiles] = useState<ListFilePartial[]>(value);
+	const [files, setFiles] = useState<AttachmentFilePartial[]>(value);
 	const [error, setError] = useState<string | null>(null);
 	// Merge value prop and local files (avoid duplicates by id)
 	const allFiles = [
@@ -95,7 +86,7 @@ export const AttachmentDropzone: React.FC<AttachmentDropzoneProps> = ({
 	];
 
 	// Handle successful upload from AttachmentDropzoneUpload
-	const handleUpload = (file: UploadFilePartial) => {
+	const handleUpload = (file: AttachmentFilePartial) => {
 		setFiles((prev) => {
 			const next = [...prev, file];
 			if (onChange) {

@@ -13,6 +13,8 @@ import { TrashIcon } from '@heroicons/react/24/outline';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import dayjs from 'dayjs';
 
+import { downloadAttachment } from '@/api/download-attachment';
+
 import { InvoiceActivityForm } from './invoice-activity-form';
 import { useInvoiceActivity } from './data';
 
@@ -317,7 +319,15 @@ export function InvoiceActivityFeed() {
 											{getActivityIcon(activity.type)}
 										</div>
 										<div className="flex-auto">
-											<p className="py-0.5 text-xs leading-5 text-gray-500">
+											<p
+												className="py-0.5 text-xs leading-5 text-gray-500"
+												onClick={() => {
+													if (activity.attachment) {
+														downloadAttachment(activity.attachment);
+													}
+												}}
+												style={{ cursor: 'pointer' }}
+											>
 												{getActivityText(
 													activity.type,
 													activity.user,

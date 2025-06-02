@@ -3,16 +3,14 @@ import Link from 'next/link';
 
 import dayjs from 'dayjs';
 
+import { AttachmentFilePartial } from '@/api/download-attachment';
 import { useLoadData, useSaveCallback } from '@/hooks/load-data';
 import { API, gql } from '@/api/index';
 import { Drawer } from '@/components/drawer';
 import { Input } from '@/components/input';
 import { LoadingSkeleton } from '@/components/loading';
 import SelectInput from '@/components/select-input';
-import {
-	AttachmentDropzone,
-	AttachmentFilePartial,
-} from '@/components/attachment-dropzone';
+import { AttachmentDropzone } from '@/components/attachment-dropzone';
 
 import { useExpenseCategories } from '@/app/_hooks/use-expense-categories';
 
@@ -62,7 +60,6 @@ export default function ExpenseOverlay({
 										fileName
 										mimeType
 										size
-										createdAt
 									}
 								}
 							}

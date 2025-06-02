@@ -8,17 +8,10 @@ import {
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 import { gql, query } from '@/api/graphql';
-
-/**
- * Partial type for uploaded file (copied from AttachmentDropzone).
- */
-export type AttachmentFilePartial = {
-	id: string;
-	fileName: string;
-	mimeType: string;
-	size: number;
-	createdAt: string;
-};
+import {
+	AttachmentFilePartial,
+	downloadAttachment,
+} from '@/api/download-attachment';
 
 /**
  * Props for AttachmentFileList component.
@@ -33,15 +26,6 @@ export interface AttachmentFileListProps {
 const DELETE_ATTACHMENT_MUTATION = gql(/* GraphQL */ `
 	mutation DeleteAttachment($attachmentId: String!) {
 		deleteAttachment(attachmentId: $attachmentId)
-	}
-`);
-
-// GraphQL query for getting the download URL for an attachment
-const ATTACHMENT_DOWNLOAD_URL_QUERY = gql(/* GraphQL */ `
-	query AttachmentDownloadUrl($attachmentId: String!) {
-		attachment(attachmentId: $attachmentId) {
-			downloadUrl
-		}
 	}
 `);
 
@@ -92,22 +76,7 @@ export const AttachmentFileList: React.FC<AttachmentFileListProps> = ({
 	const handleDownload = async (file: AttachmentFilePartial) => {
 		setError(null);
 		try {
-			// Request the download URL from the API
-			const res = await query({
-				query: ATTACHMENT_DOWNLOAD_URL_QUERY,
-				variables: { attachmentId: file.id },
-			});
-			const url = res.attachment.downloadUrl;
-			if (!url) {
-				throw new Error('No download URL received');
-			}
-			// Trigger the download using a temporary anchor element
-			const a = document.createElement('a');
-			a.href = url;
-			a.download = file.fileName;
-			document.body.append(a);
-			a.click();
-			document.body.removeChild(a);
+			await downloadAttachment(file);
 		} catch (error_: unknown) {
 			const errorMsg =
 				error_ instanceof Error ? error_.message : 'Download failed';

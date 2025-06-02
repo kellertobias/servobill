@@ -5,6 +5,7 @@ import { PhotoIcon } from '@heroicons/react/24/outline';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 import { gql, query } from '@/api/graphql';
+import { AttachmentFilePartial } from '@/api/download-attachment';
 
 /**
  * Props for AttachmentDropzoneUpload component.
@@ -23,17 +24,6 @@ export interface AttachmentDropzoneUploadProps {
 	 */
 	compact?: boolean;
 }
-
-/**
- * Partial type for uploaded file (copied from AttachmentDropzone).
- */
-export type AttachmentFilePartial = {
-	id: string;
-	fileName: string;
-	mimeType: string;
-	size: number;
-	createdAt: string;
-};
 
 // GraphQL operations for upload
 const REQUEST_UPLOAD_MUTATION = gql(`
