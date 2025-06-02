@@ -1,13 +1,12 @@
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { randomUUID } from 'crypto';
 
 import chalk from 'chalk';
 import express from 'express';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import sqlite3 from 'sqlite3';
-import { open, Database } from 'sqlite';
 import { config as dotenvConfig } from 'dotenv';
 
 import handlers from '@/backend/events';
@@ -24,26 +23,76 @@ app.use(express.json({ type: '*/*' }));
  * Initializes and manages the SQLite database for persisting event jobs.
  * All jobs are stored until they are executed, ensuring durability across restarts.
  */
-let db: Database<sqlite3.Database, sqlite3.Statement>;
+let db: sqlite3.Database;
+
+/**
+ * Promisified wrapper for running a SQL command.
+ * @param sql The SQL statement to run.
+ * @param params The parameters for the SQL statement.
+ * @returns Promise that resolves when the command completes.
+ */
+function runAsync(sql: string, params: any[] = []): Promise<void> {
+	return new Promise((resolve, reject) => {
+		db.run(sql, params, function (err) {
+			if (err) {
+				reject(err);
+			} else {
+				resolve();
+			}
+		});
+	});
+}
+
+/**
+ * Promisified wrapper for getting a single row from the database.
+ * @param sql The SQL statement to run.
+ * @param params The parameters for the SQL statement.
+ * @returns Promise that resolves with the row, or undefined if not found.
+ */
+function getAsync<T = any>(
+	sql: string,
+	params: any[] = [],
+): Promise<T | undefined> {
+	return new Promise((resolve, reject) => {
+		db.get(sql, params, function (err, row) {
+			if (err) {
+				reject(err);
+			} else {
+				resolve(row as T | undefined);
+			}
+		});
+	});
+}
 
 /**
  * Initialize the SQLite database and create the jobs table if it doesn't exist.
  */
 async function initDb() {
-	db = await open({
-		filename: './event-queue.db',
-		driver: sqlite3.Database,
+	return new Promise<void>((resolve, reject) => {
+		db = new sqlite3.Database('./event-queue.db', (err) => {
+			if (err) {
+				reject(err);
+				return;
+			}
+			db.run(
+				`CREATE TABLE IF NOT EXISTS jobs (
+				  id TEXT PRIMARY KEY,
+				  type TEXT NOT NULL,
+				  source TEXT,
+				  resources TEXT,
+				  data TEXT NOT NULL,
+				  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+				)`,
+				(err) => {
+					if (err) {
+						reject(err);
+					} else {
+						resolve();
+					}
+				},
+			);
+		});
 	});
-	await db.run(`
-    CREATE TABLE IF NOT EXISTS jobs (
-      id TEXT PRIMARY KEY,
-      type TEXT NOT NULL,
-      source TEXT,
-      resources TEXT,
-      data TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
 }
 
 /**
@@ -57,13 +106,15 @@ async function enqueueJob(job: {
 	source: string;
 	resources: string[];
 }) {
-	await db.run(
+	await runAsync(
 		`INSERT INTO jobs (id, type, source, resources, data) VALUES (?, ?, ?, ?, ?)`,
-		job.eventId,
-		job.type,
-		job.source,
-		JSON.stringify(job.resources),
-		JSON.stringify(job.data),
+		[
+			job.eventId,
+			job.type,
+			job.source,
+			JSON.stringify(job.resources),
+			JSON.stringify(job.data),
+		],
 	);
 }
 
@@ -72,13 +123,13 @@ async function enqueueJob(job: {
  * @returns The next job or null if none exist.
  */
 async function dequeueJob() {
-	const row = await db.get(
+	const row = await getAsync<any>(
 		`SELECT * FROM jobs ORDER BY created_at ASC LIMIT 1`,
 	);
 	if (!row) {
 		return null;
 	}
-	await db.run(`DELETE FROM jobs WHERE id = ?`, row.id);
+	await runAsync(`DELETE FROM jobs WHERE id = ?`, [row.id]);
 	return {
 		eventId: row.id,
 		type: row.type,

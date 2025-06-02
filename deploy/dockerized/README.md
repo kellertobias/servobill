@@ -1,5 +1,7 @@
 # Dockerized Deployment for Servobill
 
+**WARNING: This is a work in progress and not yet ready for production use. All Background Jobs, such as sending emails, are not yet implemented.**
+
 This folder provides a production-like, fully dockerized deployment for Servobill, including:
 - **Postgres** (database)
 - **MinIO** (S3-compatible object storage)

@@ -30,13 +30,34 @@ We feature a simple, easy-to-use interface for creating and managing invoices. Y
 
 <img src="/docs/screenshot-1.jpeg" alt="Servobill" width="200"/> <img src="/docs/screenshot-2.jpeg" alt="Servobill" width="200"/> <img src="/docs/screenshot-3.jpeg" alt="Servobill" width="200"/> <img src="/docs/screenshot-4.jpeg" alt="Servobill" width="200"/>
 
+## Roadmap
+
+- [X] ... basic application: customers, products, invoices, expenses, reports, etc.
+- [X] Add support for on-premise database types (postgres)
+- [X] Add support for attachments for invoices, expenses and emails
+- [X] Add categorization of expenses
+- [X] Add support for auto-generated expenses (e.g. travel expenses)
+- [ ] Add support for dockerized deployments (WIP)
+- [ ] Add support for simple inventory management (expense can create inventory items, history on inventory items, etc.)
+- [ ] Add support for incoming digital invoices (e.g. X-Rechnung/ ZugFeRD)
+- [ ] Add AI Upload of invoices (e.g. from PDF) to automatically create expenses and inventory items
+- [ ] Add support for incoming invoice emails (either parse digital invoice or use AI to parse)
+- [ ] Add support for sending digital invoices (e.g. X-Rechnung/ ZugFeRD)
+- [ ] Add "Projects" to track time and assign inventory items to projects
+- [ ] Add offline mode for: time tracking, inventory items
+- [ ] Add local user management (e.g. for self-hosted deployments)
+- [ ] Add automatic backups of data (e.g. via email or to S3)
+- [ ] Add S3 lifecycle rules to automatically archive old data (e.g. glacier to save on storage)
+- [ ] Add pagination to all lists
+- [ ] PDF export of reports (JSON & CSV export already present)
+- [ ] FinTS support for checking for payments (see https://www.fints.org/de/startseite)
 
 ## Deploying
 
 We offer two production ready deployment options and a development setup:
 
 - [Serverless on your AWS account](deploy/serverless/README.md)
-- [Dockerized on your own hardware](deploy/dockerized/README.md)
+- [Dockerized on your own hardware](deploy/dockerized/README.md) (Not yet complete, missing background jobs such as sending emails and generating PDFs)
 - [Development setup](README.md#developing)
 
 
@@ -62,14 +83,6 @@ export OAUTH_CLIENT_ID="<your google oauth client id>"
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser for local development.
-
-## Contributing
-
-If you want to contribute to Servobill, you can do so by forking this repository, making your changes, and opening a pull request. Please test your changes before opening a pull request.
-
-We have a list of features that we want to implement in the future, so if you want to contribute, please check out the [trello board](https://trello.com/b/5Isd3Nwk) and pick a feature to implement.
-
-We also plan on adding automated tests in the future, feel free to contribute to that as well.
 
 ## Building your Invoice Template
 
