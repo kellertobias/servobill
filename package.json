@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "watch-nxt": "source setup-local-env.sh && NEXT_PUBLIC_API_URL='http://localhost:3000' next dev",
+    "watch-nxt": "NEXT_PUBLIC_API_URL='http://localhost:3000' next dev",
     "watch-gql": "npm run gql:type:watch",
     "watch-api": "npx tsx stack/build-index/index.ts --watch",
-    "watch-bus": "source setup-local-env.sh && npx tsx watch --clear-screen=false --ignore src/app --ignore src/backend/api stack/local/queue/index.ts --preserveWatchOutput",
+    "watch-bus": "npx tsx watch --clear-screen=false --ignore src/app --ignore src/backend/api stack/local/queue/index.ts --preserveWatchOutput",
     "dev": "concurrently -k -t 'HH:mm:ss' -c green,red,auto -p '{time} [{name}] | ' -n '' npm:watch-*",
     "dev:server": "concurrently -k -t 'HH:mm:ss' -c green,red,auto -p '{time} [{name}] | ' -n '' npm:watch-nxt  npm:watch-api npm:watch-bus",
     "dev:tools": "concurrently -k -t 'HH:mm:ss' -c green,red,auto -p '{time} [{name}] | ' -n '' npm:watch-gql",

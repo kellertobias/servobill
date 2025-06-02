@@ -14,7 +14,10 @@ import { CustomJson } from '@/common/json';
 const port = process.env.PORT || 9326;
 
 // Load environment variables from .env file for local development
-dotenvConfig();
+// Load environment variables from .env and .env.dev files
+// .env.dev will override any values from .env
+dotenvConfig(); // Load base .env first
+dotenvConfig({ path: '.env.dev', override: true }); // Load .env.dev and override
 
 const app = express();
 app.use(express.json({ type: '*/*' }));

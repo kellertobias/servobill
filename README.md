@@ -81,6 +81,10 @@ export ALLOWED_EMAILS="<your gmail address>"
 export OAUTH_CLIENT_ID="<your google oauth client id>"
 ```
 
+### Environment overrides with `.env.dev`
+
+For local development, you can create a `.env.dev` file in the project root. Any variables in `.env.dev` will override those in `.env` when running locally. This is useful for developer-specific or temporary overrides. The `.env.dev` file is ignored by version control and will not be included in builds or deployments.
+
 Open [http://localhost:3000](http://localhost:3000) with your browser for local development.
 
 ## Building your Invoice Template
