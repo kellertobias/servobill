@@ -16,6 +16,15 @@ import { DefaultContainer } from '@/common/di';
  */
 export async function POST(request: NextRequest) {
 	try {
+		if (!process.env.IS_LOCAL) {
+			console.error(
+				'Download route implementation not yet finished. Only available in local development until we have authentication checked.',
+			);
+			return new Response(JSON.stringify({ error: 'Not implemented' }), {
+				status: 501,
+			});
+		}
+
 		const uploadHelper = DefaultContainer.get<UploadHelper>(UploadHelper);
 
 		const { searchParams } = new URL(request.url);
