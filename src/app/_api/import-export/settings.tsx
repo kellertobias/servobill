@@ -6,12 +6,15 @@ import { API, gql } from '../index';
 import { downloadFile, requestFile } from './helper';
 import { Exporters } from './exporters/exporters';
 
+import { DeferredPromise } from '@/common/deferred';
+
 export const importSettings = async () => {
 	const raw = await requestFile();
 	const data = JSON.parse(raw || '{}');
+	const waitForImport = new DeferredPromise();
 	doToast({
-		promise: (async () =>
-			await API.query({
+		promise: (async () => {
+			const result = await API.query({
 				query: gql(`
 					mutation ImportSettings($settings: SettingsInput!, $template: InvoiceTemplateInput!) {
 						updateSettings(data: $settings) {
@@ -23,11 +26,15 @@ export const importSettings = async () => {
 					}
 				`),
 				variables: data,
-			}))(),
+			});
+			waitForImport.resolve();
+			return result;
+		})(),
 		loading: 'Importing Settings...',
 		success: 'Settings Imported!',
 		error: 'Failed to import your Settings.',
 	});
+	await waitForImport.promise;
 };
 
 export const exportSettings = async () => {

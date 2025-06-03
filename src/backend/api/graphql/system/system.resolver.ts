@@ -1,7 +1,11 @@
+import { randomUUID } from 'node:crypto';
+
 import { Query, Resolver, Authorized, Mutation, Arg } from 'type-graphql';
 import dayjs from 'dayjs';
 
 import {
+	ExpenseCategoryInputType,
+	ExpenseCategoryType,
 	InvoiceTemplateInput,
 	InvoiceTemplateResult,
 	SettingsInput,
@@ -27,7 +31,7 @@ import {
 @Resolver()
 export class SystemResolver {
 	constructor(
-		@Inject(SETTINGS_REPOSITORY) private repository: SettingsRepository,
+		@Inject(SETTINGS_REPOSITORY) private settingsRepository: SettingsRepository,
 		@Inject(EventBusService) private eventBus: EventBusService,
 		@Inject(FILE_STORAGE_SERVICE)
 		private fileStorageService: FileStorageService,
@@ -36,7 +40,7 @@ export class SystemResolver {
 	private mapInvoiceSettingsEntityToResponse(
 		data: InvoiceSettingsEntity,
 		emails: PdfTemplateSetting,
-		expenseSettings: ExpenseSettingsEntity,
+		expenseSettings?: ExpenseSettingsEntity,
 	): SettingsResult {
 		return {
 			invoiceNumbersTemplate: data.invoiceNumbers.template || '',
@@ -76,16 +80,20 @@ export class SystemResolver {
 				bankIban: emails.companyData.bank.iban || '',
 				bankBic: emails.companyData.bank.bic || '',
 			},
-			categories: (expenseSettings.categories || []).map((cat) => ({ ...cat })),
+			categories: expenseSettings
+				? (expenseSettings.categories || []).map((cat) => ({ ...cat }))
+				: undefined,
 		};
 	}
 
 	@Authorized()
 	@Query(() => SettingsResult)
 	async settings(): Promise<SettingsResult> {
-		const data = await this.repository.getSetting(InvoiceSettingsEntity);
-		const emails = await this.repository.getSetting(PdfTemplateSetting);
-		const expenseSettings = await this.repository.getSetting(
+		const data = await this.settingsRepository.getSetting(
+			InvoiceSettingsEntity,
+		);
+		const emails = await this.settingsRepository.getSetting(PdfTemplateSetting);
+		const expenseSettings = await this.settingsRepository.getSetting(
 			ExpenseSettingsEntity,
 		);
 		return this.mapInvoiceSettingsEntityToResponse(
@@ -98,7 +106,7 @@ export class SystemResolver {
 	@Authorized()
 	@Query(() => InvoiceTemplateResult)
 	async template(): Promise<InvoiceTemplateResult> {
-		const emails = await this.repository.getSetting(PdfTemplateSetting);
+		const emails = await this.settingsRepository.getSetting(PdfTemplateSetting);
 		return {
 			pdfTemplate: emails.pdfTemplate || '',
 			pdfStyles: emails.pdfStyles || '',
@@ -110,11 +118,10 @@ export class SystemResolver {
 	async updateSettings(
 		@Arg('data', () => SettingsInput) nextData: SettingsInput,
 	): Promise<SettingsResult> {
-		const data = await this.repository.getSetting(InvoiceSettingsEntity);
-		const emails = await this.repository.getSetting(PdfTemplateSetting);
-		const expenseSettings = await this.repository.getSetting(
-			ExpenseSettingsEntity,
+		const data = await this.settingsRepository.getSetting(
+			InvoiceSettingsEntity,
 		);
+		const emails = await this.settingsRepository.getSetting(PdfTemplateSetting);
 
 		data.invoiceNumbers.update({
 			template: nextData.invoiceNumbersTemplate,
@@ -173,24 +180,7 @@ export class SystemResolver {
 
 		await emails.save();
 
-		if (nextData.categories) {
-			expenseSettings.categories = nextData.categories.map((cat) => ({
-				...cat,
-				id: cat.id,
-				color: cat.color,
-				isDefault: cat.isDefault || false,
-				reference: cat.reference || '',
-				sumForTaxSoftware: cat.sumForTaxSoftware || false,
-				description: cat.description || '',
-			}));
-			await expenseSettings.save();
-		}
-
-		return this.mapInvoiceSettingsEntityToResponse(
-			data,
-			emails,
-			expenseSettings,
-		);
+		return this.mapInvoiceSettingsEntityToResponse(data, emails);
 	}
 
 	@Authorized()
@@ -198,7 +188,7 @@ export class SystemResolver {
 	async updateTemplate(
 		@Arg('data', () => InvoiceTemplateInput) nextData: InvoiceTemplateInput,
 	): Promise<InvoiceTemplateResult> {
-		const emails = await this.repository.getSetting(PdfTemplateSetting);
+		const emails = await this.settingsRepository.getSetting(PdfTemplateSetting);
 
 		emails.pdfTemplate = nextData.pdfTemplate;
 		emails.pdfStyles = nextData.pdfStyles;
@@ -212,14 +202,39 @@ export class SystemResolver {
 	}
 
 	@Authorized()
+	@Mutation(() => [ExpenseCategoryType])
+	async updateExpenseSettings(
+		@Arg('categories', () => [ExpenseCategoryInputType])
+		categories: ExpenseCategoryInputType[],
+	): Promise<ExpenseCategoryType[]> {
+		console.log('Updating expense settings', categories);
+		const expenseSettings = await this.settingsRepository.getSetting(
+			ExpenseSettingsEntity,
+		);
+		expenseSettings.categories = categories.map((cat) => ({
+			...cat,
+			id: cat.categoryId || randomUUID(),
+			color: cat.color,
+			isDefault: cat.isDefault || false,
+			reference: cat.reference,
+			sumForTaxSoftware: cat.sumForTaxSoftware || false,
+			description: cat.description,
+		}));
+		await expenseSettings.save();
+		return expenseSettings.categories;
+	}
+
+	@Authorized()
 	@Mutation(() => String)
 	async testRenderTemplate(
 		@Arg('template', () => String) template: string,
 		@Arg('styles', () => String) styles: string,
 		@Arg('pdf', () => Boolean, { nullable: true }) pdf?: boolean,
 	): Promise<string> {
-		const numbers = await this.repository.getSetting(InvoiceSettingsEntity);
-		const emails = await this.repository.getSetting(PdfTemplateSetting);
+		const numbers = await this.settingsRepository.getSetting(
+			InvoiceSettingsEntity,
+		);
+		const emails = await this.settingsRepository.getSetting(PdfTemplateSetting);
 
 		const key = `template-tests/${dayjs().format('YYMMDD-HHmmss')}.${
 			pdf ? 'pdf' : 'html'

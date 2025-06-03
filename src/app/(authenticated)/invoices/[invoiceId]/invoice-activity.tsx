@@ -349,7 +349,9 @@ export function InvoiceActivityFeed() {
 															});
 														}}
 													/>
-													<span>Attach to emails</span>
+													<span className="text-xs text-gray-500">
+														Attach to emails
+													</span>
 												</label>
 											</div>
 										</div>

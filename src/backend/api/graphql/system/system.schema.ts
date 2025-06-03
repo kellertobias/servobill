@@ -1,5 +1,5 @@
 import { Field, InputType, Int, ObjectType } from 'type-graphql';
-import { IsString } from 'class-validator';
+import { IsBoolean, IsString } from 'class-validator';
 
 import { PdfTemplateSetting } from '@/backend/entities/settings.entity';
 import { ObjectProperties } from '@/common/ts-helpers';
@@ -79,7 +79,58 @@ export class SettingsResultCompany {
 	bankBic?: string;
 }
 
-@InputType('ExpenseCategoryInputType')
+@InputType()
+export class ExpenseCategoryInputType {
+	/**
+	 * Category ID. Now nullable.
+	 */
+	@IsString()
+	@Field({ nullable: true })
+	categoryId?: string;
+
+	/**
+	 * Category name. Now nullable.
+	 */
+	@IsString()
+	@Field()
+	name!: string;
+
+	/**
+	 * Category color. Now nullable.
+	 */
+	@IsString()
+	@Field({ nullable: true })
+	color?: string;
+
+	/**
+	 * Is default category. Now nullable.
+	 */
+	@IsBoolean()
+	@Field({ nullable: true })
+	isDefault?: boolean;
+
+	/**
+	 * Reference. Now nullable.
+	 */
+	@IsString()
+	@Field({ nullable: true })
+	reference?: string;
+
+	/**
+	 * Sum for tax software. Now nullable.
+	 */
+	@IsBoolean()
+	@Field({ nullable: true })
+	sumForTaxSoftware?: boolean;
+
+	/**
+	 * Description. Now nullable.
+	 */
+	@IsString()
+	@Field({ nullable: true })
+	description?: string;
+}
+
 @ObjectType()
 export class ExpenseCategoryType {
 	/**
@@ -97,7 +148,7 @@ export class ExpenseCategoryType {
 	/**
 	 * Category color. Now nullable.
 	 */
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	color?: string;
 
 	/**
@@ -406,9 +457,6 @@ export class SettingsInput implements Partial<SettingsResult> {
 
 	@Field(() => SettingsCompanyInput, { nullable: true })
 	company?: SettingsCompanyInput;
-
-	@Field(() => [ExpenseCategoryType], { nullable: true })
-	categories?: ExpenseCategoryType[];
 }
 
 @ObjectType()

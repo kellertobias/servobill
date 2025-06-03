@@ -125,15 +125,31 @@ export default function CategoriesSettingsPage() {
 
 	// Save categories to backend
 	const handleSave = async () => {
+		console.log('Saving categories', data);
 		doToast({
 			promise: (async () => {
 				await API.query({
 					query: gql(`
-            mutation UpdateSettingsCategoriesForSettingsPage($settings: SettingsInput!) {
-              updateSettings(data: $settings) { categories { id name color isDefault reference sumForTaxSoftware description } }
-            }
-          `),
-					variables: { settings: { categories: data } },
+						mutation UpdateSettingsCategoriesForSettingsPage(
+							$categories: [ExpenseCategoryInputType!]!
+						) {
+							updateExpenseSettings(categories: $categories) {
+								id
+								name
+								color
+								isDefault
+								reference
+								sumForTaxSoftware
+								description
+							}
+						}
+					`),
+					variables: {
+						categories: (data ?? []).map(({ id, ...cat }) => ({
+							...cat,
+							categoryId: id,
+						})),
+					},
 				});
 				reload();
 			})(),

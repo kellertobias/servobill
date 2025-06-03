@@ -18,7 +18,7 @@ export abstract class AbstractSettingsEntity {
 	}
 }
 
-export class PdfTemplateSetting {
+export class PdfTemplateSetting extends AbstractSettingsEntity {
 	public static settingId = 'stationary-template';
 	public pdfTemplate!: string;
 	public pdfStyles!: string;
@@ -53,7 +53,7 @@ export class PdfTemplateSetting {
 		params: Partial<ObjectProperties<PdfTemplateSetting>>,
 		private saveInner: (data: string) => Promise<void>,
 	) {
-		Object.assign(this, params);
+		super(params, saveInner);
 		if (!this.pdfTemplate) {
 			this.pdfTemplate = '';
 		}
@@ -131,7 +131,7 @@ export class PdfTemplateSetting {
 	}
 }
 
-export class IncrementNumberBehavior {
+class IncrementNumberBehavior {
 	public template!: string; // e.g. INV-YYMM-XXXX
 	public incrementTemplate!: string; // e.g. YY-XXXX
 	public lastNumber!: string;
@@ -194,7 +194,7 @@ export class IncrementNumberBehavior {
 	}
 }
 
-export class InvoiceSettingsEntity {
+export class InvoiceSettingsEntity extends AbstractSettingsEntity {
 	public static settingId = 'invoice-numbers';
 	public invoiceNumbers!: IncrementNumberBehavior;
 	public offerNumbers!: IncrementNumberBehavior;
@@ -207,6 +207,7 @@ export class InvoiceSettingsEntity {
 		params: Partial<ObjectProperties<InvoiceSettingsEntity>>,
 		private saveInner: (data: string) => Promise<void>,
 	) {
+		super(params, saveInner);
 		this.invoiceNumbers = new IncrementNumberBehavior(
 			params.invoiceNumbers || {},
 			this,
@@ -257,18 +258,15 @@ export type ExpenseCategory = {
 /**
  * Stores all expense-related settings, including categories.
  */
-export class ExpenseSettingsEntity {
+export class ExpenseSettingsEntity extends AbstractSettingsEntity {
 	public static settingId = 'expense-settings';
 	public categories: ExpenseCategory[] = [];
 
-	private saveInner: (data: string) => Promise<void>;
-
 	constructor(
 		params: Partial<ObjectProperties<ExpenseSettingsEntity>> = {},
-		saveInner: (data: string) => Promise<void>,
+		private saveInner: (data: string) => Promise<void>,
 	) {
-		Object.assign(this, params);
-		this.saveInner = saveInner;
+		super(params, saveInner);
 		this.categories = params.categories || [];
 	}
 

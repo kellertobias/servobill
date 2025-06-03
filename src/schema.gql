@@ -85,9 +85,9 @@ type Expense {
 }
 
 input ExpenseCategoryInputType {
+  categoryId: String
   color: String
   description: String
-  id: String!
   isDefault: Boolean
   name: String!
   reference: String
@@ -397,6 +397,7 @@ type Mutation {
   testRenderTemplate(pdf: Boolean, styles: String!, template: String!): String!
   updateCustomer(data: CustomerInput!, id: String!): Customer!
   updateExpense(data: ExpenseInput!, id: String!): Expense!
+  updateExpenseSettings(categories: [ExpenseCategoryInputType!]!): [ExpenseCategoryType!]!
   updateInvoice(data: InvoiceInput!, id: String!): Invoice!
   updateProduct(data: ProductInput!, id: String!): Product!
   updateSettings(data: SettingsInput!): SettingsResult!
@@ -483,7 +484,6 @@ input SettingsCompanyInput {
 }
 
 input SettingsInput {
-  categories: [ExpenseCategoryInputType!]
   company: SettingsCompanyInput
   customerNumbersIncrementTemplate: String
   customerNumbersLast: String
