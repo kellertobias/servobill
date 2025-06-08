@@ -4,7 +4,7 @@ module.exports = {
     mocha: true,
     browser: true,
   },
-  plugins: ["@typescript-eslint", "import", "prettier"],
+  plugins: ["@typescript-eslint", "import", "prettier", "type-graphql"],
   extends: [
     "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
@@ -26,6 +26,7 @@ module.exports = {
     "import/extensions": "off",
     "@next/next/no-img-element": "off",
     "unicorn/no-await-expression-member": "warn",
+    "type-graphql/enforce-type-declarations": "error",
     "import/no-extraneous-dependencies": [
       "error",
       {
@@ -53,7 +54,6 @@ module.exports = {
           "parent",
           "sibling",
           "index",
-          // 'type'
         ],
         pathGroups: [
           {

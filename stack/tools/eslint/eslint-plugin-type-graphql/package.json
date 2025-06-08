@@ -1,0 +1,11 @@
+{
+  "name": "eslint-plugin-type-graphql",
+  "version": "1.0.0",
+  "description": "ESLint plugin for TypeGraphQL type declarations",
+  "main": "index.js",
+  "author": "ServoBill Team",
+  "license": "MIT",
+  "peerDependencies": {
+    "eslint": ">=8.0.0"
+  }
+} 
