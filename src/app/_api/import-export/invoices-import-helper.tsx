@@ -93,13 +93,15 @@ export const loadInvoiceImportData = async (data: {
 
 		invoicesToImport.push({
 			customerId: customer.id,
-			invoiceNumber: invoice.invoiceNumber,
 			type: invoice.type || InvoiceType.Invoice,
-			offerNumber: invoice.offerNumber,
-			dueAt: invoice.dueAt,
-			invoicedAt: invoice.invoicedAt,
-			offeredAt: invoice.offeredAt,
-			paidAt: invoice.paidAt,
+			...(invoice.invoiceNumber
+				? { invoiceNumber: invoice.invoiceNumber }
+				: {}),
+			...(invoice.offerNumber ? { offerNumber: invoice.offerNumber } : {}),
+			...(invoice.dueAt ? { dueAt: invoice.dueAt } : {}),
+			...(invoice.invoicedAt ? { invoicedAt: invoice.invoicedAt } : {}),
+			...(invoice.offeredAt ? { offeredAt: invoice.offeredAt } : {}),
+			...(invoice.paidAt ? { paidAt: invoice.paidAt } : {}),
 			paidCents: invoice.paidCents,
 			paidVia: invoice.paidVia,
 			footerText: invoice.footerText,
