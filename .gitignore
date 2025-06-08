@@ -52,3 +52,6 @@ src/common/gql
 src/backend/api/index.ts
 event-queue.db
 _ignore_api
+
+sst-env.d.ts
+stack/local/initialize/sst-env.d.ts
