@@ -118,7 +118,7 @@ export default $config({
 			providers: {
 				aws: {
 					region: 'eu-central-1',
-					profile: process.env.AWS_PROFILE,
+					profile: process.env.USE_AWS_PROFILE,
 				},
 			},
 		};
