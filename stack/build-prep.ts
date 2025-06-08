@@ -68,6 +68,11 @@ const prepareNextBuild = () => {
 		'src/app/backend/**/*',
 		'.next/types/**/*.ts',
 	];
+	tsConfig.exclude = [
+		...(tsConfig.exclude || []),
+		'**/*.e2e.ts',
+		'**.*.spec.ts',
+	];
 
 	fs.writeFileSync(tsconfigNext, JSON.stringify(tsConfig, null, 2));
 };
