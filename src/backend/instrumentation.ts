@@ -84,7 +84,12 @@ export function Span(
 		const originalMethod = descriptor.value;
 
 		if (!originalMethod || typeof originalMethod !== 'function') {
-			throw new Error('@Span decorator can only be applied to async methods');
+			// throw new Error('@Span decorator can only be applied to async methods');
+			console.log(
+				'@Span decorator can only be applied to async methods',
+				descriptor,
+			);
+			return descriptor;
 		}
 
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
