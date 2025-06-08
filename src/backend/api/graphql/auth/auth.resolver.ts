@@ -18,18 +18,28 @@ export class AuthResolver {
 		private fileStorageService: FileStorageService,
 	) {}
 
-	@Query(() => AuthCheckResult)
-	async loggedInUser(@Ctx() context: GqlContext): Promise<AuthCheckResult> {
+	private async getUserPictureUrl(context: GqlContext): Promise<string | null> {
 		const getFileArgs = this.fileStorageService.getFileDescriptor(
 			context.session?.user?.picture || '',
 		);
-		const profilePictureSignedUrl =
-			await this.fileStorageService.getDownloadUrl(getFileArgs);
+		console.log('getUserPictureUrl', {
+			source: context.session?.user?.picture,
+			...getFileArgs,
+		});
+		if (!getFileArgs) {
+			return null;
+		}
+		return this.fileStorageService.getDownloadUrl(getFileArgs);
+	}
+
+	@Query(() => AuthCheckResult)
+	async loggedInUser(@Ctx() context: GqlContext): Promise<AuthCheckResult> {
+		const profilePictureSignedUrl = await this.getUserPictureUrl(context);
 
 		return {
 			authenticated: !!context.session?.user,
 			userName: context.session?.user?.name || '',
-			profilePictureUrl: profilePictureSignedUrl,
+			profilePictureUrl: profilePictureSignedUrl || '',
 			refreshable: context.session?.refreshable || false,
 		};
 	}

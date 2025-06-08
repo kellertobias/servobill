@@ -35,5 +35,5 @@ export interface FileStorageService {
 		attachment: AttachmentEntity | { bucket?: string; key: string },
 	): Promise<string>;
 
-	getFileDescriptor(url: string): { bucket?: string; key: string };
+	getFileDescriptor(url: string): { bucket?: string; key: string } | null;
 }

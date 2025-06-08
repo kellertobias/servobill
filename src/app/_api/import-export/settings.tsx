@@ -7,10 +7,14 @@ import { downloadFile, requestFile } from './helper';
 import { Exporters } from './exporters/exporters';
 
 import { DeferredPromise } from '@/common/deferred';
+import { InvoiceTemplateResult, SettingsResult } from '@/common/gql/graphql';
 
 export const importSettings = async () => {
 	const raw = await requestFile();
-	const data = JSON.parse(raw || '{}');
+	const data = JSON.parse(raw || '{}') as {
+		settings: SettingsResult;
+		template: InvoiceTemplateResult;
+	};
 	const { settings, template } = data;
 	const { categories, ...globalSettings } = settings;
 
@@ -19,18 +23,34 @@ export const importSettings = async () => {
 		promise: (async () => {
 			const result = await API.query({
 				query: gql(`
-					mutation ImportSettings($settings: SettingsInput!, $template: InvoiceTemplateInput!) {
+					mutation ImportSettings(
+						$settings: SettingsInput!,
+						$template: InvoiceTemplateInput!,
+						$categories: [ExpenseCategoryInputType!]!
+					) {
 						updateSettings(data: $settings) {
 							invoiceNumbersLast
 						}
 						updateTemplate(data: $template) {
 							pdfStyles
 						}
+						updateExpenseSettings(categories: $categories, fixExpensesForImport: true) {
+							id
+						}
 					}
 				`),
 				variables: {
 					settings: globalSettings,
 					template,
+					categories: (categories || []).map((cat) => ({
+						categoryId: cat.id,
+						name: cat.name,
+						description: cat.description,
+						color: cat.color,
+						isDefault: cat.isDefault,
+						sumForTaxSoftware: cat.sumForTaxSoftware,
+						reference: cat.reference,
+					})),
 				},
 			});
 			waitForImport.resolve();

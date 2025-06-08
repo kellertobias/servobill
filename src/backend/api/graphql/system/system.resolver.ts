@@ -26,12 +26,17 @@ import {
 	FILE_STORAGE_SERVICE,
 	type FileStorageService,
 } from '@/backend/services/file-storage.service';
+import {
+	EXPENSE_REPOSITORY,
+	type ExpenseRepository,
+} from '@/backend/repositories/expense';
 
 @Service()
 @Resolver()
 export class SystemResolver {
 	constructor(
 		@Inject(SETTINGS_REPOSITORY) private settingsRepository: SettingsRepository,
+		@Inject(EXPENSE_REPOSITORY) private expenseRepository: ExpenseRepository,
 		@Inject(EventBusService) private eventBus: EventBusService,
 		@Inject(FILE_STORAGE_SERVICE)
 		private fileStorageService: FileStorageService,
@@ -211,6 +216,8 @@ export class SystemResolver {
 	async updateExpenseSettings(
 		@Arg('categories', () => [ExpenseCategoryInputType])
 		categories: ExpenseCategoryInputType[],
+		@Arg('fixExpensesForImport', () => Boolean, { nullable: true })
+		fixExpensesForImport?: boolean,
 	): Promise<ExpenseCategoryType[]> {
 		const expenseSettings = await this.settingsRepository.getSetting(
 			ExpenseSettingsEntity,
@@ -244,13 +251,33 @@ export class SystemResolver {
 			(cat) => !existingCategoryIds.has(cat.categoryId || ''),
 		);
 
+		const categoryMap: Record<string, string> = {};
+
 		for (const category of newCategories) {
+			const id = randomUUID();
+			categoryMap[category.categoryId || ''] = id;
 			expenseSettings.categories.push({
 				...category,
 				id: randomUUID(),
 				isDefault: category.isDefault || false,
 				sumForTaxSoftware: category.sumForTaxSoftware || false,
 			});
+		}
+
+		if (fixExpensesForImport) {
+			// if we are importing expense categories,
+			// since we do not allow client sided IDs,
+			// we now need to re-map the categories of already
+			// imported expenses.
+			const expenses = await this.expenseRepository.listByQuery({});
+
+			for (const expense of expenses) {
+				const categoryId = expense.categoryId;
+				if (categoryId && categoryMap[categoryId]) {
+					expense.categoryId = categoryMap[categoryId];
+					await this.expenseRepository.save(expense);
+				}
+			}
 		}
 
 		await expenseSettings.save();

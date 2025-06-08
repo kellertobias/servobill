@@ -107,11 +107,15 @@ export class FileStorageServiceLocal implements FileStorageService {
 		)}&key=${encodeURIComponent(key)}`;
 	}
 
-	getFileDescriptor(url: string): { bucket?: string; key: string } {
-		const urlObj = new URL(url);
-		return {
-			bucket: urlObj.hostname.split('.')[0],
-			key: urlObj.pathname.slice(1),
-		};
+	getFileDescriptor(url: string): { bucket?: string; key: string } | null {
+		try {
+			const urlObj = new URL(url);
+			return {
+				bucket: urlObj.hostname.split('.')[0],
+				key: urlObj.pathname.slice(1),
+			};
+		} catch (error) {
+			return null;
+		}
 	}
 }

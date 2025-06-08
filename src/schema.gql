@@ -397,7 +397,7 @@ type Mutation {
   testRenderTemplate(pdf: Boolean, styles: String!, template: String!): String!
   updateCustomer(data: CustomerInput!, id: String!): Customer!
   updateExpense(data: ExpenseInput!, id: String!): Expense!
-  updateExpenseSettings(categories: [ExpenseCategoryInputType!]!): [ExpenseCategoryType!]!
+  updateExpenseSettings(categories: [ExpenseCategoryInputType!]!, fixExpensesForImport: Boolean): [ExpenseCategoryType!]!
   updateInvoice(data: InvoiceInput!, id: String!): Invoice!
   updateProduct(data: ProductInput!, id: String!): Product!
   updateSettings(data: SettingsInput!): SettingsResult!
