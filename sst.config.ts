@@ -184,7 +184,7 @@ export default $config({
 						],
 						external: options?.npmExternal,
 					},
-					install: options?.npmInstall,
+					install: [...(options?.npmInstall ?? []), 'reflect-metadata'],
 				},
 			};
 		};
