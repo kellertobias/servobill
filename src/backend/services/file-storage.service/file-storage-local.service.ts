@@ -110,7 +110,7 @@ export class FileStorageServiceLocal implements FileStorageService {
 	getFileDescriptor(url: string): { bucket?: string; key: string } {
 		const urlObj = new URL(url);
 		return {
-			bucket: urlObj.hostname,
+			bucket: urlObj.hostname.split('.')[0],
 			key: urlObj.pathname.slice(1),
 		};
 	}

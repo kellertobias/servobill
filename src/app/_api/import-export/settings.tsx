@@ -11,6 +11,9 @@ import { DeferredPromise } from '@/common/deferred';
 export const importSettings = async () => {
 	const raw = await requestFile();
 	const data = JSON.parse(raw || '{}');
+	const { settings, template } = data;
+	const { categories, ...globalSettings } = settings;
+
 	const waitForImport = new DeferredPromise();
 	doToast({
 		promise: (async () => {
@@ -25,7 +28,10 @@ export const importSettings = async () => {
 						}
 					}
 				`),
-				variables: data,
+				variables: {
+					settings: globalSettings,
+					template,
+				},
 			});
 			waitForImport.resolve();
 			return result;
