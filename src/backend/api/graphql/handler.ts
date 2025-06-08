@@ -1,9 +1,12 @@
+// This import must come first before any other imports
 import 'reflect-metadata';
+
+// Import repositories before they are used
+import '@/backend/repositories';
 
 import { APIGatewayProxyEventV2 } from 'aws-lambda';
 import cookie from 'cookie';
 
-import '@/backend/repositories';
 import { SessionLambdaContext, withSession } from '../session';
 
 import { getGraphQLServer } from './server';

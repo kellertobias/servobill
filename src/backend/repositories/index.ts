@@ -1,3 +1,7 @@
+// Import setup first to ensure reflect-metadata is loaded
+import './setup';
+
+// Then export all repositories
 export * from './customer';
 export * from './email';
 export * from './expense';
