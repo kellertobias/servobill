@@ -18,6 +18,12 @@ const requiredEnvVars = [
 	['OAUTH_CLIENT_ID'],
 ] as const satisfies string[][];
 
+const logGroups = {
+	api: '/apps/servobill/api',
+	events: '/apps/servobill/events',
+	crons: '/apps/servobill/crons',
+} as const;
+
 /**
  * Type that enforces at least one environment variable from each group must be defined
  */
@@ -97,6 +103,7 @@ type GetFunctionOptions = {
 	npmExternal?: string[];
 	timeout?: number;
 	memorySize?: number;
+	logGroup?: keyof typeof logGroups;
 };
 
 export default $config({
@@ -158,6 +165,12 @@ export default $config({
 				timeout: `${options?.timeout ?? 60} seconds`,
 				memory: `${options?.memorySize ?? 1024} MB`,
 				link: options?.link,
+				logging: options?.logGroup
+					? {
+							logGroup: logGroups[options.logGroup],
+							retention: '2 months',
+						}
+					: undefined,
 				nodejs: {
 					format: 'cjs',
 					esbuild: {
@@ -273,6 +286,7 @@ export default $config({
 				{
 					environment: { ...baseEnvironment },
 					link: [dataBucket, table],
+					logGroup: 'events',
 				},
 			),
 		);
@@ -311,6 +325,7 @@ export default $config({
 					environment: { ...baseEnvironment },
 					layers: [layerVersionResource.arn],
 					link: [email, dataBucket, table],
+					logGroup: 'events',
 				}),
 			);
 		});
@@ -356,6 +371,7 @@ export default $config({
 					npmInstall: npm.api.install,
 					npmExternal: npm.api.external,
 					link: [dataBucket, table],
+					logGroup: 'api',
 				}),
 			);
 		});
