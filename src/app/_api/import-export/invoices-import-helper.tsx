@@ -1,59 +1,22 @@
 import { API, gql } from '../index';
 
+import { importSingleCustomer } from './customers';
+
 import {
-	InNinContact,
-	InNinCustomer,
-	importSingleCustomer,
-	mapInNinCustomer,
-} from './customers';
+	Customer,
+	Invoice,
+	InvoiceImportInput,
+	InvoiceStatus,
+	InvoiceType,
+} from '@/common/gql/graphql';
 
-import { Customer, Invoice } from '@/common/gql/graphql';
-
-type InNinInvoice = {
-	id?: string;
-	client_id?: string;
-	hashed_id?: string;
-	is_deleted?: boolean;
-	line_items?: {
-		cost?: number;
-		line_total?: string;
-		product_key?: string;
-		notes?: string;
-		quantity: number;
-	}[];
-	date?: string; // YYYY-MM-DD
-	due_date?: string; // YYYY-MM-DD
-	footer?: string;
-	terms?: string;
-	number?: string;
-	paid_to_date?: string;
-};
-
-export type InvoiceDataType = Partial<Omit<Invoice, 'customer'>> &
-	InNinInvoice & {
-		customer?: { id?: string };
-		client: Omit<Customer, 'createdAt' | 'id' | 'updatedAt'>;
-	};
-
-const loadCustomers = async (needsCustomers: boolean) => {
-	if (!needsCustomers) {
-		return [];
-	}
+const loadCustomers = async () => {
 	const { customers } = await API.query({
 		query: gql(`
 			query LoadAllCustomersForInvoiceImport {
 				customers {
 					id
-					name
-					showContact
-					contactName
 					customerNumber
-					email
-					street
-					zip
-					city
-					country
-					state
 				}
 			}
 		`),
@@ -61,19 +24,13 @@ const loadCustomers = async (needsCustomers: boolean) => {
 	return customers;
 };
 
-export type LoadInvoiceImportData = Omit<InvoiceDataType, 'customer'> & {
-	customer: { id: string };
-};
-
 export const loadInvoiceImportData = async (data: {
-	clients?: InNinCustomer[];
-	client_contacts?: InNinContact[];
-	invoices?: (InNinInvoice | Partial<Invoice>)[];
-}): Promise<LoadInvoiceImportData[]> => {
-	// Get Invoices
-	const invoices = ((data?.invoices || []) as InvoiceDataType[]).filter(
+	invoices?: Partial<Invoice>[];
+}): Promise<InvoiceImportInput[]> => {
+	// Get Invoices that are not deleted
+	const invoices = ((data?.invoices || []) as Partial<Invoice>[]).filter(
 		(invoice) => {
-			if (invoice.is_deleted) {
+			if (invoice.status === InvoiceStatus.Cancelled) {
 				return false;
 			}
 
@@ -81,79 +38,83 @@ export const loadInvoiceImportData = async (data: {
 		},
 	);
 
-	// Get Customers
-	const customersImport = ((data?.clients || []) as InNinCustomer[]).map(
-		(cus) => ({
-			...mapInNinCustomer(cus, (data?.client_contacts || []) as InNinContact[]),
-			hashed_id: cus.hashed_id,
-		}),
-	);
-
-	const needsCustomers = invoices.some(
-		(inv: { customer?: { id?: string } }) => inv.customer?.id === undefined,
-	);
-
-	const customers = await loadCustomers(needsCustomers);
-
-	// Import customers that are not in the database yet
-	for (const customer of customersImport) {
-		if (
-			!customers.some(
-				(cus: { customerNumber?: string; name?: string }) =>
-					cus.customerNumber === customer.customerNumber ||
-					cus.name === customer.name,
-			)
-		) {
-			console.log('Importing customer', customer);
-			const importedCustomer = await importSingleCustomer(customer);
-			if (!importedCustomer) {
-				throw new Error(
-					`Failed to import customer ${
-						customer.customerNumber || customer.name
-					}`,
-				);
+	// Get customers from invoices
+	const invoiceCustomerNumbers = new Set<string>();
+	const invoiceCustomers = invoices
+		.map((inv) => inv.customer)
+		.filter((c) => {
+			if (!c) {
+				return false;
 			}
-			customers.push(importedCustomer);
+			if (invoiceCustomerNumbers.has(c.customerNumber)) {
+				return false;
+			}
+			invoiceCustomerNumbers.add(c.customerNumber);
+			return true;
+		}) as Customer[];
+
+	// Get Existing Customers
+	const existingCustomers = await loadCustomers();
+	const existingCustomerNumbers = new Set<string>(
+		existingCustomers.map((c) => c.customerNumber),
+	);
+
+	const customersToCreate = invoiceCustomers.filter(
+		(c) => !existingCustomerNumbers.has(c.customerNumber),
+	);
+
+	console.log('invoice import - customers', {
+		invoiceCustomers,
+		existingCustomers,
+		customersToCreate,
+	});
+
+	// now create the customers and add them to the existing customers
+	for (const customer of customersToCreate) {
+		const importedCustomer = await importSingleCustomer(customer);
+		if (!importedCustomer) {
+			throw new Error(`Failed to import customer ${customer.customerNumber}`);
 		}
+		existingCustomers.push(importedCustomer);
 	}
 
-	console.log('Customers', customers);
-
-	// Map Customers to invoice
+	// now generate the data for invoice import
+	const invoicesToImport: InvoiceImportInput[] = [];
 	for (const invoice of invoices) {
-		if (invoice.client_id) {
-			const client = customersImport.find(
-				(cus) => cus.hashed_id === invoice.client_id,
-			);
-			if (!client) {
-				throw new Error(
-					`Client ${invoice.client_id} for invoice ${invoice.id} not found`,
-				);
-			}
-			invoice.client = client;
-		}
-		const customerId =
-			invoice.customer?.id ||
-			customers.find((cus) => {
-				if (cus.customerNumber === invoice.client_id) {
-					return true;
-				}
-				if (
-					cus.name === invoice.client.name &&
-					cus.street === invoice.client.street &&
-					cus.zip === invoice.client.zip
-				) {
-					return true;
-				}
-			})?.id;
-		if (!customerId) {
+		const customer = existingCustomers.find(
+			(cus) => cus.customerNumber === invoice.customer?.customerNumber,
+		);
+
+		if (!customer) {
 			throw new Error(
-				`Customer ${invoice.client_id} for invoice ${invoice.id} not imported`,
+				`Customer ${invoice.customer?.customerNumber} for invoice ${invoice.id} not found`,
 			);
 		}
-		invoice.customer = { id: customerId };
-		delete invoice.id;
+
+		invoicesToImport.push({
+			customerId: customer.id,
+			invoiceNumber: invoice.invoiceNumber,
+			type: invoice.type || InvoiceType.Invoice,
+			offerNumber: invoice.offerNumber,
+			dueAt: invoice.dueAt,
+			invoicedAt: invoice.invoicedAt,
+			offeredAt: invoice.offeredAt,
+			paidAt: invoice.paidAt,
+			paidCents: invoice.paidCents,
+			paidVia: invoice.paidVia,
+			footerText: invoice.footerText,
+			status: invoice.status || InvoiceStatus.Draft,
+			subject: invoice.subject,
+			items: (invoice.items || []).map((item) => ({
+				name: item.name,
+				description: item.description,
+				quantity: item.quantity || 1,
+				priceCents: item.priceCents || 0,
+				taxPercentage: item.taxPercentage || 0,
+				linkedExpenses: item.linkedExpenses || [],
+			})),
+		});
 	}
 
-	return invoices as LoadInvoiceImportData[];
+	return invoicesToImport;
 };
