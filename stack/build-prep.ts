@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies, no-console, unicorn/no-process-exit */
 import fs from 'fs';
 import { execSync } from 'child_process';
-import readline from 'readline';
+import * as readline from 'readline';
 
 import boxen from 'boxen';
 
@@ -94,85 +94,92 @@ const resetGit = () => {
 // Main
 // ===============================
 
-// Print welcome message in a box
-console.log(
-	boxen(
-		'🚀 Deploying Servobill to Production.\n\nChecking and preparing for deployment...',
-		{
-			padding: 1,
-			margin: 1,
-			borderStyle: 'round',
-			borderColor: 'green',
-			title: 'Deployment',
-			titleAlignment: 'center',
-		},
-	),
-);
+export default async function main() {
+	// Print welcome message in a box
+	console.log(
+		boxen(
+			'🚀 Deploying Servobill to Production.\n\nChecking and preparing for deployment...',
+			{
+				padding: 1,
+				margin: 1,
+				borderStyle: 'round',
+				borderColor: 'green',
+				title: 'Deployment',
+				titleAlignment: 'center',
+			},
+		),
+	);
 
-// Check git status before proceeding
-if (isGitClean()) {
-	console.log('✅ Git working directory is clean');
-} else {
-	console.error('⚠️ Git working directory is not clean.');
-	const reset = await askToResetGit();
-	if (reset) {
-		resetGit();
-		console.log('✅ Repository has been reset.');
+	// Check git status before proceeding
+	if (isGitClean()) {
+		console.log('✅ Git working directory is clean');
 	} else {
-		console.error('⚠️ Please commit or stash your changes before proceeding.');
-		console.error('❌ Aborting deployment.');
-		process.exit(1);
-	}
-}
-
-// remove extra dependencies (pg, sqlite, sqlite3)
-console.log('Removing extra dependencies (pg, sqlite, sqlite3)');
-execSync('npm r -D pg sqlite sqlite3');
-execSync('npm r -S pg sqlite sqlite3');
-console.log('✅ Extra dependencies removed');
-console.log('\n\n\n');
-
-// prepare chromium layer
-// check if layers/chromium exists
-// if not, download it
-// Check if chromium layer directory exists
-if (fs.existsSync('./layers/chromium')) {
-	console.log('✅ Chromium layer exists');
-} else {
-	console.log('⚠️ Chromium layer not found. Downloading...');
-
-	// Create layers directory if it doesn't exist
-	if (!fs.existsSync('./layers')) {
-		fs.mkdirSync('./layers');
+		console.error('⚠️ Git working directory is not clean.');
+		const reset = await askToResetGit();
+		if (reset) {
+			resetGit();
+			console.log('✅ Repository has been reset.');
+		} else {
+			console.error(
+				'⚠️ Please commit or stash your changes before proceeding.',
+			);
+			console.error('❌ Aborting deployment.');
+			process.exit(1);
+		}
 	}
 
-	// Download chromium layer
-	const chromiumUrl = `https://github.com/Sparticuz/chromium/releases/download/${chromiumVersion}/chromium-${chromiumVersion}-layer.zip`;
-	const zipPath = './layers/chromium.zip';
+	// remove extra dependencies (pg, sqlite, sqlite3)
+	console.log('Removing extra dependencies (pg, sqlite, sqlite3)');
+	execSync('npm r -D pg sqlite sqlite3');
+	execSync('npm r -S pg sqlite sqlite3');
+	console.log('✅ Extra dependencies removed');
+	console.log('\n\n\n');
 
-	console.log('Downloading chromium layer...');
-	execSync(`wget ${chromiumUrl} -O ${zipPath}`);
+	// prepare chromium layer
+	// check if layers/chromium exists
+	// if not, download it
+	// Check if chromium layer directory exists
+	if (fs.existsSync('./layers/chromium')) {
+		console.log('✅ Chromium layer exists');
+	} else {
+		console.log('⚠️ Chromium layer not found. Downloading...');
 
-	// Unzip the file
-	console.log('Extracting chromium layer...');
-	execSync(`unzip ${zipPath} -d ./layers/chromium`);
+		// Create layers directory if it doesn't exist
+		if (!fs.existsSync('./layers')) {
+			fs.mkdirSync('./layers');
+		}
 
-	// Remove zip file
-	console.log('Cleaning up...');
-	fs.unlinkSync(zipPath);
+		// Download chromium layer
+		const chromiumUrl = `https://github.com/Sparticuz/chromium/releases/download/${chromiumVersion}/chromium-${chromiumVersion}-layer.zip`;
+		const zipPath = './layers/chromium.zip';
 
-	console.log('✅ Chromium layer setup complete.');
+		console.log('Downloading chromium layer...');
+		execSync(`wget ${chromiumUrl} -O ${zipPath}`);
+
+		// Unzip the file
+		console.log('Extracting chromium layer...');
+		execSync(`unzip ${zipPath} -d ./layers/chromium`);
+
+		// Remove zip file
+		console.log('Cleaning up...');
+		fs.unlinkSync(zipPath);
+
+		console.log('✅ Chromium layer setup complete.');
+	}
+
+	console.log('Preparing NextJS Build (removing api folder)');
+	prepareNextBuild();
+	console.log('\n\n\n');
+
+	for (const endpoint of [...apiEndpoints, ...eventHandlerEndpoints]) {
+		prepareHandlerExport(endpoint);
+	}
+
+	console.log('\n\n\n');
+
+	console.log('✅ Preparation Complete.');
+	console.log('Now running deployment...');
 }
 
-console.log('Preparing NextJS Build (removing api folder)');
-prepareNextBuild();
-console.log('\n\n\n');
-
-for (const endpoint of [...apiEndpoints, ...eventHandlerEndpoints]) {
-	prepareHandlerExport(endpoint);
-}
-
-console.log('\n\n\n');
-
-console.log('✅ Preparation Complete.');
-console.log('Now running deployment...');
+// eslint-disable-next-line unicorn/prefer-top-level-await
+void main();

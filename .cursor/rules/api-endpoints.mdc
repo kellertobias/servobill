@@ -1,6 +1,6 @@
 ---
 description: 
-globs: 
+globs: src/backend/api/*
 alwaysApply: false
 ---
 # API Endpoints Rule

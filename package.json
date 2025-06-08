@@ -5,7 +5,7 @@
   "scripts": {
     "build": "next build",
     "clean": "rm -rf ./layers",
-    "deploy": "node stack/build-prep.ts && npm run gql:type && sst deploy --stage prod; git checkout -f -- .;",
+    "deploy": "npx tsx --tsconfig tsconfig.json stack/build-prep.ts && npm run gql:type && sst deploy --stage prod; git checkout -f -- .;",
     "dev": "concurrently -k -t 'HH:mm:ss' -c green,red,auto -p '{time} [{name}] | ' -n '' npm:watch-*",
     "dev:server": "concurrently -k -t 'HH:mm:ss' -c green,red,auto -p '{time} [{name}] | ' -n '' npm:watch-nxt  npm:watch-api npm:watch-bus",
     "dev:tools": "concurrently -k -t 'HH:mm:ss' -c green,red,auto -p '{time} [{name}] | ' -n '' npm:watch-gql",
