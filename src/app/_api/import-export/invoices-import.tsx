@@ -126,7 +126,7 @@ export const importInvoices = async () => {
 										: InvoiceStatus.Draft,
 								subject: invoice.subject || '',
 								type: invoice.type || InvoiceType.Invoice,
-								items:
+								items: (
 									invoice.items ||
 									invoice.line_items?.map((item) => ({
 										name: item.product_key || '',
@@ -134,7 +134,11 @@ export const importInvoices = async () => {
 										priceCents: (item.cost || 0) * 100,
 										quantity: item.quantity || 0,
 										taxPercentage: 0,
-									})),
+									}))
+								)?.map((item) => ({
+									...item,
+									id: undefined,
+								})),
 							};
 							invoiceMapped.status = getInvoiceStatus(invoiceMapped);
 							if (invoiceMapped.status === InvoiceStatus.Paid) {
