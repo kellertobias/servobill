@@ -123,6 +123,9 @@ export class SystemResolver {
 	async updateSettings(
 		@Arg('data', () => SettingsInput) nextData: SettingsInput,
 	): Promise<SettingsResult> {
+		console.log('nextData', nextData);
+		console.log('nextData.company', nextData.company);
+
 		const genericSettings = await this.settingsRepository.getSetting(
 			InvoiceSettingsEntity,
 		);
@@ -155,6 +158,7 @@ export class SystemResolver {
 
 		const emailSettings =
 			await this.settingsRepository.getSetting(PdfTemplateSetting);
+
 		emailSettings.emailTemplate = nextData.emailTemplate || '';
 		emailSettings.emailSubjectInvoices =
 			nextData.emailSubjectInvoices || 'Here is your invoice {{number}}';
