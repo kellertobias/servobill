@@ -4,19 +4,32 @@ import { GqlContext } from '../types';
 
 import { AuthCheckResult, GetContextResult } from './auth.schema';
 
-import { Service } from '@/common/di';
+import { Inject, Service } from '@/common/di';
+import {
+	FILE_STORAGE_SERVICE,
+	type FileStorageService,
+} from '@/backend/services/file-storage.service';
 
 @Service()
 @Resolver()
 export class AuthResolver {
-	constructor() {}
+	constructor(
+		@Inject(FILE_STORAGE_SERVICE)
+		private fileStorageService: FileStorageService,
+	) {}
 
 	@Query(() => AuthCheckResult)
 	async loggedInUser(@Ctx() context: GqlContext): Promise<AuthCheckResult> {
+		const getFileArgs = this.fileStorageService.getFileDescriptor(
+			context.session?.user?.picture || '',
+		);
+		const profilePictureSignedUrl =
+			await this.fileStorageService.getDownloadUrl(getFileArgs);
+
 		return {
 			authenticated: !!context.session?.user,
 			userName: context.session?.user?.name || '',
-			profilePictureUrl: context.session?.user?.picture || '',
+			profilePictureUrl: profilePictureSignedUrl,
 			refreshable: context.session?.refreshable || false,
 		};
 	}
