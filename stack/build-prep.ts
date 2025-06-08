@@ -9,7 +9,6 @@ import { apiEndpoints, eventHandlerEndpoints } from './build-index';
 
 // Move src/app/api to src/app/_ignore_api
 const apiDir = 'src/app/api';
-const tsconfigNext = 'tsconfig.next.json';
 
 // original version: v123.0.1
 const chromiumVersion = 'v133.0.0';
@@ -47,16 +46,6 @@ module.exports = { ${endpoint.handler} };
 	);
 };
 
-const getTsConfig = () => {
-	try {
-		const currentTsConfigRaw = fs.readFileSync(tsconfigNext, 'utf8');
-		return JSON.parse(currentTsConfigRaw);
-	} catch (error) {
-		console.error('Error reading tsconfig.json:', error);
-		process.exit(1);
-	}
-};
-
 const prepareNextBuild = () => {
 	// eslint-disable-next-line no-console
 	if (fs.existsSync(apiDir)) {
@@ -65,25 +54,6 @@ const prepareNextBuild = () => {
 		);
 		fs.rmSync(apiDir, { recursive: true, force: true });
 	}
-
-	const tsConfig = getTsConfig();
-
-	tsConfig.include = [
-		'next-env.d.ts',
-		'src/app/**/*.ts',
-		'src/app/**/*.tsx',
-		'src/common/**/*.ts',
-		'src/common/**/*.tsx',
-		'src/app/backend/**/*',
-		'.next/types/**/*.ts',
-	];
-	tsConfig.exclude = [
-		...(tsConfig.exclude || []),
-		'**/*.e2e.ts',
-		'**.*.spec.ts',
-	];
-
-	fs.writeFileSync(tsconfigNext, JSON.stringify(tsConfig, null, 2));
 };
 
 const askToResetGit = async () => {
