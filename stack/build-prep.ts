@@ -43,9 +43,10 @@ module.exports = { ${endpoint.handler} };
 
 const prepareNextBuild = () => {
 	// eslint-disable-next-line no-console
-	console.log('    [NextJS] Preparing Build');
 	if (fs.existsSync(apiDir)) {
-		console.log(`    [NextJS] Removing Development API Folder: ${apiDir}`);
+		process.stdout.write(
+			`\r ℹ️ [NextJS] Removing Development API Folder: ${apiDir}`,
+		);
 		fs.rmSync(apiDir, { recursive: true, force: true });
 	}
 
@@ -122,10 +123,13 @@ and then reset via \`git checkout -- . \``,
 	);
 
 	// Check git status before proceeding
+	process.stdout.write(' ℹ️ Checking git status');
+	// sleep for 1 second
+	await new Promise((resolve) => setTimeout(resolve, 1000));
 	if (isGitClean()) {
-		console.log(' ✅ Git working directory is clean');
+		process.stdout.write('\r ✅ Git working directory is clean\n\n');
 	} else {
-		console.error(' ⚠️ Git working directory is not clean.');
+		process.stdout.write('\r ⚠️ Git working directory is not clean:\n');
 		const reset = await askToResetGit();
 		if (reset) {
 			resetGit();
@@ -139,14 +143,11 @@ and then reset via \`git checkout -- . \``,
 		}
 	}
 
-	console.log('\n');
-
 	// remove extra dependencies (pg, sqlite, sqlite3)
-	console.log(' ℹ️ Removing extra dependencies (pg, sqlite, sqlite3)');
+	process.stdout.write(' ℹ️ Removing extra dependencies (pg, sqlite, sqlite3)');
 	execSync('npm r -D pg sqlite sqlite3');
 	execSync('npm r -S pg sqlite sqlite3');
-	console.log(' ✅ Extra dependencies removed');
-	console.log('\n');
+	process.stdout.write('\r ✅ Extra dependencies removed\n\n');
 
 	// prepare chromium layer
 	// check if layers/chromium exists
@@ -155,7 +156,7 @@ and then reset via \`git checkout -- . \``,
 	if (fs.existsSync('./layers/chromium')) {
 		console.log(' ✅ Chromium layer exists');
 	} else {
-		console.log(' ⚠️ Chromium layer not found. Downloading...');
+		process.stdout.write(' ⚠️ Chromium layer not found. Downloading...');
 
 		// Create layers directory if it doesn't exist
 		if (!fs.existsSync('./layers')) {
@@ -166,24 +167,23 @@ and then reset via \`git checkout -- . \``,
 		const chromiumUrl = `https://github.com/Sparticuz/chromium/releases/download/${chromiumVersion}/chromium-${chromiumVersion}-layer.zip`;
 		const zipPath = './layers/chromium.zip';
 
-		console.log('    Downloading chromium layer...');
+		process.stdout.write('\r ℹ️ Downloading chromium layer...');
 		execSync(`wget ${chromiumUrl} -O ${zipPath}`);
 
 		// Unzip the file
-		console.log('    Extracting chromium layer...');
+		process.stdout.write('\r ℹ️ Extracting chromium layer...');
 		execSync(`unzip ${zipPath} -d ./layers/chromium`);
 
 		// Remove zip file
-		console.log('    Cleaning up...');
+		process.stdout.write('\r ℹ️ Cleaning up...');
 		fs.unlinkSync(zipPath);
 
-		console.log(' ✅ Chromium layer setup complete.');
+		process.stdout.write('\r ✅ Chromium layer setup complete.\n\n');
 	}
-	console.log('\n');
 
-	console.log(' ℹ️ Preparing NextJS Build (removing api folder)');
+	process.stdout.write(' ℹ️ Preparing NextJS Build (removing api folder)');
 	prepareNextBuild();
-	console.log('\n');
+	process.stdout.write('\r ✅ NextJS Build prepared: API folder removed\n\n');
 
 	console.log(' ℹ️ Preparing handler index files');
 	for (const endpoint of [...apiEndpoints, ...eventHandlerEndpoints]) {
