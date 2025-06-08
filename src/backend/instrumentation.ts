@@ -75,6 +75,20 @@ export function Span(
 	spanName: string,
 	attributes?: Record<string, AttributeValue>,
 ) {
+	// if open telemetry is not enabled, return a no-op decorator
+	// currently we cannot support otel, at least for lambda
+	// deployment, since there are problems with getting
+	// the type metadata while building using sst.
+	if (!process.env.OTEL_ENABLED) {
+		return (
+			target: unknown,
+			propertyKey: string,
+			descriptor: PropertyDescriptor,
+		) => {
+			return descriptor;
+		};
+	}
+
 	// biome-ignore lint/complexity/useArrowFunction: <explanation>
 	return function (
 		target: unknown,
@@ -84,12 +98,7 @@ export function Span(
 		const originalMethod = descriptor.value;
 
 		if (!originalMethod || typeof originalMethod !== 'function') {
-			// throw new Error('@Span decorator can only be applied to async methods');
-			console.log(
-				'@Span decorator can only be applied to async methods',
-				descriptor,
-			);
-			return descriptor;
+			throw new Error('@Span decorator can only be applied to async methods');
 		}
 
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any

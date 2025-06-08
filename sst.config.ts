@@ -367,6 +367,7 @@ export default $config({
 					'Content-Length',
 					'Cookie',
 				],
+				allowCredentials: true,
 				allowOrigins: [
 					`https://${requiredEnv.SITE_DOMAIN}`,
 					`https://api.${requiredEnv.SITE_DOMAIN}`,
