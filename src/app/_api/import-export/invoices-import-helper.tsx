@@ -149,6 +149,7 @@ export const loadInvoiceImportData = async (data: {
 			);
 		}
 		invoice.customer = { id: customerId };
+		delete invoice.id;
 	}
 
 	return invoices as LoadInvoiceImportData[];
