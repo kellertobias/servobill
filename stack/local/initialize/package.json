@@ -18,7 +18,7 @@
       "@types/aws-lambda": "^8.10.130",
       "@types/node": "^20",
       "tsx": "^4.6.2",
-      "sst": "^2.38.7",
+      "sst": "^3.17.2",
       "typescript": "^5"
     }
   }

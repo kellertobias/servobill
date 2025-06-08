@@ -1,16 +1,14 @@
-import { TableProps } from 'sst/constructs';
-
 export const tableDefinitions = {
 	electrodb: {
 		fields: {
-			pk: 'string',
-			sk: 'string',
-			gsi1pk: 'string',
-			gsi1sk: 'string',
+			pk: 'string' as const,
+			sk: 'string' as const,
+			gsi1pk: 'string' as const,
+			gsi1sk: 'string' as const,
 		},
 		primaryIndex: {
-			partitionKey: 'pk',
-			sortKey: 'sk',
+			partitionKey: 'pk' as const,
+			sortKey: 'sk' as const,
 		},
 		globalIndexes: {
 			'gsi1pk-gsi1sk-index': {
@@ -20,4 +18,4 @@ export const tableDefinitions = {
 			},
 		},
 	},
-} satisfies Record<string, TableProps>;
+} as const;

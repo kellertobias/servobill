@@ -29,6 +29,7 @@ yarn-error.log*
 /cdk.context.json
 .env
 .env.dev
+.env.backup
 
 # local env files
 .env*.local
