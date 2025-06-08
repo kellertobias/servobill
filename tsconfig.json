@@ -1,34 +1,12 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "target": "ESNext",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "preserve",
-    "incremental": true,
-    "types": ["reflect-metadata", "node"],
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
+    "lib": [
+      "esnext"
     ],
-    "paths": {
-      "@/api/*": ["./src/app/_api/*"],
-      "@/hooks/*": ["./src/app/_hooks/*"],
-      "@/components/*": ["./src/app/_components/*"],
-      "@/*": ["./src/*"]
-    }
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules","sst.config.ts"]
+  "exclude": ["node_modules","sst.config.ts", "stack/parts/**/*"]
 }

@@ -14,11 +14,17 @@ const nextConfig = {
     buildActivity: true,
     buildActivityPosition: 'bottom-right',
   },
+  typescript: {
+    tsconfigPath: './tsconfig.next.json',
+  },
   experimental: {
     serverComponentsExternalPackages: ["graphql", "typeorm"],
   },
   eslint: {
     ignoreDuringBuilds: true,
+  },
+  webpack: {
+    devtool: "source-map",
   }
 };
 
