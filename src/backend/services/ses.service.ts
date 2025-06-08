@@ -35,7 +35,6 @@ export class SESService {
 		this.client = new ses.SESClient(sesOptions);
 	}
 
-	@Span('SESService.sendEmail')
 	public sendEmail({
 		from,
 		replyTo,

@@ -44,7 +44,6 @@ export class GenerateInvoiceHtmlHandler
 {
 	constructor() {}
 
-	@Span('GenerateInvoiceHtmlHandler.execute')
 	private buildData(command: GenerateInvoiceHtmlCommand['request']) {
 		return {
 			name:
