@@ -163,7 +163,7 @@ export default $config({
 				environment: {
 					...options?.environment,
 					SITE_DOMAIN: requiredEnv.SITE_DOMAIN,
-					NODE_OPTIONS: '--enable-source-maps',
+					NODE_OPTIONS: '--enable-source-maps --require reflect-metadata',
 				},
 				timeout: `${options?.timeout ?? 60} seconds`,
 				memory: `${options?.memorySize ?? 1024} MB`,
