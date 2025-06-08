@@ -133,11 +133,10 @@ and then reset via \`git checkout -- . \``,
 		const reset = await askToResetGit();
 		if (reset) {
 			resetGit();
-			console.log(' ✅ Repository has been reset.');
+			process.stdout.write('\r ✅ Repository has been reset.\n\n');
 		} else {
-			console.log('');
-			console.error(
-				' ❌ Aborting deployment.\n    Please commit or stash your changes before proceeding.',
+			process.stdout.write(
+				'\r ❌ Aborting deployment.\n    Please commit or stash your changes before proceeding.\n\n',
 			);
 			process.exit(1);
 		}
@@ -154,7 +153,7 @@ and then reset via \`git checkout -- . \``,
 	// if not, download it
 	// Check if chromium layer directory exists
 	if (fs.existsSync('./layers/chromium')) {
-		console.log(' ✅ Chromium layer exists');
+		console.log(' ✅ Chromium layer exists\n');
 	} else {
 		process.stdout.write(' ⚠️ Chromium layer not found. Downloading...');
 
@@ -185,12 +184,11 @@ and then reset via \`git checkout -- . \``,
 	prepareNextBuild();
 	process.stdout.write('\r ✅ NextJS Build prepared: API folder removed\n\n');
 
-	console.log(' ℹ️ Preparing handler index files');
+	process.stdout.write(' ℹ️ Preparing handler index files');
 	for (const endpoint of [...apiEndpoints, ...eventHandlerEndpoints]) {
 		prepareHandlerExport(endpoint);
 	}
-
-	console.log('\n');
+	process.stdout.write('\r ✅ Handler index files prepared\n\n');
 
 	console.log(' ✅ Preparation Complete. Ready to run deployment...');
 }
