@@ -372,9 +372,6 @@ export default $config({
 					`https://api.${requiredEnv.SITE_DOMAIN}`,
 				],
 			},
-			transform: {
-				logGroup: {name: `${logGroupPrefix}/api-gateway`, retentionInDays: 60},
-			},
 		});
 
 		apiEndpoints.forEach((endpoint) => {
