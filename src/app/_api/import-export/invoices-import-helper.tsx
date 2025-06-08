@@ -104,6 +104,7 @@ export const loadInvoiceImportData = async (data: {
 					cus.name === customer.name,
 			)
 		) {
+			console.log('Importing customer', customer);
 			const importedCustomer = await importSingleCustomer(customer);
 			if (!importedCustomer) {
 				throw new Error(
@@ -115,6 +116,8 @@ export const loadInvoiceImportData = async (data: {
 			customers.push(importedCustomer);
 		}
 	}
+
+	console.log('Customers', customers);
 
 	// Map Customers to invoice
 	for (const invoice of invoices) {
