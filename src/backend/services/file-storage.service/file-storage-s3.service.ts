@@ -112,7 +112,7 @@ export class FileStorageServiceS3 implements FileStorageService {
 		try {
 			const urlObj = new URL(url);
 			return {
-				bucket: urlObj.hostname,
+				bucket: urlObj.hostname.split('.')[0],
 				key: urlObj.pathname.slice(1),
 			};
 		} catch (error) {

@@ -111,7 +111,7 @@ export class FileStorageServiceLocal implements FileStorageService {
 		try {
 			const urlObj = new URL(url);
 			return {
-				bucket: urlObj.hostname.split('.')[0],
+				bucket: urlObj.hostname,
 				key: urlObj.pathname.slice(1),
 			};
 		} catch (error) {

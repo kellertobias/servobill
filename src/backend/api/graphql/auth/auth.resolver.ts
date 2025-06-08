@@ -22,10 +22,6 @@ export class AuthResolver {
 		const getFileArgs = this.fileStorageService.getFileDescriptor(
 			context.session?.user?.picture || '',
 		);
-		console.log('getUserPictureUrl', {
-			source: context.session?.user?.picture,
-			...getFileArgs,
-		});
 		if (!getFileArgs) {
 			return null;
 		}
