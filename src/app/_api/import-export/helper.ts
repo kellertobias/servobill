@@ -7,10 +7,11 @@ export const requestFile = async () => {
 			input.type = 'file';
 
 			input.addEventListener('change', (e) => {
+				console.log('file changed, start reading...', e);
 				// getting a hold of the file reference
 				const file = (e.target as HTMLInputElement)?.files?.[0];
 				if (!file) {
-					return resolve(null);
+					return reject('No File Selected');
 				}
 				// setting up the reader
 				const reader = new FileReader();
@@ -20,20 +21,20 @@ export const requestFile = async () => {
 				reader.addEventListener('load', (readerEvent): void => {
 					const content = readerEvent.target?.result; // this is the content!
 					if (typeof content !== 'string') {
-						return reject(null);
+						return reject('Failed to read file');
 					}
+					console.log('file read, resolving...', { length: content.length });
 					resolve(content);
 				});
 			});
 
 			input.click();
 		});
-	} catch {
+	} catch (error) {
+		console.error(error);
 		doToast({
-			promise: Promise.reject(null),
-			loading: 'Waiting for file being selected...',
-			success: 'File selected!',
-			error: 'Failed to select your file.',
+			type: 'danger',
+			message: String(error) || 'Failed to select your file.',
 		});
 		return null;
 	}

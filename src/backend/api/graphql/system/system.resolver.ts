@@ -118,69 +118,74 @@ export class SystemResolver {
 	async updateSettings(
 		@Arg('data', () => SettingsInput) nextData: SettingsInput,
 	): Promise<SettingsResult> {
-		const data = await this.settingsRepository.getSetting(
+		const genericSettings = await this.settingsRepository.getSetting(
 			InvoiceSettingsEntity,
 		);
-		const emails = await this.settingsRepository.getSetting(PdfTemplateSetting);
 
-		data.invoiceNumbers.update({
+		genericSettings.invoiceNumbers.update({
 			template: nextData.invoiceNumbersTemplate,
 			incrementTemplate: nextData.invoiceNumbersIncrementTemplate,
 			lastNumber: nextData.invoiceNumbersLast,
 		});
 
-		data.offerNumbers.update({
+		genericSettings.offerNumbers.update({
 			template: nextData.offerNumbersTemplate,
 			incrementTemplate: nextData.offerNumbersIncrementTemplate,
 			lastNumber: nextData.offerNumbersLast,
 		});
 
-		data.customerNumbers.update({
+		genericSettings.customerNumbers.update({
 			template: nextData.customerNumbersTemplate,
 			incrementTemplate: nextData.customerNumbersIncrementTemplate,
 			lastNumber: nextData.customerNumbersLast,
 		});
 
-		data.offerValidityDays = nextData.offerValidityDays || 14;
-		data.defaultInvoiceDueDays = nextData.defaultInvoiceDueDays || 28;
-		data.defaultInvoiceFooterText =
+		genericSettings.offerValidityDays = nextData.offerValidityDays || 14;
+		genericSettings.defaultInvoiceDueDays =
+			nextData.defaultInvoiceDueDays || 28;
+		genericSettings.defaultInvoiceFooterText =
 			nextData.defaultInvoiceFooterText || 'Created by Servobill';
 
-		await data.save();
+		await genericSettings.save();
 
-		emails.emailTemplate = nextData.emailTemplate || '';
-		emails.emailSubjectInvoices =
+		const emailSettings =
+			await this.settingsRepository.getSetting(PdfTemplateSetting);
+		emailSettings.emailTemplate = nextData.emailTemplate || '';
+		emailSettings.emailSubjectInvoices =
 			nextData.emailSubjectInvoices || 'Here is your invoice {{number}}';
-		emails.emailSubjectOffers =
+		emailSettings.emailSubjectOffers =
 			nextData.emailSubjectOffers || 'Your offer {{number}} is ready';
-		emails.emailSubjectReminder =
+		emailSettings.emailSubjectReminder =
 			nextData.emailSubjectReminder || 'Reminder: Invoice {{number}} is due';
-		emails.emailSubjectWarning =
+		emailSettings.emailSubjectWarning =
 			nextData.emailSubjectWarning || 'Warning: Invoice {{number}} is over due';
 
-		emails.sendFrom = nextData.sendFrom || 'no-reply@example.com';
-		emails.replyTo = nextData.replyTo || 'no-reply@example.com';
+		emailSettings.sendFrom = nextData.sendFrom || 'no-reply@example.com';
+		emailSettings.replyTo = nextData.replyTo || 'no-reply@example.com';
 
-		emails.invoiceCompanyLogo = nextData.invoiceCompanyLogo || '';
-		emails.emailCompanyLogo = nextData.emailCompanyLogo || '';
+		emailSettings.invoiceCompanyLogo = nextData.invoiceCompanyLogo || '';
+		emailSettings.emailCompanyLogo = nextData.emailCompanyLogo || '';
 
-		emails.companyData.name = nextData.company?.name || '';
-		emails.companyData.street = nextData.company?.street || '';
-		emails.companyData.zip = nextData.company?.zip || '';
-		emails.companyData.city = nextData.company?.city || '';
-		emails.companyData.phone = nextData.company?.phone || '';
-		emails.companyData.email = nextData.company?.email || '';
-		emails.companyData.web = nextData.company?.web || '';
-		emails.companyData.vatId = nextData.company?.vatId || '';
-		emails.companyData.taxId = nextData.company?.taxId || '';
-		emails.companyData.bank.accountHolder =
+		emailSettings.companyData.name = nextData.company?.name || '';
+		emailSettings.companyData.street = nextData.company?.street || '';
+		emailSettings.companyData.zip = nextData.company?.zip || '';
+		emailSettings.companyData.city = nextData.company?.city || '';
+		emailSettings.companyData.phone = nextData.company?.phone || '';
+		emailSettings.companyData.email = nextData.company?.email || '';
+		emailSettings.companyData.web = nextData.company?.web || '';
+		emailSettings.companyData.vatId = nextData.company?.vatId || '';
+		emailSettings.companyData.taxId = nextData.company?.taxId || '';
+		emailSettings.companyData.bank.accountHolder =
 			nextData.company?.bankAccountHolder || '';
-		emails.companyData.bank.iban = nextData.company?.bankIban || '';
-		emails.companyData.bank.bic = nextData.company?.bankBic || '';
+		emailSettings.companyData.bank.iban = nextData.company?.bankIban || '';
+		emailSettings.companyData.bank.bic = nextData.company?.bankBic || '';
 
-		await emails.save();
+		await emailSettings.save();
 
-		return this.mapInvoiceSettingsEntityToResponse(data, emails);
+		return this.mapInvoiceSettingsEntityToResponse(
+			genericSettings,
+			emailSettings,
+		);
 	}
 
 	@Authorized()
@@ -210,15 +215,44 @@ export class SystemResolver {
 		const expenseSettings = await this.settingsRepository.getSetting(
 			ExpenseSettingsEntity,
 		);
-		expenseSettings.categories = categories.map((cat) => ({
-			...cat,
-			id: cat.categoryId || randomUUID(),
-			color: cat.color,
-			isDefault: cat.isDefault || false,
-			reference: cat.reference,
-			sumForTaxSoftware: cat.sumForTaxSoftware || false,
-			description: cat.description,
-		}));
+
+		// this happens in two steps, so that we do not get client generated
+		// ids for the categories.
+		// update existing entries, match by categoryId
+		const existingCategories = expenseSettings.categories;
+		expenseSettings.categories = [];
+		const existingCategoryIds = new Set<string>();
+		for (const category of existingCategories) {
+			const updatedCategory = categories.find(
+				(cat) => cat.categoryId === category.id,
+			);
+			if (!updatedCategory) {
+				continue;
+			}
+
+			existingCategoryIds.add(category.id);
+			expenseSettings.categories.push({
+				...category,
+				...updatedCategory,
+			});
+			// the ones that are not in the updatedCategories, get deleted
+			// since they are not in the new array.
+		}
+
+		// now create the new categories
+		const newCategories = categories.filter(
+			(cat) => !existingCategoryIds.has(cat.categoryId || ''),
+		);
+
+		for (const category of newCategories) {
+			expenseSettings.categories.push({
+				...category,
+				id: randomUUID(),
+				isDefault: category.isDefault || false,
+				sumForTaxSoftware: category.sumForTaxSoftware || false,
+			});
+		}
+
 		await expenseSettings.save();
 		return expenseSettings.categories;
 	}
