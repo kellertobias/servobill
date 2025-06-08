@@ -8,8 +8,11 @@ import { API, gql } from '../index';
 import { downloadFile, requestFile } from './helper';
 import { Exporters } from './exporters/exporters';
 
+import { DeferredPromise } from '@/common/deferred';
+
 export const importExpenses = async () => {
 	const raw = await requestFile();
+	const waitForImport = new DeferredPromise();
 	doToast({
 		promise: (async () => {
 			const data = JSON.parse(raw || '{}');
@@ -48,11 +51,13 @@ export const importExpenses = async () => {
 					},
 				});
 			}
+			waitForImport.resolve();
 		})(),
 		loading: 'Importing Expenses...',
 		success: 'Expenses Imported!',
 		error: 'Failed to import your Expenses.',
 	});
+	await waitForImport.promise;
 };
 
 export const exportExpenses = async () => {

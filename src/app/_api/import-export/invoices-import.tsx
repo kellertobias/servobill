@@ -13,6 +13,7 @@ import {
 	InvoiceStatus,
 	InvoiceType,
 } from '@/common/gql/graphql';
+import { DeferredPromise } from '@/common/deferred';
 
 const getInvoiceStatus = (invoice: InvoiceImportInput) => {
 	const total =
@@ -44,6 +45,7 @@ type InNinPayments = {
 export const importInvoices = async () => {
 	const raw = await requestFile();
 	const data = JSON.parse(raw || '{}');
+	const waitForImport = new DeferredPromise();
 
 	doToast({
 		promise: (async () => {
@@ -148,9 +150,11 @@ export const importInvoices = async () => {
 				console.error(error);
 				throw error;
 			}
+			waitForImport.resolve();
 		})(),
 		loading: 'Importing Invoices...',
 		success: 'Invoices Imported!',
 		error: 'Failed to import your Invoices.',
 	});
+	await waitForImport.promise;
 };

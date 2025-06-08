@@ -6,8 +6,11 @@ import { API, gql } from '../index';
 import { downloadFile, requestFile } from './helper';
 import { Exporters } from './exporters/exporters';
 
+import { DeferredPromise } from '@/common/deferred';
+
 export const importProducts = async () => {
 	const raw = await requestFile();
+	const waitForImport = new DeferredPromise();
 	doToast({
 		promise: (async () => {
 			const data = JSON.parse(raw || '{}');
@@ -37,11 +40,13 @@ export const importProducts = async () => {
 					},
 				});
 			}
+			waitForImport.resolve();
 		})(),
 		loading: 'Importing Products...',
 		success: 'Products Imported!',
 		error: 'Failed to import your Products.',
 	});
+	await waitForImport.promise;
 };
 
 export const exportProducts = async () => {

@@ -8,6 +8,7 @@ import { downloadFile, requestFile } from './helper';
 import { Exporters } from './exporters/exporters';
 
 import { Customer } from '@/common/gql/graphql';
+import { DeferredPromise } from '@/common/deferred';
 
 export type InNinContact = {
 	first_name: string;
@@ -91,19 +92,24 @@ export const importSingleCustomer = async (
 
 export const importCustomers = async () => {
 	const raw = await requestFile();
+	const waitForImport = new DeferredPromise();
 	doToast({
 		promise: (async () => {
 			const data = JSON.parse(raw || '{}');
 			const customers = data?.clients || data?.customers || [];
 
 			for (const customer of customers) {
-				importSingleCustomer(mapInNinCustomer(customer, data?.client_contacts));
+				await importSingleCustomer(
+					mapInNinCustomer(customer, data?.client_contacts),
+				);
 			}
+			waitForImport.resolve();
 		})(),
 		loading: 'Importing Customers...',
 		success: 'Customers Imported!',
 		error: 'Failed to import your Customers.',
 	});
+	await waitForImport.promise;
 };
 
 export const exportCustomers = async () => {
