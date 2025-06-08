@@ -55,7 +55,6 @@ export class InvoiceResolver {
 		private fileStorage: FileStorageService,
 	) {}
 
-	@Span('InvoiceResolver.invoices')
 	@Authorized()
 	@Query(() => [Invoice])
 	async invoices(
@@ -386,7 +385,7 @@ export class InvoiceResolver {
 	async setInvoiceActivityAttachmentEmailFlag(
 		@Arg('invoiceId', () => String) invoiceId: string,
 		@Arg('activityId', () => String) activityId: string,
-		@Arg('attachToEmail') attachToEmail: boolean,
+		@Arg('attachToEmail', () => Boolean) attachToEmail: boolean,
 	): Promise<InvoiceChangedResponse> {
 		const invoice = await this.invoiceRepository.getById(invoiceId);
 		if (!invoice) {
