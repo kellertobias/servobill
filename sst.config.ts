@@ -284,6 +284,7 @@ export default $config({
 			SITE_DOMAIN: requiredEnv.SITE_DOMAIN,
 			API_DOMAIN: `api.${requiredEnv.SITE_DOMAIN}`,
 			BUCKET_FILES: dataBucket.name,
+			ALLOWED_EMAILS: process.env.ALLOWED_EMAILS!,
 		};
 		// ===============================
 		// Create Background Workers:
