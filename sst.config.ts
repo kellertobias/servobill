@@ -158,7 +158,7 @@ export default $config({
 				handler: `${endpoint.file}.${endpoint.handler}`,
 				description: `${descriptionPrefix} ${endpoint.path}`,
 				permissions: defaultPermissions,
-				runtime: 'nodejs22.x',
+				runtime: 'nodejs20.x',
 				layers: options?.layers,
 				environment: {
 					...options?.environment,
@@ -405,7 +405,7 @@ export default $config({
 						logGroup: logGroups.web.name,
 					},
 				},
-			}
+			},
 		});
 	},
 });
