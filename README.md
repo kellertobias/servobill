@@ -27,25 +27,27 @@ Planned until end of May 2025:
 - [X] Add support for attachments for invoices, expenses and emails
 - [X] Add categorization of expenses
 - [X] Add support for auto-generated expenses (e.g. travel expenses)
-- [ ] Add support for dockerized deployments (WIP, mainly needs testing)
+- [X] Update to SST v3
 
 Planned until end of June 2025:
+- [ ] Fix bug where settings cannot be saved (Known bug, will be fixed in release that includes dockerized deployment)
+- [ ] Add support for dockerized deployments (WIP, mainly needs testing)
 - [ ] Add support for SMTP mail sending (instead of only allowing SES)
 - [ ] Add support for simple inventory management (expense can create inventory items, history on inventory items, etc.)
-- [ ] Add support for incoming digital invoices (e.g. X-Rechnung/ ZugFeRD)
-- [ ] Add AI Upload of invoices (e.g. from PDF) to automatically create expenses and inventory items
-- [ ] Add local user management (e.g. for self-hosted deployments)
 
 Planned until end of July 2025:
-- [ ] Add support for sending digital invoices (e.g. X-Rechnung/ ZugFeRD)
-- [ ] Add "Projects" assign inventory items to projects
+- [ ] Add support for incoming digital invoices (e.g. X-Rechnung/ ZugFeRD)
+- [ ] Add AI Upload of invoices (e.g. from PDF) to automatically create expenses and inventory items
 - [ ] Add support for incoming invoice emails (either parse digital invoice or use AI to parse)
+- [ ] Add support for sending digital invoices (e.g. X-Rechnung/ ZugFeRD)
 
 Planned until end of August 2025:
-- [ ] Add "Time Tracking" to Projects
+- [ ] Add local user management (e.g. for self-hosted deployments)
+- [ ] Add "Projects" assign inventory items to projects
 - [ ] Add automatic backups of data (e.g. via email or to S3)
 
 Long term:
+- [ ] Add "Time Tracking" to Projects
 - [ ] Add offline mode for: time tracking, inventory items
 - [ ] Add S3 lifecycle rules to automatically archive old data (e.g. glacier to save on storage)
 - [ ] Add pagination to all lists

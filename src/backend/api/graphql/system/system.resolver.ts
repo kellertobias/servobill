@@ -154,6 +154,8 @@ export class SystemResolver {
 		genericSettings.defaultInvoiceFooterText =
 			nextData.defaultInvoiceFooterText || 'Created by Servobill';
 
+		console.log('genericSettings', genericSettings);
+
 		await genericSettings.save();
 
 		const emailSettings =
@@ -189,6 +191,7 @@ export class SystemResolver {
 		emailSettings.companyData.bank.iban = nextData.company?.bankIban || '';
 		emailSettings.companyData.bank.bic = nextData.company?.bankBic || '';
 
+		console.log('emailSettings', emailSettings);
 		await emailSettings.save();
 
 		return this.mapInvoiceSettingsEntityToResponse(
@@ -223,6 +226,10 @@ export class SystemResolver {
 		@Arg('fixExpensesForImport', () => Boolean, { nullable: true })
 		fixExpensesForImport?: boolean,
 	): Promise<ExpenseCategoryType[]> {
+		if (fixExpensesForImport && !categories.length) {
+			return [];
+		}
+
 		const expenseSettings = await this.settingsRepository.getSetting(
 			ExpenseSettingsEntity,
 		);

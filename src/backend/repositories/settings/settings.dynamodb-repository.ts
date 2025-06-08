@@ -103,6 +103,7 @@ export class SettingsDynamodbRepository
 
 		// @ts-expect-error - this inherits from an abstract class
 		return new SettingsClass(parsed, async (saveData: string) => {
+			console.log('saveData', saveData);
 			await this.store
 				.upsert({
 					settingId: SettingsClass.settingId,
