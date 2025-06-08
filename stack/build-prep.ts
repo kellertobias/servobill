@@ -43,9 +43,9 @@ module.exports = { ${endpoint.handler} };
 
 const prepareNextBuild = () => {
 	// eslint-disable-next-line no-console
-	console.log('[NextJS] Preparing Build');
+	console.log('    [NextJS] Preparing Build');
 	if (fs.existsSync(apiDir)) {
-		console.log(`[NextJS] Removing Development API Folder: ${apiDir}`);
+		console.log(`    [NextJS] Removing Development API Folder: ${apiDir}`);
 		fs.rmSync(apiDir, { recursive: true, force: true });
 	}
 
@@ -73,7 +73,7 @@ const askToResetGit = async () => {
 
 	return new Promise((resolve) => {
 		rl.question(
-			'Do you want to reset the repository? (y/N): ',
+			'    Do you want to reset the repository? (y/N): ',
 			(answer: string) => {
 				if (answer.toLowerCase() === 'y') {
 					resolve(true);
@@ -98,7 +98,18 @@ export default async function main() {
 	// Print welcome message in a box
 	console.log(
 		boxen(
-			'🚀 Deploying Servobill to Production.\n\nChecking and preparing for deployment...',
+			`🚀 Preparing to Deploy Servobill Serverless
+
+This script will:
+- Make sure the git working directory is clean
+- Remove dependencies only needed for dockerized deployment
+- Prepare the chromium layer
+- prepare handler index files
+- remove development API implementation
+
+after this script, you can deploy sst to production
+and then reset via \`git checkout -- . \``,
+
 			{
 				padding: 1,
 				margin: 1,
@@ -112,37 +123,39 @@ export default async function main() {
 
 	// Check git status before proceeding
 	if (isGitClean()) {
-		console.log('✅ Git working directory is clean');
+		console.log(' ✅ Git working directory is clean');
 	} else {
-		console.error('⚠️ Git working directory is not clean.');
+		console.error(' ⚠️ Git working directory is not clean.');
 		const reset = await askToResetGit();
 		if (reset) {
 			resetGit();
-			console.log('✅ Repository has been reset.');
+			console.log(' ✅ Repository has been reset.');
 		} else {
+			console.log('');
 			console.error(
-				'⚠️ Please commit or stash your changes before proceeding.',
+				' ❌ Aborting deployment.\n    Please commit or stash your changes before proceeding.',
 			);
-			console.error('❌ Aborting deployment.');
 			process.exit(1);
 		}
 	}
 
+	console.log('\n');
+
 	// remove extra dependencies (pg, sqlite, sqlite3)
-	console.log('Removing extra dependencies (pg, sqlite, sqlite3)');
+	console.log(' ℹ️ Removing extra dependencies (pg, sqlite, sqlite3)');
 	execSync('npm r -D pg sqlite sqlite3');
 	execSync('npm r -S pg sqlite sqlite3');
-	console.log('✅ Extra dependencies removed');
-	console.log('\n\n\n');
+	console.log(' ✅ Extra dependencies removed');
+	console.log('\n');
 
 	// prepare chromium layer
 	// check if layers/chromium exists
 	// if not, download it
 	// Check if chromium layer directory exists
 	if (fs.existsSync('./layers/chromium')) {
-		console.log('✅ Chromium layer exists');
+		console.log(' ✅ Chromium layer exists');
 	} else {
-		console.log('⚠️ Chromium layer not found. Downloading...');
+		console.log(' ⚠️ Chromium layer not found. Downloading...');
 
 		// Create layers directory if it doesn't exist
 		if (!fs.existsSync('./layers')) {
@@ -153,32 +166,33 @@ export default async function main() {
 		const chromiumUrl = `https://github.com/Sparticuz/chromium/releases/download/${chromiumVersion}/chromium-${chromiumVersion}-layer.zip`;
 		const zipPath = './layers/chromium.zip';
 
-		console.log('Downloading chromium layer...');
+		console.log('    Downloading chromium layer...');
 		execSync(`wget ${chromiumUrl} -O ${zipPath}`);
 
 		// Unzip the file
-		console.log('Extracting chromium layer...');
+		console.log('    Extracting chromium layer...');
 		execSync(`unzip ${zipPath} -d ./layers/chromium`);
 
 		// Remove zip file
-		console.log('Cleaning up...');
+		console.log('    Cleaning up...');
 		fs.unlinkSync(zipPath);
 
-		console.log('✅ Chromium layer setup complete.');
+		console.log(' ✅ Chromium layer setup complete.');
 	}
+	console.log('\n');
 
-	console.log('Preparing NextJS Build (removing api folder)');
+	console.log(' ℹ️ Preparing NextJS Build (removing api folder)');
 	prepareNextBuild();
-	console.log('\n\n\n');
+	console.log('\n');
 
+	console.log(' ℹ️ Preparing handler index files');
 	for (const endpoint of [...apiEndpoints, ...eventHandlerEndpoints]) {
 		prepareHandlerExport(endpoint);
 	}
 
-	console.log('\n\n\n');
+	console.log('\n');
 
-	console.log('✅ Preparation Complete.');
-	console.log('Now running deployment...');
+	console.log(' ✅ Preparation Complete. Ready to run deployment...');
 }
 
 // eslint-disable-next-line unicorn/prefer-top-level-await
