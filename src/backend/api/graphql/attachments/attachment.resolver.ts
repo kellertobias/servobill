@@ -34,8 +34,8 @@ export class AttachmentResolver {
 	@Authorized()
 	@Mutation(() => RequestAttachmentUploadUrlResult)
 	async requestUpload(
-		@Arg('fileName') fileName: string,
-		@Arg('mimeType') mimeType: string,
+		@Arg('fileName', () => String) fileName: string,
+		@Arg('mimeType', () => String) mimeType: string,
 		@Arg('size', () => Int) size: number,
 	): Promise<RequestAttachmentUploadUrlResult> {
 		// Create a new attachment entity in DB (status: 'pending')
@@ -62,7 +62,7 @@ export class AttachmentResolver {
 	@Authorized()
 	@Mutation(() => Attachment)
 	async confirmUpload(
-		@Arg('attachmentId') attachmentId: string,
+		@Arg('attachmentId', () => String) attachmentId: string,
 	): Promise<Attachment> {
 		const attachment = await this.repository.getById(attachmentId);
 		if (!attachment) {
@@ -79,10 +79,10 @@ export class AttachmentResolver {
 	@Authorized()
 	@Mutation(() => Attachment)
 	async attachUpload(
-		@Arg('attachmentId') attachmentId: string,
-		@Arg('invoiceId', { nullable: true }) invoiceId?: string,
-		@Arg('expenseId', { nullable: true }) expenseId?: string,
-		@Arg('inventoryId', { nullable: true }) inventoryId?: string,
+		@Arg('attachmentId', () => String) attachmentId: string,
+		@Arg('invoiceId', () => String, { nullable: true }) invoiceId?: string,
+		@Arg('expenseId', () => String, { nullable: true }) expenseId?: string,
+		@Arg('inventoryId', () => String, { nullable: true }) inventoryId?: string,
 	): Promise<Attachment> {
 		const attachment = await this.repository.getById(attachmentId);
 		if (!attachment) {
@@ -108,7 +108,8 @@ export class AttachmentResolver {
 	@Authorized()
 	@Query(() => [Attachment])
 	async attachments(
-		@Arg('input', { nullable: true }) input?: ListAttachmentsInput,
+		@Arg('input', () => ListAttachmentsInput, { nullable: true })
+		input?: ListAttachmentsInput,
 	): Promise<Attachment[]> {
 		return this.repository.listByQuery({
 			invoiceId: input?.invoiceId,
@@ -125,7 +126,7 @@ export class AttachmentResolver {
 	@Authorized()
 	@Query(() => AttachmentDownloadUrlResult)
 	async attachment(
-		@Arg('attachmentId') attachmentId: string,
+		@Arg('attachmentId', () => String) attachmentId: string,
 	): Promise<AttachmentDownloadUrlResult> {
 		const attachment = await this.repository.getById(attachmentId);
 		if (!attachment) {
@@ -142,7 +143,7 @@ export class AttachmentResolver {
 	@Authorized()
 	@Mutation(() => Boolean)
 	async deleteAttachment(
-		@Arg('attachmentId') attachmentId: string,
+		@Arg('attachmentId', () => String) attachmentId: string,
 	): Promise<boolean> {
 		const attachment = await this.repository.getById(attachmentId);
 		if (!attachment) {

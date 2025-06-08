@@ -1,5 +1,5 @@
 // This import must come first before any other imports
-import 'reflect-metadata';
+// import 'reflect-metadata';
 
 // Import repositories before they are used
 import '@/backend/repositories';

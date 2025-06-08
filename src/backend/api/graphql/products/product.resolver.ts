@@ -50,13 +50,15 @@ export class ProductResolver {
 
 	@Authorized()
 	@Query(() => Product, { nullable: true })
-	async product(@Arg('id') id: string): Promise<Product | null> {
+	async product(@Arg('id', () => String) id: string): Promise<Product | null> {
 		return this.repository.getById(id);
 	}
 
 	@Authorized()
 	@Mutation(() => Product)
-	async createProduct(@Arg('data') data: ProductInput): Promise<Product> {
+	async createProduct(
+		@Arg('data', () => ProductInput) data: ProductInput,
+	): Promise<Product> {
 		const product = await this.repository.create();
 		product.update(data);
 		await this.repository.save(product);
@@ -67,8 +69,8 @@ export class ProductResolver {
 	@Authorized()
 	@Mutation(() => Product)
 	async updateProduct(
-		@Arg('id') id: string,
-		@Arg('data') data: ProductInput,
+		@Arg('id', () => String) id: string,
+		@Arg('data', () => ProductInput) data: ProductInput,
 	): Promise<Product> {
 		const product = await this.repository.getById(id);
 		if (!product) {
@@ -81,7 +83,7 @@ export class ProductResolver {
 
 	@Authorized()
 	@Mutation(() => Product)
-	async deleteProduct(@Arg('id') id: string): Promise<Product> {
+	async deleteProduct(@Arg('id', () => String) id: string): Promise<Product> {
 		const product = await this.repository.getById(id);
 		if (!product) {
 			throw new Error('Product not found');

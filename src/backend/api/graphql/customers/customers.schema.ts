@@ -7,46 +7,46 @@ import { CustomerEntity } from '@/backend/entities/customer.entity';
 
 @ObjectType()
 export class Customer implements FilteredObjectProperties<CustomerEntity> {
-	@Field()
+	@Field(() => String)
 	id!: string;
 
-	@Field()
+	@Field(() => String)
 	customerNumber!: string;
 
-	@Field()
+	@Field(() => String)
 	name!: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	contactName?: string;
 
-	@Field()
+	@Field(() => Boolean)
 	showContact!: boolean;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	email?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	street?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	zip?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	city?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	state?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	country?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	notes?: string;
 
-	@Field()
+	@Field(() => Date)
 	createdAt!: Date;
 
-	@Field()
+	@Field(() => Date)
 	updatedAt!: Date;
 }
 
@@ -56,36 +56,36 @@ export class CustomerInput
 		Omit<Customer, 'id' | 'createdAt' | 'updatedAt' | 'customerNumber'>
 {
 	@IsString()
-	@Field()
+	@Field(() => String)
 	name!: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	customerNumber?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	contactName?: string;
 
-	@Field()
+	@Field(() => Boolean)
 	showContact!: boolean;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	email?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	street?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	zip?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	city?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	state?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	country?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	notes?: string;
 }

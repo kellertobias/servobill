@@ -59,7 +59,8 @@ export class InvoiceResolver {
 	@Authorized()
 	@Query(() => [Invoice])
 	async invoices(
-		@Arg('where', { nullable: true }) where?: InvoiceWhereInput,
+		@Arg('where', () => InvoiceWhereInput, { nullable: true })
+		where?: InvoiceWhereInput,
 		@Arg('skip', () => Int, { nullable: true }) skip?: number,
 		@Arg('limit', () => Int, { nullable: true }) limit?: number,
 		@ActiveSpan() span?: OtelSpan,
@@ -99,7 +100,7 @@ export class InvoiceResolver {
 	@Authorized()
 	@Query(() => Invoice)
 	async invoice(
-		@Arg('id') id: string,
+		@Arg('id', () => String) id: string,
 		@ActiveSpan() span: OtelSpan,
 	): Promise<Invoice | null> {
 		span?.setAttribute('context.invoiceId', id);
@@ -127,7 +128,7 @@ export class InvoiceResolver {
 	@Authorized()
 	@Mutation(() => Invoice)
 	async createInvoice(
-		@Arg('customerId') customerId: string,
+		@Arg('customerId', () => String) customerId: string,
 		@Arg('type', () => InvoiceType, { nullable: true })
 		type: InvoiceType = InvoiceType.INVOICE,
 		@Ctx() context: GqlContext,
@@ -160,8 +161,8 @@ export class InvoiceResolver {
 	@Authorized()
 	@Mutation(() => Invoice)
 	async updateInvoice(
-		@Arg('id') id: string,
-		@Arg('data') data: InvoiceInput,
+		@Arg('id', () => String) id: string,
+		@Arg('data', () => InvoiceInput) data: InvoiceInput,
 	): Promise<Invoice> {
 		const invoice = await this.invoiceRepository.getById(id);
 
@@ -205,7 +206,7 @@ export class InvoiceResolver {
 	@Span('InvoiceResolver.deleteInvoice')
 	@Authorized()
 	@Mutation(() => Invoice)
-	async deleteInvoice(@Arg('id') id: string): Promise<Invoice> {
+	async deleteInvoice(@Arg('id', () => String) id: string): Promise<Invoice> {
 		const invoice = await this.invoiceRepository.getById(id);
 
 		if (!invoice) {
@@ -220,7 +221,9 @@ export class InvoiceResolver {
 	@Span('InvoiceResolver.purgeInvoices')
 	@Authorized()
 	@Mutation(() => Boolean)
-	async purgeInvoices(@Arg('confirm') confirm: string): Promise<boolean> {
+	async purgeInvoices(
+		@Arg('confirm', () => String) confirm: string,
+	): Promise<boolean> {
 		if (confirm !== 'confirm') {
 			throw new Error('Confirmation string is wrong');
 		}
@@ -321,7 +324,7 @@ export class InvoiceResolver {
 	@Authorized()
 	@Mutation(() => InvoiceChangedResponse)
 	async invoiceAddComment(
-		@Arg('invoiceId') invoiceId: string,
+		@Arg('invoiceId', () => String) invoiceId: string,
 		@Arg('comment', () => String, { nullable: true }) comment: string | null,
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		@Arg('attachmentId', () => String, { nullable: true })
@@ -381,8 +384,8 @@ export class InvoiceResolver {
 	@Authorized()
 	@Mutation(() => InvoiceChangedResponse)
 	async setInvoiceActivityAttachmentEmailFlag(
-		@Arg('invoiceId') invoiceId: string,
-		@Arg('activityId') activityId: string,
+		@Arg('invoiceId', () => String) invoiceId: string,
+		@Arg('activityId', () => String) activityId: string,
 		@Arg('attachToEmail') attachToEmail: boolean,
 	): Promise<InvoiceChangedResponse> {
 		const invoice = await this.invoiceRepository.getById(invoiceId);
@@ -416,8 +419,8 @@ export class InvoiceResolver {
 	@Authorized()
 	@Mutation(() => InvoiceChangedResponse)
 	async deleteInvoiceAttachmentActivity(
-		@Arg('invoiceId') invoiceId: string,
-		@Arg('activityId') activityId: string,
+		@Arg('invoiceId', () => String) invoiceId: string,
+		@Arg('activityId', () => String) activityId: string,
 	): Promise<InvoiceChangedResponse> {
 		const invoice = await this.invoiceRepository.getById(invoiceId);
 		if (!invoice) {

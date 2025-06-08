@@ -8,37 +8,37 @@ export class Attachment {
 	@Field(() => ID)
 	id!: string;
 
-	@Field()
+	@Field(() => String)
 	fileName!: string;
 
-	@Field()
+	@Field(() => String)
 	mimeType!: string;
 
 	@Field(() => Int)
 	size!: number;
 
-	@Field()
+	@Field(() => String)
 	s3Key!: string;
 
-	@Field()
+	@Field(() => String)
 	s3Bucket!: string;
 
-	@Field()
+	@Field(() => String)
 	status!: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	invoiceId?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	expenseId?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	inventoryId?: string;
 
-	@Field()
+	@Field(() => Date)
 	createdAt!: Date;
 
-	@Field()
+	@Field(() => Date)
 	updatedAt!: Date;
 }
 
@@ -47,10 +47,10 @@ export class Attachment {
  */
 @ObjectType()
 export class RequestAttachmentUploadUrlResult {
-	@Field()
+	@Field(() => String)
 	uploadUrl!: string;
 
-	@Field()
+	@Field(() => String)
 	attachmentId!: string;
 }
 
@@ -59,7 +59,7 @@ export class RequestAttachmentUploadUrlResult {
  */
 @ObjectType()
 export class AttachmentDownloadUrlResult {
-	@Field()
+	@Field(() => String)
 	downloadUrl!: string;
 }
 
@@ -68,13 +68,13 @@ export class AttachmentDownloadUrlResult {
  */
 @InputType()
 export class ListAttachmentsInput {
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	invoiceId?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	expenseId?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	inventoryId?: string;
 
 	@Field(() => Int, { nullable: true })

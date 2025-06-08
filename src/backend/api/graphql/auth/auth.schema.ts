@@ -2,21 +2,21 @@ import { Field, ObjectType } from 'type-graphql';
 
 @ObjectType()
 export class AuthCheckResult {
-	@Field()
+	@Field(() => Boolean)
 	authenticated!: boolean;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	userName?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	profilePictureUrl?: string;
 
-	@Field()
+	@Field(() => Boolean)
 	refreshable!: boolean;
 }
 
 @ObjectType()
 export class GetContextResult {
-	@Field()
+	@Field(() => String)
 	contextString!: string;
 }

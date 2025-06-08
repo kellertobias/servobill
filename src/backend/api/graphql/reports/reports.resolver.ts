@@ -144,7 +144,7 @@ export class ReportsResolver {
 	@Authorized()
 	@Query(() => IncomeSurplusReport)
 	async generateReport(
-		@Arg('where', { nullable: true })
+		@Arg('where', () => IncomeSurplusReportWhereInput, { nullable: true })
 		where: IncomeSurplusReportWhereInput,
 	): Promise<IncomeSurplusReport | undefined> {
 		const startDate = where?.startDate || dayjs().startOf('year').toDate();

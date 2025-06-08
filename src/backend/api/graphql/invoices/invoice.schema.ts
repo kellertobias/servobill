@@ -31,13 +31,13 @@ import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
 
 @InputType()
 export class InvoiceItemExpenseInput {
-	@Field()
+	@Field(() => String)
 	name!: string;
 
 	@Field(() => Int)
 	price!: number;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	categoryId?: string;
 
 	@Field(() => Boolean)
@@ -46,34 +46,34 @@ export class InvoiceItemExpenseInput {
 
 @ObjectType()
 export class InvoiceItemExpense {
-	@Field()
+	@Field(() => String)
 	name!: string;
 
 	@Field(() => Int)
 	price!: number;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	categoryId?: string;
 
 	@Field(() => Boolean)
 	enabled!: boolean;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	expenseId?: string;
 }
 
 @ObjectType()
 export class InvoiceItem implements ObjectProperties<InvoiceItemEntity> {
-	@Field()
+	@Field(() => String)
 	id!: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	productId?: string;
 
-	@Field()
+	@Field(() => String)
 	name!: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	description?: string;
 
 	@Field(() => Int)
@@ -97,7 +97,7 @@ export class InvoiceItem implements ObjectProperties<InvoiceItemEntity> {
 export class InvoiceSubmissions
 	implements ObjectProperties<InvoiceSubmissionEntity>
 {
-	@Field()
+	@Field(() => String)
 	id!: string;
 
 	@Field(() => Date)
@@ -111,19 +111,19 @@ export class InvoiceSubmissions
 export class InvoiceActivity
 	implements ObjectProperties<InvoiceActivityEntity>
 {
-	@Field()
+	@Field(() => String)
 	id!: string;
 
-	@Field()
+	@Field(() => Date)
 	activityAt!: Date;
 
 	@Field(() => InvoiceActivityType)
 	type!: InvoiceActivityType;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	user?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	notes?: string;
 
 	@Field(() => Attachment, {
@@ -133,31 +133,31 @@ export class InvoiceActivity
 	attachment?: Attachment;
 
 	/** If true, this attachment should be included in outgoing emails */
-	@Field({ nullable: true })
+	@Field(() => Boolean, { nullable: true })
 	attachToEmail?: boolean;
 }
 
 @ObjectType()
 export class InvoiceLinks {
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	offerId?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	invoiceId?: string;
 }
 
 @ObjectType()
 export class Invoice implements FilteredObjectProperties<InvoiceEntity> {
-	@Field()
+	@Field(() => String)
 	id!: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	subject?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	offerNumber?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	invoiceNumber?: string;
 
 	@Field(() => InvoiceType)
@@ -169,34 +169,34 @@ export class Invoice implements FilteredObjectProperties<InvoiceEntity> {
 	@Field(() => [InvoiceSubmissions])
 	submissions!: InvoiceSubmissions[];
 
-	@Field()
+	@Field(() => Customer)
 	customer!: Customer;
 
-	@Field()
+	@Field(() => Date)
 	createdAt!: Date;
 
-	@Field()
+	@Field(() => Date)
 	updatedAt!: Date;
 
-	@Field({ nullable: true })
+	@Field(() => Date, { nullable: true })
 	offeredAt?: Date;
 
-	@Field({ nullable: true })
+	@Field(() => Date, { nullable: true })
 	invoicedAt?: Date;
 
-	@Field({ nullable: true })
+	@Field(() => Date, { nullable: true })
 	dueAt?: Date;
 
 	@Field(() => Int, { nullable: true })
 	paidCents?: number;
 
-	@Field({ nullable: true })
+	@Field(() => Date, { nullable: true })
 	paidAt?: Date;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	paidVia?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	footerText?: string;
 
 	@Field(() => [InvoiceItem])
@@ -214,7 +214,7 @@ export class Invoice implements FilteredObjectProperties<InvoiceEntity> {
 	@Field(() => InvoiceLinks, { nullable: true })
 	links?: InvoiceLinks;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	contentHash?: string;
 }
 
@@ -240,23 +240,23 @@ export class InvoiceWhereInput {
 @InputType()
 export class InvoiceInput implements Partial<Omit<Invoice, 'items'>> {
 	@IsOptional()
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	subject?: string;
 
 	@IsUUID()
-	@Field()
+	@Field(() => String)
 	customerId!: string;
 
-	@Field({ nullable: true })
+	@Field(() => Date, { nullable: true })
 	offeredAt?: Date;
 
-	@Field({ nullable: true })
+	@Field(() => Date, { nullable: true })
 	invoicedAt?: Date;
 
-	@Field({ nullable: true })
+	@Field(() => Date, { nullable: true })
 	dueAt?: Date;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	footerText?: string;
 
 	@Field(() => [InvoiceItemInput])
@@ -267,18 +267,18 @@ export class InvoiceInput implements Partial<Omit<Invoice, 'items'>> {
 export class InvoiceItemInput implements Partial<InvoiceItem> {
 	@IsOptional()
 	@IsUUID()
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	productId?: string;
 
 	@IsString()
 	@MaxLength(255)
-	@Field()
+	@Field(() => String)
 	name!: string;
 
 	@IsString()
 	@IsOptional()
 	@MaxLength(2048)
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	description?: string;
 
 	@Field(() => Int)
@@ -303,13 +303,13 @@ export class InvoiceItemInput implements Partial<InvoiceItem> {
 
 @ObjectType()
 export class InvoiceChangedResponse {
-	@Field()
+	@Field(() => String)
 	id!: string;
 
-	@Field()
+	@Field(() => String)
 	activityId!: string;
 
-	@Field()
+	@Field(() => Date)
 	updatedAt!: Date;
 
 	@Field(() => InvoiceActivityType)
@@ -322,10 +322,10 @@ export class InvoicePaymentInput {
 	@Field(() => Int)
 	cents!: number;
 
-	@Field()
+	@Field(() => String)
 	via!: string;
 
-	@Field({ nullable: true })
+	@Field(() => Date, { nullable: true })
 	when?: Date;
 }
 
@@ -335,47 +335,47 @@ export class InvoiceSubmissionInput {
 	@Field(() => InvoiceSubmissionType)
 	sendType!: InvoiceSubmissionType;
 
-	@Field({ nullable: true })
+	@Field(() => Date, { nullable: true })
 	when?: Date;
 }
 
 @InputType()
 export class InvoiceCustomerInput implements CustomerInput {
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	id?: string;
 
 	@IsString()
-	@Field()
+	@Field(() => String)
 	name!: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	customerNumber?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	contactName?: string;
 
-	@Field()
+	@Field(() => Boolean)
 	showContact!: boolean;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	email?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	street?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	zip?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	city?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	state?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	country?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	notes?: string;
 }
 
@@ -398,19 +398,19 @@ export class InvoiceImportInput
 		>
 {
 	@IsString()
-	@Field()
+	@Field(() => String)
 	customerId!: string;
 
 	@IsOptional()
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	subject?: string;
 
 	@IsOptional()
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	offerNumber?: string;
 
 	@IsOptional()
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	invoiceNumber?: string;
 
 	@IsOptional()
@@ -422,15 +422,15 @@ export class InvoiceImportInput
 	status!: InvoiceStatus;
 
 	@IsOptional()
-	@Field({ nullable: true })
+	@Field(() => Date, { nullable: true })
 	offeredAt?: Date;
 
 	@IsOptional()
-	@Field({ nullable: true })
+	@Field(() => Date, { nullable: true })
 	invoicedAt?: Date;
 
 	@IsOptional()
-	@Field({ nullable: true })
+	@Field(() => Date, { nullable: true })
 	dueAt?: Date;
 
 	@IsOptional()
@@ -438,15 +438,15 @@ export class InvoiceImportInput
 	paidCents?: number;
 
 	@IsOptional()
-	@Field({ nullable: true })
+	@Field(() => Date, { nullable: true })
 	paidAt?: Date;
 
 	@IsOptional()
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	paidVia?: string;
 
 	@IsOptional()
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	footerText?: string;
 
 	@IsOptional()

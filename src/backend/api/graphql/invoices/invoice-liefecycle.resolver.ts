@@ -57,7 +57,7 @@ export class InvoiceLifecycleResolver {
 	@Authorized()
 	@Mutation(() => InvoiceChangedResponse)
 	async copyInvoice(
-		@Arg('id') invoiceId: string,
+		@Arg('id', () => String) invoiceId: string,
 		@Arg('as', () => InvoiceType) copyAs: InvoiceType,
 		@Ctx() context: GqlContext,
 	): Promise<Invoice> {
@@ -118,7 +118,9 @@ export class InvoiceLifecycleResolver {
 
 	@Authorized()
 	@Mutation(() => InvoiceChangedResponse)
-	async invoiceDeleteDraft(@Arg('id') invoiceId: string): Promise<Invoice> {
+	async invoiceDeleteDraft(
+		@Arg('id', () => String) invoiceId: string,
+	): Promise<Invoice> {
 		const invoice = await this.invoiceRepository.getById(invoiceId);
 		if (!invoice) {
 			throw new Error('Invoice not found');
@@ -130,7 +132,7 @@ export class InvoiceLifecycleResolver {
 	@Authorized()
 	@Mutation(() => InvoiceChangedResponse)
 	async invoiceCancelUnpaid(
-		@Arg('id') invoiceId: string,
+		@Arg('id', () => String) invoiceId: string,
 		@Arg('deleteExpenses', () => Boolean, { nullable: true })
 		deleteExpenses: boolean = false,
 		@Ctx() context: GqlContext,
@@ -163,7 +165,7 @@ export class InvoiceLifecycleResolver {
 	@Authorized()
 	@Mutation(() => InvoiceChangedResponse)
 	async invoiceSend(
-		@Arg('id') invoiceId: string,
+		@Arg('id', () => String) invoiceId: string,
 		@Arg('submission', () => InvoiceSubmissionInput)
 		submission: InvoiceSubmissionInput,
 		@Ctx() context: GqlContext,
@@ -207,7 +209,7 @@ export class InvoiceLifecycleResolver {
 	@Authorized()
 	@Mutation(() => InvoiceChangedResponse)
 	async invoiceAddPayment(
-		@Arg('id') invoiceId: string,
+		@Arg('id', () => String) invoiceId: string,
 		@Arg('payment', () => InvoicePaymentInput) payment: InvoicePaymentInput,
 		@Ctx() context: GqlContext,
 	): Promise<InvoiceChangedResponse> {
@@ -240,7 +242,9 @@ export class InvoiceLifecycleResolver {
 
 	@Authorized()
 	@Mutation(() => String, { nullable: true })
-	async invoicePdf(@Arg('id') invoiceId: string): Promise<string | null> {
+	async invoicePdf(
+		@Arg('id', () => String) invoiceId: string,
+	): Promise<string | null> {
 		const invoice = await this.invoiceRepository.getById(invoiceId);
 
 		this.logger.info('starting invoicePdf');

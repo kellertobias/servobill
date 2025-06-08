@@ -5,25 +5,25 @@ import { ExpenseCategoryType } from '../system/system.schema';
 
 @ObjectType()
 export class IncomeSurplusReportExport {
-	@Field()
+	@Field(() => String)
 	location!: string;
 
-	@Field()
+	@Field(() => Date)
 	startDate!: Date;
 
-	@Field()
+	@Field(() => Date)
 	endDate!: Date;
 
-	@Field()
+	@Field(() => Date)
 	generatedAt!: Date;
 }
 
 @ObjectType()
 export class IncomeSurplusReport {
-	@Field()
+	@Field(() => Date)
 	startDate!: Date;
 
-	@Field()
+	@Field(() => Date)
 	endDate!: Date;
 
 	@Field(() => Int)
@@ -59,19 +59,19 @@ export class IncomeSurplusReport {
 
 @ObjectType()
 export class IncomeSurplusReportItem {
-	@Field()
+	@Field(() => String)
 	id!: string;
 
-	@Field()
+	@Field(() => String)
 	type!: string;
 
-	@Field()
+	@Field(() => String)
 	name!: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	description?: string;
 
-	@Field()
+	@Field(() => Date)
 	valutaDate!: Date;
 
 	@Field(() => Int)
@@ -92,12 +92,12 @@ export class IncomeSurplusReportWhereInput {
 	@IsNotEmpty({
 		message: 'Start date must be provided',
 	})
-	@Field()
+	@Field(() => Date)
 	startDate!: Date;
 
 	@IsNotEmpty({
 		message: 'End date must be provided',
 	})
-	@Field()
+	@Field(() => Date)
 	endDate!: Date;
 }

@@ -25,7 +25,7 @@ export class CustomerResolver {
 	@Authorized()
 	@Query(() => [Customer])
 	async customers(
-		@Arg('where', { nullable: true }) where?: string,
+		@Arg('where', () => String, { nullable: true }) where?: string,
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		@Arg('skip', () => Int, { nullable: true }) skip?: number,
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -40,14 +40,18 @@ export class CustomerResolver {
 
 	@Authorized()
 	@Query(() => Customer, { nullable: true })
-	async customer(@Arg('id') id: string): Promise<Customer | null> {
+	async customer(
+		@Arg('id', () => String) id: string,
+	): Promise<Customer | null> {
 		const data = await this.repository.getById(id);
 		return data;
 	}
 
 	@Authorized()
 	@Mutation(() => Customer)
-	async createCustomer(@Arg('data') data: CustomerInput): Promise<Customer> {
+	async createCustomer(
+		@Arg('data', () => CustomerInput) data: CustomerInput,
+	): Promise<Customer> {
 		const customer = await this.repository.create();
 
 		if (!data.customerNumber) {
@@ -69,8 +73,8 @@ export class CustomerResolver {
 	@Authorized()
 	@Mutation(() => Customer)
 	async updateCustomer(
-		@Arg('id') id: string,
-		@Arg('data') data: CustomerInput,
+		@Arg('id', () => String) id: string,
+		@Arg('data', () => CustomerInput) data: CustomerInput,
 	): Promise<Customer> {
 		const customer = await this.repository.getById(id);
 		if (!customer) {
@@ -83,7 +87,7 @@ export class CustomerResolver {
 
 	@Authorized()
 	@Mutation(() => Customer)
-	async deleteCustomer(@Arg('id') id: string): Promise<Customer> {
+	async deleteCustomer(@Arg('id', () => String) id: string): Promise<Customer> {
 		const customer = await this.repository.getById(id);
 		if (!customer) {
 			throw new Error('Customer not found');

@@ -40,7 +40,8 @@ export class ExpenseResolver {
 	@Authorized()
 	@Query(() => [Expense])
 	async expenses(
-		@Arg('where', { nullable: true }) where?: ExpenseWhereInput,
+		@Arg('where', () => ExpenseWhereInput, { nullable: true })
+		where?: ExpenseWhereInput,
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		@Arg('skip', () => Int, { nullable: true }) skip?: number,
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -67,7 +68,9 @@ export class ExpenseResolver {
 
 	@Authorized()
 	@Mutation(() => Boolean)
-	async purgeExpenses(@Arg('confirm') confirm: string): Promise<boolean> {
+	async purgeExpenses(
+		@Arg('confirm', () => String) confirm: string,
+	): Promise<boolean> {
 		if (confirm !== 'confirm') {
 			throw new Error('Confirmation string is wrong');
 		}
@@ -83,13 +86,15 @@ export class ExpenseResolver {
 
 	@Authorized()
 	@Query(() => Expense)
-	async expense(@Arg('id') id: string): Promise<Expense | null> {
+	async expense(@Arg('id', () => String) id: string): Promise<Expense | null> {
 		return this.repository.getById(id);
 	}
 
 	@Authorized()
 	@Mutation(() => Expense)
-	async createExpense(@Arg('data') data: ExpenseInput): Promise<Expense> {
+	async createExpense(
+		@Arg('data', () => ExpenseInput) data: ExpenseInput,
+	): Promise<Expense> {
 		const expense = await this.repository.create();
 		expense.update(data);
 		await this.repository.save(expense);
@@ -111,8 +116,8 @@ export class ExpenseResolver {
 	@Authorized()
 	@Mutation(() => Expense)
 	async updateExpense(
-		@Arg('id') id: string,
-		@Arg('data') data: ExpenseInput,
+		@Arg('id', () => String) id: string,
+		@Arg('data', () => ExpenseInput) data: ExpenseInput,
 	): Promise<Expense> {
 		const { attachmentIds, ...newExpenseData } = data;
 		const expense = await this.repository.getById(id);
@@ -153,7 +158,7 @@ export class ExpenseResolver {
 
 	@Authorized()
 	@Mutation(() => Expense)
-	async deleteExpense(@Arg('id') id: string): Promise<Expense> {
+	async deleteExpense(@Arg('id', () => String) id: string): Promise<Expense> {
 		const expense = await this.repository.getById(id);
 		if (!expense) {
 			throw new Error('Expense not found');

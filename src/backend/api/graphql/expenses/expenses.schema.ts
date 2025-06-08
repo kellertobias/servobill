@@ -9,16 +9,16 @@ import { ExpenseEntity } from '@/backend/entities/expense.entity';
 
 @ObjectType()
 export class Expense implements FilteredObjectProperties<ExpenseEntity> {
-	@Field()
+	@Field(() => String)
 	id!: string;
 
-	@Field()
+	@Field(() => String)
 	name!: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	description?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	notes?: string;
 
 	@Field(() => Int)
@@ -27,13 +27,13 @@ export class Expense implements FilteredObjectProperties<ExpenseEntity> {
 	@Field(() => Int, { nullable: true })
 	taxCents?: number;
 
-	@Field()
+	@Field(() => Date)
 	expendedAt!: Date;
 
 	/**
 	 * The ID of the expense category assigned to this expense.
 	 */
-	@Field({
+	@Field(() => String, {
 		nullable: true,
 		description: 'The ID of the expense category assigned to this expense.',
 	})
@@ -48,10 +48,10 @@ export class Expense implements FilteredObjectProperties<ExpenseEntity> {
 	})
 	category?: ExpenseCategoryType;
 
-	@Field()
+	@Field(() => Date)
 	createdAt!: Date;
 
-	@Field()
+	@Field(() => Date)
 	updatedAt!: Date;
 
 	/**
@@ -66,13 +66,13 @@ export class ExpenseInput
 	implements Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>
 {
 	@IsString()
-	@Field()
+	@Field(() => String)
 	name!: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	description?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	notes?: string;
 
 	@IsInt()
@@ -84,10 +84,10 @@ export class ExpenseInput
 	@Field(() => Int, { nullable: true })
 	taxCents?: number;
 
-	@Field()
+	@Field(() => Date)
 	expendedAt!: Date;
 
-	@Field({
+	@Field(() => String, {
 		nullable: true,
 		description: 'The ID of the expense category assigned to this expense.',
 	})
@@ -102,7 +102,7 @@ export class ExpenseInput
 
 @InputType()
 export class ExpenseWhereInput {
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	search?: string;
 
 	@Field(() => Int, { nullable: true })

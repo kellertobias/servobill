@@ -10,13 +10,13 @@ import type { ProductEntity } from '@/backend/entities/product.entity';
  */
 @ObjectType()
 export class ProductExpense {
-	@Field()
+	@Field(() => String)
 	name!: string;
 
 	@Field(() => Int)
 	price!: number;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	categoryId?: string;
 }
 
@@ -25,34 +25,34 @@ export class ProductExpense {
  */
 @InputType()
 export class ProductExpenseInput {
-	@Field()
+	@Field(() => String)
 	name!: string;
 
 	@Field(() => Int)
 	price!: number;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	categoryId?: string;
 }
 
 @ObjectType()
 export class Product implements FilteredObjectProperties<ProductEntity> {
-	@Field()
+	@Field(() => String)
 	id!: string;
 
-	@Field()
+	@Field(() => String)
 	category!: string;
 
-	@Field()
+	@Field(() => String)
 	name!: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	description?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	notes?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	unit?: string;
 
 	@Field(() => Int)
@@ -64,10 +64,10 @@ export class Product implements FilteredObjectProperties<ProductEntity> {
 	@Field(() => [ProductExpense], { nullable: true })
 	expenses?: ProductExpense[];
 
-	@Field()
+	@Field(() => Date)
 	createdAt!: Date;
 
-	@Field()
+	@Field(() => Date)
 	updatedAt!: Date;
 }
 
@@ -76,16 +76,16 @@ export class ProductInput
 	implements Omit<Product, 'id' | 'createdAt' | 'updatedAt'>
 {
 	@IsString()
-	@Field()
+	@Field(() => String)
 	name!: string;
 
-	@Field()
+	@Field(() => String)
 	category!: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	description?: string;
 
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	notes?: string;
 
 	@Field(() => Int)
@@ -101,10 +101,10 @@ export class ProductInput
 @InputType()
 export class ProductWhereInput {
 	@IsOptional()
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	search?: string;
 
 	@IsOptional()
-	@Field({ nullable: true })
+	@Field(() => String, { nullable: true })
 	category?: string;
 }

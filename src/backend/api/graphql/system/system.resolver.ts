@@ -207,7 +207,6 @@ export class SystemResolver {
 		@Arg('categories', () => [ExpenseCategoryInputType])
 		categories: ExpenseCategoryInputType[],
 	): Promise<ExpenseCategoryType[]> {
-		console.log('Updating expense settings', categories);
 		const expenseSettings = await this.settingsRepository.getSetting(
 			ExpenseSettingsEntity,
 		);
