@@ -18,10 +18,11 @@ const requiredEnvVars = [
 	['OAUTH_CLIENT_ID'],
 ] as const satisfies string[][];
 
-const logGroups = {
-	api: '/apps/servobill/api',
-	events: '/apps/servobill/events',
-	crons: '/apps/servobill/crons',
+const logGroupPrefix = process.env.LOG_GROUP_PREFIX ?? 'servobill';
+const logGroupNames = {
+	api: `${logGroupPrefix}/api`,
+	events: `${logGroupPrefix}/events`,
+	crons: `${logGroupPrefix}/crons`,
 } as const;
 
 /**
@@ -103,7 +104,7 @@ type GetFunctionOptions = {
 	npmExternal?: string[];
 	timeout?: number;
 	memorySize?: number;
-	logGroup?: keyof typeof logGroups;
+	logGroup?: keyof typeof logGroupNames;
 };
 
 export default $config({
@@ -130,6 +131,7 @@ export default $config({
 
 		const path = await import('node:path');
 		const pulumi = await import('@pulumi/pulumi');
+		const aws = await import('@pulumi/aws');
 		const esbuildPluginTsc = (await import('esbuild-plugin-tsc')).default;
 		const { apiEndpoints, eventHandlerEndpoints } = await import(
 			'./stack/build-index'
@@ -167,8 +169,7 @@ export default $config({
 				link: options?.link,
 				logging: options?.logGroup
 					? {
-							logGroup: logGroups[options.logGroup],
-							retention: '2 months',
+							logGroup: logGroups[options.logGroup].name,
 						}
 					: undefined,
 				nodejs: {
@@ -222,8 +223,20 @@ export default $config({
 		// Create Resources:
 		// ===============================
 
-		// Import aws module dynamically
-		const aws = await import('@pulumi/aws');
+		const logGroups = {} as Record<
+			keyof typeof logGroupNames,
+			aws.cloudwatch.LogGroup
+		>;
+
+		for (const [name, logGroupName] of Object.entries(logGroupNames)) {
+			logGroups[name] = new aws.cloudwatch.LogGroup(name, {
+				name: logGroupName,
+				tags: {
+					app: 'servobill',
+				},
+				retentionInDays: 60,
+			});
+		}
 
 		const table = new sst.aws.Dynamo(`ServobillDataTable`, {
 			fields: tableDefinitions.electrodb.fields,
