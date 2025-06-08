@@ -20,6 +20,7 @@ const requiredEnvVars = [
 
 const logGroupPrefix = process.env.LOG_GROUP_PREFIX ?? 'servobill';
 const logGroupNames = {
+	web: `${logGroupPrefix}/web`,
 	api: `${logGroupPrefix}/api`,
 	events: `${logGroupPrefix}/events`,
 	crons: `${logGroupPrefix}/crons`,
@@ -174,6 +175,7 @@ export default $config({
 					: undefined,
 				nodejs: {
 					format: 'cjs',
+					sourcemap: true,
 					esbuild: {
 						plugins: [
 							esbuildPluginTsc({
@@ -370,6 +372,9 @@ export default $config({
 					`https://api.${requiredEnv.SITE_DOMAIN}`,
 				],
 			},
+			transform: {
+				logGroup: {name: `${logGroupPrefix}/api-gateway`, retentionInDays: 60},
+			},
 		});
 
 		apiEndpoints.forEach((endpoint) => {
@@ -397,6 +402,13 @@ export default $config({
 			environment: {
 				NEXT_PUBLIC_API_URL: api.url,
 			},
+			transform: {
+				server: {
+					logging: {
+						logGroup: logGroups.web.name,
+					},
+				},
+			}
 		});
 	},
 });
