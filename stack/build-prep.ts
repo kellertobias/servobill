@@ -14,6 +14,12 @@ const tsconfigNext = 'tsconfig.json';
 // original version: v123.0.1
 const chromiumVersion = 'v133.0.0';
 
+// this function is there for the sake of readability
+// in processes that might happen instantly, we want
+// the user to show that there is progress
+const wait = async () =>
+	await new Promise((resolve) => setTimeout(resolve, 500));
+
 /**
  * Checks if the current git working directory is clean
  * @returns {boolean} True if the working directory is clean, false otherwise
@@ -124,8 +130,8 @@ and then reset via \`git checkout -- . \``,
 
 	// Check git status before proceeding
 	process.stdout.write(' ℹ️ Checking git status');
-	// sleep for 1 second
-	await new Promise((resolve) => setTimeout(resolve, 1000));
+
+	await wait();
 	if (isGitClean()) {
 		process.stdout.write('\r ✅ Git working directory is clean\n\n');
 	} else {
@@ -181,15 +187,18 @@ and then reset via \`git checkout -- . \``,
 	}
 
 	process.stdout.write(' ℹ️ Preparing NextJS Build (removing api folder)');
+	await wait();
 	prepareNextBuild();
 	process.stdout.write('\r ✅ NextJS Build prepared: API folder removed\n\n');
 
 	process.stdout.write(' ℹ️ Preparing handler index files');
+	await wait();
 	for (const endpoint of [...apiEndpoints, ...eventHandlerEndpoints]) {
 		prepareHandlerExport(endpoint);
 	}
 	process.stdout.write('\r ✅ Handler index files prepared\n\n');
 
+	await wait();
 	console.log(' ✅ Preparation Complete. Ready to run deployment...');
 }
 
