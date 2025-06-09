@@ -20,6 +20,7 @@ export abstract class AbstractSettingsEntity {
 
 export class CompanyDataSetting extends AbstractSettingsEntity {
 	public static settingId = 'company-data';
+
 	public emailTemplate!: string;
 	public emailSubjectInvoices!: string;
 	public emailSubjectOffers!: string;
@@ -53,48 +54,50 @@ export class CompanyDataSetting extends AbstractSettingsEntity {
 	) {
 		console.log('CompanyDataSetting constructor', params);
 		super(params, saveInner);
+		Object.assign(this, params);
+
 		if (!this.emailTemplate) {
-			this.emailTemplate = '';
+			this.emailTemplate = params.emailTemplate || '';
 		}
 		if (!this.emailSubjectInvoices) {
-			this.emailSubjectInvoices = '';
+			this.emailSubjectInvoices = params.emailSubjectInvoices || '';
 		}
 		if (!this.emailSubjectOffers) {
-			this.emailSubjectOffers = '';
+			this.emailSubjectOffers = params.emailSubjectOffers || '';
 		}
 		if (!this.emailSubjectReminder) {
-			this.emailSubjectReminder = '';
+			this.emailSubjectReminder = params.emailSubjectReminder || '';
 		}
 		if (!this.emailSubjectWarning) {
-			this.emailSubjectWarning = '';
+			this.emailSubjectWarning = params.emailSubjectWarning || '';
 		}
 		if (!this.sendFrom) {
-			this.sendFrom = '';
+			this.sendFrom = params.sendFrom || '';
 		}
 		if (!this.replyTo) {
-			this.replyTo = '';
+			this.replyTo = params.replyTo || '';
 		}
 		if (!this.invoiceCompanyLogo) {
-			this.invoiceCompanyLogo = '';
+			this.invoiceCompanyLogo = params.invoiceCompanyLogo || '';
 		}
 		if (!this.emailCompanyLogo) {
-			this.emailCompanyLogo = '';
+			this.emailCompanyLogo = params.emailCompanyLogo || '';
 		}
 		if (!this.companyData) {
 			this.companyData = {
-				name: '',
-				street: '',
-				zip: '',
-				city: '',
-				taxId: '',
-				vatId: '',
-				email: '',
-				phone: '',
-				web: '',
+				name: params.companyData?.name || '',
+				street: params.companyData?.street || '',
+				zip: params.companyData?.zip || '',
+				city: params.companyData?.city || '',
+				taxId: params.companyData?.taxId || '',
+				vatId: params.companyData?.vatId || '',
+				email: params.companyData?.email || '',
+				phone: params.companyData?.phone || '',
+				web: params.companyData?.web || '',
 				bank: {
-					accountHolder: '',
-					iban: '',
-					bic: '',
+					accountHolder: params.companyData?.bank?.accountHolder || '',
+					iban: params.companyData?.bank?.iban || '',
+					bic: params.companyData?.bank?.bic || '',
 				},
 			};
 		}
@@ -133,10 +136,10 @@ export class PdfTemplateSetting extends AbstractSettingsEntity {
 	) {
 		super(params, saveInner);
 		if (!this.pdfTemplate) {
-			this.pdfTemplate = '';
+			this.pdfTemplate = params.pdfTemplate || '';
 		}
 		if (!this.pdfStyles) {
-			this.pdfStyles = '';
+			this.pdfStyles = params.pdfStyles || '';
 		}
 	}
 
@@ -165,13 +168,13 @@ class IncrementNumberBehavior {
 	) {
 		Object.assign(this, params);
 		if (!this.template) {
-			this.template = '';
+			this.template = params.template || '';
 		}
 		if (!this.incrementTemplate) {
-			this.incrementTemplate = '';
+			this.incrementTemplate = params.incrementTemplate || '';
 		}
 		if (!this.lastNumber) {
-			this.lastNumber = '';
+			this.lastNumber = params.lastNumber || '';
 		}
 	}
 
