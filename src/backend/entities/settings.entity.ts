@@ -52,7 +52,6 @@ export class CompanyDataSetting extends AbstractSettingsEntity {
 		params: Partial<ObjectProperties<CompanyDataSetting>>,
 		private saveInner: (data: string) => Promise<void>,
 	) {
-		console.log('CompanyDataSetting constructor', params);
 		super(params, saveInner);
 		Object.assign(this, params);
 

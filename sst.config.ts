@@ -340,7 +340,7 @@ export default $config({
 				...getEventFunction(endpoint, {
 					environment: { ...baseEnvironment },
 					layers: [layerVersionResource.arn],
-					link: [email, dataBucket, table],
+					link: [email, dataBucket, table, bus],
 					logGroup: 'events',
 				}),
 			);
@@ -389,7 +389,7 @@ export default $config({
 					},
 					npmInstall: npm.api.install,
 					npmExternal: npm.api.external,
-					link: [dataBucket, table],
+					link: [dataBucket, table, bus],
 					logGroup: 'api',
 				}),
 			);
