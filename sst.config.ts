@@ -346,6 +346,8 @@ export default $config({
 			);
 		});
 
+		baseEnvironment.EVENT_BUS_NAME = bus.name;
+
 		// @LATER: Create Cron Job (To send emails)
 		// new sst.aws.Cron('ServobillCron', {
 		// 	function: 'src/cron.handler',

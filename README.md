@@ -30,7 +30,6 @@ Planned until end of May 2025:
 - [X] Update to SST v3
 
 Planned until end of June 2025:
-- [ ] Fix bug where settings cannot be saved (Known bug, will be fixed in release that includes dockerized deployment)
 - [ ] Add support for dockerized deployments (WIP, mainly needs testing)
 - [ ] Add support for SMTP mail sending (instead of only allowing SES)
 - [ ] Add support for simple inventory management (expense can create inventory items, history on inventory items, etc.)
