@@ -14,11 +14,7 @@ export const importInvoices = async () => {
 
 	doToast({
 		promise: (async () => {
-			console.log(data);
-			console.log('Starting Rewriting data');
 			const invoices = await loadInvoiceImportData(data);
-
-			console.log('Data rewritten', invoices);
 
 			try {
 				await API.query({
@@ -31,7 +27,6 @@ export const importInvoices = async () => {
 				`),
 					variables: { invoices },
 				});
-				console.log('API call finished');
 			} catch (error) {
 				// eslint-disable-next-line no-console
 				console.error(error);

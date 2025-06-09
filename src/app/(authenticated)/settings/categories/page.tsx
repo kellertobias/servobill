@@ -125,7 +125,6 @@ export default function CategoriesSettingsPage() {
 
 	// Save categories to backend
 	const handleSave = async () => {
-		console.log('Saving categories', data);
 		doToast({
 			promise: (async () => {
 				await API.query({

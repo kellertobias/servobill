@@ -63,12 +63,6 @@ export const loadInvoiceImportData = async (data: {
 		(c) => !existingCustomerNumbers.has(c.customerNumber),
 	);
 
-	console.log('invoice import - customers', {
-		invoiceCustomers,
-		existingCustomers,
-		customersToCreate,
-	});
-
 	// now create the customers and add them to the existing customers
 	for (const customer of customersToCreate) {
 		const importedCustomer = await importSingleCustomer(customer);

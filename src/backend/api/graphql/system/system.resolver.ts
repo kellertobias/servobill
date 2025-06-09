@@ -52,11 +52,6 @@ export class SystemResolver {
 		company: CompanyDataSetting;
 		expenses?: ExpenseSettingsEntity;
 	}): SettingsResult {
-		console.log('mapping settings to response', {
-			invoices,
-			company,
-			expenses,
-		});
 		return {
 			// Data from company:
 			company: {
@@ -144,9 +139,6 @@ export class SystemResolver {
 	async updateSettings(
 		@Arg('data', () => SettingsInput) nextData: SettingsInput,
 	): Promise<SettingsResult> {
-		console.log('nextData', nextData);
-		console.log('nextData.company', nextData.company);
-
 		const genericSettings = await this.settingsRepository.getSetting(
 			InvoiceSettingsEntity,
 		);
@@ -174,8 +166,6 @@ export class SystemResolver {
 			nextData.defaultInvoiceDueDays || 28;
 		genericSettings.defaultInvoiceFooterText =
 			nextData.defaultInvoiceFooterText || 'Created by Servobill';
-
-		console.log('genericSettings', genericSettings);
 
 		await genericSettings.save();
 
@@ -212,7 +202,6 @@ export class SystemResolver {
 		companyData.companyData.bank.iban = nextData.company?.bankIban || '';
 		companyData.companyData.bank.bic = nextData.company?.bankBic || '';
 
-		console.log('companyData', companyData);
 		await companyData.save();
 
 		return this.mapInvoiceSettingsEntityToResponse({
