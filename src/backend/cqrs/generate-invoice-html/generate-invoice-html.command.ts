@@ -1,5 +1,5 @@
 import { InvoiceEntity } from '@/backend/entities/invoice.entity';
-import { PdfTemplateSetting } from '@/backend/entities/settings.entity';
+import { CompanyDataSetting } from '@/backend/entities/settings.entity';
 import { CqrsCommandType, ICqrsCommand } from '@/backend/services/cqrs.service';
 import { ObjectProperties } from '@/common/ts-helpers';
 
@@ -9,7 +9,7 @@ export class GenerateInvoiceHtmlCommand extends ICqrsCommand<
 		template: string;
 		styles: string;
 		logoUrl: string;
-		company: PdfTemplateSetting['companyData'];
+		company: CompanyDataSetting['companyData'];
 		invoice: Omit<
 			ObjectProperties<InvoiceEntity>,
 			| 'id'

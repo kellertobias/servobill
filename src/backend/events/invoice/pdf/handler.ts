@@ -13,7 +13,10 @@ import type {
 	InvoiceRepository,
 	SettingsRepository,
 } from '@/backend/repositories';
-import { PdfTemplateSetting } from '@/backend/entities/settings.entity';
+import {
+	CompanyDataSetting,
+	PdfTemplateSetting,
+} from '@/backend/entities/settings.entity';
 import { CqrsBus } from '@/backend/services/cqrs.service';
 import { CreateInvoicePdfCommand } from '@/backend/cqrs/generate-pdf/create-invoice-pdf.command';
 import { CreateInvoicePdfHandler } from '@/backend/cqrs/generate-pdf/create-invoice-pdf.handler';
@@ -38,6 +41,7 @@ export const handler: EventHandler = makeEventHandler(
 		});
 
 		const template = await settingsRepository.getSetting(PdfTemplateSetting);
+		const companyData = await settingsRepository.getSetting(CompanyDataSetting);
 
 		if (!template?.pdfTemplate) {
 			throw new Error('No pdf template found');
@@ -62,11 +66,11 @@ export const handler: EventHandler = makeEventHandler(
 		}
 		const { html } = await cqrs.execute(
 			new GenerateInvoiceHtmlCommand({
-				logoUrl: template.invoiceCompanyLogo,
+				logoUrl: companyData.invoiceCompanyLogo,
 				template: template.pdfTemplate,
 				styles: template.pdfStyles,
 				invoice,
-				company: template.companyData,
+				company: companyData.companyData,
 			}),
 		);
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars

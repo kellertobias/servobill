@@ -18,10 +18,8 @@ export abstract class AbstractSettingsEntity {
 	}
 }
 
-export class PdfTemplateSetting extends AbstractSettingsEntity {
-	public static settingId = 'stationary-template';
-	public pdfTemplate!: string;
-	public pdfStyles!: string;
+export class CompanyDataSetting extends AbstractSettingsEntity {
+	public static settingId = 'company-data';
 	public emailTemplate!: string;
 	public emailSubjectInvoices!: string;
 	public emailSubjectOffers!: string;
@@ -50,16 +48,10 @@ export class PdfTemplateSetting extends AbstractSettingsEntity {
 	public replyTo!: string;
 
 	constructor(
-		params: Partial<ObjectProperties<PdfTemplateSetting>>,
+		params: Partial<ObjectProperties<CompanyDataSetting>>,
 		private saveInner: (data: string) => Promise<void>,
 	) {
 		super(params, saveInner);
-		if (!this.pdfTemplate) {
-			this.pdfTemplate = '';
-		}
-		if (!this.pdfStyles) {
-			this.pdfStyles = '';
-		}
 		if (!this.emailTemplate) {
 			this.emailTemplate = '';
 		}
@@ -109,8 +101,6 @@ export class PdfTemplateSetting extends AbstractSettingsEntity {
 
 	public serializable() {
 		return {
-			pdfTemplate: this.pdfTemplate,
-			pdfStyles: this.pdfStyles,
 			emailTemplate: this.emailTemplate,
 			emailSubjectInvoices: this.emailSubjectInvoices,
 			emailSubjectOffers: this.emailSubjectOffers,
@@ -121,6 +111,38 @@ export class PdfTemplateSetting extends AbstractSettingsEntity {
 			sendFrom: this.sendFrom,
 			replyTo: this.replyTo,
 			companyData: this.companyData,
+		};
+	}
+
+	public save(): Promise<void> {
+		const data = CustomJson.toJson(this.serializable());
+
+		return this.saveInner(data);
+	}
+}
+
+export class PdfTemplateSetting extends AbstractSettingsEntity {
+	public static settingId = 'stationary-template';
+	public pdfTemplate!: string;
+	public pdfStyles!: string;
+
+	constructor(
+		params: Partial<ObjectProperties<PdfTemplateSetting>>,
+		private saveInner: (data: string) => Promise<void>,
+	) {
+		super(params, saveInner);
+		if (!this.pdfTemplate) {
+			this.pdfTemplate = '';
+		}
+		if (!this.pdfStyles) {
+			this.pdfStyles = '';
+		}
+	}
+
+	public serializable() {
+		return {
+			pdfTemplate: this.pdfTemplate,
+			pdfStyles: this.pdfStyles,
 		};
 	}
 

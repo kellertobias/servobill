@@ -2,7 +2,10 @@ import { InvoiceSendEvent } from './event';
 
 import { GenerateInvoiceHtmlHandler } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.handler';
 import { CreateInvoicePdfHandler } from '@/backend/cqrs/generate-pdf/create-invoice-pdf.handler';
-import { PdfTemplateSetting } from '@/backend/entities/settings.entity';
+import {
+	CompanyDataSetting,
+	PdfTemplateSetting,
+} from '@/backend/entities/settings.entity';
 import {
 	ATTACHMENT_REPOSITORY,
 	SETTINGS_REPOSITORY,
@@ -69,8 +72,10 @@ export class HandlerExecution {
 
 		const template =
 			await this.settingsRepository.getSetting(PdfTemplateSetting);
+		const companyData =
+			await this.settingsRepository.getSetting(CompanyDataSetting);
 
-		const pdf = await this.getPdf(invoice, template);
+		const pdf = await this.getPdf(invoice, template, companyData);
 
 		if (!pdf) {
 			throw new Error('No PDF');
@@ -82,17 +87,17 @@ export class HandlerExecution {
 			invoiceId: invoice.id,
 		});
 
-		await this.sendEmail(invoice, template, attachments, pdf);
+		await this.sendEmail(invoice, companyData, attachments, pdf);
 	}
 
 	private async sendEmail(
 		invoice: InvoiceEntity,
-		template: PdfTemplateSetting,
+		companyData: CompanyDataSetting,
 		attachments: { filename: string; content: Buffer }[],
 		pdf: Buffer,
 	) {
-		const subject = await this.getSubject(invoice, template);
-		const emailHtml = await this.getEmail(invoice, template);
+		const subject = await this.getSubject(invoice, companyData);
+		const emailHtml = await this.getEmail(invoice, companyData);
 		const redactedTo = `<redacted>@${invoice.customer.email
 			?.split('@')
 			.at(-1)}`;
@@ -105,9 +110,9 @@ export class HandlerExecution {
 
 		// Send email
 		const msg = await this.sesService.sendEmail({
-			from: template.sendFrom,
+			from: companyData.sendFrom,
 			to: invoice.customer.email!,
-			replyTo: template.replyTo,
+			replyTo: companyData.replyTo,
 			subject,
 			html: emailHtml,
 			attachments: [
@@ -138,9 +143,9 @@ export class HandlerExecution {
 		await this.invoiceRepository.save(invoice);
 
 		await this.sesService.sendEmail({
-			from: template.sendFrom,
-			to: template.replyTo,
-			replyTo: template.replyTo,
+			from: companyData.sendFrom,
+			to: companyData.replyTo,
+			replyTo: companyData.replyTo,
 			subject: `Invoice ${invoice.invoiceNumber} sent to Customer ${invoice.customer.name}`,
 			html: emailHtml,
 			attachments: [
@@ -199,25 +204,30 @@ export class HandlerExecution {
 		return extraAttachments;
 	}
 
-	private async getPdf(invoice: InvoiceEntity, template: PdfTemplateSetting) {
+	private async getPdf(
+		invoice: InvoiceEntity,
+		template: PdfTemplateSetting,
+		companyData: CompanyDataSetting,
+	) {
 		return await (invoice.pdf?.forContentHash !== invoice.contentHash ||
 		!invoice.pdf?.key
-			? this.getPdfFromGenerated(invoice, template)
+			? this.getPdfFromGenerated(invoice, template, companyData)
 			: this.getPdfFromStorage(invoice));
 	}
 
 	private async getPdfFromGenerated(
 		invoice: InvoiceEntity,
 		template: PdfTemplateSetting,
+		companyData: CompanyDataSetting,
 	) {
 		this.logger.info('No PDF. Generating', { invoiceId: invoice.id });
 		const { html } = await this.cqrsBus.execute(
 			new GenerateInvoiceHtmlCommand({
-				logoUrl: template.invoiceCompanyLogo,
+				logoUrl: companyData.invoiceCompanyLogo,
 				template: template.pdfTemplate,
 				styles: template.pdfStyles,
 				invoice,
-				company: template.companyData,
+				company: companyData.companyData,
 			}),
 		);
 		const {
@@ -263,38 +273,41 @@ export class HandlerExecution {
 
 	private async getSubject(
 		invoice: InvoiceEntity,
-		template: PdfTemplateSetting,
+		companyData: CompanyDataSetting,
 	) {
 		const subjects = {
-			invoice: template.emailSubjectInvoices,
-			offer: template.emailSubjectOffers,
-			reminder: template.emailSubjectReminder,
-			warning: template.emailSubjectWarning,
+			invoice: companyData.emailSubjectInvoices,
+			offer: companyData.emailSubjectOffers,
+			reminder: companyData.emailSubjectReminder,
+			warning: companyData.emailSubjectWarning,
 		};
 
 		const subjectTemplate =
 			subjects[invoice.type === InvoiceType.INVOICE ? 'invoice' : 'offer'];
 		const { html } = await this.cqrsBus.execute(
 			new GenerateInvoiceHtmlCommand({
-				logoUrl: template.emailCompanyLogo,
+				logoUrl: companyData.emailCompanyLogo,
 				noWrap: true,
 				template: subjectTemplate,
 				styles: '',
 				invoice,
-				company: template.companyData,
+				company: companyData.companyData,
 			}),
 		);
 		return html;
 	}
 
-	private async getEmail(invoice: InvoiceEntity, template: PdfTemplateSetting) {
+	private async getEmail(
+		invoice: InvoiceEntity,
+		companyData: CompanyDataSetting,
+	) {
 		const { html } = await this.cqrsBus.execute(
 			new GenerateInvoiceHtmlCommand({
-				logoUrl: template.emailCompanyLogo,
-				template: template.emailTemplate,
+				logoUrl: companyData.emailCompanyLogo,
+				template: companyData.emailTemplate,
 				styles: '',
 				invoice,
-				company: template.companyData,
+				company: companyData.companyData,
 			}),
 		);
 		return html;

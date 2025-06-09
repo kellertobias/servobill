@@ -18,6 +18,7 @@ import { type SettingsRepository } from '@/backend/repositories/settings/interfa
 import {
 	InvoiceSettingsEntity,
 	PdfTemplateSetting,
+	CompanyDataSetting,
 	ExpenseSettingsEntity,
 } from '@/backend/entities/settings.entity';
 import { EventBusService } from '@/backend/services/eventbus.service';
@@ -44,7 +45,7 @@ export class SystemResolver {
 
 	private mapInvoiceSettingsEntityToResponse(
 		data: InvoiceSettingsEntity,
-		emails: PdfTemplateSetting,
+		companyData: CompanyDataSetting,
 		expenseSettings?: ExpenseSettingsEntity,
 	): SettingsResult {
 		return {
@@ -59,31 +60,31 @@ export class SystemResolver {
 			customerNumbersIncrementTemplate:
 				data.customerNumbers.incrementTemplate || '',
 			customerNumbersLast: data.customerNumbers.lastNumber || '',
-			emailTemplate: emails.emailTemplate || '',
-			emailSubjectInvoices: emails.emailSubjectInvoices || '',
-			emailSubjectOffers: emails.emailSubjectOffers || '',
-			emailSubjectReminder: emails.emailSubjectReminder || '',
-			emailSubjectWarning: emails.emailSubjectWarning || '',
-			sendFrom: emails.sendFrom || '',
-			replyTo: emails.replyTo || '',
-			invoiceCompanyLogo: emails.invoiceCompanyLogo || '',
-			emailCompanyLogo: emails.emailCompanyLogo || '',
+			emailTemplate: companyData.emailTemplate || '',
+			emailSubjectInvoices: companyData.emailSubjectInvoices || '',
+			emailSubjectOffers: companyData.emailSubjectOffers || '',
+			emailSubjectReminder: companyData.emailSubjectReminder || '',
+			emailSubjectWarning: companyData.emailSubjectWarning || '',
+			sendFrom: companyData.sendFrom || '',
+			replyTo: companyData.replyTo || '',
+			invoiceCompanyLogo: companyData.invoiceCompanyLogo || '',
+			emailCompanyLogo: companyData.emailCompanyLogo || '',
 			offerValidityDays: data.offerValidityDays || 0,
 			defaultInvoiceDueDays: data.defaultInvoiceDueDays || 0,
 			defaultInvoiceFooterText: data.defaultInvoiceFooterText || '',
 			company: {
-				name: emails.companyData.name || '',
-				street: emails.companyData.street || '',
-				zip: emails.companyData.zip || '',
-				city: emails.companyData.city || '',
-				phone: emails.companyData.phone || '',
-				email: emails.companyData.email || '',
-				web: emails.companyData.web || '',
-				vatId: emails.companyData.vatId || '',
-				taxId: emails.companyData.taxId || '',
-				bankAccountHolder: emails.companyData.bank.accountHolder || '',
-				bankIban: emails.companyData.bank.iban || '',
-				bankBic: emails.companyData.bank.bic || '',
+				name: companyData.companyData.name || '',
+				street: companyData.companyData.street || '',
+				zip: companyData.companyData.zip || '',
+				city: companyData.companyData.city || '',
+				phone: companyData.companyData.phone || '',
+				email: companyData.companyData.email || '',
+				web: companyData.companyData.web || '',
+				vatId: companyData.companyData.vatId || '',
+				taxId: companyData.companyData.taxId || '',
+				bankAccountHolder: companyData.companyData.bank.accountHolder || '',
+				bankIban: companyData.companyData.bank.iban || '',
+				bankBic: companyData.companyData.bank.bic || '',
 			},
 			categories: expenseSettings
 				? (expenseSettings.categories || []).map((cat) => ({ ...cat }))
@@ -97,13 +98,14 @@ export class SystemResolver {
 		const data = await this.settingsRepository.getSetting(
 			InvoiceSettingsEntity,
 		);
-		const emails = await this.settingsRepository.getSetting(PdfTemplateSetting);
+		const companyData =
+			await this.settingsRepository.getSetting(CompanyDataSetting);
 		const expenseSettings = await this.settingsRepository.getSetting(
 			ExpenseSettingsEntity,
 		);
 		return this.mapInvoiceSettingsEntityToResponse(
 			data,
-			emails,
+			companyData,
 			expenseSettings,
 		);
 	}
@@ -158,45 +160,45 @@ export class SystemResolver {
 
 		await genericSettings.save();
 
-		const emailSettings =
-			await this.settingsRepository.getSetting(PdfTemplateSetting);
+		const companyData =
+			await this.settingsRepository.getSetting(CompanyDataSetting);
 
-		emailSettings.emailTemplate = nextData.emailTemplate || '';
-		emailSettings.emailSubjectInvoices =
+		companyData.emailTemplate = nextData.emailTemplate || '';
+		companyData.emailSubjectInvoices =
 			nextData.emailSubjectInvoices || 'Here is your invoice {{number}}';
-		emailSettings.emailSubjectOffers =
+		companyData.emailSubjectOffers =
 			nextData.emailSubjectOffers || 'Your offer {{number}} is ready';
-		emailSettings.emailSubjectReminder =
+		companyData.emailSubjectReminder =
 			nextData.emailSubjectReminder || 'Reminder: Invoice {{number}} is due';
-		emailSettings.emailSubjectWarning =
+		companyData.emailSubjectWarning =
 			nextData.emailSubjectWarning || 'Warning: Invoice {{number}} is over due';
 
-		emailSettings.sendFrom = nextData.sendFrom || 'no-reply@example.com';
-		emailSettings.replyTo = nextData.replyTo || 'no-reply@example.com';
+		companyData.sendFrom = nextData.sendFrom || 'no-reply@example.com';
+		companyData.replyTo = nextData.replyTo || 'no-reply@example.com';
 
-		emailSettings.invoiceCompanyLogo = nextData.invoiceCompanyLogo || '';
-		emailSettings.emailCompanyLogo = nextData.emailCompanyLogo || '';
+		companyData.invoiceCompanyLogo = nextData.invoiceCompanyLogo || '';
+		companyData.emailCompanyLogo = nextData.emailCompanyLogo || '';
 
-		emailSettings.companyData.name = nextData.company?.name || '';
-		emailSettings.companyData.street = nextData.company?.street || '';
-		emailSettings.companyData.zip = nextData.company?.zip || '';
-		emailSettings.companyData.city = nextData.company?.city || '';
-		emailSettings.companyData.phone = nextData.company?.phone || '';
-		emailSettings.companyData.email = nextData.company?.email || '';
-		emailSettings.companyData.web = nextData.company?.web || '';
-		emailSettings.companyData.vatId = nextData.company?.vatId || '';
-		emailSettings.companyData.taxId = nextData.company?.taxId || '';
-		emailSettings.companyData.bank.accountHolder =
+		companyData.companyData.name = nextData.company?.name || '';
+		companyData.companyData.street = nextData.company?.street || '';
+		companyData.companyData.zip = nextData.company?.zip || '';
+		companyData.companyData.city = nextData.company?.city || '';
+		companyData.companyData.phone = nextData.company?.phone || '';
+		companyData.companyData.email = nextData.company?.email || '';
+		companyData.companyData.web = nextData.company?.web || '';
+		companyData.companyData.vatId = nextData.company?.vatId || '';
+		companyData.companyData.taxId = nextData.company?.taxId || '';
+		companyData.companyData.bank.accountHolder =
 			nextData.company?.bankAccountHolder || '';
-		emailSettings.companyData.bank.iban = nextData.company?.bankIban || '';
-		emailSettings.companyData.bank.bic = nextData.company?.bankBic || '';
+		companyData.companyData.bank.iban = nextData.company?.bankIban || '';
+		companyData.companyData.bank.bic = nextData.company?.bankBic || '';
 
-		console.log('emailSettings', emailSettings);
-		await emailSettings.save();
+		console.log('companyData', companyData);
+		await companyData.save();
 
 		return this.mapInvoiceSettingsEntityToResponse(
 			genericSettings,
-			emailSettings,
+			companyData,
 		);
 	}
 
@@ -305,7 +307,8 @@ export class SystemResolver {
 		const numbers = await this.settingsRepository.getSetting(
 			InvoiceSettingsEntity,
 		);
-		const emails = await this.settingsRepository.getSetting(PdfTemplateSetting);
+		const companyData =
+			await this.settingsRepository.getSetting(CompanyDataSetting);
 
 		const key = `template-tests/${dayjs().format('YYMMDD-HHmmss')}.${
 			pdf ? 'pdf' : 'html'
@@ -319,8 +322,8 @@ export class SystemResolver {
 				styles,
 				key,
 				data: {
-					logo: emails.invoiceCompanyLogo,
-					company: emails.companyData,
+					logo: companyData.invoiceCompanyLogo,
+					company: companyData.companyData,
 					invoiceNumber: numbers.invoiceNumbers.lastNumber,
 					offerNumber: numbers.offerNumbers.lastNumber,
 					customerNumber: numbers.customerNumbers.lastNumber,
