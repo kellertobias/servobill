@@ -15,7 +15,7 @@ import {
 } from '@/backend/entities/settings.entity';
 import { prepareRepoTest } from '@/test/repo-test';
 
-const repoTestCases = prepareRepoTest({
+const repoTestCases = prepareRepoTest<SettingsRepository>({
 	name: 'Settings',
 	relational: SettingsRelationalRepository,
 	dynamodb: SettingsDynamodbRepository,
@@ -34,7 +34,7 @@ describe.each(repoTestCases)('$name (E2E)', ({ setup, onBeforeEach }) => {
 		const initial = new PdfTemplateSetting(
 			{
 				pdfTemplate: 'foo',
-				emailSubjectInvoices: 'bar',
+				pdfStyles: 'bar',
 			},
 			async () => {},
 		);
@@ -48,7 +48,7 @@ describe.each(repoTestCases)('$name (E2E)', ({ setup, onBeforeEach }) => {
 		const found = await repo.getSetting(PdfTemplateSetting);
 		expect(found).toBeInstanceOf(PdfTemplateSetting);
 		expect(found.pdfTemplate).toBe('foo');
-		expect(found.emailSubjectInvoices).toBe('bar');
+		expect(found.pdfStyles).toBe('bar');
 		// Update and save
 		found.pdfTemplate = 'baz';
 		await found.save();
