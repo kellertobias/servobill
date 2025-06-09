@@ -114,7 +114,7 @@ export class FileStorageServiceLocal implements FileStorageService {
 				bucket: urlObj.hostname,
 				key: urlObj.pathname.slice(1),
 			};
-		} catch (error) {
+		} catch {
 			return null;
 		}
 	}

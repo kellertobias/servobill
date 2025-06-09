@@ -7,6 +7,7 @@ export const requestFile = async () => {
 			input.type = 'file';
 
 			input.addEventListener('change', (e) => {
+				// eslint-disable-next-line no-console
 				console.log('file changed, start reading...', e);
 				// getting a hold of the file reference
 				const file = (e.target as HTMLInputElement)?.files?.[0];
@@ -23,6 +24,7 @@ export const requestFile = async () => {
 					if (typeof content !== 'string') {
 						return reject('Failed to read file');
 					}
+					// eslint-disable-next-line no-console
 					console.log('file read, resolving...', { length: content.length });
 					resolve(content);
 				});
@@ -31,6 +33,7 @@ export const requestFile = async () => {
 			input.click();
 		});
 	} catch (error) {
+		// eslint-disable-next-line no-console
 		console.error(error);
 		doToast({
 			type: 'danger',

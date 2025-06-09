@@ -17,6 +17,7 @@ import { DefaultContainer } from '@/common/di';
 export async function POST(request: NextRequest) {
 	try {
 		if (!process.env.IS_LOCAL) {
+			// eslint-disable-next-line no-console
 			console.error(
 				'Download route implementation not yet finished. Only available in local development until we have authentication checked.',
 			);

@@ -237,7 +237,7 @@ export class SystemResolver {
 		@Arg('fixExpensesForImport', () => Boolean, { nullable: true })
 		fixExpensesForImport?: boolean,
 	): Promise<ExpenseCategoryType[]> {
-		if (fixExpensesForImport && !categories.length) {
+		if (fixExpensesForImport && categories.length === 0) {
 			return [];
 		}
 

@@ -115,7 +115,7 @@ export class FileStorageServiceS3 implements FileStorageService {
 				bucket: urlObj.hostname.split('.')[0],
 				key: urlObj.pathname.slice(1),
 			};
-		} catch (error) {
+		} catch {
 			return null;
 		}
 	}
