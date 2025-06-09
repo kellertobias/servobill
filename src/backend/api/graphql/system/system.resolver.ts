@@ -43,51 +43,68 @@ export class SystemResolver {
 		private fileStorageService: FileStorageService,
 	) {}
 
-	private mapInvoiceSettingsEntityToResponse(
-		data: InvoiceSettingsEntity,
-		companyData: CompanyDataSetting,
-		expenseSettings?: ExpenseSettingsEntity,
-	): SettingsResult {
+	private mapInvoiceSettingsEntityToResponse({
+		invoices,
+		company,
+		expenses,
+	}: {
+		invoices: InvoiceSettingsEntity;
+		company: CompanyDataSetting;
+		expenses?: ExpenseSettingsEntity;
+	}): SettingsResult {
+		console.log('mapping settings to response', {
+			invoices,
+			company,
+			expenses,
+		});
 		return {
-			invoiceNumbersTemplate: data.invoiceNumbers.template || '',
-			invoiceNumbersIncrementTemplate:
-				data.invoiceNumbers.incrementTemplate || '',
-			invoiceNumbersLast: data.invoiceNumbers.lastNumber || '',
-			offerNumbersTemplate: data.offerNumbers.template || '',
-			offerNumbersIncrementTemplate: data.offerNumbers.incrementTemplate || '',
-			offerNumbersLast: data.offerNumbers.lastNumber || '',
-			customerNumbersTemplate: data.customerNumbers.template || '',
-			customerNumbersIncrementTemplate:
-				data.customerNumbers.incrementTemplate || '',
-			customerNumbersLast: data.customerNumbers.lastNumber || '',
-			emailTemplate: companyData.emailTemplate || '',
-			emailSubjectInvoices: companyData.emailSubjectInvoices || '',
-			emailSubjectOffers: companyData.emailSubjectOffers || '',
-			emailSubjectReminder: companyData.emailSubjectReminder || '',
-			emailSubjectWarning: companyData.emailSubjectWarning || '',
-			sendFrom: companyData.sendFrom || '',
-			replyTo: companyData.replyTo || '',
-			invoiceCompanyLogo: companyData.invoiceCompanyLogo || '',
-			emailCompanyLogo: companyData.emailCompanyLogo || '',
-			offerValidityDays: data.offerValidityDays || 0,
-			defaultInvoiceDueDays: data.defaultInvoiceDueDays || 0,
-			defaultInvoiceFooterText: data.defaultInvoiceFooterText || '',
+			// Data from company:
 			company: {
-				name: companyData.companyData.name || '',
-				street: companyData.companyData.street || '',
-				zip: companyData.companyData.zip || '',
-				city: companyData.companyData.city || '',
-				phone: companyData.companyData.phone || '',
-				email: companyData.companyData.email || '',
-				web: companyData.companyData.web || '',
-				vatId: companyData.companyData.vatId || '',
-				taxId: companyData.companyData.taxId || '',
-				bankAccountHolder: companyData.companyData.bank.accountHolder || '',
-				bankIban: companyData.companyData.bank.iban || '',
-				bankBic: companyData.companyData.bank.bic || '',
+				name: company.companyData.name || '',
+				street: company.companyData.street || '',
+				zip: company.companyData.zip || '',
+				city: company.companyData.city || '',
+				phone: company.companyData.phone || '',
+				email: company.companyData.email || '',
+				web: company.companyData.web || '',
+				vatId: company.companyData.vatId || '',
+				taxId: company.companyData.taxId || '',
+				bankAccountHolder: company.companyData.bank.accountHolder || '',
+				bankIban: company.companyData.bank.iban || '',
+				bankBic: company.companyData.bank.bic || '',
 			},
-			categories: expenseSettings
-				? (expenseSettings.categories || []).map((cat) => ({ ...cat }))
+			sendFrom: company.sendFrom || '',
+			replyTo: company.replyTo || '',
+
+			// will move into separate setting entity later, currently in company data
+			emailTemplate: company.emailTemplate || '',
+			emailSubjectInvoices: company.emailSubjectInvoices || '',
+			emailSubjectOffers: company.emailSubjectOffers || '',
+			emailSubjectReminder: company.emailSubjectReminder || '',
+			emailSubjectWarning: company.emailSubjectWarning || '',
+			invoiceCompanyLogo: company.invoiceCompanyLogo || '',
+			emailCompanyLogo: company.emailCompanyLogo || '',
+
+			// invoice and order settings
+			invoiceNumbersTemplate: invoices.invoiceNumbers.template || '',
+			invoiceNumbersIncrementTemplate:
+				invoices.invoiceNumbers.incrementTemplate || '',
+			invoiceNumbersLast: invoices.invoiceNumbers.lastNumber || '',
+			offerNumbersTemplate: invoices.offerNumbers.template || '',
+			offerNumbersIncrementTemplate:
+				invoices.offerNumbers.incrementTemplate || '',
+			offerNumbersLast: invoices.offerNumbers.lastNumber || '',
+			customerNumbersTemplate: invoices.customerNumbers.template || '',
+			customerNumbersIncrementTemplate:
+				invoices.customerNumbers.incrementTemplate || '',
+			customerNumbersLast: invoices.customerNumbers.lastNumber || '',
+			offerValidityDays: invoices.offerValidityDays || 0,
+			defaultInvoiceDueDays: invoices.defaultInvoiceDueDays || 0,
+			defaultInvoiceFooterText: invoices.defaultInvoiceFooterText || '',
+
+			// expenses
+			categories: expenses
+				? (expenses.categories || []).map((cat) => ({ ...cat }))
 				: undefined,
 		};
 	}
@@ -95,19 +112,21 @@ export class SystemResolver {
 	@Authorized()
 	@Query(() => SettingsResult)
 	async settings(): Promise<SettingsResult> {
-		const data = await this.settingsRepository.getSetting(
+		const invoices = await this.settingsRepository.getSetting(
 			InvoiceSettingsEntity,
 		);
-		const companyData =
+		const company =
 			await this.settingsRepository.getSetting(CompanyDataSetting);
-		const expenseSettings = await this.settingsRepository.getSetting(
+
+		const expenses = await this.settingsRepository.getSetting(
 			ExpenseSettingsEntity,
 		);
-		return this.mapInvoiceSettingsEntityToResponse(
-			data,
-			companyData,
-			expenseSettings,
-		);
+
+		return this.mapInvoiceSettingsEntityToResponse({
+			company,
+			invoices,
+			expenses,
+		});
 	}
 
 	@Authorized()
@@ -196,10 +215,10 @@ export class SystemResolver {
 		console.log('companyData', companyData);
 		await companyData.save();
 
-		return this.mapInvoiceSettingsEntityToResponse(
-			genericSettings,
-			companyData,
-		);
+		return this.mapInvoiceSettingsEntityToResponse({
+			company: companyData,
+			invoices: genericSettings,
+		});
 	}
 
 	@Authorized()
@@ -207,16 +226,17 @@ export class SystemResolver {
 	async updateTemplate(
 		@Arg('data', () => InvoiceTemplateInput) nextData: InvoiceTemplateInput,
 	): Promise<InvoiceTemplateResult> {
-		const emails = await this.settingsRepository.getSetting(PdfTemplateSetting);
+		const template =
+			await this.settingsRepository.getSetting(PdfTemplateSetting);
 
-		emails.pdfTemplate = nextData.pdfTemplate;
-		emails.pdfStyles = nextData.pdfStyles;
+		template.pdfTemplate = nextData.pdfTemplate;
+		template.pdfStyles = nextData.pdfStyles;
 
-		await emails.save();
+		await template.save();
 
 		return {
-			pdfTemplate: emails.pdfTemplate || '',
-			pdfStyles: emails.pdfStyles || '',
+			pdfTemplate: template.pdfTemplate || '',
+			pdfStyles: template.pdfStyles || '',
 		};
 	}
 
