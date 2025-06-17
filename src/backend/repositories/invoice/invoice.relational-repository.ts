@@ -93,6 +93,9 @@ export class InvoiceRelationalRepository
 			links: orm.links ? CustomJson.fromJson(orm.links) : undefined,
 			contentHash: orm.contentHash,
 			pdf: orm.pdf ? CustomJson.fromJson(orm.pdf) : undefined,
+			processedEventIds: orm.processedEventIds
+				? CustomJson.fromJson(orm.processedEventIds)
+				: undefined,
 		});
 	}
 
@@ -127,6 +130,7 @@ export class InvoiceRelationalRepository
 			links: CustomJson.toJson(domain.links) || '{}',
 			contentHash: domain.contentHash,
 			pdf: CustomJson.toJson(domain.pdf) || '',
+			processedEventIds: CustomJson.toJson(domain.processedEventIds) || '[]',
 		};
 	}
 

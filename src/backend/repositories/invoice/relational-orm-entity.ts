@@ -109,4 +109,8 @@ export class InvoiceOrmEntity {
 	/** Content hash */
 	@Column('text', { nullable: true })
 	contentHash?: string;
+
+	/** List of processed event IDs */
+	@Column('text', { nullable: true })
+	processedEventIds?: string;
 }

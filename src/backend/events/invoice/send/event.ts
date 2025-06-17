@@ -2,6 +2,9 @@ import { IsString } from 'class-validator';
 
 export class InvoiceSendEvent {
 	@IsString()
+	id!: string;
+
+	@IsString()
 	invoiceId!: string;
 
 	@IsString()

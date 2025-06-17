@@ -70,6 +70,15 @@ export class HandlerExecution {
 			throw new Error('Invoice has changed since send was requested');
 		}
 
+		// Check if this event has already been processed
+		if (invoice.hasProcessedEvent(event.id)) {
+			this.logger.info('Event already processed, skipping', {
+				invoiceId: invoice.id,
+				eventId: event.id,
+			});
+			return;
+		}
+
 		const template =
 			await this.settingsRepository.getSetting(PdfTemplateSetting);
 		const companyData =
@@ -88,6 +97,10 @@ export class HandlerExecution {
 		});
 
 		await this.sendEmail(invoice, companyData, attachments, pdf);
+
+		// Mark the event as processed after successful email send
+		invoice.markEventAsProcessed(event.id);
+		await this.invoiceRepository.save(invoice);
 	}
 
 	private async sendEmail(

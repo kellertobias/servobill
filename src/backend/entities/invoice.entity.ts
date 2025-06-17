@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { randomUUID } from 'crypto';
 
 import dayjs from 'dayjs';
 
@@ -68,10 +69,38 @@ export class InvoiceEntity extends DomainEntity {
 		offerId?: string;
 		invoiceId?: string;
 	};
+	/** Tracks which event IDs have been processed to prevent duplicate processing */
+	public processedEventIds?: string[];
 
 	constructor(props: Partial<Omit<InvoiceEntity, DomainEntityKeys>>) {
 		super();
 		Object.assign(this, props);
+		if (!this.processedEventIds) {
+			this.processedEventIds = [];
+		}
+	}
+
+	/**
+	 * Checks if an event has already been processed
+	 * @param eventId The ID of the event to check
+	 * @returns true if the event has been processed, false otherwise
+	 */
+	public hasProcessedEvent(eventId: string): boolean {
+		return this.processedEventIds?.includes(eventId) ?? false;
+	}
+
+	/**
+	 * Marks an event as processed
+	 * @param eventId The ID of the event to mark as processed
+	 */
+	public markEventAsProcessed(eventId: string): void {
+		if (!this.processedEventIds) {
+			this.processedEventIds = [];
+		}
+		if (!this.hasProcessedEvent(eventId)) {
+			this.processedEventIds.push(eventId);
+			this.updatedAt = new Date();
+		}
 	}
 
 	private updateContentHash(): void {
@@ -296,6 +325,7 @@ export class InvoiceEntity extends DomainEntity {
 					this.id,
 					'invoice.send',
 					new InvoiceSendEvent({
+						id: randomUUID().toString(),
 						invoiceId: this.id,
 						submissionId: submission.id,
 						forContentHash: this.contentHash,

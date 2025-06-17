@@ -92,6 +92,9 @@ export class InvoiceDynamodbRepository
 			links: CustomJson.fromJson(entity.links),
 			contentHash: entity.contentHash,
 			pdf: entity.pdf ? CustomJson.fromJson(entity.pdf) : undefined,
+			processedEventIds: entity.processedEventIds
+				? CustomJson.fromJson(entity.processedEventIds)
+				: undefined,
 		});
 	}
 
@@ -132,6 +135,8 @@ export class InvoiceDynamodbRepository
 			links: CustomJson.toJson(domainEntity.links) || '{}',
 			contentHash: domainEntity.contentHash,
 			pdf: CustomJson.toJson(domainEntity.pdf) || '',
+			processedEventIds:
+				CustomJson.toJson(domainEntity.processedEventIds) || '[]',
 		};
 	}
 

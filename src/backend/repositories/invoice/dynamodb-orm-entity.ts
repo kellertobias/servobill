@@ -98,6 +98,9 @@ export const entitySchema = DynamoDBService.getSchema({
 		contentHash: {
 			type: 'string',
 		},
+		processedEventIds: {
+			type: 'string',
+		},
 	},
 	indexes: {
 		byId: {
