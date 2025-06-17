@@ -72,14 +72,14 @@ export class HandlerExecution {
 
 		// Check if this event has already been processed
 		if (invoice.hasProcessedEvent(event.id)) {
-			this.logger.info('Event already processed, skipping', {
+			console.log('Event already processed, skipping', {
 				invoiceId: invoice.id,
 				eventId: event.id,
 			});
 			return;
 		} else {
 			// Mark the event as processed after successful email send
-			this.logger.info('Processing event - not yet sent.', {
+			console.log('Processing event - not yet sent.', {
 				invoiceId: invoice.id,
 				eventId: event.id,
 			});
