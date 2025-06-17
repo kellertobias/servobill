@@ -57,6 +57,9 @@ export class HandlerExecution {
 	}
 
 	async execute(event: InvoiceSendEvent) {
+		// randomly delay between 0 and 10 seconds to avoid overlapping sends
+		await new Promise((resolve) => setTimeout(resolve, Math.random() * 10000));
+
 		const invoice = await this.invoiceRepository.getById(event.invoiceId);
 		if (!invoice) {
 			throw new Error('Invoice not found');
