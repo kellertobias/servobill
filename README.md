@@ -30,22 +30,22 @@ Planned until end of May 2025:
 - [X] Update to SST v3
 
 Planned until end of June 2025:
+- [X] Add support for SMTP mail sending (instead of only allowing SES)
 - [ ] Add support for dockerized deployments (WIP, mainly needs testing)
-- [ ] Add support for SMTP mail sending (instead of only allowing SES)
 - [ ] Add support for simple inventory management (expense can create inventory items, history on inventory items, etc.)
 
 Planned until end of July 2025:
 - [ ] Add support for incoming digital invoices (e.g. X-Rechnung/ ZugFeRD)
 - [ ] Add AI Upload of invoices (e.g. from PDF) to automatically create expenses and inventory items
 - [ ] Add support for incoming invoice emails (either parse digital invoice or use AI to parse)
-- [ ] Add support for sending digital invoices (e.g. X-Rechnung/ ZugFeRD)
 
 Planned until end of August 2025:
+- [ ] Add support for sending digital invoices (e.g. X-Rechnung/ ZugFeRD)
 - [ ] Add local user management (e.g. for self-hosted deployments)
-- [ ] Add "Projects" assign inventory items to projects
 - [ ] Add automatic backups of data (e.g. via email or to S3)
 
 Long term:
+- [ ] Add "Projects" assign inventory items to projects
 - [ ] Add "Time Tracking" to Projects
 - [ ] Add offline mode for: time tracking, inventory items
 - [ ] Add S3 lifecycle rules to automatically archive old data (e.g. glacier to save on storage)
@@ -76,12 +76,8 @@ In theory we also support sqlite or any other database that is supported by type
 
 If you want to develop Servobill, you can do so by cloning this repository, installing the dependencis (`npm install`), starting the complimentary background services (`docker-compose up -d`), and running `npm run dev` in the root directory.
 
-You might need to setup a `secret-local-env.sh` file in the root directory with the following contents:
+You need to copy the .env.example file to .env and fill in the values.
 
-```bash
-export ALLOWED_EMAILS="<your gmail address>"
-export OAUTH_CLIENT_ID="<your google oauth client id>"
-```
 
 ### Environment overrides with `.env.dev`
 

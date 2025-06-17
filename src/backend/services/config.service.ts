@@ -107,8 +107,8 @@ export class ConfigService {
 				}
 			: {
 					type: EmailType.SES,
-					accessKeyId: process.env.SES_AWS_ACCESS_KEY,
-					secretAccessKey: process.env.SES_AWS_SECRET_ACCESS_KEY,
+					accessKeyId: process.env.SES_ACCESS_KEY_ID,
+					secretAccessKey: process.env.SES_SECRET_ACCESS_KEY,
 				};
 
 		this.fileStorage = process.env.UPLOAD_DIRECTORY
