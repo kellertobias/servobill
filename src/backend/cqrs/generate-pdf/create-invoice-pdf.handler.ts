@@ -33,7 +33,7 @@ export class CreateInvoicePdfHandler
 
 	@Span('CreateInvoicePdfHandler.generatePdf')
 	private async generatePdf(html: string, options: PDFOptions) {
-		const {default: chromium} = await import('@sparticuz/chromium');
+		const { default: chromium } = await import('@sparticuz/chromium');
 
 		let browser = null;
 		try {
@@ -41,8 +41,9 @@ export class CreateInvoicePdfHandler
 				executablePath:
 					process.env.CHROME_PATH ?? (await chromium.executablePath()),
 				headless: true,
-				ignoreHTTPSErrors: true,
-				defaultViewport: chromium.defaultViewport,
+				// ignoreHTTPSErrors: true,
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				defaultViewport: (chromium as any).defaultViewport,
 				args: [
 					...chromium.args,
 					'--headless',
@@ -64,7 +65,7 @@ export class CreateInvoicePdfHandler
 			await page.setContent(html);
 			await loaded;
 
-			return await page.pdf(options);
+			return (await page.pdf(options)) as unknown as Buffer;
 		} catch (error) {
 			this.logger.warn('Failed to generate pdf', { error });
 			throw error;
