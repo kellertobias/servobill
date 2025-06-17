@@ -7,11 +7,7 @@ import boxen from 'boxen';
 
 import { apiEndpoints, eventHandlerEndpoints } from './build-index';
 
-// Move src/app/api to src/app/_ignore_api
 const apiDir = 'src/app/api';
-
-// original version: v123.0.1
-const chromiumVersion = 'v133.0.0';
 
 // this function is there for the sake of readability
 // in processes that might happen instantly, we want
@@ -94,7 +90,6 @@ export default async function main() {
 This script will:
 - Make sure the git working directory is clean
 - Remove dependencies only needed for dockerized deployment
-- Prepare the chromium layer
 - prepare handler index files
 - remove development API implementation
 
@@ -137,38 +132,6 @@ and then reset via \`git checkout -- . \``,
 	execSync('npm r -D pg sqlite sqlite3');
 	execSync('npm r -S pg sqlite sqlite3');
 	process.stdout.write('\r ✅ Extra dependencies removed\n\n');
-
-	// prepare chromium layer
-	// check if layers/chromium exists
-	// if not, download it
-	// Check if chromium layer directory exists
-	if (fs.existsSync('./layers/chromium')) {
-		console.log(' ✅ Chromium layer exists\n');
-	} else {
-		process.stdout.write(' ⚠️ Chromium layer not found. Downloading...');
-
-		// Create layers directory if it doesn't exist
-		if (!fs.existsSync('./layers')) {
-			fs.mkdirSync('./layers');
-		}
-
-		// Download chromium layer
-		const chromiumUrl = `https://github.com/Sparticuz/chromium/releases/download/${chromiumVersion}/chromium-${chromiumVersion}-layer.zip`;
-		const zipPath = './layers/chromium.zip';
-
-		process.stdout.write('\r ℹ️ Downloading chromium layer...');
-		execSync(`wget ${chromiumUrl} -O ${zipPath}`);
-
-		// Unzip the file
-		process.stdout.write('\r ℹ️ Extracting chromium layer...');
-		execSync(`unzip ${zipPath} -d ./layers/chromium`);
-
-		// Remove zip file
-		process.stdout.write('\r ℹ️ Cleaning up...');
-		fs.unlinkSync(zipPath);
-
-		process.stdout.write('\r ✅ Chromium layer setup complete.\n\n');
-	}
 
 	process.stdout.write(' ℹ️ Preparing NextJS Build (removing api folder)');
 	await wait();

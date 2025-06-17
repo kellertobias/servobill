@@ -82,20 +82,10 @@ const npm = {
 	},
 };
 
-const defaultPermissions = [
-	{
-		actions: ['s3:GetObject'],
-		resources: ['*'],
-	},
-	{
-		actions: ['s3:PutObject', 's3:PutObjectAcl'],
-		resources: ['*'],
-	},
-	{
-		actions: ['secretsmanager:GetSecretValue'],
-		resources: ['*'],
-	},
-];
+const defaultPermissions: {
+	actions: string[];
+	resources: (string | Output<string>)[];
+}[] = [];
 
 type GetFunctionOptions = {
 	environment?: Record<string, Input<string>>;
@@ -106,6 +96,7 @@ type GetFunctionOptions = {
 	timeout?: number;
 	memorySize?: number;
 	logGroup?: keyof typeof logGroupNames;
+	description?: string;
 };
 
 export default $config({
@@ -141,10 +132,10 @@ export default $config({
 			'./stack/local/initialize/definitions/tables'
 		);
 
+		const runtime = aws.lambda.Runtime.NodeJS20dX;
+
 		// Validate environment variables before proceeding
 		const requiredEnv = validateEnvironmentVariables();
-
-		console.log('Required environment variables:', requiredEnv);
 
 		const getFunction = (
 			endpoint: ApiEndpoint | EventEndpoint,
@@ -156,9 +147,11 @@ export default $config({
 
 			return {
 				handler: `${endpoint.file}.${endpoint.handler}`,
-				description: `${descriptionPrefix} ${endpoint.path}`,
+				description:
+					options?.description ??
+					`Servobill ${descriptionPrefix} ${endpoint.path}`,
 				permissions: defaultPermissions,
-				runtime: 'nodejs20.x',
+				runtime,
 				layers: options?.layers,
 				environment: {
 					...options?.environment,
@@ -273,12 +266,6 @@ export default $config({
 			},
 		});
 
-		// Create Chromium Lambda Layer
-		const layerVersionResource = new aws.lambda.LayerVersion('MyLayer', {
-			layerName: 'sharp',
-			code: new pulumi.asset.FileArchive('layers/chromium'),
-		});
-
 		const baseEnvironment: Record<string, Input<string>> = {
 			TABLE_ELECTRODB: table.name,
 			SITE_DOMAIN: requiredEnv.SITE_DOMAIN,
@@ -287,25 +274,10 @@ export default $config({
 			ALLOWED_EMAILS: process.env.ALLOWED_EMAILS!,
 		};
 		// ===============================
-		// Create Background Workers:
+		// Create Remaining Resources:
 		// ===============================
 		// SNS Topic for Email Delivery
 		const deliveryTopic = new sst.aws.SnsTopic('ServobillDeliveryTopic');
-		deliveryTopic.subscribe(
-			'EmailDelivery',
-			getFunction(
-				{
-					file: 'src/backend/events/delivery/status/handler',
-					handler: 'handler',
-					eventType: 'delivery.status',
-				},
-				{
-					environment: { ...baseEnvironment },
-					link: [dataBucket, table],
-					logGroup: 'events',
-				},
-			),
-		);
 
 		// Create SES Email Identity
 		const email = requiredEnv.EMAIL_SENDER_IDENTITY
@@ -335,18 +307,96 @@ export default $config({
 		baseEnvironment.EMAIL_SENDER = email.sender;
 
 		const bus = new sst.aws.Bus('ServobillEventBus');
-		eventHandlerEndpoints.forEach((endpoint) => {
-			bus.subscribe(
-				...getEventFunction(endpoint, {
-					environment: { ...baseEnvironment },
-					layers: [layerVersionResource.arn],
-					link: [email, dataBucket, table, bus],
-					logGroup: 'events',
-				}),
-			);
+
+		// Add permissions to access resources
+		defaultPermissions.push({
+			actions: ['events:PutEvents'],
+			resources: [bus.arn],
+		});
+
+		defaultPermissions.push({
+			actions: ['sns:Publish'],
+			resources: [deliveryTopic.arn],
+		});
+
+		defaultPermissions.push({
+			actions: ['sns:Subscribe'],
+			resources: [deliveryTopic.arn],
+		});
+
+		defaultPermissions.push({
+			actions: ['s3:GetObject', 's3:PutObject', 's3:PutObjectAcl'],
+			resources: [dataBucket.arn],
+		});
+
+		defaultPermissions.push({
+			actions: ['dynamodb:*'],
+			resources: [table.arn],
 		});
 
 		baseEnvironment.EVENT_BUS_NAME = bus.name;
+
+		// ===============================
+		// Create Event Handlers:
+		// ===============================
+		deliveryTopic.subscribe(
+			'EmailDelivery',
+			getFunction(
+				{
+					file: 'src/backend/events/delivery/status/handler',
+					handler: 'handler',
+					eventType: 'delivery.status',
+				},
+				{
+					environment: { ...baseEnvironment },
+					link: [dataBucket, table],
+					logGroup: 'events',
+					description: 'Servobill Email Delivery Status Handler',
+				},
+			),
+		);
+
+		const eventHandlerFunctions: Record<
+			string,
+			{ fn: sst.aws.Function; name: string }
+		> = {};
+		for (const endpoint of eventHandlerEndpoints) {
+			const handlerFunctionDefinition = getFunction(endpoint, {
+				environment: { ...baseEnvironment },
+				link: [email, dataBucket, table, bus],
+				logGroup: 'events',
+				timeout: 300,
+				description: `Servobill Event Handler: ${endpoint.eventType}`,
+				npmInstall: ['@sparticuz/chromium'],
+			});
+
+			const eventName = endpoint.eventType
+				.split('.')
+				.map((part) => part[0].toUpperCase() + part.slice(1))
+				.join('');
+
+			const fn = new sst.aws.Function(
+				`Handler${eventName}`,
+				handlerFunctionDefinition,
+			);
+			eventHandlerFunctions[endpoint.eventType] = { fn, name: eventName };
+		}
+
+		for (const [eventType, { fn, name }] of Object.entries(
+			eventHandlerFunctions,
+		)) {
+			bus.subscribe(`Rule${name}`, fn.arn, {
+				pattern: {
+					detailType: [eventType],
+				},
+				transform: {
+					rule: {
+						name: `ServobillEventRule${name}`,
+						description: `Servobill Event Rule: ${eventType}`,
+					},
+				},
+			});
+		}
 
 		// @LATER: Create Cron Job (To send emails)
 		// new sst.aws.Cron('ServobillCron', {
@@ -396,7 +446,7 @@ export default $config({
 		});
 
 		// Frontend
-		new sst.aws.Nextjs('ServobillWeb', {
+		const web = new sst.aws.Nextjs('ServobillWeb', {
 			link: [dataBucket],
 			permissions: [...defaultPermissions],
 			domain: requiredEnv.SITE_DOMAIN,

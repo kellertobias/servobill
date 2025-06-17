@@ -1,6 +1,5 @@
 import puppeteer from 'puppeteer-core';
 import type { PDFOptions } from 'puppeteer-core';
-import chromium from '@sparticuz/chromium';
 import dayjs from 'dayjs';
 
 import { CreateInvoicePdfCommand } from './create-invoice-pdf.command';
@@ -34,6 +33,8 @@ export class CreateInvoicePdfHandler
 
 	@Span('CreateInvoicePdfHandler.generatePdf')
 	private async generatePdf(html: string, options: PDFOptions) {
+		const {default: chromium} = await import('@sparticuz/chromium');
+
 		let browser = null;
 		try {
 			browser = await puppeteer.launch({

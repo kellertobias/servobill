@@ -11,7 +11,7 @@ collector.yaml
 
 # next.js
 /.next/
-/out/
+/out/*
 
 /.emails/*
 # production
