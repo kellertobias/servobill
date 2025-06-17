@@ -77,6 +77,14 @@ export class HandlerExecution {
 				eventId: event.id,
 			});
 			return;
+		} else {
+			// Mark the event as processed after successful email send
+			this.logger.info('Processing event - not yet sent.', {
+				invoiceId: invoice.id,
+				eventId: event.id,
+			});
+			invoice.markEventAsProcessed(event.id);
+			await this.invoiceRepository.save(invoice);
 		}
 
 		const template =
@@ -97,10 +105,6 @@ export class HandlerExecution {
 		});
 
 		await this.sendEmail(invoice, companyData, attachments, pdf);
-
-		// Mark the event as processed after successful email send
-		invoice.markEventAsProcessed(event.id);
-		await this.invoiceRepository.save(invoice);
 	}
 
 	private async sendEmail(
