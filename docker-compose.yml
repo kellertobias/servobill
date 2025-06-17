@@ -1,8 +1,7 @@
+# this dockerfile spins up the dependencies for local development.
+# for production deployments, see the deploy/dockerized/docker-compose.yml file.
 version: '3.8'
-
-
 services:
-
   servobill-init:
     image: node:lts
     container_name: 'servobill-init'
@@ -13,7 +12,6 @@ services:
       AWS_ACCESS_KEY_ID: AKIAIOSFODNN7EXAMPLE
       AWS_SECRET_ACCESS_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
       ENDPOINT_S3: http://servobill-s3:9000
-      ENDPOINT_SQS: http://servobill-sqs:9324
       ENDPOINT_DYNAMODB: http://servobill-dynamodb:9321
       ENDPOINT_SES: http://servobill-ses:9330
     volumes:
@@ -23,32 +21,8 @@ services:
     depends_on:
       # - servobill-dynamodb
       - servobill-s3
-      - servobill-sqs
     working_dir: /src
     entrypoint: /bin/bash -c "export NODE_ENV=development && echo 'npm install' && npm i && echo 'npm install done' && echo 'Starting Script' && npm run start"
-
-  # queue-workers:
-  #   # Make sure you have your docker credentials stored in you docker config file
-  #   # and not in docker desktop or the OSX keychain.
-  #   # Otherwise this server won't have access to the required docker images.
-  #   build:
-  #     context: .
-  #     dockerfile: workers/lambda/Dockerfile.dev
-  #   container_name: 'queue-workers'
-  #   # # Not enabled as this image might fail to start depending on the configuration
-  #   # # and is not required for the main functionality.
-  #   # restart: unless-stopped
-  #   environment:
-  #     AWS_ACCESS_KEY_ID: AKIAIOSFODNN7EXAMPLE
-  #     AWS_SECRET_ACCESS_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-  #     ENDPOINT_S3: http://s3:9000
-  #     ENDPOINT_SQS: http://sqs:9324
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #     - ./stack/local/queue:/src
-
-  #   working_dir: /src
-  #   command: npm run start
 
   servobill-dynamodb:
     command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data -port 9321"
@@ -79,14 +53,15 @@ services:
     volumes:
       - s3-data:/data
 
-  # === SQS Simulation - Checkout: https://hub.docker.com/r/roribio16/alpine-sqs/
-  servobill-sqs:
-    image: softwaremill/elasticmq-native
-    restart: unless-stopped
-    container_name: 'servobill-sqs'
-    ports:
-      - "9324:9324"
-      - "9325:9325"
+  # Enable this once we need SQS
+  # # === SQS Simulation - Checkout: https://hub.docker.com/r/roribio16/alpine-sqs/
+  # servobill-sqs:
+  #   image: softwaremill/elasticmq-native
+  #   restart: unless-stopped
+  #   container_name: 'servobill-sqs'
+  #   ports:
+  #     - "9324:9324"
+  #     - "9325:9325"
 
   servobill-ses:
     image: bh42/aws-ses-local

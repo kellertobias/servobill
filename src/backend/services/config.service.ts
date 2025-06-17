@@ -25,7 +25,7 @@ export type EmailConfig =
 @Service(CONFIG_SERVICE)
 export class ConfigService {
 	public readonly endpoints: Record<
-		's3' | 'dynamodb' | 'sqs' | 'eventbridge' | 'ses',
+		's3' | 'dynamodb' | 'eventbridge' | 'ses',
 		string | undefined
 	>;
 	public readonly tables: {
@@ -71,7 +71,6 @@ export class ConfigService {
 		this.endpoints = {
 			dynamodb: process.env.ENDPOINT_DYNAMODB,
 			s3: process.env.ENDPOINT_S3,
-			sqs: process.env.ENDPOINT_SQS,
 			eventbridge: process.env.ENDPOINT_EVENTBRIDGE,
 			ses: process.env.ENDPOINT_SES,
 		};

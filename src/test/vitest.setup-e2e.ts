@@ -23,7 +23,6 @@ DefaultContainer.bind(CONFIG_SERVICE).toConstantValue({
 	endpoints: {
 		dynamodb: `http://localhost:8000`,
 		s3: undefined,
-		sqs: undefined,
 		eventbridge: undefined,
 		ses: undefined,
 	},
@@ -87,7 +86,6 @@ beforeAll(async () => {
 		endpoints: {
 			dynamodb: `http://localhost:${DYNAMODB_PORT}`,
 			s3: undefined,
-			sqs: undefined,
 			eventbridge: undefined,
 			ses: undefined,
 		},

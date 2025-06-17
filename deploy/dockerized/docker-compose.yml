@@ -1,7 +1,7 @@
 version: '3.8'
 
 # Dockerized deployment for Servobill
-# Includes: MinIO (S3), Postgres, Queue Workers, Next.js App
+# Includes: Postgres, Queue Workers, Next.js App
 
 services:
   # ---
@@ -22,69 +22,53 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
-  # === MinIO (S3-compatible storage) ===
-  minio:
-    image: quay.io/minio/minio
-    restart: unless-stopped
-    container_name: servobill-minio
-    environment:
-      MINIO_ACCESS_KEY: servobill
-      MINIO_SECRET_KEY: servobillsecret
-      MINIO_API_CORS_ALLOW_ORIGIN: '*'
-    ports:
-      - "9000:9000" # API Port
-      - "9320:9320" # Web Console Port
-    command: server /data --console-address ":9320"
-    volumes:
-      - minio-data:/data
-
   # === Queue Workers ===
   queue-workers:
     build:
       context: ../..
-      dockerfile: workers/lambda/Dockerfile.dev
+      dockerfile: deploy/dockerized/BackgroundJobs.Dockerfile
     container_name: servobill-queue-workers
     environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_USER: servobill
-      POSTGRES_PASSWORD: servobill
-      POSTGRES_DB: servobill
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_ACCESS_KEY: servobill
-      MINIO_SECRET_KEY: servobillsecret
+      # Inter service communication/configuration
+      POSTGRES_URL: postgres://servobill:servobill@postgres:5432/servobill
+      ENDPOINT_EVENTBRIDGE: http://queue-workers:9326
+
+      # Email related settings
+      SMTP_HOST: please-set
+      SMTP_PORT: please-set
+      SMTP_USER: please-set
+      SMTP_PASSWORD: please-set
+      SMTP_FROM: please-set
+      SMTP_FROM_NAME: please-set
     depends_on:
       - postgres
-      - minio
-    working_dir: /src
-    command: npm run start
+    working_dir: /app
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ../../stack/local/queue:/src
+      - s3-data:/data
 
   # === Next.js Application ===
   app:
     build:
       context: ../..
-      dockerfile: Dockerfile
+      dockerfile: deploy/dockerized/App.Dockerfile
     container_name: servobill-app
     environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_USER: servobill
-      POSTGRES_PASSWORD: servobill
-      POSTGRES_DB: servobill
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_ACCESS_KEY: servobill
-      MINIO_SECRET_KEY: servobillsecret
+      # Inter service communication/configuration
+      POSTGRES_URL: postgres://servobill:servobill@postgres:5432/servobill
+      ENDPOINT_EVENTBRIDGE: http://queue-workers:9326
+
+      # Authentication related settings
+      ALLOWED_EMAILS: please-set
+      OAUTH_CLIENT_ID: please-set
+      JWT_SECRET: please-set
+
     ports:
       - "3000:3000"
     depends_on:
       - postgres
-      - minio
-    working_dir: /app
-    command: npm run start
     volumes:
-      - ../../src:/app
+      - s3-data:/data
 
 volumes:
   postgres-data: {}
-  minio-data: {} 
+  s3-data: {} 
