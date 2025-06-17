@@ -70,23 +70,6 @@ export class HandlerExecution {
 			throw new Error('Invoice has changed since send was requested');
 		}
 
-		// Check if this event has already been processed
-		if (invoice.hasProcessedEvent(event.id)) {
-			console.log('Event already processed, skipping', {
-				invoiceId: invoice.id,
-				eventId: event.id,
-			});
-			return;
-		} else {
-			// Mark the event as processed after successful email send
-			console.log('Processing event - not yet sent.', {
-				invoiceId: invoice.id,
-				eventId: event.id,
-			});
-			invoice.markEventAsProcessed(event.id);
-			await this.invoiceRepository.save(invoice);
-		}
-
 		const template =
 			await this.settingsRepository.getSetting(PdfTemplateSetting);
 		const companyData =
@@ -104,15 +87,44 @@ export class HandlerExecution {
 			invoiceId: invoice.id,
 		});
 
-		await this.sendEmail(invoice, companyData, attachments, pdf);
+		await this.invoiceRepository.save(invoice);
+		await this.sendEmail(event.id, invoice, companyData, attachments, pdf);
 	}
 
 	private async sendEmail(
+		eventId: string,
 		invoice: InvoiceEntity,
 		companyData: CompanyDataSetting,
 		attachments: { filename: string; content: Buffer }[],
 		pdf: Buffer,
 	) {
+		// Get invoice entity again to make sure it isn't already sent.
+		const invoiceEntity = await this.invoiceRepository.getById(invoice.id);
+		if (!invoiceEntity || invoiceEntity.id !== invoice.id) {
+			throw new Error('Invoice not found');
+		}
+
+		// Check if this event has already been processed
+		if (invoiceEntity.hasProcessedEvent(eventId)) {
+			console.log('Event already processed, skipping', {
+				invoiceId: invoice.id,
+				eventId,
+			});
+			return;
+		}
+
+		// Mark the event as processed after successful email send
+		console.log('Processing event - not yet sent.', {
+			invoiceId: invoice.id,
+			eventId,
+		});
+
+		// mark the original invoice as processed and save it.
+		// we do this to the original invoice since otherwise
+		// saving the invoice later will override it.
+		invoice.markEventAsProcessed(eventId);
+		await this.invoiceRepository.save(invoice);
+
 		const subject = await this.getSubject(invoice, companyData);
 		const emailHtml = await this.getEmail(invoice, companyData);
 		const redactedTo = `<redacted>@${invoice.customer.email
