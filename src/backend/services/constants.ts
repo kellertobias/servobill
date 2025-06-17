@@ -8,3 +8,11 @@ export enum FileStorageType {
 	S3 = 's3',
 	LOCAL = 'local',
 }
+
+/**
+ * Enum defining the available email service types
+ */
+export enum EmailType {
+	SES = 'SES',
+	SMTP = 'SMTP',
+}

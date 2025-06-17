@@ -1,38 +1,60 @@
 import * as ses from '@aws-sdk/client-ses';
 import nodemailer from 'nodemailer';
 import SESTransport from 'nodemailer/lib/ses-transport';
+import SMTPTransport from 'nodemailer/lib/smtp-transport';
 
 import { Span } from '../instrumentation';
 
 import type { ConfigService } from './config.service';
 import { CONFIG_SERVICE } from './di-tokens';
+import { EmailType } from './constants';
 
 import { Inject, Service } from '@/common/di';
 
+/**
+ * Service for sending emails using either AWS SES or SMTP
+ */
 @Service()
 export class SESService {
-	private client: ses.SESClient;
+	private client: ses.SESClient | undefined;
+	private transporter: nodemailer.Transporter;
 
 	constructor(
 		@Inject(CONFIG_SERVICE) private readonly configuration: ConfigService,
 	) {
-		const sesOptions = {
-			...(this.configuration.endpoints.ses
-				? {
-						endpoint: this.configuration.endpoints.ses,
-					}
-				: {}),
-			region: this.configuration.region,
-			credentials:
-				this.configuration.ses.accessKeyId &&
-				this.configuration.ses.secretAccessKey
+		if (this.configuration.email.type === EmailType.SES) {
+			const sesOptions = {
+				...(this.configuration.endpoints.ses
 					? {
-							accessKeyId: this.configuration.ses.accessKeyId,
-							secretAccessKey: this.configuration.ses.secretAccessKey,
+							endpoint: this.configuration.endpoints.ses,
 						}
-					: undefined,
-		};
-		this.client = new ses.SESClient(sesOptions);
+					: {}),
+				region: this.configuration.region,
+				credentials:
+					this.configuration.email.accessKeyId &&
+					this.configuration.email.secretAccessKey
+						? {
+								accessKeyId: this.configuration.email.accessKeyId,
+								secretAccessKey: this.configuration.email.secretAccessKey,
+							}
+						: undefined,
+			};
+			this.client = new ses.SESClient(sesOptions);
+			this.transporter = nodemailer.createTransport({
+				SES: { ses: this.client, aws: ses },
+			});
+		} else {
+			// SMTP configuration
+			this.transporter = nodemailer.createTransport({
+				host: this.configuration.email.host,
+				port: this.configuration.email.port,
+				secure: this.configuration.email.port === 465,
+				auth: {
+					user: this.configuration.email.user,
+					pass: this.configuration.email.password,
+				},
+			} as SMTPTransport.Options);
+		}
 	}
 
 	@Span('SESService.sendEmail')
@@ -53,15 +75,17 @@ export class SESService {
 			filename: string;
 			content: Buffer | string;
 		}[];
-	}): Promise<SESTransport.SentMessageInfo> {
-		const transporter = nodemailer.createTransport({
-			SES: { ses: this.client, aws: ses },
-		});
+	}): Promise<SESTransport.SentMessageInfo | SMTPTransport.SentMessageInfo> {
+		// If using SMTP and no from address is provided, use the configured default
+		const fromAddress =
+			this.configuration.email.type === EmailType.SMTP && !from
+				? this.configuration.email.from
+				: from;
 
 		return new Promise((resolve, reject) => {
-			transporter.sendMail(
+			this.transporter.sendMail(
 				{
-					from,
+					from: fromAddress,
 					to,
 					subject,
 					replyTo,

@@ -1,7 +1,26 @@
 import { CONFIG_SERVICE } from './di-tokens';
-import { DatabaseType, FileStorageType } from './constants';
+import { DatabaseType, FileStorageType, EmailType } from './constants';
 
 import { Service } from '@/common/di';
+
+/**
+ * Type for email configuration, supporting both SES and SMTP
+ */
+export type EmailConfig =
+	| {
+			type: EmailType.SES;
+			accessKeyId?: string;
+			secretAccessKey?: string;
+	  }
+	| {
+			type: EmailType.SMTP;
+			host: string;
+			port: number;
+			user: string;
+			password: string;
+			from: string;
+			fromName?: string;
+	  };
 
 @Service(CONFIG_SERVICE)
 export class ConfigService {
@@ -25,10 +44,7 @@ export class ConfigService {
 	public readonly eventBusName: string;
 	public readonly buckets: { files: string };
 	public readonly isLocal = process.env.IS_OFFLINE === 'true';
-	public readonly ses: {
-		accessKeyId: string | undefined;
-		secretAccessKey: string | undefined;
-	};
+	public readonly email: EmailConfig;
 
 	public readonly fileStorage:
 		| {
@@ -77,10 +93,23 @@ export class ConfigService {
 		this.buckets = {
 			files: process.env.BUCKET_FILES!,
 		};
-		this.ses = {
-			accessKeyId: process.env.SES_ACCESS_KEY_ID,
-			secretAccessKey: process.env.SES_SECRET_ACCESS_KEY,
-		};
+
+		// Configure email settings based on environment variables
+		this.email = process.env.SMTP_HOST
+			? {
+					type: EmailType.SMTP,
+					host: process.env.SMTP_HOST,
+					port: Number.parseInt(process.env.SMTP_PORT || '587', 10),
+					user: process.env.SMTP_USER!,
+					password: process.env.SMTP_PASSWORD!,
+					from: process.env.SMTP_FROM!,
+					fromName: process.env.SMTP_FROM_NAME,
+				}
+			: {
+					type: EmailType.SES,
+					accessKeyId: process.env.SES_AWS_ACCESS_KEY,
+					secretAccessKey: process.env.SES_AWS_SECRET_ACCESS_KEY,
+				};
 
 		this.fileStorage = process.env.UPLOAD_DIRECTORY
 			? {
