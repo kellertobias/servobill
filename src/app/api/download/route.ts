@@ -1,7 +1,12 @@
+import 'reflect-metadata';
+
 import { NextRequest } from 'next/server';
 
-import { DownloadHelper, NotFoundError } from './download-service';
-import { NotConfiguredError } from './download-service';
+import {
+	DownloadHelper,
+	NotFoundError,
+	NotConfiguredError,
+} from './download-service';
 
 import { DefaultContainer } from '@/common/di';
 

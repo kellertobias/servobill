@@ -1,0 +1,16 @@
+node_modules
+.next
+.env
+.env.*
+templates
+event-queue.db
+sst.config.ts
+sst-env.d.ts
+.git
+.gitignore
+tsconfig.sst.json
+src/test
+docs
+.cursor
+.vscode
+.github

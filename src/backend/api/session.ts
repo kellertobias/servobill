@@ -6,7 +6,7 @@ import {
 	APIGatewayProxyStructuredResultV2,
 	Context,
 } from 'aws-lambda';
-import cookie from 'cookie';
+import * as cookie from 'cookie';
 import jwt from 'jsonwebtoken';
 
 import { Logger } from '../services/logger.service';
@@ -95,12 +95,12 @@ export type JwtToken = Pick<
 } & { dat?: Session | null };
 
 const getRawTokenFromCookies = (
-	cookies: Record<string, string>,
+	cookies: Record<string, string | undefined>,
 	type: 'SESSION' | 'REFRESH',
 ): string | undefined => {
-	return type === 'SESSION'
-		? cookies[SESSION_COOKIE_NAME]
-		: cookies[REFRESH_COOKIE_NAME];
+	const cookieName =
+		type === 'SESSION' ? SESSION_COOKIE_NAME : REFRESH_COOKIE_NAME;
+	return cookies[cookieName];
 };
 
 const getRawTokenFromEvent = (

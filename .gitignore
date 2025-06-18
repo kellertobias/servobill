@@ -48,6 +48,8 @@ next-env.d.ts
 # open-next
 .open-next
 
+stack/build-index/**/*.js
+
 src/common/gql
 src/backend/api/index.ts
 event-queue.db

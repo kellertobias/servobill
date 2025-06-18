@@ -1,14 +1,22 @@
-# Use Node.js as base image with security updates
-FROM node:20-slim-bullseye
+# Use Node.js Alpine as base image with security updates
+FROM node:20-alpine
 
 # Install Chromium and required dependencies with security fixes
-RUN apt-get update && apt-get install -y \
+RUN apk add --no-cache \
     chromium \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+    nss \
+    freetype \
+    freetype-dev \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    nodejs \
+    yarn
 
 # Set Chrome path environment variable
-ENV CHROME_PATH=/usr/bin/chromium
+ENV CHROME_PATH=/usr/bin/chromium-browser
+ENV CHROME_BIN=/usr/bin/chromium-browser
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
 # Create app directory
 WORKDIR /app

@@ -5,7 +5,7 @@
 import '@/backend/repositories';
 
 import { APIGatewayProxyEventV2 } from 'aws-lambda';
-import cookie from 'cookie';
+import * as cookie from 'cookie';
 
 import { SessionLambdaContext, withSession } from '../session';
 
@@ -23,7 +23,7 @@ const contextBuilder = async ({
 }): Promise<GqlContext> => {
 	const cookies = cookie.parse(
 		event.cookies?.join?.(';') || event.headers.cookie || '',
-	);
+	) as Record<string, string>;
 
 	return {
 		http: {

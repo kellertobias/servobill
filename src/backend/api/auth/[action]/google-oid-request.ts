@@ -1,7 +1,7 @@
 import querystring from 'node:querystring';
 
 // eslint-disable-next-line import/no-extraneous-dependencies
-import cookies from 'cookie';
+import * as cookies from 'cookie';
 
 import { OAUTH_CLIENT_ID, OAUTH_ENDPOINT } from '../config';
 import { getSiteUrl } from '../../helpers';

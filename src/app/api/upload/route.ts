@@ -1,9 +1,10 @@
+import 'reflect-metadata';
+
 import { NextRequest } from 'next/server';
 
 import * as multipart from 'parse-multipart-data';
 
-import { UploadHelper } from './upload-service';
-import { NotConfiguredError } from './upload-service';
+import { UploadHelper, NotConfiguredError } from './upload-service';
 
 import { DefaultContainer } from '@/common/di';
 

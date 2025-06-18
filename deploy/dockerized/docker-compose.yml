@@ -1,7 +1,7 @@
 version: '3.8'
 
 # Dockerized deployment for Servobill
-# Includes: Postgres, Queue Workers, Next.js App
+# Includes: Postgres, Queue Workers, Next.js App, FusionAuth
 
 services:
   # ---
@@ -14,23 +14,47 @@ services:
     restart: unless-stopped
     container_name: servobill-postgres
     environment:
-      POSTGRES_USER: servobill
-      POSTGRES_PASSWORD: servobill
-      POSTGRES_DB: servobill
+      POSTGRES_USER: servobill-user
+      POSTGRES_PASSWORD: servobill-password
+      POSTGRES_DB: servobill-db
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
+
+
+  # # === FusionAuth Service ===
+  # # Untested - for authentication without google auth https://fusionauth.io/download possible alternative: https://www.authelia.com, https://goauthentik.io
+  # fusionauth:
+  #   image: fusionauth/fusionauth-app:latest
+  #   container_name: servobill-fusionauth
+  #   depends_on:
+  #     - postgres
+  #   environment:
+  #     DATABASE_URL: jdbc:postgresql://postgres:5432/servobill-db
+  #     DATABASE_ROOT_USERNAME: servobill-user
+  #     DATABASE_ROOT_PASSWORD: servobill-password
+  #     DATABASE_USERNAME: servobill-user
+  #     DATABASE_PASSWORD: servobill-password
+  #     FUSIONAUTH_APP_MEMORY: 512M
+  #     FUSIONAUTH_APP_RUNTIME_MODE: development
+  #     FUSIONAUTH_APP_URL: http://localhost:9011
+  #     FUSIONAUTH_SEARCH_TYPE: database
+  #   ports:
+  #     - "9011:9011"
+  #   volumes:
+  #     - fusionauth-config:/usr/local/fusionauth/config
+
   # === Queue Workers ===
   queue-workers:
     build:
       context: ../..
-      dockerfile: deploy/dockerized/BackgroundJobs.Dockerfile
+      dockerfile: BackgroundJobs.Dockerfile
     container_name: servobill-queue-workers
     environment:
       # Inter service communication/configuration
-      POSTGRES_URL: postgres://servobill:servobill@postgres:5432/servobill
+      POSTGRES_URL: postgres://servobill-user:servobill-password@postgres:5432/servobill-db
       ENDPOINT_EVENTBRIDGE: http://queue-workers:9326
 
       # Email related settings
@@ -50,11 +74,11 @@ services:
   app:
     build:
       context: ../..
-      dockerfile: deploy/dockerized/App.Dockerfile
+      dockerfile: App.Dockerfile
     container_name: servobill-app
     environment:
       # Inter service communication/configuration
-      POSTGRES_URL: postgres://servobill:servobill@postgres:5432/servobill
+      POSTGRES_URL: postgres://servobill-user:servobill-password@postgres:5432/servobill-db
       ENDPOINT_EVENTBRIDGE: http://queue-workers:9326
 
       # Authentication related settings
@@ -71,4 +95,5 @@ services:
 
 volumes:
   postgres-data: {}
-  s3-data: {} 
+  s3-data: {}
+  # fusionauth-config: {} 

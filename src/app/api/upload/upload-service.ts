@@ -1,10 +1,10 @@
 import { Inject, Service } from '@/common/di';
+import { ConfigService } from '@/backend/services/config.service';
 import {
 	FILE_STORAGE_SERVICE,
 	type FileStorageService,
 } from '@/backend/services/file-storage.service';
 import { CONFIG_SERVICE } from '@/backend/services/di-tokens';
-import { ConfigService } from '@/backend/services/config.service';
 import { FileStorageType } from '@/backend/services/constants';
 import {
 	ATTACHMENT_REPOSITORY,
