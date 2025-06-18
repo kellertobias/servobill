@@ -27,6 +27,7 @@ module.exports = {
     "@next/next/no-img-element": "off",
     "unicorn/no-await-expression-member": "warn",
     "type-graphql/enforce-type-declarations": "error",
+    "type-graphql/require-authorized-decorator": "error",
     "import/no-extraneous-dependencies": [
       "error",
       {

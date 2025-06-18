@@ -172,6 +172,7 @@ export class ExpenseResolver {
 	 * Resolves the full category object for an expense, if requested.
 	 * Returns null if no categoryId is set or if the category is not found.
 	 */
+	@Authorized()
 	@FieldResolver(() => ExpenseCategoryType, { nullable: true })
 	@Cached({ getKey: (expense: Expense) => [expense.categoryId], ttl: 60 })
 	async category(
@@ -193,6 +194,7 @@ export class ExpenseResolver {
 	 * Field resolver for the attachments field on Expense.
 	 * Fetches all attachments linked to the given expense.
 	 */
+	@Authorized()
 	@FieldResolver(() => [Attachment], { nullable: true })
 	async attachments(
 		@Root() expense: Expense,

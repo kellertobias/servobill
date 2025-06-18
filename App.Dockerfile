@@ -13,10 +13,28 @@ COPY package-lock.json ./
 
 # Install dependencies and fix vulnerabilities
 RUN npm ci
-RUN npm audit fix --force || true
 
-# Copy the entire project
-COPY . .
+# Add Source
+ADD ./src ./src
+ADD ./stack ./stack
+ADD ./public ./public
+
+# Add TypeScript configuration
+ADD ./tsconfig* ./
+
+# Add ESLint configuration
+ADD ./.eslintrc* ./
+ADD ./.prettier* ./
+
+
+# Add Next.js configuration
+ADD ./next.config.js ./next.config.js
+ADD ./postcss.config.js ./postcss.config.js
+ADD ./tailwind.config.ts ./tailwind.config.ts
+
+# Add GraphQL configuration
+ADD ./codegen.ts ./codegen.ts
+
 
 # Generate GraphQL types
 RUN npm run gql:type
@@ -36,4 +54,4 @@ RUN rm -rf .next/cache && \
 EXPOSE 3000
 
 # Start the application
-CMD ["next", "start"] 
+CMD ["npx","next", "start"] 

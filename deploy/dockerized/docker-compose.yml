@@ -17,8 +17,6 @@ services:
       POSTGRES_USER: servobill-user
       POSTGRES_PASSWORD: servobill-password
       POSTGRES_DB: servobill-db
-    ports:
-      - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
@@ -47,7 +45,7 @@ services:
   #     - fusionauth-config:/usr/local/fusionauth/config
 
   # === Queue Workers ===
-  queue-workers:
+  workers:
     build:
       context: ../..
       dockerfile: BackgroundJobs.Dockerfile
@@ -82,9 +80,15 @@ services:
       ENDPOINT_EVENTBRIDGE: http://queue-workers:9326
 
       # Authentication related settings
-      ALLOWED_EMAILS: please-set
-      OAUTH_CLIENT_ID: please-set
-      JWT_SECRET: please-set
+      # ALLOWED_EMAILS: please-set
+      # OAUTH_CLIENT_ID: please-set
+      # JWT_SECRET: please-set
+
+     
+
+
+      # set this to the domain or path that is routed to the app:
+      NEXT_PUBLIC_API_URL: http://localhost:3000/
 
     ports:
       - "3000:3000"

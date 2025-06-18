@@ -4,7 +4,7 @@ version: '3.8'
 services:
   servobill-init:
     image: node:lts
-    container_name: 'servobill-init'
+    container_name: 'servobill-dev-init'
     # # This image stops after it has done it's job
     # restart: never
     environment:
@@ -30,7 +30,7 @@ services:
     restart: unless-stopped
 
     platform: linux/amd64
-    container_name: servobill-dynamodb-local
+    container_name: servobill-dev-dynamodb-local
     user: root
     ports:
       - "9321:9321"
@@ -41,7 +41,7 @@ services:
   servobill-s3:
     image: quay.io/minio/minio
     restart: unless-stopped
-    container_name: 'servobill-s3'
+    container_name: 'servobill-dev-s3'
     environment:
       MINIO_ACCESS_KEY: AKIAIOSFODNN7EXAMPLE
       MINIO_SECRET_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
@@ -67,7 +67,7 @@ services:
     image: bh42/aws-ses-local
     platform: linux/amd64
     restart: unless-stopped
-    container_name: 'servobill-ses'
+    container_name: 'servobill-dev-ses'
     ports:
       - "9330:9330"
     volumes:
@@ -82,7 +82,7 @@ services:
   servobill-postgres:
     image: postgres:15
     restart: unless-stopped
-    container_name: servobill-postgres
+    container_name: servobill-dev-postgres
     environment:
       POSTGRES_USER: servobill
       POSTGRES_PASSWORD: servobill

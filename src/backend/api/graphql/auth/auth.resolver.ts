@@ -5,6 +5,7 @@ import { GqlContext } from '../types';
 import { AuthCheckResult, GetContextResult } from './auth.schema';
 
 import { Inject, Service } from '@/common/di';
+import { AllowUnauthorized } from '@/common/graphql-decorators';
 import {
 	FILE_STORAGE_SERVICE,
 	type FileStorageService,
@@ -28,6 +29,7 @@ export class AuthResolver {
 		return this.fileStorageService.getDownloadUrl(getFileArgs);
 	}
 
+	@AllowUnauthorized()
 	@Query(() => AuthCheckResult)
 	async loggedInUser(@Ctx() context: GqlContext): Promise<AuthCheckResult> {
 		const profilePictureSignedUrl = await this.getUserPictureUrl(context);

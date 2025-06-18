@@ -22,10 +22,10 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 WORKDIR /app
 
 # Copy package files and install dependencies
-COPY package*.json ./
-RUN npm install && \
-    npm install -g tsx && \
-    npm audit fix --force
+COPY package.json ./
+COPY package-lock.json ./
+
+RUN npm ci
 
 # Copy all necessary source files and configuration
 COPY src/backend ./src/backend
@@ -38,4 +38,4 @@ COPY tsconfig.json ./
 RUN mkdir -p /data
 
 # Set the default command to run the queue server
-CMD ["tsx", "stack/local/queue/index.ts"]
+CMD ["npx", "tsx", "stack/local/queue/index.ts"]
