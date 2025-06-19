@@ -3,7 +3,7 @@ import { Field, ObjectType, InputType, ID, Int } from 'type-graphql';
 /**
  * GraphQL type representing an uploaded file attachment.
  */
-@ObjectType()
+@ObjectType('Attachment')
 export class Attachment {
 	@Field(() => ID)
 	id!: string;
@@ -45,7 +45,7 @@ export class Attachment {
 /**
  * Output for requesting an upload signed URL.
  */
-@ObjectType()
+@ObjectType('RequestAttachmentUploadUrlResult')
 export class RequestAttachmentUploadUrlResult {
 	@Field(() => String)
 	uploadUrl!: string;
@@ -57,7 +57,7 @@ export class RequestAttachmentUploadUrlResult {
 /**
  * Output for getting a signed download URL.
  */
-@ObjectType()
+@ObjectType('AttachmentDownloadUrlResult')
 export class AttachmentDownloadUrlResult {
 	@Field(() => String)
 	downloadUrl!: string;
@@ -66,7 +66,7 @@ export class AttachmentDownloadUrlResult {
 /**
  * Input for listing attachments by entity.
  */
-@InputType()
+@InputType('ListAttachmentsInput')
 export class ListAttachmentsInput {
 	@Field(() => String, { nullable: true })
 	invoiceId?: string;

@@ -28,6 +28,7 @@ module.exports = {
     "unicorn/no-await-expression-member": "warn",
     "type-graphql/enforce-type-declarations": "error",
     "type-graphql/require-authorized-decorator": "error",
+    "type-graphql/require-explicit-type-names": "error",
     "import/no-extraneous-dependencies": [
       "error",
       {

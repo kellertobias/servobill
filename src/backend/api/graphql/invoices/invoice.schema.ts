@@ -29,7 +29,7 @@ import {
 import { ObjectProperties } from '@/common/ts-helpers';
 import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
 
-@InputType()
+@InputType('InvoiceItemExpenseInput')
 export class InvoiceItemExpenseInput {
 	@Field(() => String)
 	name!: string;
@@ -44,7 +44,7 @@ export class InvoiceItemExpenseInput {
 	enabled!: boolean;
 }
 
-@ObjectType()
+@ObjectType('InvoiceItemExpense')
 export class InvoiceItemExpense {
 	@Field(() => String)
 	name!: string;
@@ -62,7 +62,7 @@ export class InvoiceItemExpense {
 	expenseId?: string;
 }
 
-@ObjectType()
+@ObjectType('InvoiceItem')
 export class InvoiceItem implements ObjectProperties<InvoiceItemEntity> {
 	@Field(() => String)
 	id!: string;
@@ -93,7 +93,7 @@ export class InvoiceItem implements ObjectProperties<InvoiceItemEntity> {
 	linkedExpenses?: InvoiceItemExpense[];
 }
 
-@ObjectType()
+@ObjectType('InvoiceSubmissions')
 export class InvoiceSubmissions
 	implements ObjectProperties<InvoiceSubmissionEntity>
 {
@@ -107,7 +107,7 @@ export class InvoiceSubmissions
 	type!: InvoiceSubmissionType;
 }
 
-@ObjectType()
+@ObjectType('InvoiceActivity')
 export class InvoiceActivity
 	implements ObjectProperties<InvoiceActivityEntity>
 {
@@ -137,7 +137,7 @@ export class InvoiceActivity
 	attachToEmail?: boolean;
 }
 
-@ObjectType()
+@ObjectType('InvoiceLinks')
 export class InvoiceLinks {
 	@Field(() => String, { nullable: true })
 	offerId?: string;
@@ -146,7 +146,7 @@ export class InvoiceLinks {
 	invoiceId?: string;
 }
 
-@ObjectType()
+@ObjectType('Invoice')
 export class Invoice implements FilteredObjectProperties<InvoiceEntity> {
 	@Field(() => String)
 	id!: string;
@@ -218,7 +218,7 @@ export class Invoice implements FilteredObjectProperties<InvoiceEntity> {
 	contentHash?: string;
 }
 
-@InputType()
+@InputType('InvoiceWhereInput')
 export class InvoiceWhereInput {
 	@IsOptional()
 	@Field(() => InvoiceType, { nullable: true })
@@ -237,7 +237,7 @@ export class InvoiceWhereInput {
 	year?: number;
 }
 
-@InputType()
+@InputType('InvoiceInput')
 export class InvoiceInput implements Partial<Omit<Invoice, 'items'>> {
 	@IsOptional()
 	@Field(() => String, { nullable: true })
@@ -263,7 +263,7 @@ export class InvoiceInput implements Partial<Omit<Invoice, 'items'>> {
 	items!: InvoiceItemInput[];
 }
 
-@InputType()
+@InputType('InvoiceItemInput')
 export class InvoiceItemInput implements Partial<InvoiceItem> {
 	@IsOptional()
 	@IsUUID()
@@ -301,7 +301,7 @@ export class InvoiceItemInput implements Partial<InvoiceItem> {
 	linkedExpenses?: InvoiceItemExpenseInput[];
 }
 
-@ObjectType()
+@ObjectType('InvoiceChangedResponse')
 export class InvoiceChangedResponse {
 	@Field(() => String)
 	id!: string;
@@ -316,7 +316,7 @@ export class InvoiceChangedResponse {
 	change!: InvoiceActivityType;
 }
 
-@InputType()
+@InputType('InvoicePaymentInput')
 export class InvoicePaymentInput {
 	@IsInt()
 	@Field(() => Int)
@@ -329,7 +329,7 @@ export class InvoicePaymentInput {
 	when?: Date;
 }
 
-@InputType()
+@InputType('InvoiceSubmissionInput')
 export class InvoiceSubmissionInput {
 	@IsNotEmpty()
 	@Field(() => InvoiceSubmissionType)
@@ -339,7 +339,7 @@ export class InvoiceSubmissionInput {
 	when?: Date;
 }
 
-@InputType()
+@InputType('InvoiceCustomerInput')
 export class InvoiceCustomerInput implements CustomerInput {
 	@Field(() => String, { nullable: true })
 	id?: string;
@@ -379,7 +379,7 @@ export class InvoiceCustomerInput implements CustomerInput {
 	notes?: string;
 }
 
-@InputType()
+@InputType('InvoiceImportInput')
 export class InvoiceImportInput
 	implements
 		FilteredObjectProperties<

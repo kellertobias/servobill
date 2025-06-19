@@ -26,7 +26,6 @@ ADD ./tsconfig* ./
 ADD ./.eslintrc* ./
 ADD ./.prettier* ./
 
-
 # Add Next.js configuration
 ADD ./next.config.js ./next.config.js
 ADD ./postcss.config.js ./postcss.config.js
@@ -35,6 +34,8 @@ ADD ./tailwind.config.ts ./tailwind.config.ts
 # Add GraphQL configuration
 ADD ./codegen.ts ./codegen.ts
 
+# Build stack index with proper TypeScript configuration first
+RUN npx tsx stack/build-index/index.ts
 
 # Generate GraphQL types
 RUN npm run gql:type

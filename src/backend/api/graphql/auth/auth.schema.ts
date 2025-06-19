@@ -1,6 +1,6 @@
 import { Field, ObjectType } from 'type-graphql';
 
-@ObjectType()
+@ObjectType('AuthCheckResult')
 export class AuthCheckResult {
 	@Field(() => Boolean)
 	authenticated!: boolean;
@@ -15,7 +15,7 @@ export class AuthCheckResult {
 	refreshable!: boolean;
 }
 
-@ObjectType()
+@ObjectType('GetContextResult')
 export class GetContextResult {
 	@Field(() => String)
 	contextString!: string;

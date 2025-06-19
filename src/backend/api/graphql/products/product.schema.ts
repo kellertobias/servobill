@@ -8,7 +8,7 @@ import type { ProductEntity } from '@/backend/entities/product.entity';
 /**
  * Represents an expense associated with a product (for output).
  */
-@ObjectType()
+@ObjectType('ProductExpense')
 export class ProductExpense {
 	@Field(() => String)
 	name!: string;
@@ -23,7 +23,7 @@ export class ProductExpense {
 /**
  * Represents an expense associated with a product (for input).
  */
-@InputType()
+@InputType('ProductExpenseInput')
 export class ProductExpenseInput {
 	@Field(() => String)
 	name!: string;
@@ -35,7 +35,7 @@ export class ProductExpenseInput {
 	categoryId?: string;
 }
 
-@ObjectType()
+@ObjectType('Product')
 export class Product implements FilteredObjectProperties<ProductEntity> {
 	@Field(() => String)
 	id!: string;
@@ -71,7 +71,7 @@ export class Product implements FilteredObjectProperties<ProductEntity> {
 	updatedAt!: Date;
 }
 
-@InputType()
+@InputType('ProductInput')
 export class ProductInput
 	implements Omit<Product, 'id' | 'createdAt' | 'updatedAt'>
 {
@@ -98,7 +98,7 @@ export class ProductInput
 	expenses?: ProductExpenseInput[];
 }
 
-@InputType()
+@InputType('ProductWhereInput')
 export class ProductWhereInput {
 	@IsOptional()
 	@Field(() => String, { nullable: true })

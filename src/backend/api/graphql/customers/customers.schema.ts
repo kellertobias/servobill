@@ -5,7 +5,7 @@ import { FilteredObjectProperties } from '../types';
 
 import { CustomerEntity } from '@/backend/entities/customer.entity';
 
-@ObjectType()
+@ObjectType('Customer')
 export class Customer implements FilteredObjectProperties<CustomerEntity> {
 	@Field(() => String)
 	id!: string;
@@ -50,7 +50,7 @@ export class Customer implements FilteredObjectProperties<CustomerEntity> {
 	updatedAt!: Date;
 }
 
-@InputType()
+@InputType('CustomerInput')
 export class CustomerInput
 	implements
 		Omit<Customer, 'id' | 'createdAt' | 'updatedAt' | 'customerNumber'>

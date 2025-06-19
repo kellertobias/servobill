@@ -55,6 +55,116 @@ module.exports = {
         };
       },
     },
+    'require-explicit-type-names': {
+      meta: {
+        type: 'problem',
+        docs: {
+          description: 'Enforce explicit names for @ObjectType() and @InputType() decorators',
+          category: 'Best Practices',
+          recommended: true,
+        },
+        fixable: 'code',
+        schema: [],
+      },
+      create(context) {
+        /**
+         * Checks if a decorator argument is a valid string literal (explicit name)
+         * @param {Object} node - The argument node to check
+         * @returns {boolean} - True if the argument is a valid string literal
+         */
+        function isValidNameArgument(node) {
+          return node && node.type === 'Literal' && typeof node.value === 'string' && node.value.trim() !== '';
+        }
+
+        /**
+         * Gets the class name from the class declaration
+         * @param {Object} classNode - The class declaration node
+         * @returns {string|null} - The class name or null if not found
+         */
+        function getClassName(classNode) {
+          return classNode && classNode.id && classNode.id.name;
+        }
+
+        /**
+         * Checks if a class has both ObjectType and InputType decorators
+         * @param {Array} decorators - Array of decorator nodes
+         * @returns {boolean} - True if both decorators are present
+         */
+        function hasBothTypeDecorators(decorators) {
+          if (!decorators || decorators.length === 0) {
+            return false;
+          }
+
+          let hasObjectType = false;
+          let hasInputType = false;
+
+          decorators.forEach(decorator => {
+            if (decorator.expression.type === 'CallExpression') {
+              const name = decorator.expression.callee.name;
+              if (name === 'ObjectType') hasObjectType = true;
+              if (name === 'InputType') hasInputType = true;
+            } else if (decorator.expression.type === 'Identifier') {
+              const name = decorator.expression.name;
+              if (name === 'ObjectType') hasObjectType = true;
+              if (name === 'InputType') hasInputType = true;
+            }
+          });
+
+          return hasObjectType && hasInputType;
+        }
+
+        return {
+          ClassDeclaration(node) {
+            const className = getClassName(node);
+            if (!className || !node.decorators) {
+              return;
+            }
+
+            const hasBothDecorators = hasBothTypeDecorators(node.decorators);
+
+            node.decorators.forEach(decorator => {
+              if (decorator.expression.type === 'CallExpression') {
+                const decoratorName = decorator.expression.callee.name;
+                const args = decorator.expression.arguments;
+
+                if (decoratorName === 'ObjectType' || decoratorName === 'InputType') {
+                  if (args.length === 0 || !isValidNameArgument(args[0])) {
+                    // Generate the appropriate name
+                    let suggestedName = className;
+                    if (decoratorName === 'InputType' && hasBothDecorators) {
+                      suggestedName = `${className}Input`;
+                    }
+
+                    context.report({
+                      node: decorator,
+                      message: `@${decoratorName}() decorator must have an explicit name as the first argument`,
+                      fix(fixer) {
+                        // If no arguments, add the name argument inside existing parentheses
+                        if (args.length === 0) {
+                          // Find the opening parenthesis and insert after it
+                          const sourceCode = context.getSourceCode();
+                          const callExpression = decorator.expression;
+                          const openingParen = sourceCode.getFirstToken(callExpression, token => token.value === '(');
+                          return fixer.insertTextAfter(
+                            openingParen,
+                            `'${suggestedName}'`
+                          );
+                        }
+                        // If first argument exists but is invalid, replace it
+                        return fixer.replaceText(
+                          args[0],
+                          `'${suggestedName}'`
+                        );
+                      },
+                    });
+                  }
+                }
+              }
+            });
+          },
+        };
+      },
+    },
     'require-authorized-decorator': {
       meta: {
         type: 'problem',

@@ -7,7 +7,7 @@ import { Attachment } from '../attachments/attachment.schema';
 
 import { ExpenseEntity } from '@/backend/entities/expense.entity';
 
-@ObjectType()
+@ObjectType('Expense')
 export class Expense implements FilteredObjectProperties<ExpenseEntity> {
 	@Field(() => String)
 	id!: string;
@@ -61,7 +61,7 @@ export class Expense implements FilteredObjectProperties<ExpenseEntity> {
 	attachments?: Attachment[];
 }
 
-@InputType()
+@InputType('ExpenseInput')
 export class ExpenseInput
 	implements Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>
 {
@@ -100,7 +100,7 @@ export class ExpenseInput
 	attachmentIds?: string[];
 }
 
-@InputType()
+@InputType('ExpenseWhereInput')
 export class ExpenseWhereInput {
 	@Field(() => String, { nullable: true })
 	search?: string;

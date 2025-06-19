@@ -4,7 +4,7 @@ import { IsBoolean, IsString } from 'class-validator';
 import { PdfTemplateSetting } from '@/backend/entities/settings.entity';
 import { ObjectProperties } from '@/common/ts-helpers';
 
-@ObjectType()
+@ObjectType('SettingsResultCompany')
 export class SettingsResultCompany {
 	/**
 	 * Company name. Now nullable.
@@ -79,7 +79,7 @@ export class SettingsResultCompany {
 	bankBic?: string;
 }
 
-@InputType()
+@InputType('ExpenseCategoryInputType')
 export class ExpenseCategoryInputType {
 	/**
 	 * Category ID. Now nullable.
@@ -131,7 +131,7 @@ export class ExpenseCategoryInputType {
 	description?: string;
 }
 
-@ObjectType()
+@ObjectType('ExpenseCategoryType')
 export class ExpenseCategoryType {
 	/**
 	 * Category ID. Now nullable.
@@ -176,7 +176,7 @@ export class ExpenseCategoryType {
 	description?: string;
 }
 
-@ObjectType()
+@ObjectType('SettingsResult')
 export class SettingsResult {
 	/**
 	 * Template for invoice numbers. Now nullable.
@@ -317,7 +317,7 @@ export class SettingsResult {
 	categories?: ExpenseCategoryType[];
 }
 
-@InputType()
+@InputType('SettingsCompanyInput')
 export class SettingsCompanyInput implements Partial<SettingsResultCompany> {
 	@IsString()
 	@Field(() => String, { nullable: true })
@@ -371,7 +371,7 @@ export class SettingsCompanyInput implements Partial<SettingsResultCompany> {
 /**
  * Input type for settings. All fields are now nullable.
  */
-@InputType()
+@InputType('SettingsInput')
 export class SettingsInput implements Partial<SettingsResult> {
 	@IsString()
 	@Field(() => String, { nullable: true })
@@ -459,7 +459,7 @@ export class SettingsInput implements Partial<SettingsResult> {
 	company?: SettingsCompanyInput;
 }
 
-@ObjectType()
+@ObjectType('InvoiceTemplateResult')
 export class InvoiceTemplateResult
 	implements
 		Pick<ObjectProperties<PdfTemplateSetting>, 'pdfTemplate' | 'pdfStyles'>
@@ -471,7 +471,7 @@ export class InvoiceTemplateResult
 	pdfStyles!: string;
 }
 
-@InputType()
+@InputType('InvoiceTemplateInput')
 export class InvoiceTemplateInput implements InvoiceTemplateResult {
 	@IsString()
 	@Field(() => String)

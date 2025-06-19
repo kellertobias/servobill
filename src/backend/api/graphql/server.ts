@@ -25,6 +25,7 @@ export async function getGraphQLServer<E, C, Ctx>(
 	const schema = await globalSchema;
 	const server = new ApolloServer({
 		schema,
+		introspection: true,
 		// TODO handle caching:
 		// import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
 		// { cache: new InMemoryLRUCache() }
@@ -33,7 +34,7 @@ export async function getGraphQLServer<E, C, Ctx>(
 		persistedQueries: false,
 		formatError: (error) => {
 			if (
-				error.extensions.exception.stacktrace[0].includes(
+				error.extensions?.exception?.stacktrace?.[0]?.includes(
 					'Session Expired - Refreshable',
 				)
 			) {
@@ -52,7 +53,7 @@ export async function getGraphQLServer<E, C, Ctx>(
 					exception: {},
 				}) as {
 					code: string;
-					exception: {
+					exception?: {
 						validationErrors: ValidationError[];
 						stacktrace: string[];
 					};
@@ -66,16 +67,21 @@ export async function getGraphQLServer<E, C, Ctx>(
 					nodeEnv: process.env.NODE_ENV,
 				});
 
-				if (exception.validationErrors) {
-					const message = `Input Data Validation Failed\n${exception.validationErrors
-						.map(
-							(e) =>
-								`- ${e.target?.constructor?.name} ${e.constraints?.[
-									Object.keys(e.constraints)[0]
-								]} (${`${e.value?.toString?.()}`.slice(0, 10)}...) }`,
-						)
-						.join('\n')}
-				`;
+				if (
+					exception?.validationErrors ||
+					error.extensions.code === 'GRAPHQL_VALIDATION_ERROR'
+				) {
+					const message = exception
+						? `Input Data Validation Failed\n${exception?.validationErrors
+								.map(
+									(e) =>
+										`- ${e.target?.constructor?.name} ${e.constraints?.[
+											Object.keys(e.constraints)[0]
+										]} (${`${e.value?.toString?.()}`.slice(0, 10)}...) }`,
+								)
+								.join('\n')}
+				`
+						: String(error);
 
 					if (process.env.NODE_ENV !== 'production') {
 						// eslint-disable-next-line no-console

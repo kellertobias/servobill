@@ -3,7 +3,7 @@ import { Field, ObjectType, InputType, Int } from 'type-graphql';
 
 import { ExpenseCategoryType } from '../system/system.schema';
 
-@ObjectType()
+@ObjectType('IncomeSurplusReportExport')
 export class IncomeSurplusReportExport {
 	@Field(() => String)
 	location!: string;
@@ -18,7 +18,7 @@ export class IncomeSurplusReportExport {
 	generatedAt!: Date;
 }
 
-@ObjectType()
+@ObjectType('IncomeSurplusReport')
 export class IncomeSurplusReport {
 	@Field(() => Date)
 	startDate!: Date;
@@ -57,7 +57,7 @@ export class IncomeSurplusReport {
 	items!: IncomeSurplusReportItem[];
 }
 
-@ObjectType()
+@ObjectType('IncomeSurplusReportItem')
 export class IncomeSurplusReportItem {
 	@Field(() => String)
 	id!: string;
@@ -87,7 +87,7 @@ export class IncomeSurplusReportItem {
 	category?: ExpenseCategoryType;
 }
 
-@InputType()
+@InputType('IncomeSurplusReportWhereInput')
 export class IncomeSurplusReportWhereInput {
 	@IsNotEmpty({
 		message: 'Start date must be provided',
