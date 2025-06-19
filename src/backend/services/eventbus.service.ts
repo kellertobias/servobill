@@ -21,6 +21,15 @@ export class EventBusService {
 	constructor(
 		@Inject(CONFIG_SERVICE) private readonly configuration: ConfigService,
 	) {
+		const nonStandardEndpoint =
+			this.configuration.endpoints.eventbridge &&
+			!this.configuration.endpoints.eventbridge.includes('.');
+
+		if (nonStandardEndpoint) {
+			console.log('Using non-standard eventbridge endpoint', {
+				endpoint: this.configuration.endpoints.eventbridge,
+			});
+		}
 		const eventBridgeOptions = {
 			...(this.configuration.endpoints.eventbridge
 				? {
@@ -28,14 +37,25 @@ export class EventBusService {
 					}
 				: {}),
 			region: this.configuration.region,
-			credentials:
-				this.configuration.awsCreds.accessKeyId &&
-				this.configuration.awsCreds.secretAccessKey
-					? {
-							accessKeyId: this.configuration.awsCreds.accessKeyId,
-							secretAccessKey: this.configuration.awsCreds.secretAccessKey,
-						}
-					: undefined,
+			credentials: (() => {
+				if (
+					this.configuration.awsCreds &&
+					this.configuration.awsCreds.accessKeyId &&
+					this.configuration.awsCreds.secretAccessKey
+				) {
+					return {
+						accessKeyId: this.configuration.awsCreds.accessKeyId,
+						secretAccessKey: this.configuration.awsCreds.secretAccessKey,
+					};
+				}
+				if (nonStandardEndpoint) {
+					return {
+						accessKeyId: 'local',
+						secretAccessKey: 'local',
+					};
+				}
+				return;
+			})(),
 		};
 		this.client = new EventBridgeClient(eventBridgeOptions);
 	}
