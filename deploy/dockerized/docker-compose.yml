@@ -50,14 +50,19 @@ services:
       context: ../..
       dockerfile: BackgroundJobs.Dockerfile
     container_name: servobill-queue-workers
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
+      UPLOAD_DIRECTORY: "/data"
       # Inter service communication/configuration
-      POSTGRES_URL: postgres://servobill-user:servobill-password@postgres:5432/servobill-db
       ENDPOINT_EVENTBRIDGE: http://queue-workers:9326
 
+      # Change this
+      POSTGRES_URL: postgres://servobill-user:servobill-password@postgres:5432/servobill-db
+
       # Email related settings
-      SMTP_HOST: please-set
-      SMTP_PORT: please-set
+      SMTP_HOST: host.docker.internal
+      SMTP_PORT: 1025
       SMTP_USER: please-set
       SMTP_PASSWORD: please-set
       SMTP_FROM: please-set
@@ -66,7 +71,7 @@ services:
       - postgres
     working_dir: /app
     volumes:
-      - s3-data:/data
+      - ./data:/data
 
   # === Next.js Application ===
   app:
@@ -74,13 +79,19 @@ services:
       context: ../..
       dockerfile: App.Dockerfile
     container_name: servobill-app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
+      UPLOAD_DIRECTORY: "/data"
       # Inter service communication/configuration
-      POSTGRES_URL: postgres://servobill-user:servobill-password@postgres:5432/servobill-db
       ENDPOINT_EVENTBRIDGE: http://workers:9326
 
+      
       # Remove this once you actually put this behind an tls termination proxy
       INSECURE_COOKIES: true
+
+      # Change these
+      POSTGRES_URL: postgres://servobill-user:servobill-password@postgres:5432/servobill-db
 
       # Authentication related settings
       # ALLOWED_EMAILS: please-set
@@ -98,9 +109,8 @@ services:
     depends_on:
       - postgres
     volumes:
-      - s3-data:/data
+      - ./data:/data
 
 volumes:
   postgres-data: {}
-  s3-data: {}
   # fusionauth-config: {} 

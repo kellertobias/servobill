@@ -74,6 +74,15 @@ services:
       - .emails:/opt/output
     command: 'aws-ses-local --outputDir /opt/output --port 9330'
 
+  servobill-smtp:
+    image: haravich/fake-smtp-server
+    platform: linux/amd64
+    restart: unless-stopped
+    container_name: servobill-dev-smtp
+    ports:
+      - "1025:1025" # SMTP Port
+      - "1080:1080" # Web Console Port
+
   # ---
   # Postgres connection URL for local development:
   # postgres://servobill:servobill@localhost:5432/servobill

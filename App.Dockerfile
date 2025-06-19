@@ -16,7 +16,7 @@ RUN npm ci
 
 # Add Source
 ADD ./src ./src
-ADD ./stack ./stack
+ADD ./stack/build-index ./stack/build-index
 ADD ./public ./public
 
 # Add TypeScript configuration

@@ -1,5 +1,7 @@
 import 'reflect-metadata';
 
+import '@/backend/services/config.service';
+
 import { SNSEventHandler } from '../../types';
 
 import { withInstrumentation, withSpan } from '@/backend/instrumentation';

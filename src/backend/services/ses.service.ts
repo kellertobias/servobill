@@ -8,6 +8,7 @@ import { Span } from '../instrumentation';
 import type { ConfigService } from './config.service';
 import { CONFIG_SERVICE } from './di-tokens';
 import { EmailType } from './constants';
+import { Logger } from './logger.service';
 
 import { Inject, Service } from '@/common/di';
 
@@ -16,6 +17,7 @@ import { Inject, Service } from '@/common/di';
  */
 @Service()
 export class SESService {
+	private logger = new Logger('SESService');
 	private client: ses.SESClient | undefined;
 	private transporter: nodemailer.Transporter;
 
@@ -43,6 +45,7 @@ export class SESService {
 			this.transporter = nodemailer.createTransport({
 				SES: { ses: this.client, aws: ses },
 			});
+			this.logger.info('SES client initialized');
 		} else {
 			// SMTP configuration
 			this.transporter = nodemailer.createTransport({
@@ -54,6 +57,11 @@ export class SESService {
 					pass: this.configuration.email.password,
 				},
 			} as SMTPTransport.Options);
+			this.logger.info('SMTP client initialized', {
+				host: this.configuration.email.host,
+				port: this.configuration.email.port,
+				user: this.configuration.email.user,
+			});
 		}
 	}
 

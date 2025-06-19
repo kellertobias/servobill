@@ -33,19 +33,45 @@ export class CreateInvoicePdfHandler
 
 	@Span('CreateInvoicePdfHandler.generatePdf')
 	private async generatePdf(html: string, options: PDFOptions) {
-		const { default: chromium } = await import('@sparticuz/chromium');
+		// Conditionally import chromium based on environment
+		// Use @sparticuz/chromium for serverless environments (when NOT_SERVERLESS is not set)
+		// Use default puppeteer chromium for non-serverless environments
+		let chromium: {
+			executablePath: () => Promise<string>;
+			args: string[];
+		} | null = null;
+		let chromiumArgs: string[] = [];
+		let chromiumViewport: { width: number; height: number } | null = null;
+
+		if (process.env.NOT_SERVERLESS) {
+			// For non-serverless environments, use default puppeteer
+			// Note: puppeteer-core doesn't include chromium by default
+			// We'll use the system's default chrome or the CHROME_PATH
+			chromium = null;
+			chromiumArgs = [];
+			chromiumViewport = null;
+		} else {
+			// For serverless environments, use @sparticuz/chromium
+			const { default: sparticuzChromium } = await import(
+				'@sparticuz/chromium'
+			);
+			chromium = sparticuzChromium;
+			chromiumArgs = sparticuzChromium.args;
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			chromiumViewport = (sparticuzChromium as any).defaultViewport;
+		}
 
 		let browser = null;
 		try {
 			browser = await puppeteer.launch({
 				executablePath:
-					process.env.CHROME_PATH ?? (await chromium.executablePath()),
+					process.env.CHROME_PATH ??
+					(chromium ? await chromium.executablePath() : undefined),
 				headless: true,
 				// ignoreHTTPSErrors: true,
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				defaultViewport: (chromium as any).defaultViewport,
+				defaultViewport: chromiumViewport,
 				args: [
-					...chromium.args,
+					...chromiumArgs,
 					'--headless',
 					'--disable-gpu',
 					'--full-memory-crash-report',

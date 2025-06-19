@@ -23,7 +23,6 @@ export abstract class DomainEntity {
 		if (this.sentEvents.has(event.id)) {
 			return;
 		}
-		this.sentEvents.add(event.id);
 		this.events.push(event);
 	}
 	public async purgeEvents(send: (event: DomainEvent) => Promise<void>) {

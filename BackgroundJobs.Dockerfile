@@ -17,6 +17,7 @@ RUN apk add --no-cache \
 ENV CHROME_PATH=/usr/bin/chromium-browser
 ENV CHROME_BIN=/usr/bin/chromium-browser
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV NOT_SERVERLESS=true
 
 # Create app directory
 WORKDIR /app
@@ -26,11 +27,12 @@ COPY package.json ./
 COPY package-lock.json ./
 
 RUN npm ci
+RUN npm i @sparticuz/chromium
 
 # Copy all necessary source files and configuration
 COPY src/backend ./src/backend
 COPY src/common ./src/common
-COPY stack/local ./stack/local
+COPY stack/local/queue ./stack/local/queue
 COPY tsconfig.base.json ./
 COPY tsconfig.json ./
 

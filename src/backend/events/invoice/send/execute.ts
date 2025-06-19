@@ -295,7 +295,7 @@ export class HandlerExecution {
 			key: invoice.pdf.key,
 		});
 		// Get pdf from storage abstraction
-		if (!invoice.pdf.bucket || !invoice.pdf.key) {
+		if (!invoice.pdf.key) {
 			throw new Error('PDF bucket or key missing');
 		}
 		return await this.fileStorageService.getFile(invoice.pdf.key, {
