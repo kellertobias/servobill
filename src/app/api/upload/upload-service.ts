@@ -38,6 +38,11 @@ export class UploadHelper {
 		}
 	}
 
+	/**
+	 * Upload a file to storage.
+	 * @param attachmentId - The ID of the attachment to upload
+	 * @param file - The file data as a Buffer
+	 */
 	async uploadFile(attachmentId: string, file: Buffer) {
 		const attachment = await this.attachmentRepository.getById(attachmentId);
 		if (!attachment) {

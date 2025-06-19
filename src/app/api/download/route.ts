@@ -2,6 +2,8 @@ import 'reflect-metadata';
 
 import { NextRequest } from 'next/server';
 
+import { checkAuth } from '../check-auth';
+
 import {
 	DownloadHelper,
 	NotFoundError,
@@ -15,19 +17,24 @@ import { DefaultContainer } from '@/common/di';
  * Handles file downloads when UPLOAD_DIRECTORY is set.
  * Serves files from the path specified by the attachment's s3Key.
  *
+ * Requires valid authentication session.
+ *
  * Query: attachmentId (required)
  */
 export async function GET(request: NextRequest) {
 	try {
-		if (!process.env.IS_LOCAL) {
-			// eslint-disable-next-line no-console
-			console.error(
-				'Download route implementation not yet finished. Only available in local development until we have authentication checked.',
+		// Validate authentication
+		const auth = await checkAuth(request);
+		if (!auth.isValid) {
+			return new Response(
+				JSON.stringify({
+					error: 'Authentication required',
+					details: auth.error,
+				}),
+				{ status: 401 },
 			);
-			return new Response(JSON.stringify({ error: 'Not implemented' }), {
-				status: 501,
-			});
 		}
+
 		const downloadHelper = DefaultContainer.get<DownloadHelper>(DownloadHelper);
 
 		const { searchParams } = new URL(request.url);

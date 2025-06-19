@@ -4,6 +4,8 @@ import { NextRequest } from 'next/server';
 
 import * as multipart from 'parse-multipart-data';
 
+import { checkAuth } from '../check-auth';
+
 import { UploadHelper, NotConfiguredError } from './upload-service';
 
 import { DefaultContainer } from '@/common/di';
@@ -15,16 +17,18 @@ import { DefaultContainer } from '@/common/di';
  *
  * Query: attachmentId (required)
  */
-export async function POST(request: NextRequest) {
+export async function PUT(request: NextRequest) {
 	try {
-		if (!process.env.IS_LOCAL) {
-			// eslint-disable-next-line no-console
-			console.error(
-				'Download route implementation not yet finished. Only available in local development until we have authentication checked.',
+		// Validate authentication
+		const auth = await checkAuth(request);
+		if (!auth.isValid) {
+			return new Response(
+				JSON.stringify({
+					error: 'Authentication required',
+					details: auth.error,
+				}),
+				{ status: 401 },
 			);
-			return new Response(JSON.stringify({ error: 'Not implemented' }), {
-				status: 501,
-			});
 		}
 
 		const uploadHelper = DefaultContainer.get<UploadHelper>(UploadHelper);
@@ -41,43 +45,54 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		// Parse multipart form data
 		const contentType = request.headers.get('content-type') || '';
-		if (!contentType.startsWith('multipart/form-data')) {
-			return new Response(
-				JSON.stringify({ error: 'Content-Type must be multipart/form-data' }),
-				{ status: 400 },
-			);
+		let fileData: Buffer;
+
+		// Handle multipart form data uploads
+		if (contentType.startsWith('multipart/form-data')) {
+			const boundary = contentType.split('boundary=')[1];
+			if (!boundary) {
+				return new Response(
+					JSON.stringify({ error: 'No boundary in Content-Type' }),
+					{ status: 400 },
+				);
+			}
+
+			const buffer = Buffer.from(await request.arrayBuffer());
+			const parts = multipart.parse(buffer, boundary);
+
+			// Only allow one file per upload
+			if (parts.length !== 1 || !parts[0].filename) {
+				return new Response(
+					JSON.stringify({ error: 'Only one file per upload is allowed.' }),
+					{ status: 400 },
+				);
+			}
+
+			const part = parts[0];
+			if (!part.data) {
+				return new Response(
+					JSON.stringify({ error: 'No file data found in upload.' }),
+					{ status: 400 },
+				);
+			}
+
+			fileData = part.data;
+		} else {
+			// Handle raw file uploads - treat entire body as file data
+			// The content-type should be the mime type of the file
+			fileData = Buffer.from(await request.arrayBuffer());
+
+			// Validate that we have some data
+			if (fileData.length === 0) {
+				return new Response(
+					JSON.stringify({ error: 'No file data found in upload.' }),
+					{ status: 400 },
+				);
+			}
 		}
 
-		const boundary = contentType.split('boundary=')[1];
-		if (!boundary) {
-			return new Response(
-				JSON.stringify({ error: 'No boundary in Content-Type' }),
-				{ status: 400 },
-			);
-		}
-
-		const buffer = Buffer.from(await request.arrayBuffer());
-		const parts = multipart.parse(buffer, boundary);
-
-		// Only allow one file per upload
-		if (parts.length !== 1 || !parts[0].filename) {
-			return new Response(
-				JSON.stringify({ error: 'Only one file per upload is allowed.' }),
-				{ status: 400 },
-			);
-		}
-
-		const part = parts[0];
-		if (!part.data) {
-			return new Response(
-				JSON.stringify({ error: 'No file data found in upload.' }),
-				{ status: 400 },
-			);
-		}
-
-		await uploadHelper.uploadFile(attachmentId, part.data);
+		await uploadHelper.uploadFile(attachmentId, fileData);
 
 		return new Response(JSON.stringify({ success: true, attachmentId }), {
 			status: 200,
@@ -97,6 +112,15 @@ export async function POST(request: NextRequest) {
 			status: 500,
 		});
 	}
+}
+
+export async function POST() {
+	return new Response(
+		JSON.stringify({ error: 'Method not allowed', details: 'Use PUT instead' }),
+		{
+			status: 405,
+		},
+	);
 }
 
 export async function GET() {
