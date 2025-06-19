@@ -79,6 +79,9 @@ services:
       POSTGRES_URL: postgres://servobill-user:servobill-password@postgres:5432/servobill-db
       ENDPOINT_EVENTBRIDGE: http://queue-workers:9326
 
+      # Remove this once you actually put this behind an tls termination proxy
+      INSECURE_COOKIES: true
+
       # Authentication related settings
       # ALLOWED_EMAILS: please-set
       # OAUTH_CLIENT_ID: please-set

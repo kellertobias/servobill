@@ -25,6 +25,12 @@ export async function getGraphQLServer<E, C, Ctx>(
 	const schema = await globalSchema;
 	const server = new ApolloServer({
 		schema,
+		// TODO handle caching:
+		// import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
+		// { cache: new InMemoryLRUCache() }
+		// if we are not serverless
+		// for now, we just disable persisted queries
+		persistedQueries: false,
 		formatError: (error) => {
 			if (
 				error.extensions.exception.stacktrace[0].includes(

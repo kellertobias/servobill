@@ -12,6 +12,10 @@ import jwt from 'jsonwebtoken';
 import { Logger } from '../services/logger.service';
 
 const JWT_SECRET = process.env.JWT_SECRET;
+const INSECURE_COOKIES =
+	process.env.INSECURE_COOKIES === 'true' ||
+	process.env.NODE_ENV === 'development';
+
 
 if (!JWT_SECRET) {
 	throw new Error('JWT_SECRET not set');
@@ -61,7 +65,7 @@ const makeTokenCookieInternal = (
 ): string => {
 	const expiresIn = type === 'SESSION' ? SESSION_DURATION : REFRESH_DURATION;
 	const token = content
-		? jwt.sign({ dat: content }, JWT_SECRET, { expiresIn })
+		? jwt.sign({ dat: { ...content, type } }, JWT_SECRET, { expiresIn })
 		: '';
 
 	return cookie.serialize(
@@ -69,7 +73,7 @@ const makeTokenCookieInternal = (
 		token,
 		{
 			httpOnly: true,
-			secure: process.env.NODE_ENV !== 'development',
+			secure: !INSECURE_COOKIES,
 			sameSite: 'lax',
 			maxAge: content ? expiresIn : 0,
 			path: '/',
@@ -155,7 +159,7 @@ const extractTokenInternal = (
 			};
 		}
 		// eslint-disable-next-line no-console
-		console.error(error);
+		console.error('Token error (extractTokenInternal)', error);
 		if (error instanceof jwt.JsonWebTokenError) {
 			return { ...invalidToken, invalid: true, message: error.message, error };
 		}

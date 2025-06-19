@@ -83,7 +83,6 @@ export class AuthenticationService {
 		const renewalId = randomUUID().toString();
 		const { user } = options;
 		// Construct a new SessionEntity to satisfy the repository type requirements
-		// TODO: Check if this works
 		const sessionEntity = await this.sessionRepository.createSession(
 			new SessionEntity({
 				userId: user.userId,
