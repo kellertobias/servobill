@@ -16,14 +16,9 @@ const INSECURE_COOKIES =
 	process.env.INSECURE_COOKIES === 'true' ||
 	process.env.NODE_ENV === 'development';
 
-
-if (!JWT_SECRET) {
-	throw new Error('JWT_SECRET not set');
-}
-
 const SESSION_COOKIE_NAME = 'Session-Token';
 const REFRESH_COOKIE_NAME = 'Refresh-Token';
-const SESSION_DURATION = 30 * 60; // * 60;
+const SESSION_DURATION = 30 * 60;
 const REFRESH_DURATION = 30 * 24 * 60 * 60;
 
 const logger = new Logger('Session');
@@ -63,6 +58,10 @@ const makeTokenCookieInternal = (
 	content: Session | null,
 	type: 'SESSION' | 'REFRESH',
 ): string => {
+	if (!JWT_SECRET) {
+		throw new Error('JWT_SECRET not set');
+	}
+
 	const expiresIn = type === 'SESSION' ? SESSION_DURATION : REFRESH_DURATION;
 	const token = content
 		? jwt.sign({ dat: { ...content, type } }, JWT_SECRET, { expiresIn })
@@ -130,6 +129,10 @@ const extractTokenInternal = (
 		| { headers?: undefined; cookies: Record<string, string> },
 	type: 'SESSION' | 'REFRESH',
 ): JwtToken | null => {
+	if (!JWT_SECRET) {
+		throw new Error('JWT_SECRET not set');
+	}
+
 	const token = evt.headers
 		? getRawTokenFromEvent(evt, type)
 		: getRawTokenFromCookies(evt.cookies, type);
