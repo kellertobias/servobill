@@ -65,6 +65,7 @@ export const loadInvoiceImportData = async (data: {
 
 	// now create the customers and add them to the existing customers
 	for (const customer of customersToCreate) {
+		console.log(`Importing customer ${customer.customerNumber}`);
 		const importedCustomer = await importSingleCustomer(customer);
 		if (!importedCustomer) {
 			throw new Error(`Failed to import customer ${customer.customerNumber}`);
@@ -107,7 +108,22 @@ export const loadInvoiceImportData = async (data: {
 				quantity: item.quantity || 1,
 				priceCents: item.priceCents || 0,
 				taxPercentage: item.taxPercentage || 0,
-				linkedExpenses: item.linkedExpenses || [],
+				linkedExpenses: (item.linkedExpenses || []).map((expense) => ({
+					categoryId: expense.categoryId,
+					enabled: expense.enabled,
+					name: expense.name,
+					price: expense.price,
+				})),
+			})),
+			// Include activity history for complete data preservation
+			activity: (invoice.activity || []).map((activity) => ({
+				id: activity.id,
+				activityAt: activity.activityAt,
+				type: activity.type,
+				user: activity.user,
+				notes: activity.notes,
+				attachToEmail: activity.attachToEmail,
+				attachmentId: activity.attachment?.id,
 			})),
 		});
 	}

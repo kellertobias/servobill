@@ -329,6 +329,30 @@ export class InvoicePaymentInput {
 	when?: Date;
 }
 
+@InputType('InvoiceActivityInput')
+export class InvoiceActivityInput {
+	@Field(() => String, { nullable: true })
+	id?: string;
+
+	@Field(() => Date)
+	activityAt!: Date;
+
+	@Field(() => InvoiceActivityType)
+	type!: InvoiceActivityType;
+
+	@Field(() => String, { nullable: true })
+	user?: string;
+
+	@Field(() => String, { nullable: true })
+	notes?: string;
+
+	@Field(() => Boolean, { nullable: true })
+	attachToEmail?: boolean;
+
+	@Field(() => String, { nullable: true })
+	attachmentId?: string;
+}
+
 @InputType('InvoiceSubmissionInput')
 export class InvoiceSubmissionInput {
 	@IsNotEmpty()
@@ -452,4 +476,8 @@ export class InvoiceImportInput
 	@IsOptional()
 	@Field(() => [InvoiceItemInput], { nullable: true })
 	items!: InvoiceItemInput[];
+
+	@IsOptional()
+	@Field(() => [InvoiceActivityInput], { nullable: true })
+	activity?: InvoiceActivityInput[];
 }

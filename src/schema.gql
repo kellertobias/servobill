@@ -195,6 +195,16 @@ type InvoiceActivity {
   user: String
 }
 
+input InvoiceActivityInput {
+  activityAt: DateTime!
+  attachToEmail: Boolean
+  attachmentId: String
+  id: String
+  notes: String
+  type: InvoiceActivityType!
+  user: String
+}
+
 """Type of Activity Log entry"""
 enum InvoiceActivityType {
   ARCHIVE_INVOICE
@@ -229,6 +239,7 @@ type InvoiceChangedResponse {
 }
 
 input InvoiceImportInput {
+  activity: [InvoiceActivityInput!]
   customerId: String!
   dueAt: DateTime
   footerText: String

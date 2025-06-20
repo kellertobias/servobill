@@ -268,7 +268,24 @@ export class InvoiceResolver {
 				context.session?.user?.name || 'Unknown',
 			);
 			invoices.push(invoice);
-			invoice.activity = [];
+
+			// Preserve original activity history if provided
+			invoice.activity =
+				invoiceData.activity && invoiceData.activity.length > 0
+					? invoiceData.activity.map(
+							(activityData) =>
+								new InvoiceActivityEntity({
+									activityAt: activityData.activityAt,
+									type: activityData.type,
+									user: activityData.user,
+									notes: activityData.notes,
+									attachToEmail: activityData.attachToEmail,
+									attachmentId: activityData.attachmentId,
+								}),
+						)
+					: [];
+
+			// Add import activity to track this import action
 			invoice.addActivity(
 				new InvoiceActivityEntity({
 					type: InvoiceActivityType.IMPORTED,
@@ -300,16 +317,26 @@ export class InvoiceResolver {
 			invoice.offerNumber = invoiceData.offerNumber;
 			invoice.status = invoiceData.status;
 
+			// Handle payment information
 			if (invoiceData.paidCents) {
-				invoice.addPayment(
-					{
-						paidCents: invoiceData.paidCents,
-						paidAt: invoiceData.paidAt || new Date(),
-						paidVia: invoiceData.paidVia || 'Unknown',
-					},
-					context.session?.user?.name || 'Unknown',
+				// Only add payment activity if there isn't already a payment activity
+				const hasPaymentActivity = invoice.activity.some(
+					(activity) => activity.type === InvoiceActivityType.PAYMENT,
 				);
+
+				if (!hasPaymentActivity) {
+					invoice.addPayment(
+						{
+							paidCents: invoiceData.paidCents,
+							paidAt: invoiceData.paidAt || new Date(),
+							paidVia: invoiceData.paidVia || 'Unknown',
+						},
+						context.session?.user?.name || 'Unknown',
+					);
+				}
 			}
+
+			// Set payment fields directly to ensure they're preserved
 			invoice.paidCents = invoiceData.paidCents;
 			invoice.paidAt = invoiceData.paidAt;
 			invoice.paidVia = invoiceData.paidVia;

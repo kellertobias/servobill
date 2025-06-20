@@ -16,6 +16,9 @@ export class Exporters {
                         type
                         subject
                         footerText
+                        paidAt
+                        paidCents
+                        paidVia
                         customer {
                             id
                             name
@@ -43,6 +46,20 @@ export class Exporters {
                                 categoryId
                                 enabled
                                 expenseId
+                            }
+                        }
+                        activity {
+                            id
+                            activityAt
+                            type
+                            user
+                            notes
+                            attachToEmail
+                            attachment {
+                                id
+                                fileName
+                                mimeType
+                                size
                             }
                         }
                         createdAt
