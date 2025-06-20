@@ -1,6 +1,6 @@
 ![Servobill](/docs/github-header.png)
 
-# Servobill
+# Servobill - Open Source Serverless Invoicing App
 
 Servobill is a simple, open-source invoicing app built with Next.js, Tailwind CSS, and TypeScript on top of AWS Serverless technologies. It is extremely cheap to maintain and can be deployed to your own AWS account in minutes. We now also support a dockerized deployment on your own hardware.
 
@@ -10,82 +10,104 @@ We feature a simple, easy-to-use interface for creating and managing invoices. Y
 
 - Modern and simple UI (in-place editing, mobile friendly)
 - Create and manage invoices/ offers & send them to clients via PDF
-- Manage expenses with attachments and expenses categories & automatically create expenses when e.g. adding travel to an invoice
-- Generate reports with all income & expenses in JSON & CSV format
-- Customizable - from templates to invoice number formats
+- Manage expenses with attachments and expense categories & automatically create expenses when e.g. adding travel to an invoice
+- Generate reports with all income & expenses in JSON & CSV format for the tax authorities
+- Customizable - from email and invoice templates to invoice number formats
 - Modern Software Architecture: Modern Decorator based Typescript codebase, Serverless, Repository & Adapter Pattern for multiple database types, Folder based API structure (like NextJS), React/ NextJS based frontend, GraphQL based API, JWT based authentication workflow with refresh tokens and more.
 
 <img src="/docs/screenshot-1.jpeg" alt="Servobill" width="200"/> <img src="/docs/screenshot-2.jpeg" alt="Servobill" width="200"/> <img src="/docs/screenshot-3.jpeg" alt="Servobill" width="200"/> <img src="/docs/screenshot-4.jpeg" alt="Servobill" width="200"/>
 
-## Roadmap
+### Roadmap [(To full roadmap)](ROADMAP.md)
 
-Planned until end of 2024:
-- [X] ... basic application: customers, products, invoices, expenses, reports, etc.
+These are the high level next steps:
 
-Planned until end of May 2025:
-- [X] Add support for on-premise database types (postgres)
-- [X] Add support for attachments for invoices, expenses and emails
-- [X] Add categorization of expenses
-- [X] Add support for auto-generated expenses (e.g. travel expenses)
-- [X] Update to SST v3
+- [X] Attachments to invoices & expenses
+- [X] Dockerized deployment
+- [X] SMTP Mail sending (rather than only SES)
+- [X] Local file storage (rather than S3)
+- [ ] Inventory Management
+- [ ] Auto-Generate expenses (based on incoming invoices)
+- [ ] Digital outgoing invoices
+- [ ] Full Standalone (Local User Management, automatic backups, etc.)
+- [ ] Multi-user support (more than one user per installation)
 
-Planned until end of June 2025:
-- [X] Add support for SMTP mail sending (instead of only allowing SES)
-- [ ] Add support for dockerized deployments (WIP, mainly needs testing)
-- [ ] Add support for simple inventory management (expense can create inventory items, history on inventory items, etc.)
+### Known Bugs
 
-Planned until end of July 2025:
-- [ ] Add support for incoming digital invoices (e.g. X-Rechnung/ ZugFeRD)
-- [ ] Add AI Upload of invoices (e.g. from PDF) to automatically create expenses and inventory items
-- [ ] Add support for incoming invoice emails (either parse digital invoice or use AI to parse)
+- [ ] Settings import currently is flaky
+- [ ] Invoice export does not export payment date
 
-Planned until end of August 2025:
-- [ ] Add support for sending digital invoices (e.g. X-Rechnung/ ZugFeRD)
-- [ ] Add local user management (e.g. for self-hosted deployments)
-- [ ] Add automatic backups of data (e.g. via email or to S3)
 
-Long term:
-- [ ] Add "Projects" assign inventory items to projects
-- [ ] Add "Time Tracking" to Projects
-- [ ] Add offline mode for: time tracking, inventory items
-- [ ] Add S3 lifecycle rules to automatically archive old data (e.g. glacier to save on storage)
-- [ ] Add pagination to all lists
-- [ ] PDF export of reports (JSON & CSV export already present)
-- [ ] FinTS support for checking for payments (see https://www.fints.org/de/startseite)
-
-## Deploying
+## Developing & Deploying
 
 We offer two production ready deployment options and a development setup:
 
-- [Serverless on your AWS account](deploy/serverless/README.md)
-- [Dockerized on your own hardware](deploy/dockerized/README.md) (Not yet complete, missing background jobs such as sending emails and generating PDFs)
-- [Development setup](README.md#developing)
+- [⚡ Serverless on your AWS account](deploy/serverless/README.md)
+- [🐳 Dockerized on your own hardware](deploy/dockerized/README.md)
+- [💻 Development setup](README.md#developing)
 
+If you have no experience with AWS, we recommend the dockerized deployment, however all ways of deploying servobill require some level of technical knowledge to deploy it in a secure way.
 
-## Architecture
+### Architecture
 
 Servobill is built with a serverless architecture in mind. It uses AWS Lambda functions to handle the API requests, AWS DynamoDB to store the data, and AWS S3 to store the PDFs. It also uses AWS SES to send the emails. The frontend is built with Next.js and Tailwind CSS and is deployed to AWS S3 and CloudFront.
 
+#### Serverless Architecture
+
 ![Servobill](/docs/aws-architecture.png)
 
-For the dockerized deployment, the nextjs app in one docker container also handles the API requests while another container handles the queue workers. For dockerized deployments, we use a minio instance for S3 storage and postgres rather than dynamoDB. For this we have database adapters in our repository layer for both postgres and dynamoDB.
+In the serverless deployment, we use SST to deploy the application to AWS. For the frontend, we use CloudFront and for the APIs we use the AWS API Gateway. Data is stored in AWS DynamoDB and long running processes are decoupled from the API requests by using AWS EventBridge to trigger Lambda functions.
 
-In theory we also support sqlite or any other database that is supported by typeOrm, you however need to build the configuration for that yourself.
+#### Dockerized Architecture
+For the dockerized deployment, the nextjs app in one docker container also handles the API requests while another container handles the queue workers. For dockerized deployments, we use postgres rather than dynamoDB for structured data storage.
 
-## Developing
+For storing assets (such as generated invoices or attachments), you can choose if you want to setup and maintain a minio instance (which is basically a self-hostable S3-Clone) or if you want to use an extremely simple local data storage where you just need to provide a folder to store the data in.
 
-If you want to develop Servobill, you can do so by cloning this repository, installing the dependencis (`npm install`), starting the complimentary background services (`docker-compose up -d`), and running `npm run dev` in the root directory.
+From a code perspective, all these options are implemented transparently with an adapter pattern.
 
-You need to copy the .env.example file to .env and fill in the values.
+
+#### Authentication
+
+In all deployment types, we use Google OAuth/ OpenID to authenticate users. This is the only supported authentication method for now. 
+
+You can allow a given set of email addresses to access the application by setting the `ALLOWED_EMAILS` environment variable. Email addresses not in this list will be denied access.
+
+Once authenticated, you get two JWT tokens in your cookies, one short lived session token and one long lived refresh token. The session token is used to authenticate your requests to the API and the refresh token is used to refresh the session token when it expires. When using the refresh token, we also check if the user is still allowed to access the application against the database.
+
+### Development Setup
+
+If you want to develop Servobill, you can do so by following these steps to get you up and running:
+
+- clone this repository
+- install the dependencis (`npm install`)
+- start the complimentary background services (`docker-compose up -d`)
+- copy and adapt the env files: `.env.example` -> `.env` & `.env.dev.example` -> `.env.dev`
+- run `npm run dev` in the root directory.
+- setup a google oauth client id and secret and add them to the env files
+- open [http://localhost:3000](http://localhost:3000) with your browser for local development.
 
 
 ### Environment overrides with `.env.dev`
 
 For local development, you can create a `.env.dev` file in the project root. Any variables in `.env.dev` will override those in `.env` when running locally. This is useful for developer-specific or temporary overrides. The `.env.dev` file is ignored by version control and will not be included in builds or deployments.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser for local development.
+see the `.env.example` and `.env.dev.example` files for the available variables.
 
-## Building your Invoice Template
+### Extra Tools
+
+We have added some extra tools to the development setup for you to help you with your development.
+
+Use the following web interfaces to help you with your development:
+
+- S3 Simulation (Minio): [minio](http://localhost:9320)
+- SMTP Simulation (Fake SMTP Server): [http://localhost:1025](http://localhost:1025)
+
+We also have added tools that do not have we interfaces, but are setup when running the docker-compose file from the servobill-init container.
+
+- DynamoDB Simulation (dynamodb-local)
+- SES Simulation (aws-ses-local)
+- Postgres
+
+### Building your Invoice Template
 
 Servobill uses [Handlebars](https://handlebarsjs.com/) to generate the invoice PDFs. You can change your template directly in the app, however if you want a more convenient way to do so, you can use the template builder. For that you install the dependencies as described above, and then run `npm run template` in the root directory. This will start a local server on port 2998. You can then open [http://localhost:2998](http://localhost:2998) with your browser and see your template. You can edit the template in the `templates/` folder and once you save the file, the page will automatically reload.
 
