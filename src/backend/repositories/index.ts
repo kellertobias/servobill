@@ -10,3 +10,6 @@ export * from './product';
 export * from './session';
 export * from './settings';
 export * from './attachment';
+export * from './inventory-item';
+export * from './inventory-location';
+export * from './inventory-type';

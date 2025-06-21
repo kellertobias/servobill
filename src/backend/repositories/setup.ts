@@ -10,3 +10,6 @@ import './product';
 import './session';
 import './settings';
 import './attachment';
+import './inventory-item';
+import './inventory-location';
+import './inventory-type';
