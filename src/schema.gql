@@ -29,6 +29,19 @@ type AuthCheckResult {
   userName: String
 }
 
+input CreateInventoryLocationInput {
+  barcode: String
+  name: String!
+}
+
+input CreateInventoryTypeInput {
+  checkInterval: Int
+  checkType: String
+  name: String!
+  parent: String
+  properties: [String!]
+}
+
 type Customer {
   city: String
   contactName: String
@@ -155,6 +168,125 @@ type IncomeSurplusReportItem {
 input IncomeSurplusReportWhereInput {
   endDate: DateTime!
   startDate: DateTime!
+}
+
+"""The state of a check for an inventory item"""
+enum InventoryCheckState {
+  FAIL
+  PASS
+  RECHECK
+}
+
+"""The type of history entry for an inventory item"""
+enum InventoryHistoryType {
+  CHECK
+  NOTE
+  STATE_CHANGE
+}
+
+type InventoryItem {
+  barcode: String
+  createdAt: DateTime!
+  history: [InventoryItemHistory!]!
+  id: String!
+  lastScanned: DateTime!
+  location: InventoryLocationInfo
+  name: String
+  nextCheck: DateTime!
+  properties: [InventoryItemProperty!]!
+  state: InventoryItemState!
+  type: InventoryTypeInfo
+  updatedAt: DateTime!
+}
+
+type InventoryItemHistory {
+  date: DateTime!
+  note: String
+  state: InventoryCheckState
+  type: InventoryHistoryType!
+}
+
+input InventoryItemInput {
+  barcode: String
+  locationId: String
+  name: String
+  nextCheck: DateTime
+  properties: [InventoryItemPropertyInput!]
+  state: InventoryItemState
+  typeId: String
+}
+
+type InventoryItemProperty {
+  key: String!
+  value: String!
+}
+
+input InventoryItemPropertyInput {
+  key: String!
+  value: String!
+}
+
+"""The state of an inventory item"""
+enum InventoryItemState {
+  BROKEN
+  DEFAULT
+  NEW
+  REMOVED
+}
+
+input InventoryItemWhereInput {
+  barcode: String
+  locationId: String
+  overdue: Boolean
+  search: String
+  state: InventoryItemState
+  typeId: String
+}
+
+type InventoryLocation {
+  barcode: String
+  createdAt: DateTime!
+  id: String!
+  itemCount: Float
+  items: [InventoryItem!]
+  name: String!
+  updatedAt: DateTime!
+}
+
+type InventoryLocationInfo {
+  id: String!
+  name: String!
+}
+
+input InventoryLocationWhereInput {
+  barcode: String
+  search: String
+}
+
+type InventoryType {
+  checkInterval: Int
+  checkType: String
+  createdAt: DateTime!
+  id: String!
+  itemCount: Int!
+  items: [InventoryItem!]
+  name: String!
+  parent: String
+  properties: [String!]!
+  updatedAt: DateTime!
+}
+
+type InventoryTypeInfo {
+  checkInterval: Int
+  checkType: String
+  id: String!
+  name: String!
+}
+
+input InventoryTypeWhereInput {
+  parent: String
+  rootOnly: Boolean
+  search: String
 }
 
 type Invoice {
@@ -380,16 +512,24 @@ input ListAttachmentsInput {
 }
 
 type Mutation {
+  addInventoryCheck(id: String!, note: String, state: InventoryCheckState!): Boolean!
+  addInventoryNote(id: String!, note: String!): Boolean!
   attachUpload(attachmentId: String!, expenseId: String, inventoryId: String, invoiceId: String): Attachment!
   confirmUpload(attachmentId: String!): Attachment!
   copyInvoice(as: InvoiceType!, id: String!): InvoiceChangedResponse!
   createCustomer(data: CustomerInput!): Customer!
   createExpense(data: ExpenseInput!): Expense!
+  createInventoryItem(input: InventoryItemInput!): InventoryItem!
+  createInventoryLocation(input: CreateInventoryLocationInput!): InventoryLocation!
+  createInventoryType(input: CreateInventoryTypeInput!): InventoryType!
   createInvoice(customerId: String!, type: InvoiceType): Invoice!
   createProduct(data: ProductInput!): Product!
   deleteAttachment(attachmentId: String!): Boolean!
   deleteCustomer(id: String!): Customer!
   deleteExpense(id: String!): Expense!
+  deleteInventoryItem(id: String!): Boolean!
+  deleteInventoryLocation(id: String!): Boolean!
+  deleteInventoryType(id: String!): Boolean!
   deleteInvoice(id: String!): Invoice!
   deleteInvoiceAttachmentActivity(activityId: String!, invoiceId: String!): InvoiceChangedResponse!
   deleteProduct(id: String!): Product!
@@ -409,6 +549,9 @@ type Mutation {
   updateCustomer(data: CustomerInput!, id: String!): Customer!
   updateExpense(data: ExpenseInput!, id: String!): Expense!
   updateExpenseSettings(categories: [ExpenseCategoryInputType!]!, fixExpensesForImport: Boolean): [ExpenseCategoryType!]!
+  updateInventoryItem(id: String!, input: InventoryItemInput!): InventoryItem!
+  updateInventoryLocation(id: String!, input: UpdateInventoryLocationInput!): InventoryLocation!
+  updateInventoryType(id: String!, input: UpdateInventoryTypeInput!): InventoryType!
   updateInvoice(data: InvoiceInput!, id: String!): Invoice!
   updateProduct(data: ProductInput!, id: String!): Product!
   updateSettings(data: SettingsInput!): SettingsResult!
@@ -465,6 +608,13 @@ type Query {
   expenses(limit: Int, skip: Int, where: ExpenseWhereInput): [Expense!]!
   generateReport(where: IncomeSurplusReportWhereInput): IncomeSurplusReport!
   getContext: GetContextResult!
+  inventoryItem(barcode: String, id: String): InventoryItem
+  inventoryItems(limit: Int, skip: Int, where: InventoryItemWhereInput): [InventoryItem!]!
+  inventoryLocation(id: String!): InventoryLocation
+  inventoryLocationByBarcode(barcode: String!): InventoryLocation
+  inventoryLocations(limit: Int, skip: Int, where: InventoryLocationWhereInput): [InventoryLocation!]!
+  inventoryType(id: String!): InventoryType
+  inventoryTypes(limit: Int, skip: Int, where: InventoryTypeWhereInput): [InventoryType!]!
   invoice(id: String!): Invoice!
   invoices(limit: Int, skip: Int, where: InvoiceWhereInput): [Invoice!]!
   loggedInUser: AuthCheckResult!
@@ -558,4 +708,17 @@ type SettingsResultCompany {
   vatId: String
   web: String
   zip: String
+}
+
+input UpdateInventoryLocationInput {
+  barcode: String
+  name: String
+}
+
+input UpdateInventoryTypeInput {
+  checkInterval: Int
+  checkType: String
+  name: String
+  parent: String
+  properties: [String!]
 }

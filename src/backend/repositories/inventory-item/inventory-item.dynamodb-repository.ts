@@ -241,4 +241,50 @@ export class InventoryItemDynamoDBRepository
 			throw error;
 		}
 	}
+
+	/**
+	 * Counts the number of inventory items for a specific type.
+	 * @param typeId The type ID to count items for
+	 * @returns The number of items of the specified type
+	 */
+	public async countByTypeId(typeId: string): Promise<number> {
+		try {
+			// Query items of specific type using the byType index
+			const queryBuilder = this.store.query.byType({
+				storeId: this.storeId,
+				typeId: typeId,
+			});
+			const result = await queryBuilder.go();
+			return result.data.length;
+		} catch (error) {
+			this.logger.error('Error counting inventory items by type', {
+				typeId,
+				error,
+			});
+			throw error;
+		}
+	}
+
+	/**
+	 * Counts the number of inventory items at a specific location.
+	 * @param locationId The location ID to count items for
+	 * @returns The number of items at the specified location
+	 */
+	public async countByLocationId(locationId: string): Promise<number> {
+		try {
+			// Scan all items and filter by locationId since we don't have a location index
+			const result = await this.store.scan.go();
+			const itemsAtLocation = result.data.filter(
+				(entity: InventoryItemOrmEntity) =>
+					entity.storeId === this.storeId && entity.locationId === locationId,
+			);
+			return itemsAtLocation.length;
+		} catch (error) {
+			this.logger.error('Error counting inventory items by location', {
+				locationId,
+				error,
+			});
+			throw error;
+		}
+	}
 }

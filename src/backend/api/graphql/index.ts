@@ -12,6 +12,9 @@ import './enums';
 import { authChecker } from './authorizer';
 import { SystemResolver } from './system/system.resolver';
 import { AttachmentResolver } from './attachments/attachment.resolver';
+import { InventoryResolver } from './inventory/inventory-item.resolver';
+import { InventoryLocationResolver } from './inventory/inventory-location.resolver';
+import { InventoryTypeResolver } from './inventory/inventory-type.resolver';
 
 import { DefaultContainer } from '@/common/di';
 
@@ -33,6 +36,9 @@ export const globalSchema = buildSchema({
 		AuthResolver,
 		SystemResolver,
 		AttachmentResolver,
+		InventoryResolver,
+		InventoryLocationResolver,
+		InventoryTypeResolver,
 	],
 	emitSchemaFile:
 		process.env.NODE_ENV === 'development' ? 'src/schema.gql' : false,

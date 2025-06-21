@@ -224,4 +224,48 @@ export class InventoryItemRelationalRepository
 			throw error;
 		}
 	}
+
+	/**
+	 * Counts the number of inventory items for a specific type.
+	 * @param typeId The type ID to count items for
+	 * @returns The number of items of the specified type
+	 */
+	public async countByTypeId(typeId: string): Promise<number> {
+		await this.initialized.promise;
+
+		try {
+			const count = await this.repository!.count({
+				where: { typeId },
+			});
+			return count;
+		} catch (error) {
+			this.logger.error('Error counting inventory items by type', {
+				typeId,
+				error,
+			});
+			throw error;
+		}
+	}
+
+	/**
+	 * Counts the number of inventory items at a specific location.
+	 * @param locationId The location ID to count items for
+	 * @returns The number of items at the specified location
+	 */
+	public async countByLocationId(locationId: string): Promise<number> {
+		await this.initialized.promise;
+
+		try {
+			const count = await this.repository!.count({
+				where: { locationId },
+			});
+			return count;
+		} catch (error) {
+			this.logger.error('Error counting inventory items by location', {
+				locationId,
+				error,
+			});
+			throw error;
+		}
+	}
 }

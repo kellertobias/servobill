@@ -27,5 +27,7 @@ export type InventoryItemRepository = AbstractRepositoryInterface<
 			cursor?: string;
 		}): Promise<InventoryItemEntity[]>;
 		findByBarcode(barcode: string): Promise<InventoryItemEntity | null>;
+		countByTypeId(typeId: string): Promise<number>;
+		countByLocationId(locationId: string): Promise<number>;
 	}
 >;

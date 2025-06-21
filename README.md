@@ -42,6 +42,13 @@ We offer two production ready deployment options and a development setup:
 
 If you have no experience with AWS, we recommend the dockerized deployment, however all ways of deploying servobill require some level of technical knowledge to deploy it in a secure way.
 
+### Deployment Considerations
+
+Serverless hosting works great for freelancers with around 100-1000 invoices & expenses a year, and a total of around 50-100 customers & products as well as 2000-5000 items in the inventory shared across in 50-500 inventory types.
+
+Since the pricing of DynamoDB is based on the amount of reads and writes, the cost of storing and retrieving larger amounts of data or having frequent requests to DynamoDB can become unpredictable. In these cases we recommend using the dockerized deployment or at least using a relational database rather than dynamoDB in the serverless deployment.
+
+
 ### Architecture
 
 Servobill is built with a serverless architecture in mind. It uses AWS Lambda functions to handle the API requests, AWS DynamoDB to store the data, and AWS S3 to store the PDFs. It also uses AWS SES to send the emails. The frontend is built with Next.js and Tailwind CSS and is deployed to AWS S3 and CloudFront.
