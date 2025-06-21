@@ -22,7 +22,7 @@ import { prepareRepoTest } from '@/test/repo-test';
  * Parameterized test suite for both repository implementations.
  */
 describe.each(
-	prepareRepoTest({
+	prepareRepoTest<InvoiceRepository>({
 		name: 'Invoice',
 		relational: InvoiceRelationalRepository,
 		dynamodb: InvoiceDynamodbRepository,

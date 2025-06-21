@@ -65,6 +65,7 @@ export const loadInvoiceImportData = async (data: {
 
 	// now create the customers and add them to the existing customers
 	for (const customer of customersToCreate) {
+		// eslint-disable-next-line no-console
 		console.log(`Importing customer ${customer.customerNumber}`);
 		const importedCustomer = await importSingleCustomer(customer);
 		if (!importedCustomer) {
