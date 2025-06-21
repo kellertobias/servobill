@@ -377,7 +377,6 @@ export default $config({
 
 			const fn = new sst.aws.Function(`Handler${eventName}`, {
 				...handlerFunctionDefinition,
-				retries: 0,
 			});
 			eventHandlerFunctions[endpoint.eventType] = { fn, name: eventName };
 		}
