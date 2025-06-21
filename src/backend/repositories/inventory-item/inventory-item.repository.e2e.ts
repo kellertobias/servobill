@@ -321,6 +321,66 @@ describe.each(repoTestCases)('$name (E2E)', ({ setup, onBeforeEach }) => {
 		}
 	});
 
+	it('should support filtering by typeId null (one-off items)', async () => {
+		const { app, RepositoryImplementation } = await setup();
+		const repo = app.create<InventoryItemRepository>(RepositoryImplementation);
+
+		const locationId = randomUUID();
+		const typeId = randomUUID();
+
+		const items = [
+			new InventoryItemEntity({
+				id: randomUUID(),
+				name: 'Typed Item',
+				locationId,
+				typeId: typeId,
+				state: InventoryItemState.DEFAULT,
+				properties: [],
+				nextCheck: new Date('2024-12-31'),
+				lastScanned: new Date(),
+			}),
+			new InventoryItemEntity({
+				id: randomUUID(),
+				name: 'One-off Item',
+				locationId,
+				typeId: undefined, // No type - one-off item
+				state: InventoryItemState.DEFAULT,
+				properties: [],
+				nextCheck: new Date('2024-12-31'),
+				lastScanned: new Date(),
+			}),
+		];
+
+		// Create items
+		for (const item of items) {
+			const createdItem = await repo.createWithId(item.id);
+			createdItem.updateName(item.name!);
+			createdItem.updateLocation(item.locationId);
+			createdItem.updateTypeId(item.typeId); // This will be undefined for the one-off item
+			createdItem.updateState(item.state);
+			createdItem.updateProperties(item.properties);
+			createdItem.updateNextCheck(item.nextCheck);
+			await repo.save(createdItem);
+		}
+
+		// Test filtering by typeId null (one-off items)
+		const oneOffItems = await repo.listByQuery({ where: { typeId: null } });
+		expect(oneOffItems).toHaveLength(1);
+		expect(oneOffItems[0].name).toBe('One-off Item');
+		expect(oneOffItems[0].typeId).toBeFalsy();
+
+		// Test filtering by specific typeId
+		const typedItems = await repo.listByQuery({ where: { typeId: typeId } });
+		expect(typedItems).toHaveLength(1);
+		expect(typedItems[0].name).toBe('Typed Item');
+		expect(typedItems[0].typeId).toBe(typeId);
+
+		// Cleanup
+		for (const item of items) {
+			await repo.delete(item.id);
+		}
+	});
+
 	it('should support finding items by barcode', async () => {
 		const { app, RepositoryImplementation } = await setup();
 		const repo = app.create<InventoryItemRepository>(RepositoryImplementation);

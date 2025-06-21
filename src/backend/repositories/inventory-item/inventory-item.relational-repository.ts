@@ -45,7 +45,7 @@ export class InventoryItemRelationalRepository
 	): InventoryItemEntity {
 		return new InventoryItemEntity({
 			id: ormEntity.id,
-			typeId: ormEntity.typeId,
+			typeId: ormEntity.typeId || undefined,
 			name: ormEntity.name,
 			barcode: ormEntity.barcode,
 			locationId: ormEntity.locationId,
@@ -127,8 +127,14 @@ export class InventoryItemRelationalRepository
 		const queryBuilder = this.repository!.createQueryBuilder('item');
 
 		// Apply filters
-		if (where?.typeId) {
-			queryBuilder.andWhere('item.typeId = :typeId', { typeId: where.typeId });
+		if (where?.typeId !== undefined) {
+			if (where.typeId === null) {
+				queryBuilder.andWhere('item.typeId IS NULL');
+			} else {
+				queryBuilder.andWhere('item.typeId = :typeId', {
+					typeId: where.typeId,
+				});
+			}
 		}
 
 		if (where?.locationId) {

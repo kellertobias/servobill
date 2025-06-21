@@ -49,7 +49,7 @@ export class InventoryItemDynamoDBRepository
 	): InventoryItemEntity {
 		return new InventoryItemEntity({
 			id: entity.inventoryItemId,
-			typeId: entity.typeId,
+			typeId: entity.typeId || undefined,
 			name: entity.name,
 			barcode: entity.barcode,
 			locationId: entity.locationId,
@@ -71,7 +71,7 @@ export class InventoryItemDynamoDBRepository
 	): Omit<InventoryItemOrmEntity, 'storeId'> {
 		return {
 			inventoryItemId: domainEntity.id,
-			typeId: domainEntity.typeId,
+			typeId: domainEntity.typeId || '',
 			name: domainEntity.name,
 			barcode: domainEntity.barcode,
 			locationId: domainEntity.locationId,
@@ -111,7 +111,7 @@ export class InventoryItemDynamoDBRepository
 	 */
 	public async listByQuery(query: {
 		where?: {
-			typeId?: string;
+			typeId?: string | null;
 			locationId?: string;
 			state?: InventoryItemState;
 			overdue?: boolean;
@@ -137,6 +137,17 @@ export class InventoryItemDynamoDBRepository
 			});
 			const result = await queryBuilder.go();
 			entities = result.data.map((item) => this.ormToDomainEntity(item));
+		} else if (where?.typeId === null) {
+			// Query all items (no type filter) - use scan operation
+			// Since we don't have a general index, we'll scan all items
+			const queryBuilder = this.store.query.byType({
+				storeId: this.storeId,
+				typeId: '',
+			});
+			const result = await queryBuilder.go();
+			entities = result.data
+				.filter((item) => item.storeId === this.storeId)
+				.map((item) => this.ormToDomainEntity(item));
 		} else {
 			// Query all items (no type filter) - use scan operation
 			// Since we don't have a general index, we'll scan all items

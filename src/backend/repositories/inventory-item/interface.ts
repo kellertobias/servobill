@@ -15,7 +15,7 @@ export type InventoryItemRepository = AbstractRepositoryInterface<
 	{
 		listByQuery(query: {
 			where?: {
-				typeId?: string;
+				typeId?: string | null;
 				locationId?: string;
 				state?: InventoryItemState;
 				overdue?: boolean;
