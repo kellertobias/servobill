@@ -256,8 +256,8 @@ export default $config({
 			enforceHttps: true,
 			cors: {
 				allowOrigins: [
-					requiredEnv.SITE_DOMAIN,
-					`api.${requiredEnv.SITE_DOMAIN}`,
+					`https://${requiredEnv.SITE_DOMAIN}`,
+					`https://api.${requiredEnv.SITE_DOMAIN}`,
 				],
 				allowMethods: ['GET', 'HEAD', 'POST', 'PUT', 'DELETE'],
 				allowHeaders: ['*'],
