@@ -31,11 +31,6 @@ These are the high level next steps:
 - [ ] Full Standalone (Local User Management, automatic backups, etc.)
 - [ ] Multi-user support (more than one user per installation)
 
-### Known Bugs
-
-- [ ] Settings import currently is flaky
-- [ ] Invoice export does not export payment date
-
 
 ## Developing & Deploying
 
