@@ -9,7 +9,11 @@ const handlers: Record<string, EventHandlerImport> = {
 		await import('@/backend/events/invoice/send/handler').then(
 			(importedModule) => importedModule.handler,
 		),
-	'template': async () =>
+	receipt: async () =>
+		await import('@/backend/events/receipt/handler').then(
+			(importedModule) => importedModule.handler,
+		),
+	template: async () =>
 		await import('@/backend/events/template/handler').then(
 			(importedModule) => importedModule.handler,
 		),
