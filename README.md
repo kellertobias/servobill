@@ -25,12 +25,12 @@ These are the high level next steps:
 - [X] Dockerized deployment
 - [X] SMTP Mail sending (rather than only SES)
 - [X] Local file storage (rather than S3)
+- [X] Semantic versioning and automated releases
 - [ ] Inventory Management
 - [ ] Auto-Generate expenses (based on incoming invoices)
 - [ ] Digital outgoing invoices
 - [ ] Full Standalone (Local User Management, automatic backups, etc.)
 - [ ] Multi-user support (more than one user per installation)
-
 
 ## Developing & Deploying
 

@@ -1,0 +1,87 @@
+version: '3.8'
+
+# Production Dockerized deployment for Servobill
+# This file uses pre-built images from GitHub Container Registry
+# To use this file, set the VERSION environment variable or use the latest tag
+
+services:
+  # ---
+  # Postgres connection URL for local development:
+  # postgres://servobill:servobill@localhost:5432/servobill
+  # Format: postgres://<user>:<password>@<host>:<port>/<database>
+  # ---
+  postgres:
+    image: postgres:15
+    restart: unless-stopped
+    container_name: servobill-postgres
+    environment:
+      POSTGRES_USER: servobill-user
+      POSTGRES_PASSWORD: servobill-password
+      POSTGRES_DB: servobill-db
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  # === Queue Workers ===
+  workers:
+    image: ghcr.io/${GITHUB_REPOSITORY:-your-username/servobill}/workers:${VERSION:-latest}
+    container_name: servobill-queue-workers
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      UPLOAD_DIRECTORY: "/data"
+      # Inter service communication/configuration
+      ENDPOINT_EVENTBRIDGE: http://workers:9326
+
+      # Database configuration
+      POSTGRES_URL: postgres://servobill-user:servobill-password@postgres:5432/servobill-db
+
+      # Email related settings - configure these for your environment
+      SMTP_HOST: ${SMTP_HOST:-host.docker.internal}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USER: ${SMTP_USER:-please-set}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-please-set}
+      SMTP_FROM: ${SMTP_FROM:-please-set}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-please-set}
+    depends_on:
+      - postgres
+    working_dir: /app
+    volumes:
+      - ./data:/data
+
+  # === Next.js Application ===
+  app:
+    image: ghcr.io/${GITHUB_REPOSITORY:-your-username/servobill}/app:${VERSION:-latest}
+    container_name: servobill-app
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      UPLOAD_DIRECTORY: "/data"
+      # Inter service communication/configuration
+      ENDPOINT_EVENTBRIDGE: http://workers:9326
+
+      # Security settings - set to false in production with proper TLS
+      INSECURE_COOKIES: ${INSECURE_COOKIES:-false}
+
+      # Database configuration
+      POSTGRES_URL: postgres://servobill-user:servobill-password@postgres:5432/servobill-db
+
+      # Authentication related settings - configure these for your environment
+      ALLOWED_EMAILS: ${ALLOWED_EMAILS:-please-set}
+      OAUTH_CLIENT_ID: ${OAUTH_CLIENT_ID:-please-set}
+      OAUTH_CLIENT_SECRET: ${OAUTH_CLIENT_SECRET:-please-set}
+      JWT_SECRET: ${JWT_SECRET:-please-set}
+
+      # API URL configuration
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000/}
+
+    ports:
+      - "${PORT:-3000}:3000"
+    depends_on:
+      - postgres
+    volumes:
+      - ./data:/data
+
+volumes:
+  postgres-data: {} 
