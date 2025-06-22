@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/kellertobias/servobill/compare/v1.0.0...v1.0.1) (2025-06-22)
+
+
+### 🐛 Bug Fixes
+
+* add OrmEntity decorator to inventory ORM entities ([667a74e](https://github.com/kellertobias/servobill/commit/667a74e2610afb7a8023ee76aeefcccba16b4168))
+
 ## 1.0.0 (2025-06-22)
 
 
