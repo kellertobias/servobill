@@ -32,15 +32,17 @@ export const useHandleExtractExpenses = (onClose: () => void) => {
 
 				await API.query({
 					query: gql(`
-                mutation ExtractReceiptFromAttachments($attachmentIds: [String!], $text: String) {
-                    extractReceipt(attachmentIds: $attachmentIds, text: $text) {
-                        eventIds
-                        message
-                    }
-                }
-            `),
+						mutation ExtractReceiptFromAttachments($input: ExtractReceiptInput!) {
+							extractReceipt(input: $input) {
+								eventIds
+								message
+							}
+						}
+					`),
 					variables: {
-						attachmentIds,
+						input: {
+							attachmentIds,
+						},
 					},
 				});
 

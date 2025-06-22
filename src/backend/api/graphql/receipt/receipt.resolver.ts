@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import { Resolver, Mutation, Arg, Authorized } from 'type-graphql';
 
 import { ExtractReceiptResult } from './receipt.schema';
+import { ExtractReceiptInput } from './extract-receipt.input';
 
 import { Inject, Service } from '@/common/di';
 import { ATTACHMENT_REPOSITORY } from '@/backend/repositories/attachment/di-tokens';
@@ -47,10 +48,8 @@ export class ReceiptResolver {
 	@Authorized()
 	@Mutation(() => ExtractReceiptResult)
 	async extractReceipt(
-		@Arg('attachmentIds', () => [String], { nullable: true })
-		attachmentIds: string[] = [],
-		@Arg('text', () => String, { nullable: true })
-		text: string = '',
+		@Arg('input', () => ExtractReceiptInput)
+		{ attachmentIds = [], text = '' }: ExtractReceiptInput,
 	): Promise<ExtractReceiptResult> {
 		this.logger.info('Processing receipt extraction request', {
 			hasText: !!text,
