@@ -16,3 +16,9 @@ export enum EmailType {
 	SES = 'SES',
 	SMTP = 'SMTP',
 }
+
+export enum LLMProvider {
+	OPENAI = 'openai',
+	ANTHROPIC = 'anthropic',
+	LOCAL = 'local',
+}

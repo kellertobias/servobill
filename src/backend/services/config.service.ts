@@ -1,5 +1,10 @@
 import { CONFIG_SERVICE } from './di-tokens';
-import { DatabaseType, FileStorageType, EmailType } from './constants';
+import {
+	DatabaseType,
+	FileStorageType,
+	EmailType,
+	LLMProvider,
+} from './constants';
 
 import { Service } from '@/common/di';
 
@@ -38,6 +43,12 @@ export class ConfigService {
 		accessKeyId: string | undefined;
 		secretAccessKey: string | undefined;
 	};
+	public readonly llm: {
+		provider: LLMProvider;
+		apiKey: string;
+		baseUrl?: string;
+		model?: string;
+	} | null;
 	public readonly port: string | number;
 	public readonly domains: { api: string; site: string };
 	public readonly region: string;
@@ -118,6 +129,23 @@ export class ConfigService {
 			: {
 					type: FileStorageType.S3,
 				};
+
+		this.llm = process.env.LLM_PROVIDER
+			? {
+					provider: process.env.LLM_PROVIDER as LLMProvider,
+					apiKey: process.env.LLM_API_KEY!,
+					baseUrl: process.env.LLM_BASE_URL,
+					model: (() => {
+						if (process.env.LLM_MODEL) {
+							return process.env.LLM_MODEL;
+						}
+						if (process.env.LLM_PROVIDER === LLMProvider.OPENAI) {
+							return 'gpt-4.1';
+						}
+						return 'claude-3-5-sonnet-20240620';
+					})(),
+				}
+			: null;
 	}
 
 	public get uploadDirectory(): string | undefined {

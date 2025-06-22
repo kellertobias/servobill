@@ -1,7 +1,10 @@
-import { Logger } from './logger.service';
-import { LLM_SERVICE } from './di-tokens';
+import OpenAI from 'openai';
 
-import { Service } from '@/common/di';
+import type { ConfigService } from './config.service';
+import { Logger } from './logger.service';
+import { CONFIG_SERVICE, LLM_SERVICE } from './di-tokens';
+
+import { Inject, Service } from '@/common/di';
 
 /**
  * Configuration for LLM providers
@@ -17,6 +20,7 @@ export interface LLMConfig {
  * Request structure for LLM calls
  */
 export interface LLMRequest {
+	systemPrompt?: string;
 	prompt: string;
 	files?: Array<{
 		name: string;
@@ -72,16 +76,15 @@ export class LLMService {
 	private readonly logger = new Logger('LLMService');
 	private config: LLMConfig;
 
-	constructor() {
+	constructor(
+		@Inject(CONFIG_SERVICE)
+		private readonly configService: ConfigService,
+	) {
+		if (!this.configService.llm) {
+			throw new Error('LLM configuration not found');
+		}
 		// Default configuration - can be overridden via environment variables
-		this.config = {
-			provider:
-				(process.env.LLM_PROVIDER as 'openai' | 'anthropic' | 'local') ||
-				'openai',
-			apiKey: process.env.LLM_API_KEY,
-			baseUrl: process.env.LLM_BASE_URL,
-			model: process.env.LLM_MODEL || 'gpt-4o',
-		};
+		this.config = this.configService.llm;
 	}
 
 	/**
@@ -124,64 +127,86 @@ export class LLMService {
 		if (!this.config.apiKey) {
 			throw new Error('OpenAI API key not configured');
 		}
+		if (!this.config.model) {
+			throw new Error('OpenAI model not configured');
+		}
 
-		const baseUrl = this.config.baseUrl || 'https://api.openai.com/v1';
-		const url = `${baseUrl}/chat/completions`;
+		const openai = new OpenAI({
+			apiKey: this.config.apiKey,
+			baseURL: this.config.baseUrl || 'https://api.openai.com/v1',
+		});
 
-		const messages: Array<{
-			role: 'user';
-			content: OpenAIMessageContent[];
-		}> = [
-			{
-				role: 'user',
-				content: [
-					{
-						type: 'text',
-						text: request.prompt,
-					},
-					...(request.files?.map((file) => ({
-						type: 'image_url' as const,
-						image_url: {
-							url: `data:${file.mimeType};base64,${file.content.toString(
-								'base64',
-							)}`,
+		const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
+
+		if (request.systemPrompt) {
+			messages.push({
+				role: 'system',
+				content: request.systemPrompt,
+			});
+		}
+
+		if (request.files?.length) {
+			for (const attachment of request.files) {
+				const file = new File([attachment.content], attachment.name, {
+					type: attachment.mimeType,
+				});
+
+				const fileID = await openai.files.create({
+					file,
+					purpose: 'user_data',
+				});
+
+				messages.push({
+					role: 'user',
+					content: [
+						{
+							type: 'file',
+							file: {
+								file_id: fileID.id,
+							},
 						},
-					})) || []),
-				],
-			},
-		];
+					],
+				});
+			}
+		}
 
-		const response = await fetch(url, {
-			method: 'POST',
-			headers: {
-				Authorization: `Bearer ${this.config.apiKey}`,
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify({
+		messages.push({
+			role: 'user',
+			content: request.prompt,
+		});
+
+		try {
+			const response = await openai.chat.completions.create({
 				model: this.config.model,
 				messages,
 				temperature: request.temperature || 0.1,
 				max_tokens: request.maxTokens || 4000,
-			}),
-		});
-
-		if (!response.ok) {
-			const errorText = await response.text();
-			this.logger.error('OpenAI API request failed', {
-				status: response.status,
-				statusText: response.statusText,
-				error: errorText,
 			});
-			throw new Error(
-				`OpenAI API request failed: ${response.status} ${response.statusText}`,
-			);
-		}
 
-		const data = await response.json();
-		return {
-			content: data.choices[0].message.content,
-			usage: data.usage,
-		};
+			console.log(response);
+
+			return {
+				content: response.choices[0].message.content || '',
+				usage: response.usage
+					? {
+							completionTokens: response.usage.completion_tokens,
+							promptTokens: response.usage.prompt_tokens,
+							totalTokens: response.usage.total_tokens,
+						}
+					: undefined,
+			};
+		} catch (error) {
+			this.logger.error('OpenAI API request failed', { error });
+			if (error instanceof OpenAI.APIError) {
+				throw new TypeError(
+					`OpenAI API request failed: ${error.status} ${error.name} ${error.message}`,
+				);
+			}
+			if (error instanceof Error) {
+				throw new TypeError(`OpenAI API request failed: ${error.message}`);
+			}
+			throw new Error(`OpenAI API request failed: ${String(error)}`);
+		}
 	}
 
 	/**

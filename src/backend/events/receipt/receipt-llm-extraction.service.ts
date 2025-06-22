@@ -45,12 +45,24 @@ export class ReceiptLLMExtractionService implements ReceiptExtractorService {
 
 	public async extract(source: {
 		text: string;
-		attachments: { content: Buffer; name: string; mimeType: string }[];
+		attachments: {
+			content: Buffer;
+			name: string;
+			mimeType: string;
+			id: string;
+		}[];
 	}): Promise<ReceiptResult> {
 		try {
 			const { categories } = await this.loadData();
-			const prompt = getExtractionPrompt(source.text, categories);
-			const expensesRaw = await this.askLLM(prompt, source.attachments);
+			const systemPrompt = getExtractionPrompt(source.text, categories);
+			const prompt = source.text
+				? `<email-body>${source.text}</email-body>`
+				: 'Please Extract from Attachment';
+			const expensesRaw = await this.askLLM(
+				systemPrompt,
+				prompt,
+				source.attachments,
+			);
 			const expenses: ExpenseEntity[] = [];
 
 			for (const expense of expensesRaw) {
@@ -90,6 +102,7 @@ export class ReceiptLLMExtractionService implements ReceiptExtractorService {
 	}
 
 	private async askLLM(
+		systemPrompt: string,
 		prompt: string,
 		files: {
 			name: string;
@@ -98,6 +111,7 @@ export class ReceiptLLMExtractionService implements ReceiptExtractorService {
 		}[],
 	) {
 		const llmResponse = await this.llmService.sendRequest({
+			systemPrompt,
 			prompt,
 			files: files.length > 0 ? files : undefined,
 			temperature: 0.1,

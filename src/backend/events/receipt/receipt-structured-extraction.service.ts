@@ -41,7 +41,12 @@ export class ReceiptStructuredExtractionService
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	public async extract(source: {
 		text: string;
-		attachments: { content: Buffer; name: string; mimeType: string }[];
+		attachments: {
+			content: Buffer;
+			name: string;
+			mimeType: string;
+			id: string;
+		}[];
 	}): Promise<ReceiptResult> {
 		throw new Error('Not implemented');
 	}

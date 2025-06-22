@@ -51,15 +51,5 @@ export default (rawEmailText: string, categories: ExpenseCategory[]) => {
 			})),
 		)}
     </categories>
-
-    ${
-			rawEmailText
-				? `
-    <email-context>
-    ${rawEmailText}
-    </email-context>	
-    `
-				: ''
-		}
-	`;
+    `;
 };

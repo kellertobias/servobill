@@ -43,11 +43,15 @@ export default function AIExtractionModal({
 	onClose,
 }: AIExtractionModalProps) {
 	const [attachments, setAttachments] = useState<AttachmentFilePartial[]>([]);
+	const onCloseInner = React.useCallback(() => {
+		setAttachments([]);
+		onClose();
+	}, [onClose]);
 	const {
 		isExtracting,
 		callback: handleExtractExpenses,
 		handleClose,
-	} = useHandleExtractExpenses(onClose);
+	} = useHandleExtractExpenses(onCloseInner);
 
 	return (
 		<Transition.Root show={isOpen} as={Fragment}>

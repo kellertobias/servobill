@@ -24,6 +24,7 @@ import {
 } from '@/backend/repositories/settings';
 import { CompanyDataSetting } from '@/backend/entities/settings.entity';
 import { ExpenseEntity } from '@/backend/entities/expense.entity';
+import { AttachmentEntity } from '@/backend/entities/attachment.entity';
 
 /**
  * Main execution handler for receipt events
@@ -75,13 +76,20 @@ export class HandlerExecution {
 
 			const strategy =
 				classification === ReceiptClassification.Structured
-					? this.llmExtractionService
-					: this.structuredExtractionService;
+					? this.structuredExtractionService
+					: this.llmExtractionService;
 
 			const result = await strategy.extract({
 				text: event.emailText || '',
 				attachments,
 			});
+
+			const firstExpenseId = result.expenses[0]?.id;
+
+			for (const { attachmentEntity } of attachments) {
+				attachmentEntity.expenseId = firstExpenseId;
+				await this.attachmentRepository.save(attachmentEntity);
+			}
 
 			this.logger.info('Receipt processing completed successfully', {
 				eventId: event.id,
@@ -165,10 +173,17 @@ export class HandlerExecution {
 			content: Buffer;
 			mimeType: string;
 			name: string;
+			id: string;
+			attachmentEntity: AttachmentEntity;
 		}[]
 	> {
-		const attachments: { content: Buffer; mimeType: string; name: string }[] =
-			[];
+		const attachments: {
+			content: Buffer;
+			mimeType: string;
+			name: string;
+			id: string;
+			attachmentEntity: AttachmentEntity;
+		}[] = [];
 
 		for (const attachmentId of attachmentIds) {
 			try {
@@ -191,6 +206,8 @@ export class HandlerExecution {
 					content,
 					mimeType: attachment.mimeType,
 					name: attachment.fileName,
+					id: attachment.id,
+					attachmentEntity: attachment,
 				});
 
 				this.logger.info('Downloaded attachment for processing', {

@@ -7,6 +7,11 @@ export interface ReceiptResult {
 export interface ReceiptExtractorService {
 	extract(source: {
 		text: string;
-		attachments: { content: Buffer; name: string; mimeType: string }[];
+		attachments: {
+			content: Buffer;
+			name: string;
+			mimeType: string;
+			id: string;
+		}[];
 	}): Promise<ReceiptResult>;
 }
