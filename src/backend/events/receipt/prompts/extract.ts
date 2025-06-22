@@ -36,7 +36,7 @@ export default (rawEmailText: string, categories: ExpenseCategory[]) => {
     - Convert all amounts to cents (e.g., $10.00 = 1000 cents)
     - Use ISO 8601 format for dates
     - If no specific date is found, leave it empty
-    - Only include categoryId if you can confidently match an item to a category
+    - Only include categoryId if you can confidently match an item to a category. If no category matches, leave it empty.
     - Extract tax amounts separately when possible
     - If multiple items are present, list each separately and group them to similar items.
     </guidelines>
