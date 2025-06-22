@@ -39,6 +39,7 @@ export default (rawEmailText: string, categories: ExpenseCategory[]) => {
     - Only include categoryId if you can confidently match an item to a category. If no category matches, leave it empty.
     - Extract tax amounts separately when possible
     - If multiple items are present, list each separately and group them to similar items.
+    - in the description, always include the name of the supplier and the invoice or receipt number.
     </guidelines>
 
     <categories>
