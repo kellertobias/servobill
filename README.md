@@ -11,6 +11,7 @@ We feature a simple, easy-to-use interface for creating and managing invoices. Y
 - Modern and simple UI (in-place editing, mobile friendly)
 - Create and manage invoices/ offers & send them to clients via PDF
 - Manage expenses with attachments and expense categories & automatically create expenses when e.g. adding travel to an invoice
+- Auto-Import expenses from incoming invoices with AI
 - Generate reports with all income & expenses in JSON & CSV format for the tax authorities
 - Customizable - from email and invoice templates to invoice number formats
 - Modern Software Architecture: Modern Decorator based Typescript codebase, Serverless, Repository & Adapter Pattern for multiple database types, Folder based API structure (like NextJS), React/ NextJS based frontend, GraphQL based API, JWT based authentication workflow with refresh tokens and more.
@@ -26,11 +27,11 @@ These are the high level next steps:
 - [X] SMTP Mail sending (rather than only SES)
 - [X] Local file storage (rather than S3)
 - [X] Semantic versioning and automated releases
-- [ ] Inventory Management
-- [ ] Auto-Generate expenses (based on incoming invoices)
+- [X] Auto-Generate expenses (based on incoming invoices with AI)
+- [ ] Inventory Management (WIP)
+- [ ] Auto-Generate expenses (based on incoming structured invoices, e.g. ZUGFeRD/ X-Rechnung)
 - [ ] Digital outgoing invoices
-- [ ] Full Standalone (Local User Management, automatic backups, etc.)
-- [ ] Multi-user support (more than one user per installation)
+- [ ] Full Standalone (Local User Management, Multi-user support, automatic backups, etc.)
 
 ## Developing & Deploying
 
