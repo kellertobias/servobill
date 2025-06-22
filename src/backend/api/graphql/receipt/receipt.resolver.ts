@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto';
 
 import { Resolver, Mutation, Arg, Authorized } from 'type-graphql';
 
-import { ExtractReceiptInput, ExtractReceiptResult } from './receipt.schema';
+import { ExtractReceiptResult } from './receipt.schema';
 
 import { Inject, Service } from '@/common/di';
 import { ATTACHMENT_REPOSITORY } from '@/backend/repositories/attachment/di-tokens';
@@ -32,72 +32,71 @@ export class ReceiptResolver {
 	) {}
 
 	/**
-	 * Extract receipt data from text content or uploaded attachment.
+	 * Extract receipt data from text content or uploaded attachments.
 	 *
 	 * This mutation triggers a receipt processing event that will:
 	 * - Classify the receipt type (digital invoice vs regular receipt)
 	 * - Extract expense information using LLM services
 	 * - Create expense records in the database
 	 *
-	 * @param input - Contains either text content or attachment ID for processing
+	 * @param input - Contains either text content or attachment IDs for processing
 	 * @returns Event ID and confirmation message
 	 */
 	@Authorized()
 	@Mutation(() => ExtractReceiptResult)
 	async extractReceipt(
-		@Arg('input', () => ExtractReceiptInput) input: ExtractReceiptInput,
+		@Arg('attachmentIds', () => [String], { nullable: true })
+		attachmentIds?: string[],
+		@Arg('text', () => String, { nullable: true })
+		text?: string,
 	): Promise<ExtractReceiptResult> {
-		const eventId = randomUUID();
-
 		this.logger.info('Processing receipt extraction request', {
-			eventId,
-			hasText: !!input.text,
-			hasAttachmentId: !!input.attachmentId,
+			hasText: !!text,
+			hasAttachmentIds: !!attachmentIds?.length,
+			attachmentCount: attachmentIds?.length || 0,
 		});
 
-		// Validate input - must have either text or attachment
-		if (!input.text && !input.attachmentId) {
-			throw new Error('Either text or attachmentId must be provided');
+		// Validate input - must have either text or attachments
+		if (!text && (!attachmentIds || attachmentIds.length === 0)) {
+			throw new Error('Either text or attachmentIds must be provided');
 		}
 
-		let attachmentKey: string | undefined;
-		let attachmentBucket: string | undefined;
-
-		// If attachment ID is provided, get attachment details
-		if (input.attachmentId) {
-			const attachment = await this.attachmentRepository.getById(
-				input.attachmentId,
-			);
-			if (!attachment) {
-				throw new Error('Attachment not found');
+		// Validate all attachment IDs exist
+		if (attachmentIds && attachmentIds.length > 0) {
+			for (const attachmentId of attachmentIds) {
+				const attachment =
+					await this.attachmentRepository.getById(attachmentId);
+				if (!attachment) {
+					throw new Error(`Attachment not found: ${attachmentId}`);
+				}
 			}
-
-			attachmentKey = attachment.s3Key;
-			attachmentBucket = attachment.s3Bucket;
 		}
 
-		// Create receipt event payload
-		const receiptEvent = {
-			id: eventId,
-			attachmentKey,
-			attachmentBucket,
-			emailText: input.text,
-		};
+		const eventIds: string[] = [];
 
-		// Publish receipt event to event bus
-		const publishedEventId = await this.eventBus.send('receipt', receiptEvent, {
-			source: 'graphql.receipt',
-			resources: input.attachmentId ? [input.attachmentId] : [],
-		});
+		for (const attachmentId of attachmentIds || []) {
+			// Create receipt event payload
+			const receiptEvent = {
+				id: randomUUID(),
+				attachmentIds: [attachmentId],
+				emailText: text,
+			};
+
+			eventIds.push(receiptEvent.id);
+
+			// Publish receipt event to event bus
+			await this.eventBus.send('receipt', receiptEvent);
+
+			// delay for .3 seconds to avoid rate limiting
+			await new Promise((resolve) => setTimeout(resolve, 300));
+		}
 
 		this.logger.info('Receipt event published successfully', {
-			eventId,
-			publishedEventId,
-			attachmentKey,
+			eventIds,
 		});
 
 		return {
-			eventId: publishedEventId || eventId,
+			eventIds,
 			message:
 				'Receipt processing started successfully. The extraction will be processed asynchronously.',
 		};

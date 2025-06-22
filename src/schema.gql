@@ -135,13 +135,8 @@ input ExpenseWhereInput {
   year: Int
 }
 
-input ExtractReceiptInput {
-  attachmentId: String
-  text: String
-}
-
 type ExtractReceiptResult {
-  eventId: String!
+  eventIds: [String!]!
   message: String!
 }
 
@@ -543,7 +538,7 @@ type Mutation {
   deleteInvoice(id: String!): Invoice!
   deleteInvoiceAttachmentActivity(activityId: String!, invoiceId: String!): InvoiceChangedResponse!
   deleteProduct(id: String!): Product!
-  extractReceipt(input: ExtractReceiptInput!): ExtractReceiptResult!
+  extractReceipt(attachmentIds: [String!], text: String): ExtractReceiptResult!
   importInvoices(data: [InvoiceImportInput!]!): [Invoice!]!
   invoiceAddComment(attachToEmail: Boolean, attachmentId: String, comment: String, invoiceId: String!): InvoiceChangedResponse!
   invoiceAddPayment(id: String!, payment: InvoicePaymentInput!): InvoiceChangedResponse!

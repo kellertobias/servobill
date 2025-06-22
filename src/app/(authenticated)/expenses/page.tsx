@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-import { PlusIcon } from '@heroicons/react/20/solid';
+import { PlusIcon, SparklesIcon } from '@heroicons/react/20/solid';
 import dayjs from 'dayjs';
 
 import { Button } from '@/components/button';
@@ -13,11 +13,14 @@ import { API, gql } from '@/api/index';
 import { exportExpenses, importExpenses } from '@/api/import-export/expenses';
 
 import ExpenseOverlay from './expense-overlay';
+import AIExtractionModal from './ai-extraction-modal';
 
 export default function ExpensesHomePage() {
 	const [selectedExpenseId, setSelectedExpenseId] = React.useState<
 		null | string
 	>(null);
+	const [isAIExtractionModalOpen, setIsAIExtractionModalOpen] =
+		React.useState(false);
 
 	const { data, loading, reload } = useLoadData(async () => {
 		const data = await API.query({
@@ -59,12 +62,27 @@ export default function ExpensesHomePage() {
 					}}
 				/>
 			)}
+
+			<AIExtractionModal
+				isOpen={isAIExtractionModalOpen}
+				onClose={() => setIsAIExtractionModalOpen(false)}
+				onExtractionComplete={reload}
+			/>
+
 			<PageContent
 				title="Expenses"
 				noPadding
 				contentClassName="overflow-hidden pt-6"
 				right={
 					<>
+						<Button
+							icon={SparklesIcon}
+							header
+							grouped
+							onClick={() => setIsAIExtractionModalOpen(true)}
+						>
+							AI Upload
+						</Button>
 						<Button
 							icon={PlusIcon}
 							header

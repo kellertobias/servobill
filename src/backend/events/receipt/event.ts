@@ -1,4 +1,4 @@
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsArray, IsBoolean } from 'class-validator';
 
 /**
  * Event for processing receipts and invoices
@@ -10,12 +10,17 @@ export class ReceiptEvent {
 	id!: string;
 
 	@IsOptional()
-	@IsString()
-	attachmentKey?: string;
+	@IsBoolean()
+	isBreakdown?: boolean;
 
 	@IsOptional()
 	@IsString()
-	attachmentBucket?: string;
+	originalEventId?: string;
+
+	@IsOptional()
+	@IsArray()
+	@IsString({ each: true })
+	attachmentIds?: string[];
 
 	@IsOptional()
 	@IsString()
