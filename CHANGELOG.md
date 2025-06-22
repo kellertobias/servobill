@@ -1,3 +1,15 @@
+## [1.0.2](https://github.com/kellertobias/servobill/compare/v1.0.1...v1.0.2) (2025-06-22)
+
+
+### ♻️ Code Refactoring
+
+* restructure inventory page components and types ([01ac6cd](https://github.com/kellertobias/servobill/commit/01ac6cd1de1d4ef58f929b80ead72bb55c9c6b2c))
+
+
+### 🔧 Chores
+
+* update CI workflows for linting and release processes ([8157378](https://github.com/kellertobias/servobill/commit/8157378698c5a7089c9f6830f9bcb8e5e7da5e97))
+
 ## [1.0.1](https://github.com/kellertobias/servobill/compare/v1.0.0...v1.0.1) (2025-06-22)
 
 
