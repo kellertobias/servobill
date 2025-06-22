@@ -1,3 +1,22 @@
+## [1.2.0](https://github.com/kellertobias/servobill/compare/v1.1.0...v1.2.0) (2025-06-22)
+
+
+### ✨ Features
+
+* enhance receipt extraction functionality in GraphQL API ([588e8be](https://github.com/kellertobias/servobill/commit/588e8bed424cf7d21b6c714ede45eeb2e152b56f))
+
+
+### 🐛 Bug Fixes
+
+* add validation decorators to extract receipt input ([32dbdba](https://github.com/kellertobias/servobill/commit/32dbdba7e16bad9f9caa1a68699eda6a3b320b15))
+* implement ExtractReceiptInput for enhanced receipt extraction ([e3f181e](https://github.com/kellertobias/servobill/commit/e3f181e11dfe503f548fdd72045b097bc79f52d9))
+
+
+### 📚 Documentation
+
+* update README and manifest for enhanced features ([4afd59f](https://github.com/kellertobias/servobill/commit/4afd59f259445ab5ff335887f637fdc4f9f1f1a0))
+* update README to clarify AI auto-import feature ([198bab7](https://github.com/kellertobias/servobill/commit/198bab7bfa6e8a5886166ffe8ac800400e379f5a))
+
 ## [1.1.0](https://github.com/kellertobias/servobill/compare/v1.0.2...v1.1.0) (2025-06-22)
 
 
