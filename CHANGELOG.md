@@ -1,3 +1,10 @@
+## [1.1.0](https://github.com/kellertobias/servobill/compare/v1.0.2...v1.1.0) (2025-06-22)
+
+
+### ✨ Features
+
+* add AI configuration and conditional rendering for AI upload button ([2844cab](https://github.com/kellertobias/servobill/commit/2844cab707a2a586b4f68a7a1ba08c04c259257f))
+
 ## [1.0.2](https://github.com/kellertobias/servobill/compare/v1.0.1...v1.0.2) (2025-06-22)
 
 
