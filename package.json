@@ -117,6 +117,7 @@
     "boxen": "^8.0.1",
     "concurrently": "^8.2.2",
     "constructs": "10.3.0",
+    "conventional-changelog-conventionalcommits": "^9.0.0",
     "esbuild-plugin-tsc": "^0.4.0",
     "eslint": "^8.55.0",
     "eslint-config-airbnb-typescript": "^17.1.0",
