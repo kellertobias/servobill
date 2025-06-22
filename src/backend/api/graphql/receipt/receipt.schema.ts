@@ -1,3 +1,4 @@
+import { IsArray, IsString } from 'class-validator';
 import { Field, ObjectType } from 'type-graphql';
 
 /**
@@ -6,8 +7,10 @@ import { Field, ObjectType } from 'type-graphql';
 @ObjectType('ExtractReceiptResult')
 export class ExtractReceiptResult {
 	@Field(() => [String])
+	@IsArray()
 	eventIds!: string[];
 
 	@Field(() => String)
+	@IsString()
 	message!: string;
 }

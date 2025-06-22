@@ -9,6 +9,7 @@ import { ATTACHMENT_REPOSITORY } from '@/backend/repositories/attachment/di-toke
 import { type AttachmentRepository } from '@/backend/repositories/attachment/interface';
 import { EventBusService } from '@/backend/services/eventbus.service';
 import { Logger } from '@/backend/services/logger.service';
+import { Span } from '@/backend/instrumentation';
 
 /**
  * GraphQL resolver for processing receipts and triggering receipt extraction events.
@@ -42,13 +43,14 @@ export class ReceiptResolver {
 	 * @param input - Contains either text content or attachment IDs for processing
 	 * @returns Event ID and confirmation message
 	 */
+	@Span('ReceiptResolver.extractReceipt')
 	@Authorized()
 	@Mutation(() => ExtractReceiptResult)
 	async extractReceipt(
 		@Arg('attachmentIds', () => [String], { nullable: true })
-		attachmentIds?: string[],
+		attachmentIds: string[] = [],
 		@Arg('text', () => String, { nullable: true })
-		text?: string,
+		text: string = '',
 	): Promise<ExtractReceiptResult> {
 		this.logger.info('Processing receipt extraction request', {
 			hasText: !!text,
