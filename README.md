@@ -11,7 +11,7 @@ We feature a simple, easy-to-use interface for creating and managing invoices. Y
 - Modern and simple UI (in-place editing, mobile friendly)
 - Create and manage invoices/ offers & send them to clients via PDF
 - Manage expenses with attachments and expense categories & automatically create expenses when e.g. adding travel to an invoice
-- Auto-Import expenses from incoming invoices with AI
+- Auto-Import expenses from incoming invoices with AI (with gpt-4.1 one PDF invoice roughly costs 0.005€)
 - Generate reports with all income & expenses in JSON & CSV format for the tax authorities
 - Customizable - from email and invoice templates to invoice number formats
 - Modern Software Architecture: Modern Decorator based Typescript codebase, Serverless, Repository & Adapter Pattern for multiple database types, Folder based API structure (like NextJS), React/ NextJS based frontend, GraphQL based API, JWT based authentication workflow with refresh tokens and more.
