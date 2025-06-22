@@ -20,10 +20,10 @@ import {
 import { InventoryItem } from './inventory-item.schema';
 import { InventoryResolver } from './inventory-item.resolver';
 
-import { INVENTORY_LOCATION_REPOSITORY } from '@/backend/repositories/inventory-location/di-tokens';
-import { type InventoryLocationRepository } from '@/backend/repositories/inventory-location/interface';
-import { INVENTORY_ITEM_REPOSITORY } from '@/backend/repositories/inventory-item/di-tokens';
-import { type InventoryItemRepository } from '@/backend/repositories/inventory-item/interface';
+import { INVENTORY_LOCATION_REPOSITORY } from '@/backend/repositories/inventory-location';
+import { type InventoryLocationRepository } from '@/backend/repositories/inventory-location';
+import { INVENTORY_ITEM_REPOSITORY } from '@/backend/repositories/inventory-item';
+import { type InventoryItemRepository } from '@/backend/repositories/inventory-item';
 import { InventoryLocationEntity } from '@/backend/entities/inventory-location.entity';
 import { Logger } from '@/backend/services/logger.service';
 import { Inject, Service } from '@/common/di';

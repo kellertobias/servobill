@@ -23,6 +23,7 @@ const navigation: MenuItemDef[] = [
 	{ name: 'Invoices', href: '/invoices' },
 	{ name: 'Expenses', href: '/expenses' },
 	{ name: 'Reports', href: '/reports' },
+	{ name: 'Inventory', href: '/inventory' },
 	{ name: 'Customers', href: '/customers', mobile: true },
 	{ name: 'Products', href: '/products', mobile: true },
 	{ name: 'Settings', href: '/settings', mobile: true },

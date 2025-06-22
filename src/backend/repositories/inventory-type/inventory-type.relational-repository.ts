@@ -18,7 +18,7 @@ import { DatabaseType } from '@/backend/services/constants';
  */
 @Service({
 	name: INVENTORY_TYPE_REPOSITORY,
-	...shouldRegister(DatabaseType.SQLITE),
+	...shouldRegister([DatabaseType.SQLITE, DatabaseType.POSTGRES]),
 })
 export class InventoryTypeRelationalRepository
 	extends AbstractRelationalRepository<
