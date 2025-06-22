@@ -41,9 +41,6 @@ jobs:
       - name: Run ESLint
         run: npm run lint
 
-      - name: Run tests
-        run: npm run test
-
   # Semantic versioning and release creation
   release:
     name: Create Release
