@@ -18,5 +18,7 @@ export const OrmEntityRegistry: Function[] = [];
  * Adds the class to the OrmEntityRegistry array for later use (e.g., in DataSource config).
  */
 export function OrmEntity(target: Function) {
-	OrmEntityRegistry.push(target);
+	if (!OrmEntityRegistry.includes(target)) {
+		OrmEntityRegistry.push(target);
+	}
 }

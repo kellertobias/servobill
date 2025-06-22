@@ -1,9 +1,12 @@
 import { Column, Entity, PrimaryColumn } from 'typeorm';
 
+import { OrmEntity } from '@/common/orm-entity-registry';
+
 /**
  * Relational database entity for InventoryItem.
  * Maps to the inventory_items table in the database.
  */
+@OrmEntity
 @Entity('inventory_items')
 export class InventoryItemOrmEntity {
 	@PrimaryColumn('text')
