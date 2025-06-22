@@ -15,6 +15,7 @@ import { AttachmentResolver } from './attachments/attachment.resolver';
 import { InventoryResolver } from './inventory/inventory-item.resolver';
 import { InventoryLocationResolver } from './inventory/inventory-location.resolver';
 import { InventoryTypeResolver } from './inventory/inventory-type.resolver';
+import { ReceiptResolver } from './receipt/receipt.resolver';
 
 import { DefaultContainer } from '@/common/di';
 
@@ -39,6 +40,7 @@ export const globalSchema = buildSchema({
 		InventoryResolver,
 		InventoryLocationResolver,
 		InventoryTypeResolver,
+		ReceiptResolver,
 	],
 	emitSchemaFile:
 		process.env.NODE_ENV === 'development' ? 'src/schema.gql' : false,
