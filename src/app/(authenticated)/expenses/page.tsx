@@ -75,14 +75,16 @@ export default function ExpensesHomePage() {
 				contentClassName="overflow-hidden pt-6"
 				right={
 					<>
-						<Button
-							icon={SparklesIcon}
-							header
-							grouped
-							onClick={() => setIsAIExtractionModalOpen(true)}
-						>
-							AI Upload
-						</Button>
+						{process.env.NEXT_PUBLIC_HAS_LLM === 'true' && (
+							<Button
+								icon={SparklesIcon}
+								header
+								grouped
+								onClick={() => setIsAIExtractionModalOpen(true)}
+							>
+								AI Upload
+							</Button>
+						)}
 						<Button
 							icon={PlusIcon}
 							header

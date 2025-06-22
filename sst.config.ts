@@ -191,29 +191,6 @@ export default $config({
 			return [`${endpoint.method} ${apiPath}`, getFunction(endpoint, options)];
 		};
 
-		const getEventFunction = (
-			endpoint: EventEndpoint,
-			options?: GetFunctionOptions,
-		): [string, sst.aws.FunctionArgs, sst.aws.BusSubscriberArgs] => {
-			const eventType = endpoint.eventType
-				.split('.')
-				.map((namePart) => {
-					// ucfirst
-					return namePart[0].toUpperCase() + namePart.slice(1);
-				})
-				.join('');
-
-			return [
-				`Event${eventType}`,
-				getFunction(endpoint, options),
-				{
-					pattern: {
-						detailType: [endpoint.eventType],
-					},
-				},
-			];
-		};
-
 		// ===============================
 		// Create Resources:
 		// ===============================
@@ -362,7 +339,21 @@ export default $config({
 		> = {};
 		for (const endpoint of eventHandlerEndpoints) {
 			const handlerFunctionDefinition = getFunction(endpoint, {
-				environment: { ...baseEnvironment },
+				environment: {
+					...baseEnvironment,
+					...(process.env.LLM_API_KEY
+						? { LLM_API_KEY: process.env.LLM_API_KEY }
+						: {}),
+					...(process.env.LLM_MODEL
+						? { LLM_MODEL: process.env.LLM_MODEL }
+						: {}),
+					...(process.env.LLM_BASE_URL
+						? { LLM_BASE_URL: process.env.LLM_BASE_URL }
+						: {}),
+					...(process.env.LLM_PROVIDER
+						? { LLM_PROVIDER: process.env.LLM_PROVIDER }
+						: {}),
+				},
 				link: [email, dataBucket, table, bus],
 				logGroup: 'events',
 				timeout: 300,
@@ -451,6 +442,7 @@ export default $config({
 			domain: requiredEnv.SITE_DOMAIN,
 			environment: {
 				NEXT_PUBLIC_API_URL: api.url,
+				NEXT_PUBLIC_HAS_LLM: process.env.LLM_API_KEY ? 'true' : 'false',
 			},
 			transform: {
 				server: {
