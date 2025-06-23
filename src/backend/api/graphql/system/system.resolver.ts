@@ -3,6 +3,8 @@ import { randomUUID } from 'node:crypto';
 import { Query, Resolver, Authorized, Mutation, Arg } from 'type-graphql';
 import dayjs from 'dayjs';
 
+import { GRAPHQL_TEST_SET } from '../di-tokens';
+
 import {
 	ExpenseCategoryInputType,
 	ExpenseCategoryType,
@@ -32,7 +34,9 @@ import {
 	type ExpenseRepository,
 } from '@/backend/repositories/expense';
 
-@Service()
+@Service({
+	addToTestSet: [GRAPHQL_TEST_SET],
+})
 @Resolver()
 export class SystemResolver {
 	constructor(

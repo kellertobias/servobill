@@ -1,4 +1,5 @@
 import { shouldRegister } from '../../services/should-register';
+import { RELATIONAL_REPOSITORY_TEST_SET } from '../di-tokens';
 
 import { EMAIL_REPOSITORY, EMAIL_REPO_NAME } from './di-tokens';
 import { EmailOrmEntity } from './relational-orm-entity';
@@ -19,6 +20,7 @@ import { RelationalDbService } from '@/backend/services/relationaldb.service';
 @Service({
 	name: EMAIL_REPOSITORY,
 	...shouldRegister([DatabaseType.POSTGRES, DatabaseType.SQLITE]),
+	addToTestSet: [RELATIONAL_REPOSITORY_TEST_SET],
 })
 export class EmailRelationalRepository
 	extends AbstractRelationalRepository<EmailOrmEntity, EmailEntity, []>

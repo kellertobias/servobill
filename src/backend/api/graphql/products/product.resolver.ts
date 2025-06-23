@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Query, Resolver, Mutation, Arg, Int, Authorized } from 'type-graphql';
 
+import { GRAPHQL_TEST_SET } from '../di-tokens';
+
 import { ProductWhereInput, Product, ProductInput } from './product.schema';
 
 import { Inject, Service } from '@/common/di';
@@ -9,7 +11,9 @@ import {
 	type ProductRepository,
 } from '@/backend/repositories/product';
 
-@Service()
+@Service({
+	addToTestSet: [GRAPHQL_TEST_SET],
+})
 @Resolver(() => Product)
 export class ProductResolver {
 	constructor(

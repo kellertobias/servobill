@@ -9,6 +9,7 @@ import {
 } from 'type-graphql';
 
 import { GqlContext } from '../types';
+import { GRAPHQL_TEST_SET } from '../di-tokens';
 
 import {
 	Invoice,
@@ -42,7 +43,9 @@ import { ATTACHMENT_REPOSITORY } from '@/backend/repositories/attachment/di-toke
 import { FILE_STORAGE_SERVICE } from '@/backend/services/file-storage.service';
 import type { FileStorageService } from '@/backend/services/file-storage.service';
 
-@Service()
+@Service({
+	addToTestSet: [GRAPHQL_TEST_SET],
+})
 @Resolver(() => Invoice)
 export class InvoiceResolver {
 	constructor(

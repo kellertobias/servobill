@@ -4,6 +4,7 @@ import { Query, Resolver, Arg, Authorized } from 'type-graphql';
 import dayjs from 'dayjs';
 
 import { ExpenseCategoryType } from '../system/system.schema';
+import { GRAPHQL_TEST_SET } from '../di-tokens';
 
 import {
 	IncomeSurplusReport,
@@ -32,7 +33,9 @@ type Booking = IncomeSurplusReportItem & {
 	overdueCents?: number;
 };
 
-@Service()
+@Service({
+	addToTestSet: [GRAPHQL_TEST_SET],
+})
 @Resolver()
 export class ReportsResolver {
 	constructor(

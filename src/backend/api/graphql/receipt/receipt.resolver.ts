@@ -2,6 +2,8 @@ import { randomUUID } from 'crypto';
 
 import { Resolver, Mutation, Arg, Authorized } from 'type-graphql';
 
+import { GRAPHQL_TEST_SET } from '../di-tokens';
+
 import { ExtractReceiptResult } from './receipt.schema';
 import { ExtractReceiptInput } from './extract-receipt.input';
 
@@ -22,7 +24,9 @@ import { Span } from '@/backend/instrumentation';
  * The resolver publishes receipt events that are handled asynchronously by the receipt event handler,
  * which uses LLM services to extract structured expense data from receipts.
  */
-@Service()
+@Service({
+	addToTestSet: [GRAPHQL_TEST_SET],
+})
 @Resolver()
 export class ReceiptResolver {
 	private readonly logger = new Logger('ReceiptResolver');

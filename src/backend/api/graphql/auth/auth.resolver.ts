@@ -1,6 +1,7 @@
 import { Query, Resolver, Ctx, Authorized } from 'type-graphql';
 
 import { GqlContext } from '../types';
+import { GRAPHQL_TEST_SET } from '../di-tokens';
 
 import { AuthCheckResult, GetContextResult } from './auth.schema';
 
@@ -11,7 +12,9 @@ import {
 	type FileStorageService,
 } from '@/backend/services/file-storage.service';
 
-@Service()
+@Service({
+	addToTestSet: [GRAPHQL_TEST_SET],
+})
 @Resolver()
 export class AuthResolver {
 	constructor(

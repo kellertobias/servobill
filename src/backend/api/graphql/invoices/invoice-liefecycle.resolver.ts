@@ -2,6 +2,7 @@ import { Resolver, Arg, Authorized, Mutation, Ctx } from 'type-graphql';
 import dayjs from 'dayjs';
 
 import { GqlContext } from '../types';
+import { GRAPHQL_TEST_SET } from '../di-tokens';
 
 import {
 	Invoice,
@@ -40,7 +41,9 @@ import {
 } from '@/backend/entities/invoice-activity.entity';
 import { InvoiceSettingsEntity } from '@/backend/entities/settings.entity';
 
-@Service()
+@Service({
+	addToTestSet: [GRAPHQL_TEST_SET],
+})
 @Resolver(() => Invoice)
 export class InvoiceLifecycleResolver {
 	private logger = new Logger(InvoiceLifecycleResolver.name);

@@ -1,4 +1,5 @@
 import { shouldRegister } from '../../services/should-register';
+import { RELATIONAL_REPOSITORY_TEST_SET } from '../di-tokens';
 
 import { InventoryItemOrmEntity } from './relational-orm-entity';
 import { InventoryItemRepository } from './interface';
@@ -22,6 +23,7 @@ import { DatabaseType } from '@/backend/services/constants';
 @Service({
 	name: INVENTORY_ITEM_REPOSITORY,
 	...shouldRegister([DatabaseType.SQLITE, DatabaseType.POSTGRES]),
+	addToTestSet: [RELATIONAL_REPOSITORY_TEST_SET],
 })
 export class InventoryItemRelationalRepository
 	extends AbstractRelationalRepository<

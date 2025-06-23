@@ -1,6 +1,7 @@
 import { IsNull, Brackets } from 'typeorm';
 
 import { AbstractRelationalRepository } from '../abstract-relational-repository';
+import { RELATIONAL_REPOSITORY_TEST_SET } from '../di-tokens';
 
 import { AttachmentOrmEntity } from './relational-orm-entity';
 import { AttachmentCreateInput } from './interface';
@@ -19,6 +20,7 @@ import { shouldRegister } from '@/backend/services/should-register';
 @Service({
 	name: ATTACHMENT_REPOSITORY,
 	...shouldRegister([DatabaseType.POSTGRES, DatabaseType.SQLITE]),
+	addToTestSet: [RELATIONAL_REPOSITORY_TEST_SET],
 })
 export class AttachmentRelationalRepository extends AbstractRelationalRepository<
 	AttachmentOrmEntity,

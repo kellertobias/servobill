@@ -2,7 +2,7 @@ import * as fs from 'node:fs/promises';
 import path from 'node:path';
 import { existsSync } from 'node:fs';
 
-import { FILE_STORAGE_SERVICE } from './di-tokens';
+import { FILE_STORAGE_LOCAL_TEST_SET, FILE_STORAGE_SERVICE } from './di-tokens';
 import { FileStorageService } from './interface';
 
 import { CONFIG_SERVICE } from '@/backend/services/di-tokens';
@@ -22,6 +22,7 @@ import { AttachmentEntity } from '@/backend/entities/attachment.entity';
 
 		return configService.fileStorage.type === FileStorageType.LOCAL;
 	},
+	addToTestSet: [FILE_STORAGE_LOCAL_TEST_SET],
 })
 export class FileStorageServiceLocal implements FileStorageService {
 	private filesDirectory: string;

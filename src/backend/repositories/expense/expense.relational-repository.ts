@@ -1,4 +1,5 @@
 import { shouldRegister } from '../../services/should-register';
+import { RELATIONAL_REPOSITORY_TEST_SET } from '../di-tokens';
 
 import { EXPENSE_REPOSITORY, EXPENSE_REPO_NAME } from './di-tokens';
 import { ExpenseOrmEntity } from './relational-orm-entity';
@@ -19,6 +20,7 @@ import { RelationalDbService } from '@/backend/services/relationaldb.service';
 @Service({
 	name: EXPENSE_REPOSITORY,
 	...shouldRegister([DatabaseType.POSTGRES, DatabaseType.SQLITE]),
+	addToTestSet: [RELATIONAL_REPOSITORY_TEST_SET],
 })
 export class ExpenseRelationalRepository
 	extends AbstractRelationalRepository<ExpenseOrmEntity, ExpenseEntity, []>

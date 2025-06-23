@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-// users.resolvers.ts
-
-import { randomUUID } from 'crypto';
-
 import { Query, Resolver, Mutation, Arg, Int, Authorized } from 'type-graphql';
+
+import { GRAPHQL_TEST_SET } from '../di-tokens';
 
 import { Customer, CustomerInput } from './customers.schema';
 
@@ -14,7 +12,9 @@ import { type SettingsRepository } from '@/backend/repositories/settings/interfa
 import { Inject, Service } from '@/common/di';
 import { InvoiceSettingsEntity } from '@/backend/entities/settings.entity';
 
-@Service()
+@Service({
+	addToTestSet: [GRAPHQL_TEST_SET],
+})
 @Resolver(() => Customer)
 export class CustomerResolver {
 	constructor(

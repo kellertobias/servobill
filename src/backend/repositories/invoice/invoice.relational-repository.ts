@@ -1,4 +1,5 @@
 import { shouldRegister } from '../../services/should-register';
+import { RELATIONAL_REPOSITORY_TEST_SET } from '../di-tokens';
 
 import { INVOICE_REPOSITORY, INVOICE_REPO_NAME } from './di-tokens';
 import { InvoiceOrmEntity } from './relational-orm-entity';
@@ -31,6 +32,7 @@ import { CustomJson } from '@/common/json';
 @Service({
 	name: INVOICE_REPOSITORY,
 	...shouldRegister([DatabaseType.POSTGRES, DatabaseType.SQLITE]),
+	addToTestSet: [RELATIONAL_REPOSITORY_TEST_SET],
 })
 export class InvoiceRelationalRepository
 	extends AbstractRelationalRepository<

@@ -11,6 +11,7 @@ import {
 
 import { ExpenseCategoryType } from '../system/system.schema';
 import { Attachment } from '../attachments/attachment.schema';
+import { GRAPHQL_TEST_SET } from '../di-tokens';
 
 import { ExpenseInput, Expense, ExpenseWhereInput } from './expenses.schema';
 
@@ -26,7 +27,9 @@ import { Cached } from '@/backend/services/cache-decorator';
 import { FILE_STORAGE_SERVICE } from '@/backend/services/file-storage.service';
 import type { FileStorageService } from '@/backend/services/file-storage.service';
 
-@Service()
+@Service({
+	addToTestSet: [GRAPHQL_TEST_SET],
+})
 @Resolver(() => Expense)
 export class ExpenseResolver {
 	constructor(

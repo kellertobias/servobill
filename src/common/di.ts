@@ -4,9 +4,10 @@ import { Container, injectable } from 'inversify';
 import { Logger } from '@/backend/services/logger.service';
 
 export type ModuleToken = new (...args: any[]) => unknown;
+export type ModuleTokenName = string | symbol | ModuleToken;
 export type ModuleBinding =
-	| { token: string | symbol | ModuleToken; module: ModuleToken }
-	| { token: string | symbol | ModuleToken; value: any }
+	| { token: ModuleTokenName; module: ModuleToken }
+	| { token: ModuleTokenName; value: any }
 	| ModuleToken;
 
 export class App {
@@ -30,6 +31,21 @@ export class App {
 
 	static get<T>(type: string | symbol | (new (...args: any[]) => T)) {
 		return this.defaultContainer.get<T>(type);
+	}
+
+	static testSets: Record<
+		string,
+		{ token: ModuleTokenName; module: ModuleToken }[]
+	> = {};
+
+	static addToTestSet(
+		testSet: string,
+		binding: { token: ModuleTokenName; module: ModuleToken },
+	) {
+		if (!this.testSets[testSet]) {
+			this.testSets[testSet] = [];
+		}
+		this.testSets[testSet].push(binding);
 	}
 
 	constructor(private readonly container: Container) {}
@@ -78,15 +94,29 @@ export function Service<T extends new (...args: any[]) => unknown>(
 				name?: string | symbol;
 				singleton?: boolean;
 				shouldRegister?: () => boolean;
+				addToTestSet?: string[];
 		  },
 ): (target: T) => T {
 	return function (target: T) {
-		const { name, singleton, shouldRegister } =
+		const { name, singleton, shouldRegister, addToTestSet } =
 			typeof nameOrOptions === 'string' || typeof nameOrOptions === 'symbol'
-				? { name: nameOrOptions, singleton: false, shouldRegister: () => true }
+				? {
+						name: nameOrOptions,
+						singleton: false,
+						shouldRegister: () => true,
+						addToTestSet: [],
+					}
 				: nameOrOptions || {};
 
 		const injected = injectable()(target);
+		if (addToTestSet && addToTestSet.length > 0) {
+			for (const testSet of addToTestSet) {
+				App.addToTestSet(testSet, {
+					token: name || target,
+					module: target,
+				});
+			}
+		}
 		if (shouldRegister && !shouldRegister()) {
 			return target;
 		}

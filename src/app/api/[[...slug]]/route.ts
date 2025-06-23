@@ -87,7 +87,11 @@ const nextToLambdaRequest = async (
 	body: string,
 	pathParameters: Record<string, string>,
 ): Promise<APIGatewayProxyEventV2 & { path: string }> => {
-	const headers = Object.fromEntries(request.headers.entries());
+	const headers = Object.fromEntries(
+		// the casting is necessary because Next.js headers are not typed as a Map
+		// but they are a Map
+		(request.headers as unknown as string[]).entries(),
+	);
 	const queryStringParameters = Object.fromEntries(
 		request.nextUrl.searchParams.entries(),
 	);

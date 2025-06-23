@@ -5,9 +5,15 @@ import {
 	POSTGRES_PASSWORD,
 	POSTGRES_PORT,
 	POSTGRES_USER,
+	S3_PORT,
 } from './vitest.setup-e2e';
 
-import { DatabaseType } from '@/backend/services/constants';
+import { EmailConfig } from '@/backend/services/config.service';
+import {
+	DatabaseType,
+	EmailType,
+	FileStorageType,
+} from '@/backend/services/constants';
 
 /**
  * Returns a minimal config object for DynamoDB-based tests.
@@ -55,6 +61,8 @@ export function getConfigForRelationalDb(
 		},
 		endpoints: {
 			dynamodb: `http://localhost:${DYNAMODB_PORT}`,
+			s3: `http://localhost:${S3_PORT}`,
+			eventbridge: `http://localhost:1234`,
 		},
 		region: 'eu-central-1',
 		awsCreds: {
@@ -70,6 +78,18 @@ export function getConfigForRelationalDb(
 			accessKeyId: 'AKIAIOSFODNN7EXAMPLE',
 			secretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
 		},
+		fileStorage: {
+			type: FileStorageType.LOCAL,
+			baseDirectory: `/tmp/test-file-storage/${Date.now()}`,
+		},
+		email: {
+			type: EmailType.SMTP,
+			host: 'localhost',
+			port: 1025,
+			user: 'test',
+			password: 'test',
+			from: 'test@test.com',
+		} satisfies EmailConfig,
 		...overrides,
 	};
 }

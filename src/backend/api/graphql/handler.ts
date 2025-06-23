@@ -14,7 +14,7 @@ import { GqlContext } from './types';
 
 import { withInstrumentation } from '@/backend/instrumentation';
 
-const contextBuilder = async ({
+export const contextBuilder = async ({
 	event,
 	context,
 }: {

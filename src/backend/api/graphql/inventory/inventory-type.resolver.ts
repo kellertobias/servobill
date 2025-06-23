@@ -11,6 +11,8 @@ import {
 	Root,
 } from 'type-graphql';
 
+import { GRAPHQL_TEST_SET } from '../di-tokens';
+
 import {
 	InventoryType,
 	CreateInventoryTypeInput,
@@ -32,7 +34,9 @@ import { Inject, Service } from '@/common/di';
  * GraphQL resolver for inventory type operations.
  * Provides CRUD operations and querying capabilities for inventory types.
  */
-@Service()
+@Service({
+	addToTestSet: [GRAPHQL_TEST_SET],
+})
 @Resolver(() => InventoryType)
 export class InventoryTypeResolver {
 	private logger = new Logger('inventory-type-resolver');

@@ -2,6 +2,8 @@ import { randomUUID } from 'crypto';
 
 import { Arg, Mutation, Query, Resolver, Int, Authorized } from 'type-graphql';
 
+import { GRAPHQL_TEST_SET } from '../di-tokens';
+
 import {
 	InventoryItem,
 	InventoryItemInput,
@@ -28,7 +30,9 @@ import { InventoryTypeEntity } from '@/backend/entities/inventory-type.entity';
  * GraphQL resolver for inventory item operations.
  * Provides CRUD operations and querying capabilities for inventory items.
  */
-@Service()
+@Service({
+	addToTestSet: [GRAPHQL_TEST_SET],
+})
 @Resolver(() => InventoryItem)
 export class InventoryResolver {
 	private logger = new Logger('inventory-item-resolver');

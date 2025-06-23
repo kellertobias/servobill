@@ -11,6 +11,8 @@ import {
 	Root,
 } from 'type-graphql';
 
+import { GRAPHQL_TEST_SET } from '../di-tokens';
+
 import {
 	InventoryLocation,
 	CreateInventoryLocationInput,
@@ -32,7 +34,9 @@ import { Inject, Service } from '@/common/di';
  * GraphQL resolver for inventory location operations.
  * Provides CRUD operations and querying capabilities for inventory locations.
  */
-@Service()
+@Service({
+	addToTestSet: [GRAPHQL_TEST_SET],
+})
 @Resolver(() => InventoryLocation)
 export class InventoryLocationResolver {
 	private logger = new Logger('inventory-location-resolver');

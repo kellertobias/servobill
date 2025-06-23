@@ -1,4 +1,5 @@
 import { shouldRegister } from '../../services/should-register';
+import { RELATIONAL_REPOSITORY_TEST_SET } from '../di-tokens';
 
 import { SessionOrmEntity } from './relational-orm-entity';
 import type { SessionRepository } from './interface';
@@ -19,6 +20,7 @@ function getAllowedEmails() {
 @Service({
 	name: SESSION_REPOSITORY,
 	...shouldRegister([DatabaseType.POSTGRES, DatabaseType.SQLITE]),
+	addToTestSet: [RELATIONAL_REPOSITORY_TEST_SET],
 })
 /**
  * Relational DB implementation of the SessionRepository interface.

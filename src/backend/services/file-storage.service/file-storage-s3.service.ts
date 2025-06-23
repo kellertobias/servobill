@@ -1,4 +1,4 @@
-import { FILE_STORAGE_SERVICE } from './di-tokens';
+import { FILE_STORAGE_S3_TEST_SET, FILE_STORAGE_SERVICE } from './di-tokens';
 import { FileStorageService } from './interface';
 
 import { CONFIG_SERVICE } from '@/backend/services/di-tokens';
@@ -19,6 +19,7 @@ import { AttachmentEntity } from '@/backend/entities/attachment.entity';
 
 		return configService.fileStorage.type === FileStorageType.S3;
 	},
+	addToTestSet: [FILE_STORAGE_S3_TEST_SET],
 })
 export class FileStorageServiceS3 implements FileStorageService {
 	private defaultBucket: string;

@@ -1,5 +1,7 @@
 import { Resolver, Query, Mutation, Arg, Authorized, Int } from 'type-graphql';
 
+import { GRAPHQL_TEST_SET } from '../di-tokens';
+
 import {
 	Attachment,
 	RequestAttachmentUploadUrlResult,
@@ -20,7 +22,9 @@ import type { FileStorageService } from '@/backend/services/file-storage.service
  *
  * TODO: Implement presigned PUT upload URL in S3Service for direct client uploads.
  */
-@Service()
+@Service({
+	addToTestSet: [GRAPHQL_TEST_SET],
+})
 @Resolver(() => Attachment)
 export class AttachmentResolver {
 	constructor(

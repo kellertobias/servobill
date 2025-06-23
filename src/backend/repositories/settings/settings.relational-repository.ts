@@ -1,4 +1,5 @@
 import { shouldRegister } from '../../services/should-register';
+import { RELATIONAL_REPOSITORY_TEST_SET } from '../di-tokens';
 
 import { SettingsOrmEntity } from './relational-orm-entity';
 import type { SettingsRepository } from './interface';
@@ -20,6 +21,7 @@ const storeId = 'settings';
 @Service({
 	name: SETTINGS_REPOSITORY,
 	...shouldRegister([DatabaseType.POSTGRES, DatabaseType.SQLITE]),
+	addToTestSet: [RELATIONAL_REPOSITORY_TEST_SET],
 })
 /**
  * Relational DB implementation of the SettingsRepository interface.
