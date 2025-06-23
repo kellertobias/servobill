@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/kellertobias/servobill/compare/v1.2.0...v1.2.1) (2025-06-22)
+
+
+### 🐛 Bug Fixes
+
+* add new 512x512 PNG image and update manifest references ([880863c](https://github.com/kellertobias/servobill/commit/880863c70d591bb5efcb3cc39326b667dd8372b5))
+
 ## [1.2.0](https://github.com/kellertobias/servobill/compare/v1.1.0...v1.2.0) (2025-06-22)
 
 
