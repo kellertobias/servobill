@@ -19,7 +19,7 @@ import { Inject, Service } from '@/common/di';
 	...shouldRegister([DatabaseType.POSTGRES, DatabaseType.SQLITE]),
 })
 export class RelationalDbService {
-	private dataSource: DataSource;
+	public dataSource: DataSource;
 
 	constructor(@Inject(CONFIG_SERVICE) private readonly config: ConfigService) {
 		this.dataSource = this.createDataSource();

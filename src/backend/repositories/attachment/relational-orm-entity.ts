@@ -49,9 +49,9 @@ export class AttachmentOrmEntity {
 	@Column('text', { nullable: true })
 	invoiceId?: string;
 
-	/** Linked expense ID, if any */
-	@Column('text', { nullable: true })
-	expenseId?: string;
+	/** Linked expense IDs, if any */
+	@Column('text', { array: true, nullable: true })
+	expenseIds?: string[];
 
 	/** Linked inventory ID, if any */
 	@Column('text', { nullable: true })

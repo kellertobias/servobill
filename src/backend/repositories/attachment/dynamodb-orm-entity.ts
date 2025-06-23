@@ -43,6 +43,42 @@ export const entitySchema = DynamoDBService.getSchema({
 	},
 });
 
+export const attachmentExpenseLinkSchema = DynamoDBService.getSchema({
+	model: {
+		entity: 'attachmentExpenseLink',
+		version: '1',
+		service: 'attachment',
+	},
+	attributes: {
+		storeId: { type: 'string', required: true },
+		attachmentId: { type: 'string', required: true },
+		expenseId: { type: 'string', required: true },
+	},
+	indexes: {
+		byAttachmentId: {
+			pk: {
+				field: 'pk',
+				composite: ['attachmentId'],
+			},
+			sk: {
+				field: 'sk',
+				composite: ['storeId', 'expenseId'],
+			},
+		},
+		byExpenseId: {
+			index: 'gsi1pk-gsi1sk-index',
+			pk: {
+				field: 'gsi1pk',
+				composite: ['expenseId'],
+			},
+			sk: {
+				field: 'gsi1sk',
+				composite: ['storeId', 'attachmentId'],
+			},
+		},
+	},
+});
+
 export type AttachmentSchema = typeof entitySchema.schema;
 export type AttachmentSchemaResponseItem = ResponseItem<
 	string,
@@ -51,3 +87,14 @@ export type AttachmentSchemaResponseItem = ResponseItem<
 	AttachmentSchema
 >;
 export type AttachmentOrmEntity = typeof entitySchema.responseItem;
+
+export type AttachmentExpenseLinkSchema =
+	typeof attachmentExpenseLinkSchema.schema;
+export type AttachmentExpenseLinkSchemaResponseItem = ResponseItem<
+	string,
+	string,
+	string,
+	AttachmentExpenseLinkSchema
+>;
+export type AttachmentExpenseLinkOrmEntity =
+	typeof attachmentExpenseLinkSchema.responseItem;

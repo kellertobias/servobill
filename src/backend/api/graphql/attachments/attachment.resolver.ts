@@ -89,13 +89,13 @@ export class AttachmentResolver {
 			throw new Error('Attachment not found');
 		}
 		if (invoiceId) {
-			attachment.invoiceId = invoiceId;
+			attachment.setInvoiceId(invoiceId);
 		}
 		if (expenseId) {
-			attachment.expenseId = expenseId;
+			attachment.addExpenseId(expenseId);
 		}
 		if (inventoryId) {
-			attachment.inventoryId = inventoryId;
+			attachment.setInventoryId(inventoryId);
 		}
 		attachment.status = 'attached';
 		await this.repository.save(attachment);

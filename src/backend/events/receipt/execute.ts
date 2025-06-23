@@ -87,7 +87,7 @@ export class HandlerExecution {
 			const firstExpenseId = result.expenses[0]?.id;
 
 			for (const { attachmentEntity } of attachments) {
-				attachmentEntity.expenseId = firstExpenseId;
+				attachmentEntity.addExpenseId(firstExpenseId);
 				await this.attachmentRepository.save(attachmentEntity);
 			}
 

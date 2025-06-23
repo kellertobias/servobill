@@ -90,6 +90,11 @@ export function prepareRepoTest<T>({
 			},
 			onBeforeEach: async () => {
 				// Optionally clear relational DB, etc.
+				const config = getConfigForRelationalDb();
+				const dbService = new RelationalDbService(config as any);
+				await dbService.initialize();
+				await dbService.dataSource.synchronize(true);
+				await dbService.dataSource.destroy();
 			},
 		},
 	];

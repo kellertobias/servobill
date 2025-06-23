@@ -29,6 +29,7 @@ export abstract class AbstractRelationalRepository<
 	CreateArgs extends unknown[] = [],
 > extends AbstractRepository<OrmEntity, DomainEntity, CreateArgs> {
 	protected initialized = new DeferredPromise<void>();
+	protected db: RelationalDbService;
 	/**
 	 * TypeORM repository for the entity.
 	 */
@@ -52,6 +53,7 @@ export abstract class AbstractRelationalRepository<
 		ormEntityClass: { new (): OrmEntity };
 	}) {
 		super();
+		this.db = db;
 		db.initialize()
 			.then(() => {
 				this.repository = db.getRepository(ormEntityClass);

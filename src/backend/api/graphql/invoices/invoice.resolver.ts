@@ -384,7 +384,7 @@ export class InvoiceResolver {
 			const attachment = await this.attachmentRepository.getById(attachmentId);
 			if (attachment) {
 				activity.attachmentId = attachment.id;
-				attachment.invoiceId = invoiceId;
+				attachment.setInvoiceId(invoiceId);
 				await this.attachmentRepository.save(attachment);
 			}
 		}

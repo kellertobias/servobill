@@ -24,8 +24,8 @@ export class AttachmentEntity extends DomainEntity {
 	public status!: 'pending' | 'finished' | 'attached';
 	/** Linked invoice ID, if any */
 	public invoiceId?: string;
-	/** Linked expense ID, if any */
-	public expenseId?: string;
+	/** Linked expense IDs, if any */
+	public expenseIds?: string[];
 	/** Linked inventory ID, if any (future use) */
 	public inventoryId?: string;
 	/** S3 bucket name */
@@ -43,11 +43,57 @@ export class AttachmentEntity extends DomainEntity {
 		if (!this.updatedAt) {
 			this.updatedAt = new Date();
 		}
+		if (!this.expenseIds) {
+			this.expenseIds = [];
+		}
 		if (!this.status) {
 			this.status = 'pending';
 		}
 		if (!this.s3Bucket) {
 			this.s3Bucket = '';
 		}
+	}
+
+	public setInvoiceId(invoiceId: string | null): void {
+		this.invoiceId = invoiceId === null ? undefined : invoiceId;
+		this.status = 'attached';
+		this.updatedAt = new Date();
+	}
+
+	public setExpenseIds(expenseIds: string[] | null): void {
+		this.expenseIds = expenseIds === null ? undefined : expenseIds;
+		this.status = 'attached';
+		this.updatedAt = new Date();
+	}
+
+	public addExpenseId(expenseId: string): void {
+		if (!this.expenseIds) {
+			this.expenseIds = [];
+		}
+		this.expenseIds.push(expenseId);
+		this.status = 'attached';
+		this.updatedAt = new Date();
+	}
+
+	public removeExpenseId(expenseId: string): void {
+		if (!this.expenseIds) {
+			return;
+		}
+		this.expenseIds = this.expenseIds.filter((id) => id !== expenseId);
+		if (this.expenseIds.length === 0) {
+			this.status = 'pending';
+		}
+		this.updatedAt = new Date();
+	}
+
+	public setInventoryId(inventoryId: string | null): void {
+		this.inventoryId = inventoryId === null ? undefined : inventoryId;
+		this.status = 'attached';
+		this.updatedAt = new Date();
+	}
+
+	public setFinished(): void {
+		this.status = 'finished';
+		this.updatedAt = new Date();
 	}
 }

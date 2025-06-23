@@ -8,6 +8,7 @@ export type AttachmentCreateInput = {
 	size: number;
 	s3Key: string;
 	s3Bucket: string;
+	expenseIds?: string[];
 };
 
 /**

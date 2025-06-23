@@ -1,9 +1,12 @@
+import { Entity } from 'electrodb';
+
 import { AbstractDynamodbRepository } from '../abstract-dynamodb-repository';
 
 import {
 	entitySchema,
 	AttachmentOrmEntity,
 	AttachmentSchema,
+	attachmentExpenseLinkSchema,
 } from './dynamodb-orm-entity';
 import { AttachmentCreateInput } from './interface';
 import { ATTACHMENT_REPO_NAME, ATTACHMENT_REPOSITORY } from './di-tokens';
@@ -31,10 +34,49 @@ export class AttachmentDynamoDBRepository extends AbstractDynamodbRepository<
 	protected logger = new Logger(ATTACHMENT_REPO_NAME);
 	protected mainIdName = 'attachmentId';
 	protected storeId = 'attachment';
+	protected linkStore: Entity<
+		string,
+		string,
+		string,
+		typeof attachmentExpenseLinkSchema.schema
+	>;
+	protected linkStoreId = 'attachmentExpenseLink';
 
 	constructor(@Inject(DynamoDBService) private dynamoDb: DynamoDBService) {
 		super();
 		this.store = this.dynamoDb.getEntity(entitySchema.schema);
+		this.linkStore = this.dynamoDb.getEntity(
+			attachmentExpenseLinkSchema.schema,
+		);
+	}
+
+	public async save(entity: AttachmentEntity): Promise<void> {
+		await super.save(entity);
+		await this.populateExpenseLinks(entity);
+	}
+
+	public async delete(id: string): Promise<void> {
+		const entity = await this.getById(id);
+		if (!entity) {
+			throw new Error(`Attachment with id ${id} not found`);
+		}
+		await this.populateExpenseLinks(entity, true);
+		await super.delete(id);
+	}
+
+	public async createWithId(
+		id: string,
+		input: AttachmentCreateInput,
+	): Promise<AttachmentEntity> {
+		const entity = await super.createWithId(id, input);
+		await this.populateExpenseLinks(entity);
+		return entity;
+	}
+
+	public async create(input: AttachmentCreateInput): Promise<AttachmentEntity> {
+		const entity = await super.create(input);
+		await this.populateExpenseLinks(entity);
+		return entity;
 	}
 
 	/**
@@ -54,8 +96,8 @@ export class AttachmentDynamoDBRepository extends AbstractDynamodbRepository<
 			s3Bucket: orm.s3Bucket,
 			status: orm.status as 'pending' | 'finished',
 			invoiceId: orm.linkType === 'invoice' ? orm.linkedId : undefined,
-			expenseId: orm.linkType === 'expense' ? orm.linkedId : undefined,
 			inventoryId: orm.linkType === 'inventory' ? orm.linkedId : undefined,
+			expenseIds: orm.linkType === 'expense' ? JSON.parse(orm.linkedId) : [],
 		});
 	}
 
@@ -80,11 +122,11 @@ export class AttachmentDynamoDBRepository extends AbstractDynamodbRepository<
 				if (domain.invoiceId) {
 					return 'invoice';
 				}
-				if (domain.expenseId) {
-					return 'expense';
-				}
 				if (domain.inventoryId) {
 					return 'inventory';
+				}
+				if (domain.expenseIds) {
+					return 'expense';
 				}
 				return 'orphaned';
 			})(),
@@ -92,11 +134,11 @@ export class AttachmentDynamoDBRepository extends AbstractDynamodbRepository<
 				if (domain.invoiceId) {
 					return domain.invoiceId;
 				}
-				if (domain.expenseId) {
-					return domain.expenseId;
-				}
 				if (domain.inventoryId) {
 					return domain.inventoryId;
+				}
+				if (domain.expenseIds) {
+					return JSON.stringify(domain.expenseIds);
 				}
 				return 'orphaned';
 			})(),
@@ -120,6 +162,7 @@ export class AttachmentDynamoDBRepository extends AbstractDynamodbRepository<
 			status: 'pending',
 			createdAt: new Date(),
 			updatedAt: new Date(),
+			expenseIds: input.expenseIds || [],
 		});
 	}
 
@@ -135,34 +178,57 @@ export class AttachmentDynamoDBRepository extends AbstractDynamodbRepository<
 		limit?: number;
 		cursor?: string;
 	}): Promise<AttachmentEntity[]> {
-		let linkedId: string | undefined;
-		if (query.invoiceId) {
-			linkedId = query.invoiceId;
-		} else if (query.expenseId) {
-			linkedId = query.expenseId;
-		} else if (query.inventoryId) {
-			linkedId = query.inventoryId;
-		}
 		let data: AttachmentOrmEntity[] = [];
-		if (linkedId) {
-			const result = await this.store.query
-				.byLinkedId({
-					storeId: this.storeId,
-					linkedId,
+
+		if (query.expenseId) {
+			const linkResults = await this.linkStore.query
+				.byExpenseId({
+					expenseId: query.expenseId,
 				})
 				.go();
-			data = result.data;
+			const attachmentIds = linkResults.data.map((l) => l.attachmentId);
+			if (attachmentIds.length === 0) {
+				return [];
+			}
+			const attachmentsResult = await this.store
+				.get(
+					attachmentIds.map((id) => ({
+						attachmentId: id,
+						storeId: this.storeId,
+					})),
+				)
+				.go();
+			data = attachmentsResult.data;
 		} else {
-			// List all (not recommended for large tables)
-			const result = await this.store.query
-				.byLinkedId({
-					storeId: this.storeId,
-					linkedId: 'orphaned',
-				})
-				.go();
-			data = result.data;
+			let linkedId: string | undefined;
+			if (query.invoiceId) {
+				linkedId = query.invoiceId;
+			} else if (query.inventoryId) {
+				linkedId = query.inventoryId;
+			}
+
+			if (linkedId) {
+				const result = await this.store.query
+					.byLinkedId({
+						storeId: this.storeId,
+						linkedId,
+					})
+					.go();
+				data = result.data;
+			} else {
+				// List all (not recommended for large tables), for now only orphaned
+				const result = await this.store.query
+					.byLinkedId({
+						storeId: this.storeId,
+						linkedId: 'orphaned',
+					})
+					.go();
+				data = result.data;
+			}
 		}
-		return data.map((orm) => this.ormToDomainEntitySafe(orm));
+
+		const attachments = data.map((orm) => this.ormToDomainEntitySafe(orm));
+		return attachments;
 	}
 
 	/**
@@ -177,10 +243,65 @@ export class AttachmentDynamoDBRepository extends AbstractDynamodbRepository<
 				linkedId: 'orphaned',
 			})
 			.go();
-		const orphaned = result.data;
-		for (const a of orphaned) {
+		const orphanedInMainTable = result.data;
+
+		const orphanedAttachments = [];
+		for (const a of orphanedInMainTable) {
+			const links = await this.linkStore.query
+				.byAttachmentId({ attachmentId: a.attachmentId })
+				.go();
+			if (links.data.length === 0) {
+				orphanedAttachments.push(a);
+			}
+		}
+
+		for (const a of orphanedAttachments) {
 			await this.delete(a.attachmentId);
 		}
-		return orphaned.length;
+		return orphanedAttachments.length;
+	}
+
+	private async populateExpenseLinks(
+		entity: AttachmentEntity,
+		deleteAllLinks = false,
+	): Promise<void> {
+		const existingLinks = await this.linkStore.query
+			.byAttachmentId({ attachmentId: entity.id })
+			.go();
+
+		const newLinks = deleteAllLinks
+			? []
+			: entity.expenseIds?.filter(
+					(id) => !existingLinks.data.some((link) => link.expenseId === id),
+				);
+		const linksToDelete = deleteAllLinks
+			? existingLinks.data
+			: existingLinks.data.filter(
+					(link) => !entity.expenseIds?.includes(link.expenseId),
+				);
+
+		if (newLinks && newLinks.length > 0) {
+			for (const link of newLinks) {
+				await this.linkStore
+					.put({
+						attachmentId: entity.id,
+						expenseId: link,
+						storeId: this.linkStoreId,
+					})
+					.go();
+			}
+		}
+
+		if (linksToDelete && linksToDelete.length > 0) {
+			await this.linkStore
+				.delete(
+					linksToDelete.map((link) => ({
+						attachmentId: link.attachmentId,
+						expenseId: link.expenseId,
+						storeId: this.linkStoreId,
+					})),
+				)
+				.go();
+		}
 	}
 }

@@ -1,4 +1,4 @@
-import { IsNull } from 'typeorm';
+import { IsNull, Brackets } from 'typeorm';
 
 import { AbstractRelationalRepository } from '../abstract-relational-repository';
 
@@ -46,7 +46,7 @@ export class AttachmentRelationalRepository extends AbstractRelationalRepository
 			s3Bucket: orm.s3Bucket,
 			status: orm.status as 'pending' | 'finished',
 			invoiceId: orm.invoiceId,
-			expenseId: orm.expenseId,
+			expenseIds: orm.expenseIds,
 			inventoryId: orm.inventoryId,
 		});
 	}
@@ -73,7 +73,7 @@ export class AttachmentRelationalRepository extends AbstractRelationalRepository
 			s3Bucket: domain.s3Bucket,
 			status: domain.status,
 			invoiceId: domain.invoiceId,
-			expenseId: domain.expenseId,
+			expenseIds: domain.expenseIds,
 			inventoryId: domain.inventoryId,
 		};
 	}
@@ -113,9 +113,28 @@ export class AttachmentRelationalRepository extends AbstractRelationalRepository
 			});
 		}
 		if (query.expenseId) {
-			qb.andWhere('attachment.expenseId = :expenseId', {
-				expenseId: query.expenseId,
-			});
+			const dbType = this.db.dataSource.options.type;
+			if (dbType === 'postgres') {
+				qb.andWhere(`:expenseId = ANY(attachment.expenseIds)`, {
+					expenseId: query.expenseId,
+				});
+			} else {
+				qb.andWhere(
+					new Brackets((subQuery) => {
+						subQuery
+							.where('attachment.expenseIds = :expenseId')
+							.orWhere('attachment.expenseIds LIKE :expenseIdStart')
+							.orWhere('attachment.expenseIds LIKE :expenseIdMiddle')
+							.orWhere('attachment.expenseIds LIKE :expenseIdEnd');
+					}),
+					{
+						expenseId: query.expenseId,
+						expenseIdStart: `${query.expenseId},%`,
+						expenseIdMiddle: `%,${query.expenseId},%`,
+						expenseIdEnd: `%,${query.expenseId}`,
+					},
+				);
+			}
 		}
 		if (query.inventoryId) {
 			qb.andWhere('attachment.inventoryId = :inventoryId', {
@@ -140,7 +159,7 @@ export class AttachmentRelationalRepository extends AbstractRelationalRepository
 		const orphaned = await this.repository!.find({
 			where: {
 				invoiceId: IsNull(),
-				expenseId: IsNull(),
+				expenseIds: IsNull(),
 				inventoryId: IsNull(),
 			},
 		});

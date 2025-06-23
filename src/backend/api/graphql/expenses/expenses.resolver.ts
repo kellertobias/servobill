@@ -104,7 +104,7 @@ export class ExpenseResolver {
 			for (const id of data.attachmentIds) {
 				const attachment = await this.attachmentRepository.getById(id);
 				if (attachment) {
-					attachment.expenseId = expense.id;
+					attachment.addExpenseId(expense.id);
 					await this.attachmentRepository.save(attachment);
 				}
 			}
@@ -131,7 +131,7 @@ export class ExpenseResolver {
 		for (const attId of attachmentIds || []) {
 			const attachment = await this.attachmentRepository.getById(attId);
 			if (attachment) {
-				attachment.expenseId = expense.id;
+				attachment.setExpenseIds([expense.id]);
 				await this.attachmentRepository.save(attachment);
 			}
 		}
@@ -144,13 +144,22 @@ export class ExpenseResolver {
 			if (!(attachmentIds || []).includes(att.id)) {
 				// Get attachment details before deletion to clean up storage abstraction
 				const attachment = await this.attachmentRepository.getById(att.id);
-				if (attachment?.s3Key && attachment.s3Bucket) {
-					// Delete file from storage abstraction before removing DB record
-					await this.fileStorage.deleteFile(attachment.s3Key, {
-						bucket: attachment.s3Bucket,
-					});
+				if (!attachment) {
+					continue;
 				}
-				await this.attachmentRepository.delete(att.id);
+				attachment.removeExpenseId(expense.id);
+
+				if (attachment.expenseIds?.length === 0) {
+					if (attachment?.s3Key && attachment.s3Bucket) {
+						// Delete file from storage abstraction before removing DB record
+						await this.fileStorage.deleteFile(attachment.s3Key, {
+							bucket: attachment.s3Bucket,
+						});
+					}
+					await this.attachmentRepository.delete(att.id);
+				} else {
+					await this.attachmentRepository.save(attachment);
+				}
 			}
 		}
 		return expense;
