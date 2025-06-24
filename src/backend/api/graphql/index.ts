@@ -1,50 +1,17 @@
 import 'reflect-metadata';
-import { buildSchema } from 'type-graphql';
 
 import './enums';
 
-import { authChecker } from './authorizer';
-import { CustomerResolver } from './customers/customers.resolver';
-import { ExpenseResolver } from './expenses/expenses.resolver';
-import { InvoiceResolver } from './invoices/invoice.resolver';
-import { InvoiceLifecycleResolver } from './invoices/invoice-liefecycle.resolver';
-import { ProductResolver } from './products/product.resolver';
-import { ReportsResolver } from './reports/reports.resolver';
-import { AuthResolver } from './auth/auth.resolver';
-import { SystemResolver } from './system/system.resolver';
-import { AttachmentResolver } from './attachments/attachment.resolver';
-import { InventoryResolver } from './inventory/inventory-item.resolver';
-import { InventoryLocationResolver } from './inventory/inventory-location.resolver';
-import { InventoryTypeResolver } from './inventory/inventory-type.resolver';
-import { ReceiptResolver } from './receipt/receipt.resolver';
-
-import { DefaultContainer } from '@/common/di';
-
-// import { CqrsBus } from '@/backend/services/cqrs.service';
-
-// CqrsBus.forRoot({
-// 	handlers: [],
-// 	container: Container,
-// });
-
-export const globalSchema = buildSchema({
-	resolvers: [
-		CustomerResolver,
-		ExpenseResolver,
-		InvoiceResolver,
-		InvoiceLifecycleResolver,
-		ProductResolver,
-		ReportsResolver,
-		AuthResolver,
-		SystemResolver,
-		AttachmentResolver,
-		InventoryResolver,
-		InventoryLocationResolver,
-		InventoryTypeResolver,
-		ReceiptResolver,
-	],
-	emitSchemaFile:
-		process.env.NODE_ENV === 'development' ? 'src/schema.gql' : false,
-	container: DefaultContainer,
-	authChecker,
-});
+export { CustomerResolver } from './customers/customers.resolver';
+export { ExpenseResolver } from './expenses/expenses.resolver';
+export { InvoiceResolver } from './invoices/invoice.resolver';
+export { InvoiceLifecycleResolver } from './invoices/invoice-liefecycle.resolver';
+export { ProductResolver } from './products/product.resolver';
+export { ReportsResolver } from './reports/reports.resolver';
+export { AuthResolver } from './auth/auth.resolver';
+export { SystemResolver } from './system/system.resolver';
+export { AttachmentResolver } from './attachments/attachment.resolver';
+export { InventoryResolver } from './inventory/inventory-item.resolver';
+export { InventoryLocationResolver } from './inventory/inventory-location.resolver';
+export { InventoryTypeResolver } from './inventory/inventory-type.resolver';
+export { ReceiptResolver } from './receipt/receipt.resolver';

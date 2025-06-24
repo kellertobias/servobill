@@ -5,7 +5,7 @@ import chalk from 'chalk';
 import { APIGatewayProxyStructuredResultV2 } from 'aws-lambda';
 import { trace } from '@opentelemetry/api';
 
-import { globalSchema } from '.';
+import { globalSchema } from './schema';
 
 import { Logger } from '@/backend/services/logger.service';
 

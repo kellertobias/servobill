@@ -20,13 +20,13 @@ export class App {
 		const container = new Container();
 		const app = new this(container);
 
-		for (const Module of modules) {
-			if (typeof Module === 'function') {
-				app.bind(Module);
-			} else if ('module' in Module) {
-				app.bind(Module.token, { module: Module.module });
+		for (const binding of modules) {
+			if (typeof binding === 'function') {
+				app.bind(binding);
+			} else if ('module' in binding) {
+				app.bind(binding.token, { module: binding.module });
 			} else {
-				app.bind(Module.token, { value: Module.value });
+				app.bind(binding.token, { value: binding.value });
 			}
 		}
 
@@ -71,7 +71,7 @@ export class App {
 			  },
 	) {
 		if (typeof type === 'function') {
-			this.container.bind(type.name).to(type);
+			this.container.bind(type).to(type);
 			if (process.env.DI_DEBUG) {
 				// eslint-disable-next-line no-console
 				console.log(` * Binding ${type.name} to ${type.name}`);

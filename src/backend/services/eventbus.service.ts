@@ -27,7 +27,7 @@ export class EventBusService {
 			this.configuration.endpoints.eventbridge &&
 			!this.configuration.endpoints.eventbridge.includes('.');
 
-		if (nonStandardEndpoint) {
+		if (nonStandardEndpoint && !process.env.VITEST) {
 			console.log('Using non-standard eventbridge endpoint', {
 				endpoint: this.configuration.endpoints.eventbridge,
 			});

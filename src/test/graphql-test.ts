@@ -1,3 +1,7 @@
+/* eslint-disable import/no-extraneous-dependencies */
+import { randomUUID } from 'node:crypto';
+
+import { vi } from 'vitest';
 import { ApolloServer } from 'apollo-server-lambda';
 import { buildSchema, NonEmptyArray } from 'type-graphql';
 import type {
@@ -11,6 +15,7 @@ import { getConfigForRelationalDb } from './create-config';
 
 import '@/backend/repositories';
 
+import * as resolvers from '@/backend/api/graphql/index';
 import { App, DEFAULT_TEST_SET, DefaultContainer } from '@/common/di';
 import { GRAPHQL_TEST_SET } from '@/backend/api/graphql/di-tokens';
 import {
@@ -21,7 +26,7 @@ import { RelationalDbService } from '@/backend/services/relationaldb.service';
 import { RELATIONAL_REPOSITORY_TEST_SET } from '@/backend/repositories/di-tokens';
 import { FILE_STORAGE_LOCAL_TEST_SET } from '@/backend/services/file-storage.service/di-tokens';
 import { Session, SessionLambdaContext } from '@/backend/api/session';
-import { contextBuilder } from '@/backend/api/graphql/handler';
+import { contextBuilder } from '@/backend/api/graphql/context-builder';
 import { authChecker } from '@/backend/api/graphql/authorizer';
 
 export type ExecuteTestFunction = (options: {
@@ -31,7 +36,8 @@ export type ExecuteTestFunction = (options: {
 		authenticated: boolean;
 		session: Session;
 	};
-}) => Promise<ExecutionResult>;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+}) => Promise<ExecutionResult | { errors: string[]; data?: any }>;
 
 if (DefaultContainer.isBound(CONFIG_SERVICE)) {
 	DefaultContainer.unbind(CONFIG_SERVICE);
@@ -49,6 +55,7 @@ export async function prepareGraphqlTest() {
 			...App.testSets[DEFAULT_TEST_SET],
 			...App.testSets[RELATIONAL_REPOSITORY_TEST_SET],
 			...App.testSets[FILE_STORAGE_LOCAL_TEST_SET],
+			...App.testSets[GRAPHQL_TEST_SET],
 		],
 	});
 
@@ -57,15 +64,10 @@ export async function prepareGraphqlTest() {
 	await dbService.initialize();
 	await dbService.dataSource.synchronize(true); // this wipes the DB
 
-	const resolvers = App.testSets[GRAPHQL_TEST_SET].map(
-		// eslint-disable-next-line @typescript-eslint/ban-types
-		(r) => r.module as Function,
-	);
-
 	// Build GraphQL schema
 	const schema = await buildSchema({
 		// eslint-disable-next-line @typescript-eslint/ban-types
-		resolvers: resolvers as NonEmptyArray<Function>,
+		resolvers: Object.values(resolvers) as unknown as NonEmptyArray<Function>,
 		container: app,
 		authChecker,
 	});
@@ -96,38 +98,50 @@ export async function prepareGraphqlTest() {
 				: null;
 
 		const gqlHandler = server.createHandler();
-
+		const cb = vi.fn();
 		const ctx = {
-			done: () => {},
-			fail: () => {},
-			succeed: () => {},
-			getRemainingTimeInMillis: () => 30000,
-			functionName: 'test-function',
-			functionVersion: 'test-version',
+			callbackWaitsForEmptyEventLoop: false,
+			functionName: '/api/graphql',
+			functionVersion: 'local',
+			invokedFunctionArn: 'arn:aws:lambda:local',
+			memoryLimitInMB: '512',
+			awsRequestId: randomUUID(),
+			logGroupName: 'local',
+			logStreamName: 'local',
+			getRemainingTimeInMillis: () => 10000,
+			done: cb,
+			fail: cb,
+			succeed: (messageOrObject: unknown) => cb(undefined, messageOrObject),
 			identity: {
 				user: session,
 				refreshable: false,
 			},
 		} satisfies Partial<SessionLambdaContext> as unknown as Context;
-
+		const body = JSON.stringify({ query: source, variables: variableValues });
 		const event = {
+			httpMethod: 'POST',
+			version: '1.0',
 			routeKey: 'local',
+			path: '/api/graphql',
 			rawPath: '/api/graphql',
 			rawQueryString: '',
 			headers: {
 				'content-type': 'application/json',
 			},
 			cookies: [],
-			isBase64Encoded: false,
 			queryStringParameters: {},
+			body,
 			pathParameters: {},
-			body: JSON.stringify({ query: source, variables: variableValues }),
+			isBase64Encoded: false,
+			stageVariables: undefined,
 			requestContext: {
 				accountId: 'test-account',
 				apiId: 'test-api-id',
-				domainName: 'test-domain-name',
-				domainPrefix: 'test-domain-prefix',
-				requestId: 'test-request-id',
+				domainName: 'localhost:3000',
+				domainPrefix: '',
+				requestId: randomUUID(),
+				routeKey: 'local',
+				stage: 'local',
 				time: new Date().toISOString(),
 				timeEpoch: Date.now(),
 				http: {
@@ -138,11 +152,17 @@ export async function prepareGraphqlTest() {
 					userAgent: 'test-user-agent',
 				},
 			} satisfies Partial<APIGatewayEventRequestContextV2> as unknown as APIGatewayEventRequestContextV2,
-		} satisfies Partial<APIGatewayProxyEventV2> as unknown as APIGatewayProxyEventV2;
-
+		} satisfies Partial<APIGatewayProxyEventV2> & {
+			path: string;
+			httpMethod: string;
+		} as unknown as APIGatewayProxyEventV2;
 		const answer = await gqlHandler(event, ctx, () => {});
 
-		return answer;
+		try {
+			return JSON.parse(answer.body as string) as ExecutionResult;
+		} catch {
+			return { errors: [answer.body as string] };
+		}
 	};
 
 	return {

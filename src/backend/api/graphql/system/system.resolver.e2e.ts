@@ -23,7 +23,7 @@ describe('SystemResolver', () => {
 	});
 
 	// @TODO this doesn't work yet, since the mocking of graphql is broken somewhere
-	it.skip('should return the settings', async () => {
+	it('should return the settings', async () => {
 		// Arrange
 		const companySetting =
 			await settingsRepository.getSetting(CompanyDataSetting);
