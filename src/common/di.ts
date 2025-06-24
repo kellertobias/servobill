@@ -58,6 +58,14 @@ export class App {
 		return this.container.get<T>(type);
 	}
 
+	isBound(token: ModuleTokenName) {
+		return this.container.isBound(token);
+	}
+
+	unbind(token: ModuleTokenName) {
+		this.container.unbind(token);
+	}
+
 	bind<T>(
 		type: string | symbol | (new (...args: any[]) => T),
 		to?:

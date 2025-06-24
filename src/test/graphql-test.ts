@@ -21,6 +21,7 @@ import { GRAPHQL_TEST_SET } from '@/backend/api/graphql/di-tokens';
 import {
 	CONFIG_SERVICE,
 	RELATIONALDB_SERVICE,
+	EVENTBUS_SERVICE,
 } from '@/backend/services/di-tokens';
 import { RelationalDbService } from '@/backend/services/relationaldb.service';
 import { RELATIONAL_REPOSITORY_TEST_SET } from '@/backend/repositories/di-tokens';
@@ -45,19 +46,35 @@ if (DefaultContainer.isBound(CONFIG_SERVICE)) {
 
 /**
  * Prepares a test environment for GraphQL e2e tests.
+ *
+ * This function also injects a mocked EventBusService into the DI container, allowing tests
+ * to inspect and assert which events are sent via the event bus. The mock is returned as part
+ * of the result, and replaces any previously registered EventBusService.
  */
 export async function prepareGraphqlTest() {
 	const config = getConfigForRelationalDb();
 
+	// --- Mock EventBusService ---
+	const eventBusMock = {
+		send: vi.fn().mockImplementation(() => Promise.resolve(randomUUID())),
+	};
+
 	const app = App.forRoot({
 		modules: [
 			{ token: CONFIG_SERVICE, value: config },
+			// Register the mock EventBusService for all code under test
 			...App.testSets[DEFAULT_TEST_SET],
 			...App.testSets[RELATIONAL_REPOSITORY_TEST_SET],
 			...App.testSets[FILE_STORAGE_LOCAL_TEST_SET],
 			...App.testSets[GRAPHQL_TEST_SET],
 		],
 	});
+
+	// Unbind any existing EventBusService to ensure the mock is used
+	if (app.isBound(EVENTBUS_SERVICE)) {
+		app.unbind(EVENTBUS_SERVICE);
+	}
+	app.bind(EVENTBUS_SERVICE, { value: eventBusMock });
 
 	// Initialize database and synchronize schema
 	const dbService = app.get<RelationalDbService>(RELATIONALDB_SERVICE);
@@ -169,5 +186,6 @@ export async function prepareGraphqlTest() {
 		schema,
 		app,
 		execute,
+		eventBusMock,
 	};
 }
