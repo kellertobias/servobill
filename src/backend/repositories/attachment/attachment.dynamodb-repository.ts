@@ -1,5 +1,6 @@
 import { Entity } from 'electrodb';
 
+import { DYNAMODB_REPOSITORY_TEST_SET } from '../di-tokens';
 import { AbstractDynamodbRepository } from '../abstract-dynamodb-repository';
 
 import {
@@ -29,6 +30,7 @@ import type { EventBusService } from '@/backend/services/eventbus.service';
 @Service({
 	name: ATTACHMENT_REPOSITORY,
 	...shouldRegister(DatabaseType.DYNAMODB),
+	addToTestSet: [DYNAMODB_REPOSITORY_TEST_SET],
 })
 export class AttachmentDynamoDBRepository extends AbstractDynamodbRepository<
 	AttachmentOrmEntity,

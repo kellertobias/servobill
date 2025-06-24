@@ -1,4 +1,5 @@
 import { shouldRegister } from '../../services/should-register';
+import { DYNAMODB_REPOSITORY_TEST_SET } from '../di-tokens';
 
 import { EMAIL_REPO_NAME, EMAIL_REPOSITORY } from './di-tokens';
 import { entitySchema, EmailOrmEntity } from './dynamodb-orm-entity';
@@ -20,7 +21,11 @@ import type { EventBusService } from '@/backend/services/eventbus.service';
 /**
  * DynamoDB implementation of the EmailRepository interface.
  */
-@Service({ name: EMAIL_REPOSITORY, ...shouldRegister(DatabaseType.DYNAMODB) })
+@Service({
+	name: EMAIL_REPOSITORY,
+	...shouldRegister(DatabaseType.DYNAMODB),
+	addToTestSet: [DYNAMODB_REPOSITORY_TEST_SET],
+})
 export class EmailDynamodbRepository
 	extends AbstractDynamodbRepository<
 		EmailOrmEntity,

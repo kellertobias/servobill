@@ -1,4 +1,5 @@
 import { shouldRegister } from '../../services/should-register';
+import { DYNAMODB_REPOSITORY_TEST_SET } from '../di-tokens';
 
 import { entitySchema, InventoryItemOrmEntity } from './dynamodb-orm-entity';
 import { InventoryItemRepository } from './interface';
@@ -27,6 +28,7 @@ import type { EventBusService } from '@/backend/services/eventbus.service';
 @Service({
 	name: INVENTORY_ITEM_REPOSITORY,
 	...shouldRegister(DatabaseType.DYNAMODB),
+	addToTestSet: [DYNAMODB_REPOSITORY_TEST_SET],
 })
 export class InventoryItemDynamoDBRepository
 	extends AbstractDynamodbRepository<

@@ -6,6 +6,7 @@ import {
 } from 'electrodb';
 
 import { shouldRegister } from '../../services/should-register';
+import { DYNAMODB_REPOSITORY_TEST_SET } from '../di-tokens';
 
 import {
 	entitySchema,
@@ -20,7 +21,11 @@ import { InventoryLocationEntity } from '@/backend/entities/inventory-location.e
 import { Logger } from '@/backend/services/logger.service';
 import { Inject, Service } from '@/common/di';
 import { DatabaseType } from '@/backend/services/constants';
-import { DYNAMODB_SERVICE } from '@/backend/services/di-tokens';
+import {
+	DYNAMODB_SERVICE,
+	EVENTBUS_SERVICE,
+} from '@/backend/services/di-tokens';
+import type { EventBusService } from '@/backend/services/eventbus.service';
 
 type InventoryLocationSchema = typeof entitySchema.schema;
 type InventoryLocationSchemaResponseItem = ResponseItem<
@@ -37,6 +42,7 @@ type InventoryLocationSchemaResponseItem = ResponseItem<
 @Service({
 	name: INVENTORY_LOCATION_REPOSITORY,
 	...shouldRegister(DatabaseType.DYNAMODB),
+	addToTestSet: [DYNAMODB_REPOSITORY_TEST_SET],
 })
 export class InventoryLocationDynamoDBRepository
 	extends AbstractDynamodbRepository<
@@ -51,8 +57,12 @@ export class InventoryLocationDynamoDBRepository
 	protected mainIdName: string = 'inventoryLocationId';
 	protected storeId: string = 'inventory';
 
-	constructor(@Inject(DYNAMODB_SERVICE) private dynamoDb: DynamoDBService) {
+	constructor(
+		@Inject(DYNAMODB_SERVICE) private dynamoDb: DynamoDBService,
+		@Inject(EVENTBUS_SERVICE) protected eventBus: EventBusService,
+	) {
 		super();
+		this.eventBus = eventBus;
 		this.store = this.dynamoDb.getEntity(entitySchema.schema);
 	}
 

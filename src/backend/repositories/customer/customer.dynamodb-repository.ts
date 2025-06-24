@@ -6,6 +6,7 @@ import {
 } from 'electrodb';
 
 import { shouldRegister } from '../../services/should-register';
+import { DYNAMODB_REPOSITORY_TEST_SET } from '../di-tokens';
 
 import { CUSTOMER_REPO_NAME, CUSTOMER_REPOSITORY } from './di-tokens';
 import { entitySchema, CustomerOrmEntity } from './dynamodb-orm-entity';
@@ -38,6 +39,7 @@ type CustomerSchemaResponseItem = ResponseItem<
 @Service({
 	name: CUSTOMER_REPOSITORY,
 	...shouldRegister(DatabaseType.DYNAMODB),
+	addToTestSet: [DYNAMODB_REPOSITORY_TEST_SET],
 })
 export class CustomerDynamodbRepository
 	extends AbstractDynamodbRepository<

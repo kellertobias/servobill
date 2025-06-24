@@ -41,6 +41,7 @@ const tryConnection = async (connect: () => Promise<void>, retries = 15) => {
 let teardownHappened = false;
 
 export default async function globalSetup(project: TestProject) {
+	// eslint-disable-next-line no-console
 	console.log('Starting Global Test Setup...');
 	const start = Date.now();
 

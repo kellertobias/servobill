@@ -1,4 +1,5 @@
 import { shouldRegister } from '../../services/should-register';
+import { DYNAMODB_REPOSITORY_TEST_SET } from '../di-tokens';
 
 import { INVOICE_REPO_NAME, INVOICE_REPOSITORY } from './di-tokens';
 import { entitySchema, InvoiceOrmEntity } from './dynamodb-orm-entity';
@@ -32,7 +33,11 @@ import type { EventBusService } from '@/backend/services/eventbus.service';
 /**
  * DynamoDB implementation of the InvoiceRepository interface.
  */
-@Service({ name: INVOICE_REPOSITORY, ...shouldRegister(DatabaseType.DYNAMODB) })
+@Service({
+	name: INVOICE_REPOSITORY,
+	...shouldRegister(DatabaseType.DYNAMODB),
+	addToTestSet: [DYNAMODB_REPOSITORY_TEST_SET],
+})
 export class InvoiceDynamodbRepository
 	extends AbstractDynamodbRepository<
 		InvoiceOrmEntity,

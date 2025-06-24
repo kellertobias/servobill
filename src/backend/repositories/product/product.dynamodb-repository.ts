@@ -5,6 +5,7 @@ import {
 } from 'electrodb';
 
 import { shouldRegister } from '../../services/should-register';
+import { DYNAMODB_REPOSITORY_TEST_SET } from '../di-tokens';
 
 import { PRODUCT_REPO_NAME, PRODUCT_REPOSITORY } from './di-tokens';
 import type { ProductRepository } from './interface';
@@ -27,7 +28,11 @@ import {
 } from '@/backend/services/di-tokens';
 import type { EventBusService } from '@/backend/services/eventbus.service';
 
-@Service({ name: PRODUCT_REPOSITORY, ...shouldRegister(DatabaseType.DYNAMODB) })
+@Service({
+	name: PRODUCT_REPOSITORY,
+	...shouldRegister(DatabaseType.DYNAMODB),
+	addToTestSet: [DYNAMODB_REPOSITORY_TEST_SET],
+})
 /**
  * DynamoDB implementation of the ProductRepository interface.
  */

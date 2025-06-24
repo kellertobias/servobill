@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 
 import { shouldRegister } from '../../services/should-register';
+import { DYNAMODB_REPOSITORY_TEST_SET } from '../di-tokens';
 
 import { entitySchema, SessionOrmEntity } from './dynamodb-orm-entity';
 import type { SessionRepository } from './interface';
@@ -25,7 +26,11 @@ function getAllowedEmails() {
 	return new Set((process.env.ALLOWED_EMAILS || '').split(','));
 }
 
-@Service({ name: SESSION_REPOSITORY, ...shouldRegister(DatabaseType.DYNAMODB) })
+@Service({
+	name: SESSION_REPOSITORY,
+	...shouldRegister(DatabaseType.DYNAMODB),
+	addToTestSet: [DYNAMODB_REPOSITORY_TEST_SET],
+})
 /**
  * DynamoDB implementation of the SessionRepository interface.
  */

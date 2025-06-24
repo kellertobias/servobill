@@ -6,6 +6,7 @@ import {
 } from 'electrodb';
 
 import { shouldRegister } from '../../services/should-register';
+import { DYNAMODB_REPOSITORY_TEST_SET } from '../di-tokens';
 
 import { entitySchema, InventoryTypeOrmEntity } from './dynamodb-orm-entity';
 import { InventoryTypeRepository } from './interface';
@@ -39,6 +40,7 @@ type InventoryTypeSchemaResponseItem = ResponseItem<
 @Service({
 	name: INVENTORY_TYPE_REPOSITORY,
 	...shouldRegister(DatabaseType.DYNAMODB),
+	addToTestSet: [DYNAMODB_REPOSITORY_TEST_SET],
 })
 export class InventoryTypeDynamoDBRepository
 	extends AbstractDynamodbRepository<
