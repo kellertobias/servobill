@@ -1,33 +1,15 @@
-import { CONFIG_SERVICE } from './di-tokens';
+import { CONFIG_SERVICE, DEFAULT_CONFIG_TEST_SET } from './di-tokens';
 import {
 	DatabaseType,
 	FileStorageType,
 	EmailType,
 	LLMProvider,
+	EmailConfig,
 } from './constants';
 
 import { Service } from '@/common/di';
 
-/**
- * Type for email configuration, supporting both SES and SMTP
- */
-export type EmailConfig =
-	| {
-			type: EmailType.SES;
-			accessKeyId?: string;
-			secretAccessKey?: string;
-	  }
-	| {
-			type: EmailType.SMTP;
-			host: string;
-			port: number;
-			user: string;
-			password: string;
-			from: string;
-			fromName?: string;
-	  };
-
-@Service(CONFIG_SERVICE)
+@Service({ name: CONFIG_SERVICE, addToTestSet: [DEFAULT_CONFIG_TEST_SET] })
 export class ConfigService {
 	public readonly endpoints: Record<
 		's3' | 'dynamodb' | 'eventbridge' | 'ses',

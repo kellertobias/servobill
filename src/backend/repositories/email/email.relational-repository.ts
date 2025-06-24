@@ -11,7 +11,12 @@ import { EmailEntity } from '@/backend/entities/email.entity';
 import { Logger } from '@/backend/services/logger.service';
 import { AbstractRelationalRepository } from '@/backend/repositories/abstract-relational-repository';
 import { DatabaseType } from '@/backend/services/constants';
-import { RelationalDbService } from '@/backend/services/relationaldb.service';
+import type { RelationalDbService } from '@/backend/services/relationaldb.service';
+import {
+	EVENTBUS_SERVICE,
+	RELATIONALDB_SERVICE,
+} from '@/backend/services/di-tokens';
+import type { EventBusService } from '@/backend/services/eventbus.service';
 
 /**
  * Unified repository for Email using TypeORM (Postgres or SQLite).
@@ -29,8 +34,12 @@ export class EmailRelationalRepository
 	/** Logger instance for this repository. */
 	protected logger = new Logger(EMAIL_REPO_NAME);
 
-	constructor(@Inject(RelationalDbService) db: RelationalDbService) {
+	constructor(
+		@Inject(RELATIONALDB_SERVICE) db: RelationalDbService,
+		@Inject(EVENTBUS_SERVICE) protected eventBus: EventBusService,
+	) {
 		super({ db, ormEntityClass: EmailOrmEntity });
+		this.eventBus = eventBus;
 	}
 
 	/**

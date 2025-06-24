@@ -33,8 +33,7 @@ describe.each(repoTestCases)('$name (E2E)', ({ setup, onBeforeEach }) => {
 	});
 
 	it('should create, get, and delete an inventory item', async () => {
-		const { app, RepositoryImplementation } = await setup();
-		const repo = app.create<InventoryItemRepository>(RepositoryImplementation);
+		const { repo } = await setup();
 
 		const id = randomUUID();
 		const locationId = randomUUID();
@@ -77,8 +76,7 @@ describe.each(repoTestCases)('$name (E2E)', ({ setup, onBeforeEach }) => {
 	});
 
 	it('should list inventory items using listByQuery', async () => {
-		const { app, RepositoryImplementation } = await setup();
-		const repo = app.create<InventoryItemRepository>(RepositoryImplementation);
+		const { repo } = await setup();
 
 		const id1 = randomUUID();
 		const id2 = randomUUID();
@@ -141,8 +139,7 @@ describe.each(repoTestCases)('$name (E2E)', ({ setup, onBeforeEach }) => {
 	});
 
 	it('should support filtering by location', async () => {
-		const { app, RepositoryImplementation } = await setup();
-		const repo = app.create<InventoryItemRepository>(RepositoryImplementation);
+		const { repo } = await setup();
 
 		const locationId1 = randomUUID();
 		const locationId2 = randomUUID();
@@ -203,8 +200,7 @@ describe.each(repoTestCases)('$name (E2E)', ({ setup, onBeforeEach }) => {
 	});
 
 	it('should support filtering by state', async () => {
-		const { app, RepositoryImplementation } = await setup();
-		const repo = app.create<InventoryItemRepository>(RepositoryImplementation);
+		const { repo } = await setup();
 
 		const locationId = randomUUID();
 		const typeId = randomUUID();
@@ -264,8 +260,7 @@ describe.each(repoTestCases)('$name (E2E)', ({ setup, onBeforeEach }) => {
 	});
 
 	it('should support filtering by type', async () => {
-		const { app, RepositoryImplementation } = await setup();
-		const repo = app.create<InventoryItemRepository>(RepositoryImplementation);
+		const { repo } = await setup();
 
 		const locationId = randomUUID();
 		const typeId1 = randomUUID();
@@ -322,8 +317,7 @@ describe.each(repoTestCases)('$name (E2E)', ({ setup, onBeforeEach }) => {
 	});
 
 	it('should support filtering by typeId null (one-off items)', async () => {
-		const { app, RepositoryImplementation } = await setup();
-		const repo = app.create<InventoryItemRepository>(RepositoryImplementation);
+		const { repo } = await setup();
 
 		const locationId = randomUUID();
 		const typeId = randomUUID();
@@ -382,8 +376,7 @@ describe.each(repoTestCases)('$name (E2E)', ({ setup, onBeforeEach }) => {
 	});
 
 	it('should support finding items by barcode', async () => {
-		const { app, RepositoryImplementation } = await setup();
-		const repo = app.create<InventoryItemRepository>(RepositoryImplementation);
+		const { repo } = await setup();
 
 		const locationId = randomUUID();
 		const typeId = randomUUID();
@@ -427,8 +420,7 @@ describe.each(repoTestCases)('$name (E2E)', ({ setup, onBeforeEach }) => {
 	});
 
 	it('should support filtering by overdue status', async () => {
-		const { app, RepositoryImplementation } = await setup();
-		const repo = app.create<InventoryItemRepository>(RepositoryImplementation);
+		const { repo } = await setup();
 
 		const locationId = randomUUID();
 		const typeId = randomUUID();
@@ -486,8 +478,7 @@ describe.each(repoTestCases)('$name (E2E)', ({ setup, onBeforeEach }) => {
 	});
 
 	it('should support search functionality', async () => {
-		const { app, RepositoryImplementation } = await setup();
-		const repo = app.create<InventoryItemRepository>(RepositoryImplementation);
+		const { repo } = await setup();
 
 		const locationId = randomUUID();
 		const typeId = randomUUID();
@@ -546,8 +537,7 @@ describe.each(repoTestCases)('$name (E2E)', ({ setup, onBeforeEach }) => {
 	});
 
 	it('should support filtering by barcode', async () => {
-		const { app, RepositoryImplementation } = await setup();
-		const repo = app.create<InventoryItemRepository>(RepositoryImplementation);
+		const { repo } = await setup();
 
 		const locationId = randomUUID();
 		const typeId = randomUUID();
@@ -605,8 +595,7 @@ describe.each(repoTestCases)('$name (E2E)', ({ setup, onBeforeEach }) => {
 	});
 
 	it('should support pagination with skip and limit', async () => {
-		const { app, RepositoryImplementation } = await setup();
-		const repo = app.create<InventoryItemRepository>(RepositoryImplementation);
+		const { repo } = await setup();
 
 		const locationId = randomUUID();
 		const typeId = randomUUID();

@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 
 import '@/backend/services/config.service';
+
 import { EventHandler } from '../types';
 import { makeEventHandler } from '../event-handler';
 

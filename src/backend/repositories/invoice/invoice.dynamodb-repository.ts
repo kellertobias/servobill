@@ -6,7 +6,7 @@ import { entitySchema, InvoiceOrmEntity } from './dynamodb-orm-entity';
 import type { InvoiceRepository } from './index';
 
 import { AbstractDynamodbRepository } from '@/backend/repositories/abstract-dynamodb-repository';
-import { DynamoDBService } from '@/backend/services/dynamodb.service';
+import type { DynamoDBService } from '@/backend/services/dynamodb.service';
 import {
 	InvoiceEntity,
 	InvoiceStatus,
@@ -23,6 +23,11 @@ import { Logger } from '@/backend/services/logger.service';
 import { Inject, Service } from '@/common/di';
 import { CustomJson } from '@/common/json';
 import { DatabaseType } from '@/backend/services/constants';
+import {
+	DYNAMODB_SERVICE,
+	EVENTBUS_SERVICE,
+} from '@/backend/services/di-tokens';
+import type { EventBusService } from '@/backend/services/eventbus.service';
 
 /**
  * DynamoDB implementation of the InvoiceRepository interface.
@@ -41,8 +46,12 @@ export class InvoiceDynamodbRepository
 	protected mainIdName: string = 'invoiceId';
 	protected storeId: string = 'invoice';
 
-	constructor(@Inject(DynamoDBService) private dynamoDb: DynamoDBService) {
+	constructor(
+		@Inject(DYNAMODB_SERVICE) private dynamoDb: DynamoDBService,
+		@Inject(EVENTBUS_SERVICE) protected eventBus: EventBusService,
+	) {
 		super();
+		this.eventBus = eventBus;
 		this.store = this.dynamoDb.getEntity(entitySchema.schema);
 	}
 

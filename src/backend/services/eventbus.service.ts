@@ -8,13 +8,15 @@ import { Span } from '../instrumentation';
 
 import type { ConfigService } from './config.service';
 import { Logger } from './logger.service';
-import { CONFIG_SERVICE } from './di-tokens';
+import { CONFIG_SERVICE, EVENTBUS_SERVICE } from './di-tokens';
 
 import { CustomJson } from '@/common/json';
 import { Inject, Service } from '@/common/di';
 const tracer = trace.getTracer('eventbus');
 
-@Service()
+@Service({
+	name: EVENTBUS_SERVICE,
+})
 export class EventBusService {
 	private logger = new Logger(EventBusService.name);
 	private client: EventBridgeClient;

@@ -8,11 +8,16 @@ import { SESSION_REPOSITORY, SESSION_REPO_NAME } from './di-tokens';
 
 import { Inject, Service } from '@/common/di';
 import { Logger } from '@/backend/services/logger.service';
-import { DynamoDBService } from '@/backend/services/dynamodb.service';
+import type { DynamoDBService } from '@/backend/services/dynamodb.service';
 import { AbstractDynamodbRepository } from '@/backend/repositories/abstract-dynamodb-repository';
 import { SessionEntity } from '@/backend/entities/session.entity';
 import { UserEntity } from '@/backend/entities/user.entity';
 import { DatabaseType } from '@/backend/services/constants';
+import {
+	DYNAMODB_SERVICE,
+	EVENTBUS_SERVICE,
+} from '@/backend/services/di-tokens';
+import type { EventBusService } from '@/backend/services/eventbus.service';
 
 const storeId = 'sessions';
 
@@ -37,8 +42,12 @@ export class SessionDynamodbRepository
 	protected mainIdName: string = 'sessionId';
 	protected storeId: string = storeId;
 
-	constructor(@Inject(DynamoDBService) private dynamoDb: DynamoDBService) {
+	constructor(
+		@Inject(DYNAMODB_SERVICE) private dynamoDb: DynamoDBService,
+		@Inject(EVENTBUS_SERVICE) protected eventBus: EventBusService,
+	) {
 		super();
+		this.eventBus = eventBus;
 		this.store = this.dynamoDb.getEntity(entitySchema.schema);
 	}
 

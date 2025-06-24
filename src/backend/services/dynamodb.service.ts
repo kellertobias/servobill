@@ -4,13 +4,19 @@ import { Entity, ResponseItem, Schema } from 'electrodb';
 import type { ConfigService } from './config.service';
 import { DatabaseType } from './constants';
 import { shouldRegister } from './should-register';
-import { CONFIG_SERVICE } from './di-tokens';
+import {
+	CONFIG_SERVICE,
+	DYNAMODB_SERVICE,
+	DYNAMODB_TEST_SET,
+} from './di-tokens';
 
 import { Inject, Service } from '@/common/di';
 
 @Service({
-	singleton: true,
+	name: DYNAMODB_SERVICE,
 	...shouldRegister(DatabaseType.DYNAMODB),
+	singleton: true,
+	addToTestSet: [DYNAMODB_TEST_SET],
 })
 export class DynamoDBService {
 	private client: DynamoDBClient;

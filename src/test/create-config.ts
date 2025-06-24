@@ -8,11 +8,11 @@ import {
 	S3_PORT,
 } from './vitest.setup-e2e';
 
-import { EmailConfig } from '@/backend/services/config.service';
 import {
 	DatabaseType,
 	EmailType,
 	FileStorageType,
+	EmailConfig,
 } from '@/backend/services/constants';
 
 /**

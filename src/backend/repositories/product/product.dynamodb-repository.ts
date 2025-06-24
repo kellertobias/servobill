@@ -16,11 +16,16 @@ import {
 } from './dynamodb-orm-entity';
 
 import { AbstractDynamodbRepository } from '@/backend/repositories/abstract-dynamodb-repository';
-import { DynamoDBService } from '@/backend/services/dynamodb.service';
+import type { DynamoDBService } from '@/backend/services/dynamodb.service';
 import { ProductEntity } from '@/backend/entities/product.entity';
 import { Logger } from '@/backend/services/logger.service';
 import { Inject, Service } from '@/common/di';
 import { DatabaseType } from '@/backend/services/constants';
+import {
+	DYNAMODB_SERVICE,
+	EVENTBUS_SERVICE,
+} from '@/backend/services/di-tokens';
+import type { EventBusService } from '@/backend/services/eventbus.service';
 
 @Service({ name: PRODUCT_REPOSITORY, ...shouldRegister(DatabaseType.DYNAMODB) })
 /**
@@ -39,8 +44,12 @@ export class ProductDynamodbRepository
 	protected mainIdName: string = 'productId';
 	protected storeId: string = 'product';
 
-	constructor(@Inject(DynamoDBService) private dynamoDb: DynamoDBService) {
+	constructor(
+		@Inject(DYNAMODB_SERVICE) private dynamoDb: DynamoDBService,
+		@Inject(EVENTBUS_SERVICE) protected eventBus: EventBusService,
+	) {
 		super();
+		this.eventBus = eventBus;
 		this.store = this.dynamoDb.getEntity(entitySchema.schema);
 	}
 

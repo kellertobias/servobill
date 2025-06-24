@@ -22,3 +22,22 @@ export enum LLMProvider {
 	ANTHROPIC = 'anthropic',
 	LOCAL = 'local',
 }
+
+/**
+ * Type for email configuration, supporting both SES and SMTP
+ */
+export type EmailConfig =
+	| {
+			type: EmailType.SES;
+			accessKeyId?: string;
+			secretAccessKey?: string;
+	  }
+	| {
+			type: EmailType.SMTP;
+			host: string;
+			port: number;
+			user: string;
+			password: string;
+			from: string;
+			fromName?: string;
+	  };

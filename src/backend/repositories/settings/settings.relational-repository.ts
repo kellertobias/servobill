@@ -7,7 +7,7 @@ import { SETTINGS_REPOSITORY, SETTINGS_REPO_NAME } from './di-tokens';
 
 import { Inject, Service } from '@/common/di';
 import { Logger } from '@/backend/services/logger.service';
-import { RelationalDbService } from '@/backend/services/relationaldb.service';
+import type { RelationalDbService } from '@/backend/services/relationaldb.service';
 import { AbstractRelationalRepository } from '@/backend/repositories/abstract-relational-repository';
 import {
 	SettingsEntity,
@@ -15,6 +15,11 @@ import {
 } from '@/backend/entities/settings.entity';
 import { DatabaseType } from '@/backend/services/constants';
 import { CustomJson } from '@/common/json';
+import {
+	EVENTBUS_SERVICE,
+	RELATIONALDB_SERVICE,
+} from '@/backend/services/di-tokens';
+import type { EventBusService } from '@/backend/services/eventbus.service';
 
 const storeId = 'settings';
 
@@ -32,7 +37,10 @@ export class SettingsRelationalRepository
 {
 	protected logger = new Logger(SETTINGS_REPO_NAME);
 
-	constructor(@Inject(RelationalDbService) db: RelationalDbService) {
+	constructor(
+		@Inject(RELATIONALDB_SERVICE) db: RelationalDbService,
+		@Inject(EVENTBUS_SERVICE) protected eventBus: EventBusService,
+	) {
 		super({ db, ormEntityClass: SettingsOrmEntity });
 	}
 

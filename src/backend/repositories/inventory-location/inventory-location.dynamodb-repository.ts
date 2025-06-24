@@ -15,11 +15,12 @@ import { InventoryLocationRepository } from './interface';
 import { INVENTORY_LOCATION_REPOSITORY } from './di-tokens';
 
 import { AbstractDynamodbRepository } from '@/backend/repositories/abstract-dynamodb-repository';
-import { DynamoDBService } from '@/backend/services/dynamodb.service';
+import type { DynamoDBService } from '@/backend/services/dynamodb.service';
 import { InventoryLocationEntity } from '@/backend/entities/inventory-location.entity';
 import { Logger } from '@/backend/services/logger.service';
 import { Inject, Service } from '@/common/di';
 import { DatabaseType } from '@/backend/services/constants';
+import { DYNAMODB_SERVICE } from '@/backend/services/di-tokens';
 
 type InventoryLocationSchema = typeof entitySchema.schema;
 type InventoryLocationSchemaResponseItem = ResponseItem<
@@ -50,7 +51,7 @@ export class InventoryLocationDynamoDBRepository
 	protected mainIdName: string = 'inventoryLocationId';
 	protected storeId: string = 'inventory';
 
-	constructor(@Inject(DynamoDBService) private dynamoDb: DynamoDBService) {
+	constructor(@Inject(DYNAMODB_SERVICE) private dynamoDb: DynamoDBService) {
 		super();
 		this.store = this.dynamoDb.getEntity(entitySchema.schema);
 	}

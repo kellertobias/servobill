@@ -1,9 +1,11 @@
 import { DataSource, EntityManager, Repository, ObjectLiteral } from 'typeorm';
 
+import { RELATIONAL_REPOSITORY_TEST_SET } from '../repositories/di-tokens';
+
 import type { ConfigService } from './config.service';
 import { DatabaseType } from './constants';
 import { shouldRegister } from './should-register';
-import { CONFIG_SERVICE } from './di-tokens';
+import { CONFIG_SERVICE, RELATIONALDB_SERVICE } from './di-tokens';
 
 import { OrmEntityRegistry } from '@/common/orm-entity-registry';
 import { Inject, Service } from '@/common/di';
@@ -15,8 +17,10 @@ import { Inject, Service } from '@/common/di';
  * Uses the OrmEntityRegistry array to dynamically register all ORM entities decorated with @OrmEntity.
  */
 @Service({
+	name: RELATIONALDB_SERVICE,
 	singleton: true,
 	...shouldRegister([DatabaseType.POSTGRES, DatabaseType.SQLITE]),
+	addToTestSet: [RELATIONAL_REPOSITORY_TEST_SET],
 })
 export class RelationalDbService {
 	public dataSource: DataSource;

@@ -23,7 +23,7 @@ import {
 	CompanyDataSetting,
 	ExpenseSettingsEntity,
 } from '@/backend/entities/settings.entity';
-import { EventBusService } from '@/backend/services/eventbus.service';
+import type { EventBusService } from '@/backend/services/eventbus.service';
 import { GenerateTemplatePreviewEvent } from '@/backend/events/template/event';
 import {
 	FILE_STORAGE_SERVICE,
@@ -33,6 +33,7 @@ import {
 	EXPENSE_REPOSITORY,
 	type ExpenseRepository,
 } from '@/backend/repositories/expense';
+import { EVENTBUS_SERVICE } from '@/backend/services/di-tokens';
 
 @Service({
 	addToTestSet: [GRAPHQL_TEST_SET],
@@ -42,7 +43,7 @@ export class SystemResolver {
 	constructor(
 		@Inject(SETTINGS_REPOSITORY) private settingsRepository: SettingsRepository,
 		@Inject(EXPENSE_REPOSITORY) private expenseRepository: ExpenseRepository,
-		@Inject(EventBusService) private eventBus: EventBusService,
+		@Inject(EVENTBUS_SERVICE) private eventBus: EventBusService,
 		@Inject(FILE_STORAGE_SERVICE)
 		private fileStorageService: FileStorageService,
 	) {}

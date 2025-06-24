@@ -7,11 +7,16 @@ import { SESSION_REPOSITORY, SESSION_REPO_NAME } from './di-tokens';
 
 import { Inject, Service } from '@/common/di';
 import { Logger } from '@/backend/services/logger.service';
-import { RelationalDbService } from '@/backend/services/relationaldb.service';
+import type { RelationalDbService } from '@/backend/services/relationaldb.service';
 import { AbstractRelationalRepository } from '@/backend/repositories/abstract-relational-repository';
 import { SessionEntity } from '@/backend/entities/session.entity';
 import { UserEntity } from '@/backend/entities/user.entity';
 import { DatabaseType } from '@/backend/services/constants';
+import {
+	EVENTBUS_SERVICE,
+	RELATIONALDB_SERVICE,
+} from '@/backend/services/di-tokens';
+import type { EventBusService } from '@/backend/services/eventbus.service';
 
 function getAllowedEmails() {
 	return new Set((process.env.ALLOWED_EMAILS || '').split(','));
@@ -31,8 +36,12 @@ export class SessionRelationalRepository
 {
 	protected logger = new Logger(SESSION_REPO_NAME);
 
-	constructor(@Inject(RelationalDbService) db: RelationalDbService) {
+	constructor(
+		@Inject(RELATIONALDB_SERVICE) db: RelationalDbService,
+		@Inject(EVENTBUS_SERVICE) protected eventBus: EventBusService,
+	) {
 		super({ db, ormEntityClass: SessionOrmEntity });
+		this.eventBus = eventBus;
 	}
 
 	/**

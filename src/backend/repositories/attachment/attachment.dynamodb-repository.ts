@@ -14,9 +14,14 @@ import { ATTACHMENT_REPO_NAME, ATTACHMENT_REPOSITORY } from './di-tokens';
 import { AttachmentEntity } from '@/backend/entities/attachment.entity';
 import { Logger } from '@/backend/services/logger.service';
 import { Inject, Service } from '@/common/di';
-import { DynamoDBService } from '@/backend/services/dynamodb.service';
+import type { DynamoDBService } from '@/backend/services/dynamodb.service';
 import { shouldRegister } from '@/backend/services/should-register';
 import { DatabaseType } from '@/backend/services/constants';
+import {
+	DYNAMODB_SERVICE,
+	EVENTBUS_SERVICE,
+} from '@/backend/services/di-tokens';
+import type { EventBusService } from '@/backend/services/eventbus.service';
 
 /**
  * DynamoDB repository for managing AttachmentEntity records.
@@ -42,7 +47,10 @@ export class AttachmentDynamoDBRepository extends AbstractDynamodbRepository<
 	>;
 	protected linkStoreId = 'attachmentExpenseLink';
 
-	constructor(@Inject(DynamoDBService) private dynamoDb: DynamoDBService) {
+	constructor(
+		@Inject(DYNAMODB_SERVICE) private dynamoDb: DynamoDBService,
+		@Inject(EVENTBUS_SERVICE) protected eventBus: EventBusService,
+	) {
 		super();
 		this.store = this.dynamoDb.getEntity(entitySchema.schema);
 		this.linkStore = this.dynamoDb.getEntity(

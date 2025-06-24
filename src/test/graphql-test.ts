@@ -11,9 +11,12 @@ import { getConfigForRelationalDb } from './create-config';
 
 import '@/backend/repositories';
 
+import { App, DEFAULT_TEST_SET, DefaultContainer } from '@/common/di';
 import { GRAPHQL_TEST_SET } from '@/backend/api/graphql/di-tokens';
-import { CONFIG_SERVICE } from '@/backend/services/di-tokens';
-import { App } from '@/common/di';
+import {
+	CONFIG_SERVICE,
+	RELATIONALDB_SERVICE,
+} from '@/backend/services/di-tokens';
 import { RelationalDbService } from '@/backend/services/relationaldb.service';
 import { RELATIONAL_REPOSITORY_TEST_SET } from '@/backend/repositories/di-tokens';
 import { FILE_STORAGE_LOCAL_TEST_SET } from '@/backend/services/file-storage.service/di-tokens';
@@ -30,6 +33,10 @@ export type ExecuteTestFunction = (options: {
 	};
 }) => Promise<ExecutionResult>;
 
+if (DefaultContainer.isBound(CONFIG_SERVICE)) {
+	DefaultContainer.unbind(CONFIG_SERVICE);
+}
+
 /**
  * Prepares a test environment for GraphQL e2e tests.
  */
@@ -39,14 +46,14 @@ export async function prepareGraphqlTest() {
 	const app = App.forRoot({
 		modules: [
 			{ token: CONFIG_SERVICE, value: config },
-			{ token: RelationalDbService, module: RelationalDbService },
+			...App.testSets[DEFAULT_TEST_SET],
 			...App.testSets[RELATIONAL_REPOSITORY_TEST_SET],
 			...App.testSets[FILE_STORAGE_LOCAL_TEST_SET],
 		],
 	});
 
 	// Initialize database and synchronize schema
-	const dbService = app.get(RelationalDbService);
+	const dbService = app.get<RelationalDbService>(RELATIONALDB_SERVICE);
 	await dbService.initialize();
 	await dbService.dataSource.synchronize(true); // this wipes the DB
 

@@ -8,11 +8,16 @@ import { AttachmentCreateInput } from './interface';
 import { ATTACHMENT_REPO_NAME, ATTACHMENT_REPOSITORY } from './di-tokens';
 
 import { Inject, Service } from '@/common/di';
-import { RelationalDbService } from '@/backend/services/relationaldb.service';
+import type { RelationalDbService } from '@/backend/services/relationaldb.service';
 import { AttachmentEntity } from '@/backend/entities/attachment.entity';
 import { Logger } from '@/backend/services/logger.service';
 import { DatabaseType } from '@/backend/services/constants';
 import { shouldRegister } from '@/backend/services/should-register';
+import {
+	EVENTBUS_SERVICE,
+	RELATIONALDB_SERVICE,
+} from '@/backend/services/di-tokens';
+import type { EventBusService } from '@/backend/services/eventbus.service';
 
 /**
  * Repository for managing AttachmentEntity records in a relational database.
@@ -29,8 +34,12 @@ export class AttachmentRelationalRepository extends AbstractRelationalRepository
 > {
 	protected logger = new Logger(ATTACHMENT_REPO_NAME);
 
-	constructor(@Inject(RelationalDbService) db: RelationalDbService) {
+	constructor(
+		@Inject(RELATIONALDB_SERVICE) db: RelationalDbService,
+		@Inject(EVENTBUS_SERVICE) protected eventBus: EventBusService,
+	) {
 		super({ db, ormEntityClass: AttachmentOrmEntity });
+		this.eventBus = eventBus;
 	}
 
 	/**

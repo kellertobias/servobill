@@ -3,6 +3,8 @@ import { Container, injectable } from 'inversify';
 
 import { Logger } from '@/backend/services/logger.service';
 
+export const DEFAULT_TEST_SET = 'default';
+
 export type ModuleToken = new (...args: any[]) => unknown;
 export type ModuleTokenName = string | symbol | ModuleToken;
 export type ModuleBinding =
@@ -11,22 +13,24 @@ export type ModuleBinding =
 	| ModuleToken;
 
 export class App {
+	static skipDefaultRegistration = false;
 	static defaultLogger = new Logger(App.name);
 	static defaultContainer = new Container();
 	static forRoot({ modules }: { modules: ModuleBinding[] }) {
 		const container = new Container();
+		const app = new this(container);
 
 		for (const Module of modules) {
 			if (typeof Module === 'function') {
-				container.bind(Module.name).to(Module);
+				app.bind(Module);
 			} else if ('module' in Module) {
-				container.bind(Module.token).to(Module.module);
+				app.bind(Module.token, { module: Module.module });
 			} else {
-				container.bind(Module.token).toConstantValue(Module.value);
+				app.bind(Module.token, { value: Module.value });
 			}
 		}
 
-		return new this(container);
+		return app;
 	}
 
 	static get<T>(type: string | symbol | (new (...args: any[]) => T)) {
@@ -68,12 +72,27 @@ export class App {
 	) {
 		if (typeof type === 'function') {
 			this.container.bind(type.name).to(type);
-		} else if (to && 'module' in to && to.module) {
-			this.container.bind(type).to(to.module);
-		} else if (to && 'value' in to && to.value) {
-			this.container.bind(type).toConstantValue(to.value);
+			if (process.env.DI_DEBUG) {
+				// eslint-disable-next-line no-console
+				console.log(` * Binding ${type.name} to ${type.name}`);
+			}
 		} else {
-			throw new Error('Invalid type or to');
+			const tokenName = typeof type === 'symbol' ? String(type) : type;
+			if (to && 'module' in to && to.module) {
+				this.container.bind(type).to(to.module);
+				if (process.env.DI_DEBUG) {
+					// eslint-disable-next-line no-console
+					console.log(` * Binding ${tokenName} to ${to.module.name}`);
+				}
+			} else if (to && 'value' in to && to.value) {
+				this.container.bind(type).toConstantValue(to.value);
+				if (process.env.DI_DEBUG) {
+					// eslint-disable-next-line no-console
+					console.log(` * Binding ${tokenName} to <FIXED VALUE>`);
+				}
+			} else {
+				throw new Error('Invalid type or to');
+			}
 		}
 	}
 
@@ -109,6 +128,7 @@ export function Service<T extends new (...args: any[]) => unknown>(
 				: nameOrOptions || {};
 
 		const injected = injectable()(target);
+
 		if (addToTestSet && addToTestSet.length > 0) {
 			for (const testSet of addToTestSet) {
 				App.addToTestSet(testSet, {
@@ -116,10 +136,28 @@ export function Service<T extends new (...args: any[]) => unknown>(
 					module: target,
 				});
 			}
+		} else {
+			App.addToTestSet(DEFAULT_TEST_SET, {
+				token: name || target,
+				module: target,
+			});
 		}
+
+		if (App.skipDefaultRegistration) {
+			if (!process.env.VITEST) {
+				throw new Error(
+					`Skipping import registration for ${
+						name ? String(name) : target.name
+					} - this should only happen in tests`,
+				);
+			}
+			return target;
+		}
+
 		if (shouldRegister && !shouldRegister()) {
 			return target;
 		}
+
 		App.defaultLogger.debug(
 			`Registering Service *${name ? String(name) : target.name}* ${
 				target.name

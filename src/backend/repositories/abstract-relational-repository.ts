@@ -12,7 +12,7 @@ import { DomainEntity as DomainBaseEntity } from '../entities/abstract.entity';
 
 import { AbstractRepository } from './abstract-repository';
 
-import { RelationalDbService } from '@/backend/services/relationaldb.service';
+import type { RelationalDbService } from '@/backend/services/relationaldb.service';
 import { DeferredPromise } from '@/common/deferred';
 
 /**

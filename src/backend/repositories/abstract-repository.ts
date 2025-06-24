@@ -1,10 +1,9 @@
 import { injectable } from 'inversify';
 
 import { DomainEntity as DomainBaseEntity } from '../entities/abstract.entity';
-import { EventBusService } from '../services/eventbus.service';
+import type { EventBusService } from '../services/eventbus.service';
 
 import { Logger } from '@/backend/services/logger.service';
-import { DefaultContainer } from '@/common/di';
 
 export type AbstractRepositoryInterface<
 	DomainEntity extends DomainBaseEntity,
@@ -24,6 +23,7 @@ export abstract class AbstractRepository<
 	DomainEntity extends DomainBaseEntity,
 	CreateArgs extends unknown[],
 > {
+	protected abstract eventBus: EventBusService;
 	protected abstract logger: Logger;
 
 	protected abstract generateEmptyItem(
@@ -85,11 +85,10 @@ export abstract class AbstractRepository<
 
 	protected async purgeOutbox(entity: DomainEntity): Promise<void> {
 		this.logger.debug('Purging Outbox');
-		const eventBus = DefaultContainer.get(EventBusService);
 		entity.purgeEvents(async (event) => {
 			this.logger.debug('Purging Outbox Event', { event });
 
-			await eventBus.send(event.name, {
+			await this.eventBus.send(event.name, {
 				aggregateId: event.aggregateId,
 				...event.data,
 			});

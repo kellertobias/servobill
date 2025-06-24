@@ -5,7 +5,7 @@ import { InventoryItemRepository } from './interface';
 import { INVENTORY_ITEM_REPOSITORY } from './di-tokens';
 
 import { AbstractDynamodbRepository } from '@/backend/repositories/abstract-dynamodb-repository';
-import { DynamoDBService } from '@/backend/services/dynamodb.service';
+import type { DynamoDBService } from '@/backend/services/dynamodb.service';
 import {
 	InventoryItemEntity,
 	InventoryItemState,
@@ -14,6 +14,11 @@ import { CustomJson } from '@/common/json';
 import { Logger } from '@/backend/services/logger.service';
 import { Inject, Service } from '@/common/di';
 import { DatabaseType } from '@/backend/services/constants';
+import {
+	DYNAMODB_SERVICE,
+	EVENTBUS_SERVICE,
+} from '@/backend/services/di-tokens';
+import type { EventBusService } from '@/backend/services/eventbus.service';
 
 /**
  * DynamoDB implementation of the InventoryItem repository.
@@ -36,8 +41,12 @@ export class InventoryItemDynamoDBRepository
 	protected mainIdName: string = 'inventoryItemId';
 	protected storeId: string = 'inventory';
 
-	constructor(@Inject(DynamoDBService) private dynamoDb: DynamoDBService) {
+	constructor(
+		@Inject(DYNAMODB_SERVICE) private dynamoDb: DynamoDBService,
+		@Inject(EVENTBUS_SERVICE) protected eventBus: EventBusService,
+	) {
 		super();
+		this.eventBus = eventBus;
 		this.store = this.dynamoDb.getEntity(entitySchema.schema);
 	}
 

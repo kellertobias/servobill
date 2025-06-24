@@ -1,18 +1,23 @@
+/* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { randomUUID } from 'node:crypto';
+
+import { vi } from 'vitest';
+
 import {
 	getConfigForDynamodb,
 	getConfigForRelationalDb,
 } from './create-config';
-import {
-	DYNAMODB_TABLE_NAME,
-	ensureDynamoTableExists,
-} from './ensure-dynamo-table';
-import { clearDynamoTable } from './clear-dynamo-table';
-import { DYNAMODB_PORT } from './vitest.setup-e2e';
+import { ensureDynamoTableExists } from './ensure-dynamo-table';
 
 import { DatabaseType } from '@/backend/services/constants';
-import { CONFIG_SERVICE } from '@/backend/services/di-tokens';
-import { App, ModuleBinding } from '@/common/di';
+import {
+	CONFIG_SERVICE,
+	DYNAMODB_SERVICE,
+	EVENTBUS_SERVICE,
+	RELATIONALDB_SERVICE,
+} from '@/backend/services/di-tokens';
+import { App } from '@/common/di';
 import { DynamoDBService } from '@/backend/services/dynamodb.service';
 import { RelationalDbService } from '@/backend/services/relationaldb.service';
 
@@ -21,7 +26,6 @@ interface PrepareRepoTestOptions<T> {
 	relational: new (...args: any[]) => T;
 	dynamodb: new (...args: any[]) => T;
 	relationalOrmEntity: any;
-	modules?: (dbType: DatabaseType) => ModuleBinding[];
 }
 
 /**
@@ -35,35 +39,36 @@ export function prepareRepoTest<T>({
 	relational,
 	dynamodb,
 	relationalOrmEntity,
-	modules,
 }: PrepareRepoTestOptions<T>) {
+	const eventBusMock = {
+		send: vi.fn().mockImplementation(() => {
+			return Promise.resolve(randomUUID());
+		}),
+	};
 	return [
 		{
 			dbType: DatabaseType.DYNAMODB,
 			name: `${name}DynamodbRepository`,
 			setup: async () => {
-				await ensureDynamoTableExists();
-
-				const config = getConfigForDynamodb(DYNAMODB_TABLE_NAME);
+				const tableName = `${name}-${randomUUID()}`;
+				const config = getConfigForDynamodb(tableName);
 				const app = App.forRoot({
 					modules: [
 						{ token: CONFIG_SERVICE, value: config },
-						{ token: DynamoDBService, module: DynamoDBService },
-						...(modules?.(DatabaseType.DYNAMODB) || []),
+						{ token: DYNAMODB_SERVICE, module: DynamoDBService },
+						{ token: EVENTBUS_SERVICE, value: eventBusMock },
 					],
 				});
+
+				await ensureDynamoTableExists(tableName);
+
 				return {
 					app,
 					RepositoryImplementation: dynamodb,
+					repo: app.create<T>(dynamodb),
 				};
 			},
-			onBeforeEach: async () => {
-				await ensureDynamoTableExists();
-				await clearDynamoTable({
-					tableName: DYNAMODB_TABLE_NAME,
-					port: DYNAMODB_PORT,
-				});
-			},
+			onBeforeEach: async () => {},
 		},
 		{
 			dbType: DatabaseType.POSTGRES,
@@ -78,14 +83,14 @@ export function prepareRepoTest<T>({
 				const app = App.forRoot({
 					modules: [
 						{ token: CONFIG_SERVICE, value: config },
-						{ token: RelationalDbService, module: RelationalDbService },
-
-						...(modules?.(DatabaseType.POSTGRES) || []),
+						{ token: RELATIONALDB_SERVICE, module: RelationalDbService },
+						{ token: EVENTBUS_SERVICE, value: eventBusMock },
 					],
 				});
 				return {
 					app,
 					RepositoryImplementation: relational,
+					repo: app.create<T>(relational),
 				};
 			},
 			onBeforeEach: async () => {
@@ -97,5 +102,16 @@ export function prepareRepoTest<T>({
 				await dbService.dataSource.destroy();
 			},
 		},
-	];
+	].filter((test) => {
+		if (!process.env.VITEST_REPOTYPE) {
+			return true;
+		}
+		if (process.env.VITEST_REPOTYPE === 'all') {
+			return true;
+		}
+		if (process.env.VITEST_REPOTYPE === test.dbType) {
+			return true;
+		}
+		return false;
+	});
 }

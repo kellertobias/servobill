@@ -6,12 +6,17 @@ import { SETTINGS_REPOSITORY, SETTINGS_REPO_NAME } from './di-tokens';
 
 import { Inject, Service } from '@/common/di';
 import { Logger } from '@/backend/services/logger.service';
-import { DynamoDBService } from '@/backend/services/dynamodb.service';
+import type { DynamoDBService } from '@/backend/services/dynamodb.service';
 import { AbstractDynamodbRepository } from '@/backend/repositories/abstract-dynamodb-repository';
 import { SettingsEntity } from '@/backend/entities/settings.entity';
 import { DatabaseType } from '@/backend/services/constants';
 import { AbstractSettingsEntity } from '@/backend/entities/settings.entity';
 import { CustomJson } from '@/common/json';
+import {
+	DYNAMODB_SERVICE,
+	EVENTBUS_SERVICE,
+} from '@/backend/services/di-tokens';
+import type { EventBusService } from '@/backend/services/eventbus.service';
 
 const storeId = 'settings';
 
@@ -35,7 +40,10 @@ export class SettingsDynamodbRepository
 	protected mainIdName: string = 'settingId';
 	protected storeId: string = storeId;
 
-	constructor(@Inject(DynamoDBService) private dynamoDb: DynamoDBService) {
+	constructor(
+		@Inject(DYNAMODB_SERVICE) private dynamoDb: DynamoDBService,
+		@Inject(EVENTBUS_SERVICE) protected eventBus: EventBusService,
+	) {
 		super();
 		this.store = this.dynamoDb.getEntity(entitySchema.schema);
 	}

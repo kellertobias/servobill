@@ -2,6 +2,7 @@
 // import 'reflect-metadata';
 
 // Import repositories before they are used
+import '@/backend/services/config.service';
 import '@/backend/repositories';
 
 import { APIGatewayProxyEventV2 } from 'aws-lambda';

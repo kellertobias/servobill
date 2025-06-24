@@ -10,9 +10,10 @@ import { ExtractReceiptInput } from './extract-receipt.input';
 import { Inject, Service } from '@/common/di';
 import { ATTACHMENT_REPOSITORY } from '@/backend/repositories/attachment/di-tokens';
 import { type AttachmentRepository } from '@/backend/repositories/attachment/interface';
-import { EventBusService } from '@/backend/services/eventbus.service';
+import type { EventBusService } from '@/backend/services/eventbus.service';
 import { Logger } from '@/backend/services/logger.service';
 import { Span } from '@/backend/instrumentation';
+import { EVENTBUS_SERVICE } from '@/backend/services/di-tokens';
 
 /**
  * GraphQL resolver for processing receipts and triggering receipt extraction events.
@@ -34,7 +35,7 @@ export class ReceiptResolver {
 	constructor(
 		@Inject(ATTACHMENT_REPOSITORY)
 		private attachmentRepository: AttachmentRepository,
-		@Inject(EventBusService) private eventBus: EventBusService,
+		@Inject(EVENTBUS_SERVICE) private eventBus: EventBusService,
 	) {}
 
 	/**

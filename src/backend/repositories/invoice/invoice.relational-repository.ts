@@ -15,7 +15,7 @@ import {
 import { Logger } from '@/backend/services/logger.service';
 import { AbstractRelationalRepository } from '@/backend/repositories/abstract-relational-repository';
 import { DatabaseType } from '@/backend/services/constants';
-import { RelationalDbService } from '@/backend/services/relationaldb.service';
+import type { RelationalDbService } from '@/backend/services/relationaldb.service';
 import { CustomerEntity } from '@/backend/entities/customer.entity';
 import {
 	InvoiceActivityEntity,
@@ -24,6 +24,11 @@ import {
 import { InvoiceSubmissionEntity } from '@/backend/entities/invoice-submission.entity';
 import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
 import { CustomJson } from '@/common/json';
+import {
+	EVENTBUS_SERVICE,
+	RELATIONALDB_SERVICE,
+} from '@/backend/services/di-tokens';
+import type { EventBusService } from '@/backend/services/eventbus.service';
 
 /**
  * Unified repository for Invoice using TypeORM (Postgres or SQLite).
@@ -45,8 +50,12 @@ export class InvoiceRelationalRepository
 	/** Logger instance for this repository. */
 	protected logger = new Logger(INVOICE_REPO_NAME);
 
-	constructor(@Inject(RelationalDbService) db: RelationalDbService) {
+	constructor(
+		@Inject(RELATIONALDB_SERVICE) db: RelationalDbService,
+		@Inject(EVENTBUS_SERVICE) protected eventBus: EventBusService,
+	) {
 		super({ db, ormEntityClass: InvoiceOrmEntity });
+		this.eventBus = eventBus;
 	}
 
 	/**

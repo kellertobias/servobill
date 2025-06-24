@@ -1,7 +1,9 @@
 import 'reflect-metadata';
 
-import { APIHandler } from '../../types';
+import '@/backend/services/config.service';
 import '@/backend/repositories';
+
+import { APIHandler } from '../../types';
 
 import { googleOidRequestHandler } from './google-oid-request';
 import { googleOidCallbackHandler } from './google-oid-callback';

@@ -6,11 +6,16 @@ import { InventoryLocationRepository } from './interface';
 import { INVENTORY_LOCATION_REPOSITORY } from './di-tokens';
 
 import { AbstractRelationalRepository } from '@/backend/repositories/abstract-relational-repository';
-import { RelationalDbService } from '@/backend/services/relationaldb.service';
+import type { RelationalDbService } from '@/backend/services/relationaldb.service';
 import { InventoryLocationEntity } from '@/backend/entities/inventory-location.entity';
 import { Logger } from '@/backend/services/logger.service';
 import { Inject, Service } from '@/common/di';
 import { DatabaseType } from '@/backend/services/constants';
+import {
+	EVENTBUS_SERVICE,
+	RELATIONALDB_SERVICE,
+} from '@/backend/services/di-tokens';
+import type { EventBusService } from '@/backend/services/eventbus.service';
 
 /**
  * Relational database implementation of the InventoryLocation repository.
@@ -31,8 +36,12 @@ export class InventoryLocationRelationalRepository
 {
 	protected logger = new Logger('inventory-location-relational-repository');
 
-	constructor(@Inject(RelationalDbService) db: RelationalDbService) {
+	constructor(
+		@Inject(RELATIONALDB_SERVICE) db: RelationalDbService,
+		@Inject(EVENTBUS_SERVICE) protected eventBus: EventBusService,
+	) {
 		super({ db, ormEntityClass: InventoryLocationOrmEntity });
+		this.eventBus = eventBus;
 	}
 
 	/**
