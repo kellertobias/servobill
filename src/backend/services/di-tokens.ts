@@ -5,3 +5,4 @@ export const DYNAMODB_TEST_SET = 'dynamodb';
 export const EVENTBUS_SERVICE = Symbol('EventBusService');
 export const DYNAMODB_SERVICE = Symbol('DynamoDBService');
 export const RELATIONALDB_SERVICE = Symbol('RelationalDbService');
+export const S3_SERVICE = Symbol('S3Service');

@@ -1,13 +1,15 @@
 import { FILE_STORAGE_S3_TEST_SET, FILE_STORAGE_SERVICE } from './di-tokens';
 import { FileStorageService } from './interface';
 
-import { CONFIG_SERVICE } from '@/backend/services/di-tokens';
+import { CONFIG_SERVICE, S3_SERVICE } from '@/backend/services/di-tokens';
 import { FileStorageType } from '@/backend/services/constants';
-import { S3Service } from '@/backend/services/s3.service';
+import type { S3Service } from '@/backend/services/s3.service';
 import type { ConfigService } from '@/backend/services/config.service';
 import { Span } from '@/backend/instrumentation';
 import { DefaultContainer, Inject, Service } from '@/common/di';
 import { AttachmentEntity } from '@/backend/entities/attachment.entity';
+
+import '@/backend/services/s3.service';
 
 /**
  * Implementation of FileStorageService that delegates to S3 or local file system.
@@ -26,7 +28,7 @@ export class FileStorageServiceS3 implements FileStorageService {
 
 	constructor(
 		@Inject(CONFIG_SERVICE) private readonly config: ConfigService,
-		@Inject(S3Service) private readonly s3: S3Service,
+		@Inject(S3_SERVICE) private readonly s3: S3Service,
 	) {
 		if (this.config.fileStorage.type !== FileStorageType.S3) {
 			throw new Error('FileStorageServiceS3 is not supported');

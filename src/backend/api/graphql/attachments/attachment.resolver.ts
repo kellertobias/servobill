@@ -19,8 +19,6 @@ import type { FileStorageService } from '@/backend/services/file-storage.service
  * GraphQL resolver for managing file attachments, including upload, confirmation, listing, deletion, and download URL generation.
  *
  * This resolver uses dependency injection for the repository and S3 service.
- *
- * TODO: Implement presigned PUT upload URL in S3Service for direct client uploads.
  */
 @Service({
 	addToTestSet: [GRAPHQL_TEST_SET],
@@ -136,7 +134,6 @@ export class AttachmentResolver {
 		if (!attachment) {
 			throw new Error('Attachment not found');
 		}
-		// Use S3Service.getSignedUrl for download
 		const downloadUrl = await this.fileStorage.getDownloadUrl(attachment);
 		return { downloadUrl };
 	}

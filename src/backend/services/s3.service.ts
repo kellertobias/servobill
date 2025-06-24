@@ -10,11 +10,13 @@ import {
 import { Span } from '../instrumentation';
 
 import type { ConfigService } from './config.service';
-import { CONFIG_SERVICE } from './di-tokens';
+import { CONFIG_SERVICE, S3_SERVICE } from './di-tokens';
 
 import { Inject, Service } from '@/common/di';
 
-@Service()
+@Service({
+	name: S3_SERVICE,
+})
 export class S3Service {
 	private client: S3Client;
 
