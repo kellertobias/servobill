@@ -75,6 +75,8 @@ jobs:
     outputs:
       new_release_published: ${{ steps.semantic.outputs.new_release_published }}
       new_release_version: ${{ steps.semantic.outputs.new_release_version }}
+      # Expose the computed major version as an output for downstream jobs
+      major_version: ${{ steps.set_major.outputs.MAJOR }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -162,20 +164,13 @@ jobs:
             - The latest major version (e.g., `v1`)
             - `latest`
 
+            # The following example uses the major version output from the release job, since GitHub Actions expressions do not support .split().
             For convenience, you should use the major version tag for most deployments:
             
             ```yaml
             services:
               app:
-                image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/app:v${{ needs.release.outputs.new_release_version.split('.')[0] }}
+                image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/app:${{ needs.release.outputs.major_version }}
             ```
 
-            > Note: The `latest` and version-specific tags are also available, but only updated weekly.
-
-          draft: false
-          prerelease: false
-          files: |
-            deploy/dockerized/docker-compose.prod.yml
-            deploy/dockerized/README.md
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+            > Note: The `latest` and version-specific tags are also available, but only updated weekly. 
