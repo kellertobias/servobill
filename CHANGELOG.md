@@ -1,3 +1,27 @@
+## [1.2.6](https://github.com/kellertobias/servobill/compare/v1.2.5...v1.2.6) (2025-06-24)
+
+
+### ✅ Tests
+
+* add integration tests for ReceiptResolver's extractReceipt mutation ([f12551a](https://github.com/kellertobias/servobill/commit/f12551a75beb18a886eeaac62b45a40d435ec3ad))
+* add unit tests for DeferredPromise and money utility functions ([86dbf9e](https://github.com/kellertobias/servobill/commit/86dbf9edf6f3e4ecc6b9a6537eff8d235a1852a3))
+* add unit tests for LLMService with mocked dependencies ([cca4bae](https://github.com/kellertobias/servobill/commit/cca4bae3a7655292b9502b4256a832a1af871e7f))
+* enhance Numbering utility tests with comprehensive cases ([83e35f7](https://github.com/kellertobias/servobill/commit/83e35f7f5b4a388d3e0c2cc4d52e71119985acab))
+* enhance SystemResolver e2e tests with additional mutation coverage ([c464966](https://github.com/kellertobias/servobill/commit/c4649664eeee39dfbc32858f65e864729accb684))
+* integrate S3 service and enhance file storage functionality ([96633d5](https://github.com/kellertobias/servobill/commit/96633d5dabedd80e399bc0ce8981653a1195884a))
+
+
+### 🔧 Chores
+
+* enhance CI/CD workflows with testing and Docker build updates ([f7d5dae](https://github.com/kellertobias/servobill/commit/f7d5dae03179be1c9e7f3a49f163175e6e07e868))
+* enhance release workflow with major version output ([bb54ff0](https://github.com/kellertobias/servobill/commit/bb54ff0fe6d2c7cb9ebb435844cf6e834eab2048))
+* simplify test command in release workflow ([ae149d7](https://github.com/kellertobias/servobill/commit/ae149d7a535d0eac3ed2c3355b8ab4868d7c324e))
+* update package-lock and package.json for coverage tools ([716d5df](https://github.com/kellertobias/servobill/commit/716d5df69171fcd170e798b5a1be2f1b6096c551))
+* update package-lock and package.json for Vitest coverage ([4d8e1bd](https://github.com/kellertobias/servobill/commit/4d8e1bdeb3b5a67003944f91f468851ad80bf04e))
+* update package.json and package-lock.json for Jest types and testing utilities ([9a29995](https://github.com/kellertobias/servobill/commit/9a29995d18a061439cda7796e3868c0894939e8c))
+* update release workflow to run PostgreSQL tests only ([3443c61](https://github.com/kellertobias/servobill/commit/3443c61c76852a7badeab3b8f0d77e108ef8b825))
+* update vitest.config.ts to refine coverage exclusions ([d29dc4f](https://github.com/kellertobias/servobill/commit/d29dc4fe543044d2777c86ee684c87995bd1e19d))
+
 ## [1.2.5](https://github.com/kellertobias/servobill/compare/v1.2.4...v1.2.5) (2025-06-24)
 
 
