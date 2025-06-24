@@ -65,7 +65,9 @@ jobs:
         run: docker --version
 
       - name: Run tests with coverage
-        run: npm run test
+        # only run postgres test, since the dynamodb tests take ages in CI
+        # and we do not want to burn CI minutes
+        run: VITEST_REPOTYPE=postgres npm run test
 
   # Semantic versioning and release creation
   release:
