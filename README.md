@@ -14,7 +14,7 @@ We feature a simple, easy-to-use interface for creating and managing invoices. Y
 - Auto-Import expenses from incoming invoices with AI (with gpt-4.1 one PDF invoice roughly costs 0.005€)
 - Generate reports with all income & expenses in JSON & CSV format for the tax authorities
 - Customizable - from email and invoice templates to invoice number formats
-- Modern Software Architecture: Modern Decorator based Typescript codebase, Serverless, Repository & Adapter Pattern for multiple database types, Folder based API structure (like NextJS), React/ NextJS based frontend, GraphQL based API, JWT based authentication workflow with refresh tokens and more.
+- Modern Software Architecture: Modern Decorator based Typescript codebase, Serverless, Repository & Adapter Pattern for multiple database types, Folder based API structure (like Next.JS), React/ Next.JS based frontend, GraphQL based API, JWT based authentication workflow with refresh tokens and more.
 
 <img src="/docs/screenshot-1.jpeg" alt="Servobill" width="200"/> <img src="/docs/screenshot-2.jpeg" alt="Servobill" width="200"/> <img src="/docs/screenshot-3.jpeg" alt="Servobill" width="200"/> <img src="/docs/screenshot-4.jpeg" alt="Servobill" width="200"/>
 
@@ -41,13 +41,13 @@ We offer two production ready deployment options and a development setup:
 - [🐳 Dockerized on your own hardware](deploy/dockerized/README.md)
 - [💻 Development setup](README.md#developing)
 
-If you have no experience with AWS, we recommend the dockerized deployment, however all ways of deploying servobill require some level of technical knowledge to deploy it in a secure way.
+If you have no experience with AWS, we recommend the dockerized deployment, however all ways of deploying Servobill require some level of technical knowledge to deploy it securely.
 
 ### Deployment Considerations
 
 Serverless hosting works great for freelancers with around 100-1000 invoices & expenses a year, and a total of around 50-100 customers & products as well as 2000-5000 items in the inventory shared across in 50-500 inventory types.
 
-Since the pricing of DynamoDB is based on the amount of reads and writes, the cost of storing and retrieving larger amounts of data or having frequent requests to DynamoDB can become unpredictable. In these cases we recommend using the dockerized deployment or at least using a relational database rather than dynamoDB in the serverless deployment.
+Since the pricing of DynamoDB is based on the amount of reads and writes, the cost of storing and retrieving larger amounts of data or having frequent requests to DynamoDB can become unpredictable. In these cases we recommend using the dockerized deployment or at least using a relational database rather than DynamoDB in the serverless deployment.
 
 
 ### Architecture
@@ -58,12 +58,12 @@ Servobill is built with a serverless architecture in mind. It uses AWS Lambda fu
 
 ![Servobill](/docs/aws-architecture.png)
 
-In the serverless deployment, we use SST to deploy the application to AWS. For the frontend, we use CloudFront and for the APIs we use the AWS API Gateway. Data is stored in AWS DynamoDB and long running processes are decoupled from the API requests by using AWS EventBridge to trigger Lambda functions.
+In the serverless deployment, we use SST to deploy the application to AWS. For the frontend, we use CloudFront and for the APIs we use the AWS API Gateway. Data is stored in AWS DynamoDB and long-running processes are decoupled from the API requests by using AWS EventBridge to trigger Lambda functions.
 
 #### Dockerized Architecture
-For the dockerized deployment, the nextjs app in one docker container also handles the API requests while another container handles the queue workers. For dockerized deployments, we use postgres rather than dynamoDB for structured data storage.
+For the dockerized deployment, the Next.js app in one docker container also handles the API requests while another container handles the queue workers. For dockerized deployments, we use Postgres rather than DynamoDB for structured data storage.
 
-For storing assets (such as generated invoices or attachments), you can choose if you want to setup and maintain a minio instance (which is basically a self-hostable S3-Clone) or if you want to use an extremely simple local data storage where you just need to provide a folder to store the data in.
+For storing assets (such as generated invoices or attachments), you can choose if you want to set up and maintain a minio instance (which is basically a self-hostable S3-Clone) or if you want to use an extremely simple local data storage where you just need to provide a folder to store the data in.
 
 From a code perspective, all these options are implemented transparently with an adapter pattern.
 
@@ -74,26 +74,26 @@ In all deployment types, we use Google OAuth/ OpenID to authenticate users. This
 
 You can allow a given set of email addresses to access the application by setting the `ALLOWED_EMAILS` environment variable. Email addresses not in this list will be denied access.
 
-Once authenticated, you get two JWT tokens in your cookies, one short lived session token and one long lived refresh token. The session token is used to authenticate your requests to the API and the refresh token is used to refresh the session token when it expires. When using the refresh token, we also check if the user is still allowed to access the application against the database.
+Once authenticated, you get two JWT tokens in your cookies, one short-lived session token and one long-lived refresh token. The session token is used to authenticate your requests to the API and the refresh token is used to refresh the session token when it expires. When using the refresh token, we also check if the user is still allowed to access the application against the database.
 
 ### Development Setup
 
 If you want to develop Servobill, you can do so by following these steps to get you up and running:
 
-- clone this repository
-- install the dependencis (`npm install`)
-- start the complimentary background services (`docker-compose up -d`)
-- copy and adapt the env files: `.env.example` -> `.env` & `.env.dev.example` -> `.env.dev`
-- run `npm run dev` in the root directory.
-- setup a google oauth client id and secret and add them to the env files
-- open [http://localhost:3000](http://localhost:3000) with your browser for local development.
+- Clone this repository
+- Install the dependencies (`npm install`)
+- Start the complimentary background services (`docker-compose up -d`)
+- Copy and adapt the env files: `.env.example` → `.env` & `.env.dev.example` → `.env.dev`
+- Run `npm run dev` in the root directory.
+- Setup a Google OAuth client ID and secret and add them to the env files
+- Open [http://localhost:3000](http://localhost:3000) with your browser for local development.
 
 
 ### Environment overrides with `.env.dev`
 
 For local development, you can create a `.env.dev` file in the project root. Any variables in `.env.dev` will override those in `.env` when running locally. This is useful for developer-specific or temporary overrides. The `.env.dev` file is ignored by version control and will not be included in builds or deployments.
 
-see the `.env.example` and `.env.dev.example` files for the available variables.
+See the `.env.example` and `.env.dev.example` files for the available variables.
 
 ### Extra Tools
 
@@ -104,7 +104,7 @@ Use the following web interfaces to help you with your development:
 - S3 Simulation (Minio): [minio](http://localhost:9320)
 - SMTP Simulation (Fake SMTP Server): [http://localhost:1025](http://localhost:1025)
 
-We also have added tools that do not have we interfaces, but are setup when running the docker-compose file from the servobill-init container.
+We also have added tools that do not have web interfaces, but are set up when running the docker-compose file from the servobill-init container.
 
 - DynamoDB Simulation (dynamodb-local)
 - SES Simulation (aws-ses-local)
