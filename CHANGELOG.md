@@ -1,3 +1,10 @@
+## [1.2.4](https://github.com/kellertobias/servobill/compare/v1.2.3...v1.2.4) (2025-06-24)
+
+
+### 🐛 Bug Fixes
+
+* graphql test setup and first test case now works ([ce6b299](https://github.com/kellertobias/servobill/commit/ce6b299601ec926b1c93447dc93333b127e4c458))
+
 ## [1.2.3](https://github.com/kellertobias/servobill/compare/v1.2.2...v1.2.3) (2025-06-24)
 
 
