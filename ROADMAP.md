@@ -25,8 +25,8 @@ We will update this roadmap as we progress with the development of Servobill.
 - [ ] Add service scan mode: define messages, scan item and select which message to add to item (e.g. "Serviced on 2025-06-20"/ "Service Check Failed on 2025-06-20")
 
 ## Milestone "Auto-Generate expenses" (based on incoming invoices) (planned till end of July 2025):
+- [X] Add AI Upload of invoices (e.g. from PDF) to automatically create expenses and inventory items
 - [ ] Add support for incoming digital invoices (e.g. X-Rechnung/ ZugFeRD)
-- [ ] Add AI Upload of invoices (e.g. from PDF) to automatically create expenses and inventory items
 - [ ] Add support for incoming invoice emails (either parse digital invoice or use AI to parse)
 
 ## Milestone "Digital outgoing invoices" (planned till end of August 2025):

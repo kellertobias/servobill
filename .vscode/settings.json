@@ -12,8 +12,8 @@
         "package.json": "tsconfig.json, tsconfig.*.json, package.json, package-lock.json",
         "docker-compose.yml": ".dockerignore, *Dockerfile",
         "sst.config.ts": "sst.config.ts, sst-env.d.ts",
-        "README.md": "README.md, LICENSE.md",
-        "next.config.js": "next-env.d.ts, schema.graphql, schema.prisma, postcss.config.js*, tailwind.config.js*, tailwind.config.ts, keystone.db",
+        "README.md": "README.md, LICENSE.md, CHANGELOG.md, ROADMAP.md, .releaserc.json",
+        "next.config.js": "next-env.d.ts, schema.graphql, schema.prisma, postcss.config.js*, tailwind.config.js*, tailwind.config.ts, event-queue.db, codegen.ts",
     },
     "files.watcherExclude": {
         ".keystone/**": true,
