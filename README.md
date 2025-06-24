@@ -106,8 +106,8 @@ Use the following web interfaces to help you with your development:
 
 We also have added tools that do not have web interfaces, but are set up when running the docker-compose file from the servobill-init container.
 
-- DynamoDB Simulation (dynamodb-local)
-- SES Simulation (aws-ses-local)
+- DynamoDB Simulation (`dynamodb-local`)
+- SES Simulation (`aws-ses-local`)
 - Postgres
 
 ### Building your Invoice Template
