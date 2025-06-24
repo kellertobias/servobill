@@ -1,3 +1,20 @@
+## [1.2.3](https://github.com/kellertobias/servobill/compare/v1.2.2...v1.2.3) (2025-06-24)
+
+
+### 🐛 Bug Fixes
+
+* significantly improve test speed ([e3539e9](https://github.com/kellertobias/servobill/commit/e3539e939c31d26eac69f7c01d854c176d7faafa))
+
+
+### ♻️ Code Refactoring
+
+* enhance GraphQL resolvers and add test set integration ([b9490ff](https://github.com/kellertobias/servobill/commit/b9490ff946a5cae9b8e309a66010432b00213748))
+
+
+### ✅ Tests
+
+* add end-to-end tests for SystemResolver and enhance DynamoDB repository integration ([c5c2bb6](https://github.com/kellertobias/servobill/commit/c5c2bb68951046a7de93748081b16a4921a0e2ef))
+
 ## [1.2.2](https://github.com/kellertobias/servobill/compare/v1.2.1...v1.2.2) (2025-06-23)
 
 
