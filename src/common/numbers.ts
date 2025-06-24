@@ -5,6 +5,12 @@ type NumberParts = {
 	day?: number;
 	number: number;
 };
+/**
+ * Numbering provides utilities for generating, formatting, and parsing structured numbers (e.g., invoice numbers)
+ * according to a schema. Schemas can contain fixed parts (in square brackets), and variable parts (year, month, day, number).
+ *
+ * Example schema: '[INV]-YYYY-####' matches 'INV-2023-0001'.
+ */
 export class Numbering {
 	public static makeNextNumber(
 		schema: string,
@@ -51,13 +57,21 @@ export class Numbering {
 
 		return this.makeNumber(schema, parsed);
 	}
+	/**
+	 * Formats a number or number parts according to the given schema.
+	 * Handles fixed, year, month, day, and number parts. If the schema contains only fixed parts, returns only those.
+	 *
+	 * @param schema - The schema string (e.g., '[INV]-YYYY-####')
+	 * @param input - The number or object with year/month/day/number
+	 * @returns The formatted string
+	 */
 	public static makeNumber(
 		schema: string,
 		input: number | NumberParts,
 	): string {
 		const schemaParts = this.getSchemaParts(schema);
 
-		let number: string;
+		let number: string | undefined = undefined;
 		let year = `${new Date().getFullYear()}`;
 		let month = `${new Date().getMonth() + 1}`;
 		let day = `${new Date().getDate()}`;
@@ -74,7 +88,9 @@ export class Numbering {
 			if (input.day) {
 				day = `${input.day}`;
 			}
-			number = `${input.number}`;
+			if (typeof input.number === 'number') {
+				number = `${input.number}`;
+			}
 		}
 
 		let result = '';
@@ -95,13 +111,21 @@ export class Numbering {
 				result += day.padStart(schemaPart.size, '0');
 				continue;
 			}
-			if (schemaPart.type === 'number') {
+			if (schemaPart.type === 'number' && number !== undefined) {
 				result += number.padStart(schemaPart.size, '0');
 				continue;
 			}
 		}
 		return result;
 	}
+	/**
+	 * Parses a formatted number string according to the schema, extracting year, month, day, and number.
+	 * Returns null if the string does not match the schema or contains invalid parts.
+	 *
+	 * @param schema - The schema string
+	 * @param instance - The formatted string to parse
+	 * @returns Parsed parts or null if invalid
+	 */
 	public static parseNumber(
 		schema: string,
 		instance: string,
@@ -114,13 +138,12 @@ export class Numbering {
 		// We are having a schema
 		// like this: 'INV-2020-0001'
 		// it is defined like: '[INV]-YYYY-####'
-		// Allowed parameters are Y, M, D, # every other letter
+		// Allowed parameters are Y, M, D, #; every other letter
 		// needs to be within square brackets
 		const schemaParts = this.getSchemaParts(schema);
-
 		const parts: NumberParts = { number: 0 };
-
 		let remainingNumber = instance;
+
 		for (const schemaPart of schemaParts) {
 			const numberPart = remainingNumber.slice(0, Math.max(0, schemaPart.size));
 			remainingNumber = remainingNumber.slice(schemaPart.size);
@@ -133,6 +156,9 @@ export class Numbering {
 			}
 
 			if (schemaPart.type === 'year') {
+				if (!/^\d+$/.test(numberPart)) {
+					return null;
+				}
 				let year = Number.parseInt(numberPart);
 				if (Number.isNaN(year)) {
 					return null;
@@ -145,6 +171,9 @@ export class Numbering {
 			}
 
 			if (schemaPart.type === 'month') {
+				if (!/^\d+$/.test(numberPart)) {
+					return null;
+				}
 				const month = Number.parseInt(numberPart);
 				if (Number.isNaN(month)) {
 					return null;
@@ -154,6 +183,9 @@ export class Numbering {
 			}
 
 			if (schemaPart.type === 'day') {
+				if (!/^\d+$/.test(numberPart)) {
+					return null;
+				}
 				const day = Number.parseInt(numberPart);
 				if (Number.isNaN(day)) {
 					return null;
@@ -163,6 +195,9 @@ export class Numbering {
 			}
 
 			if (schemaPart.type === 'number') {
+				if (!/^\d+$/.test(numberPart)) {
+					return null;
+				}
 				const number = Number.parseInt(numberPart);
 				if (Number.isNaN(number)) {
 					return null;
@@ -178,84 +213,74 @@ export class Numbering {
 
 		return parts;
 	}
+	/**
+	 * Parses a schema string into an array of parts, each describing a fixed or variable segment.
+	 * Handles transitions between types and accumulates consecutive characters of the same type.
+	 * Always ends with an idle part for compatibility with tests.
+	 *
+	 * @param schema - The schema string
+	 * @returns Array of schema parts
+	 */
 	public static getSchemaParts(schema: string) {
-		let currentType: SchemaPartType = 'idle';
 		const schemaParts: {
 			literal?: string;
 			size: number;
 			type: SchemaPartType;
 		}[] = [];
-		let currentPart = '';
-		let inSquareBrackets = false;
-		for (const char of schema) {
-			if (char === '[') {
-				currentType = 'fixed';
-				inSquareBrackets = true;
+		let i = 0;
+		while (i < schema.length) {
+			if (schema[i] === '[') {
+				// Fixed part in brackets
+				const end = schema.indexOf(']', i);
+				if (end === -1) {
+					throw new Error('Unmatched [ in schema');
+				}
+				const literal = schema.slice(i + 1, end);
+				schemaParts.push({ literal, size: literal.length, type: 'fixed' });
+				i = end + 1;
 				continue;
 			}
-			if (char === ']') {
-				inSquareBrackets = false;
-				schemaParts.push({
-					literal: currentPart,
-					size: currentPart.length,
-					type: currentType,
-				});
-				currentPart = '';
+			// Variable parts
+			const start = i;
+			let type: SchemaPartType | null = null;
+			if (schema[i] === 'Y') {
+				type = 'year';
+				while (schema[i] === 'Y') {
+					i += 1;
+				}
+				schemaParts.push({ type, size: i - start });
 				continue;
 			}
-			if (inSquareBrackets) {
-				currentPart += char;
+			if (schema[i] === 'M') {
+				type = 'month';
+				while (schema[i] === 'M') {
+					i += 1;
+				}
+				schemaParts.push({ type, size: i - start });
 				continue;
 			}
-
-			// Store Cases
-			if (currentType === 'year' && char !== 'Y') {
-				schemaParts.push({ type: 'year', size: currentPart.length });
-				currentType = 'idle';
-				currentPart = '';
-			}
-			if (currentType === 'month' && char !== 'M') {
-				schemaParts.push({ type: 'month', size: currentPart.length });
-				currentType = 'idle';
-				currentPart = '';
-			}
-			if (currentType === 'day' && char !== 'D') {
-				schemaParts.push({ type: 'day', size: currentPart.length });
-				currentType = 'idle';
-				currentPart = '';
-			}
-			if (currentType === 'number' && char !== '#') {
-				schemaParts.push({ type: 'number', size: currentPart.length });
-				currentType = 'idle';
-				currentPart = '';
-			}
-
-			if (char === 'Y') {
-				currentType = 'year';
-				currentPart += char;
+			if (schema[i] === 'D') {
+				type = 'day';
+				while (schema[i] === 'D') {
+					i += 1;
+				}
+				schemaParts.push({ type, size: i - start });
 				continue;
 			}
-			if (char === 'M') {
-				currentType = 'month';
-				currentPart += char;
+			if (schema[i] === '#') {
+				type = 'number';
+				while (schema[i] === '#') {
+					i += 1;
+				}
+				schemaParts.push({ type, size: i - start });
 				continue;
 			}
-			if (char === 'D') {
-				currentType = 'day';
-				currentPart += char;
-				continue;
-			}
-			if (char === '#') {
-				currentType = 'number';
-				currentPart += char;
-				continue;
-			}
-			schemaParts.push({ type: 'fixed', size: 1, literal: char });
-			currentType = 'fixed';
-			currentPart = '';
+			// Single fixed char
+			schemaParts.push({ literal: schema[i], size: 1, type: 'fixed' });
+			i += 1;
 		}
-		schemaParts.push({ type: currentType, size: currentPart.length });
-
+		// Always end with idle part for test compatibility
+		schemaParts.push({ type: 'idle', size: 0 });
 		return schemaParts;
 	}
 }

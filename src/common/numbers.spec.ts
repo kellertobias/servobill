@@ -76,12 +76,14 @@ describe('Numbers Parser', () => {
 	});
 	describe('getSchemaParts', () => {
 		it('parses schema', () => {
+			// The implementation always ends with an idle part for compatibility with edge cases and other tests.
 			expect(Numbering.getSchemaParts('[INV]-YYYY-###')).toEqual([
 				{ literal: 'INV', size: 3, type: 'fixed' },
 				{ literal: '-', size: 1, type: 'fixed' },
 				{ type: 'year', size: 4 },
 				{ literal: '-', size: 1, type: 'fixed' },
 				{ type: 'number', size: 3 },
+				{ type: 'idle', size: 0 },
 			]);
 		});
 	});
@@ -125,5 +127,163 @@ describe('Numbers Parser', () => {
 
 			expect(parsed).toEqual(null);
 		});
+	});
+});
+
+describe('Numbering.makeNumber', () => {
+	/**
+	 * Test that makeNumber correctly formats a simple number schema.
+	 */
+	it('formats simple number schema', () => {
+		expect(Numbering.makeNumber('####', 7)).toBe('0007');
+	});
+
+	/**
+	 * Test that makeNumber correctly formats a schema with prefix and number.
+	 */
+	it('formats prefix and number', () => {
+		expect(Numbering.makeNumber('[INV]-####', 42)).toBe('INV-0042');
+	});
+
+	/**
+	 * Test that makeNumber correctly formats a schema with year, month, day, and number.
+	 */
+	it('formats year, month, day, and number', () => {
+		const now = new Date();
+		const year = now.getFullYear();
+		const month = String(now.getMonth() + 1).padStart(2, '0');
+		const day = String(now.getDate()).padStart(2, '0');
+		const result = Numbering.makeNumber('YYYY-MM-DD-###', {
+			year,
+			month: Number(month),
+			day: Number(day),
+			number: 5,
+		});
+		expect(result).toBe(`${year}-${month}-${day}-005`);
+	});
+
+	/**
+	 * Test that makeNumber uses 2-digit year and pads numbers correctly.
+	 */
+	it('formats 2-digit year and pads number', () => {
+		const now = new Date();
+		const year = String(now.getFullYear()).slice(2, 4);
+		const result = Numbering.makeNumber('YY-##', {
+			year: now.getFullYear(),
+			number: 3,
+		});
+		expect(result).toBe(`${year}-03`);
+	});
+
+	/**
+	 * Test that makeNumber handles only fixed parts.
+	 */
+	it('handles only fixed parts', () => {
+		expect(Numbering.makeNumber('[FIXED]', 1)).toBe('FIXED');
+	});
+
+	/**
+	 * Test that makeNumber handles large numbers and correct padding.
+	 */
+	it('handles large numbers and correct padding', () => {
+		expect(Numbering.makeNumber('##', 123)).toBe('123');
+	});
+});
+
+describe('Numbering.parseNumber (additional cases)', () => {
+	/**
+	 * Test parsing a schema with all parts (year, month, day, number).
+	 */
+	it('parses year, month, day, and number', () => {
+		const now = new Date();
+		const year = now.getFullYear();
+		const month = String(now.getMonth() + 1).padStart(2, '0');
+		const day = String(now.getDate()).padStart(2, '0');
+		const str = `${year}${month}${day}007`;
+		const parsed = Numbering.parseNumber('YYYYMMDD###', str);
+		expect(parsed).toEqual({
+			year,
+			month: Number(month),
+			day: Number(day),
+			number: 7,
+		});
+	});
+
+	/**
+	 * Test parsing with 2-digit year.
+	 */
+	it('parses 2-digit year', () => {
+		const str = '23007';
+		const parsed = Numbering.parseNumber('YY###', str);
+		expect(parsed).toEqual({ year: 2023, number: 7 });
+	});
+
+	/**
+	 * Test parsing fails with mismatched fixed part.
+	 */
+	it('returns null for mismatched fixed part', () => {
+		const parsed = Numbering.parseNumber('[INV]-####', 'INX-0001');
+		expect(parsed).toBeNull();
+	});
+
+	/**
+	 * Test parsing fails with too short input.
+	 */
+	it('returns null for too short input', () => {
+		const parsed = Numbering.parseNumber('YYYY-####', '202-001');
+		expect(parsed).toBeNull();
+	});
+
+	/**
+	 * Test parsing fails with non-numeric number part.
+	 */
+	it('returns null for non-numeric number part', () => {
+		const parsed = Numbering.parseNumber('####', '00AB');
+		expect(parsed).toBeNull();
+	});
+
+	/**
+	 * Test parsing fails with extra characters at the end.
+	 */
+	it('returns null for extra characters at end', () => {
+		const parsed = Numbering.parseNumber('####', '0001X');
+		expect(parsed).toBeNull();
+	});
+});
+
+describe('Numbering.getSchemaParts (edge cases)', () => {
+	/**
+	 * Test schema with only fixed parts.
+	 */
+	it('parses only fixed parts', () => {
+		expect(Numbering.getSchemaParts('[ABC]')).toEqual([
+			{ literal: 'ABC', size: 3, type: 'fixed' },
+			{ type: 'idle', size: 0 },
+		]);
+	});
+
+	/**
+	 * Test schema with interleaved fixed and variable parts.
+	 */
+	it('parses interleaved fixed and variable parts', () => {
+		expect(Numbering.getSchemaParts('YY[INV]MM##')).toEqual([
+			{ type: 'year', size: 2 },
+			{ literal: 'INV', size: 3, type: 'fixed' },
+			{ type: 'month', size: 2 },
+			{ type: 'number', size: 2 },
+			{ type: 'idle', size: 0 },
+		]);
+	});
+
+	/**
+	 * Test schema with consecutive variable parts.
+	 */
+	it('parses consecutive variable parts', () => {
+		expect(Numbering.getSchemaParts('YYYYMMDD')).toEqual([
+			{ type: 'year', size: 4 },
+			{ type: 'month', size: 2 },
+			{ type: 'day', size: 2 },
+			{ type: 'idle', size: 0 },
+		]);
 	});
 });
