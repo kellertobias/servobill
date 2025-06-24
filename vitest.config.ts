@@ -27,6 +27,14 @@ export default defineConfig({
 			provider: 'v8', // Use built-in V8 for coverage (default)
 			reporter: ['text', 'html', 'lcov'], // Output coverage in multiple formats
 			exclude: [
+				'.next/**',
+				'.sst/**',
+				'.swc/**',
+				'node_modules/**',
+				'dist/**',
+				'build/**',
+				'deploy/**',
+				'coverage/**',
 				'src/test/**',
 				'**/*.d.ts',
 				'stack/**',
