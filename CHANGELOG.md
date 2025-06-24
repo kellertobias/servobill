@@ -1,3 +1,10 @@
+## [1.2.2](https://github.com/kellertobias/servobill/compare/v1.2.1...v1.2.2) (2025-06-23)
+
+
+### ♻️ Code Refactoring
+
+* update attachment handling to support multiple expense IDs ([cbf73b1](https://github.com/kellertobias/servobill/commit/cbf73b1f0dec04be3341d5cfae26cea2eef3c909))
+
 ## [1.2.1](https://github.com/kellertobias/servobill/compare/v1.2.0...v1.2.1) (2025-06-22)
 
 
