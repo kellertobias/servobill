@@ -41,10 +41,36 @@ jobs:
       - name: Run ESLint
         run: npm run lint
 
+  # Test job to run tests with coverage (requires Docker)
+  test:
+    name: Run Tests with Coverage
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ensure Docker is available
+        run: docker --version
+
+      - name: Run tests with coverage
+        run: npm run test -- --coverage
+
   # Semantic versioning and release creation
   release:
     name: Create Release
-    needs: lint
+    needs: [lint, test]
     runs-on: ubuntu-latest
     outputs:
       new_release_published: ${{ steps.semantic.outputs.new_release_published }}
@@ -90,57 +116,27 @@ jobs:
             @semantic-release/github
             @semantic-release/git
 
-  # Docker build and push job
-  docker:
-    name: Build and Push ${{ matrix.image }} image (multi-platform)
-    needs: release
-    runs-on: ubuntu-latest
-    if: needs.release.outputs.new_release_published == 'true'
-    strategy:
-      matrix:
-        image: [app, workers]
+      - name: Set major version for compose file
+        id: set_major
+        run: |
+          VERSION="${{ steps.semantic.outputs.new_release_version }}"
+          MAJOR="v$(echo $VERSION | cut -d'.' -f1 | sed 's/v//')"
+          echo "MAJOR=$MAJOR" >> $GITHUB_OUTPUT
+          sed "s/:v1/:$MAJOR/g" deploy/dockerized/docker-compose.release.yml > deploy/dockerized/docker-compose.release.tmp.yml
+          mv deploy/dockerized/docker-compose.release.tmp.yml deploy/dockerized/docker-compose.release.yml
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
+      - name: Upload release docker-compose and env.example as artifacts
+        uses: actions/upload-artifact@v4
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata for ${{ matrix.image }}
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.image }}
-          tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=raw,value=latest,enable={{is_default_branch}}
-
-      - name: Build and push Docker image for ${{ matrix.image }}
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./${{ matrix.image == 'app' && 'App' || 'BackgroundJobs' }}.Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          platforms: linux/amd64,linux/arm64
+          name: release-compose-and-env
+          path: |
+            deploy/dockerized/docker-compose.release.yml
+            deploy/dockerized/env.example
 
   # Create GitHub release with assets
   create-release:
     name: Create GitHub Release
-    needs: [release, docker]
+    needs: [release]
     runs-on: ubuntu-latest
     if: needs.release.outputs.new_release_published == 'true'
     steps:
@@ -154,34 +150,32 @@ jobs:
           name: Release v${{ needs.release.outputs.new_release_version }}
           body: |
             ## What's Changed
+
+            ${{ steps.semantic.outputs.new_release_notes }}
+
+            ---
+
+            **Docker images are now built and published only once per week, based on the latest release at the time of the build.**
             
-            This release includes:
-            - Docker images tagged with version ${{ needs.release.outputs.new_release_version }}
-            - App image: `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/app:${{ needs.release.outputs.new_release_version }}`
-            - Workers image: `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/workers:${{ needs.release.outputs.new_release_version }}`
+            The weekly Docker image will be available after the next scheduled weekly build. Images are tagged as follows:
+            - The exact release version (e.g., `v1.2.3`)
+            - The latest major version (e.g., `v1`)
+            - `latest`
+
+            For convenience, you should use the major version tag for most deployments:
             
-            ## Docker Deployment
-            
-            Update your docker-compose.yml to use the new tagged images:
             ```yaml
             services:
               app:
-                image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/app:${{ needs.release.outputs.new_release_version }}
-              workers:
-                image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/workers:${{ needs.release.outputs.new_release_version }}
+                image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/app:v${{ needs.release.outputs.new_release_version.split('.')[0] }}
             ```
-            
-            ## Quick Deployment
-            
-            Use the deployment script to quickly deploy this version:
-            ```bash
-            VERSION=${{ needs.release.outputs.new_release_version }} ./deploy/dockerized/deploy.sh
-            ```
+
+            > Note: The `latest` and version-specific tags are also available, but only updated weekly.
+
           draft: false
           prerelease: false
           files: |
             deploy/dockerized/docker-compose.prod.yml
-            deploy/dockerized/deploy.sh
             deploy/dockerized/README.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
