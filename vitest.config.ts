@@ -3,6 +3,13 @@ import { join } from 'path';
 
 import { defineConfig } from 'vitest/config';
 
+/**
+ * Vitest coverage configuration
+ *
+ * Uses the built-in 'v8' provider for code coverage. This enables coverage reporting when running tests with the --coverage flag or via the test:coverage script.
+ * You can customize include/exclude patterns, reporters, and thresholds as needed.
+ * See: https://vitest.dev/guide/coverage.html
+ */
 export default defineConfig({
 	test: {
 		environment: 'node',
@@ -15,6 +22,32 @@ export default defineConfig({
 		fileParallelism: false,
 		sequence: {
 			concurrent: false,
+		},
+		coverage: {
+			provider: 'v8', // Use built-in V8 for coverage (default)
+			reporter: ['text', 'html', 'lcov'], // Output coverage in multiple formats
+			exclude: [
+				'src/test/**',
+				'**/*.d.ts',
+				'stack/**',
+				'templates/**',
+				'src/common/gql/**',
+				'**/handler.ts',
+				'**/event.ts',
+				'**/index.ts',
+				'**/*.e2e.ts',
+				'**/*.spec.ts',
+				'**/*.schema.ts',
+				'src/backend/instrumentation.ts',
+				'**/di-tokens.ts',
+			], // Exclude test files and type definitions
+			// Optionally, set thresholds to enforce minimum coverage
+			// thresholds: {
+			//   lines: 80,
+			//   functions: 80,
+			//   branches: 70,
+			//   statements: 80,
+			// },
 		},
 	},
 	resolve: {

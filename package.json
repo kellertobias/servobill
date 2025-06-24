@@ -24,7 +24,8 @@
     "watch-api": "npx tsx stack/build-index/index.ts --watch",
     "watch-bus": "npx tsx watch --clear-screen=false --ignore src/app --ignore src/backend/api stack/local/queue/index.ts --preserveWatchOutput",
     "watch-gql": "npm run gql:type:watch",
-    "watch-nxt": "NEXT_PUBLIC_API_URL='http://localhost:3000' next dev"
+    "watch-nxt": "NEXT_PUBLIC_API_URL='http://localhost:3000' next dev",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.478.0",
@@ -117,6 +118,7 @@
     "aws-cdk-lib": "2.110.1",
     "body-parser": "^1.20.2",
     "boxen": "^8.0.1",
+    "c8": "^10.1.3",
     "concurrently": "^8.2.2",
     "constructs": "10.3.0",
     "conventional-changelog-conventionalcommits": "^7.0.2",
