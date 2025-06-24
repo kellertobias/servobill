@@ -1,3 +1,12 @@
+## [1.2.5](https://github.com/kellertobias/servobill/compare/v1.2.4...v1.2.5) (2025-06-24)
+
+
+### 🔧 Chores
+
+* fix remaining typos ([c2e0dd4](https://github.com/kellertobias/servobill/commit/c2e0dd49e5df358e0d229dc54bd973d310e21a84))
+* fix typos in readme ([97fcdad](https://github.com/kellertobias/servobill/commit/97fcdad3677dc282d0ec8275175f3f084a91473f))
+* update ROADMAP and VSCode settings ([f98f12f](https://github.com/kellertobias/servobill/commit/f98f12fd9eb1a9c0671f35015d37ab6bec2e75a2))
+
 ## [1.2.4](https://github.com/kellertobias/servobill/compare/v1.2.3...v1.2.4) (2025-06-24)
 
 
