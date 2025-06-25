@@ -113,6 +113,20 @@ jobs:
               'main'
             ]
 
+      # Extract the latest changelog section (for the new release) and save as artifact
+      - name: Extract latest changelog section
+        id: extract_changelog
+        run: |
+          # Extract the latest section from CHANGELOG.md (from the top to the next heading)
+          awk '/^## /{i++} i==2{exit} i==1' CHANGELOG.md | tee latest-changelog.md
+        shell: bash
+
+      - name: Upload latest changelog as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: latest-changelog
+          path: latest-changelog.md
+
       - name: Set major version for compose file
         id: set_major
         run: |
@@ -140,6 +154,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Download the latest changelog artifact
+      - name: Download latest changelog artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: latest-changelog
+
+      # Read the changelog section into an output variable
+      - name: Read latest changelog section
+        id: changelog
+        run: |
+          # Save the changelog content as a single output variable
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          cat latest-changelog.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        shell: bash
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
@@ -148,7 +178,7 @@ jobs:
           body: |
             ## What's Changed
 
-            ${{ steps.semantic.outputs.new_release_notes }}
+            ${{ steps.changelog.outputs.changelog }}
 
             ---
 
