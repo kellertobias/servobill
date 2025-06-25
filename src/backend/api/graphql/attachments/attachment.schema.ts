@@ -1,4 +1,5 @@
 import { Field, ObjectType, InputType, ID, Int } from 'type-graphql';
+import { IsInt, IsOptional, IsUUID } from 'class-validator';
 
 /**
  * GraphQL type representing an uploaded file attachment.
@@ -69,17 +70,27 @@ export class AttachmentDownloadUrlResult {
 @InputType('ListAttachmentsInput')
 export class ListAttachmentsInput {
 	@Field(() => String, { nullable: true })
+	@IsUUID()
+	@IsOptional()
 	invoiceId?: string;
 
 	@Field(() => String, { nullable: true })
+	@IsUUID()
+	@IsOptional()
 	expenseId?: string;
 
 	@Field(() => String, { nullable: true })
+	@IsUUID()
+	@IsOptional()
 	inventoryId?: string;
 
 	@Field(() => Int, { nullable: true })
+	@IsOptional()
+	@IsInt()
 	skip?: number;
 
 	@Field(() => Int, { nullable: true })
+	@IsOptional()
+	@IsInt()
 	limit?: number;
 }
