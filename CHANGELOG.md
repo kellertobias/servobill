@@ -1,3 +1,26 @@
+## [1.4.1](https://github.com/kellertobias/servobill/compare/v1.4.0...v1.4.1) (2025-06-25)
+
+
+### 🐛 Bug Fixes
+
+* update changelog extraction in release workflow ([0578739](https://github.com/kellertobias/servobill/commit/0578739da55fbda411cccd94afc8357646788821))
+
+
+### 📚 Documentation
+
+* update deployment instructions in release workflow ([65dd745](https://github.com/kellertobias/servobill/commit/65dd745cad7c2c43bea1a2704cadd857ae4679ef))
+
+
+### ✅ Tests
+
+* add integration tests for AttachmentResolver ([ff1a82a](https://github.com/kellertobias/servobill/commit/ff1a82a0129327019328ee4fb6a3b5e98b066519))
+* add integration tests for AuthResolver ([f69f3ca](https://github.com/kellertobias/servobill/commit/f69f3ca9d8dee9138d3857bcd7d2673fd40caad5))
+* add integration tests for CustomerResolver ([1cd7ef2](https://github.com/kellertobias/servobill/commit/1cd7ef250cc26f6a9a5c4ba56ea5061d020faa1d))
+* add integration tests for ExpenseResolver ([52e159b](https://github.com/kellertobias/servobill/commit/52e159b71dc6ec68c0bef96d2aef0743daeb035c))
+* add integration tests for InvoiceLifecycleResolver ([c9ba5a5](https://github.com/kellertobias/servobill/commit/c9ba5a5db6dc049285738cbcbea1e9546db65323))
+* add integration tests for InvoiceResolver ([db7a8dd](https://github.com/kellertobias/servobill/commit/db7a8dd63509e14223d77857f6ed24c7db08eb92))
+* add integration tests for ProductResolver and ReportsResolver ([8f2b791](https://github.com/kellertobias/servobill/commit/8f2b791f67d18070f5a2596a8b94db08e2b0091f))
+
 ## [1.4.0](https://github.com/kellertobias/servobill/compare/v1.3.0...v1.4.0) (2025-06-25)
 
 
