@@ -35,7 +35,7 @@ export type ExecuteTestFunction = (options: {
 	variableValues?: Record<string, unknown>;
 	contextValue?: {
 		authenticated: boolean;
-		session: Session;
+		session?: Session;
 	};
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 }) => Promise<ExecutionResult | { errors: string[]; data?: any }>;
