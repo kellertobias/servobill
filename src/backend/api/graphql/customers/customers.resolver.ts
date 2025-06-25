@@ -70,6 +70,11 @@ export class CustomerResolver {
 		return customer;
 	}
 
+	/**
+	 * Updates a customer. Ensures customerNumber is always preserved unless explicitly updated.
+	 * This is necessary because the GraphQL schema requires customerNumber to be non-null,
+	 * and the update input may omit it. We must not accidentally clear it.
+	 */
 	@Authorized()
 	@Mutation(() => Customer)
 	async updateCustomer(
@@ -80,8 +85,14 @@ export class CustomerResolver {
 		if (!customer) {
 			throw new Error('Customer not found');
 		}
-		customer.update(data);
+		// Explicitly preserve customerNumber if not provided in input
+		const updateData = { ...data };
+		if (data.customerNumber === undefined) {
+			updateData.customerNumber = customer.customerNumber;
+		}
+		customer.update(updateData);
 		await this.repository.save(customer);
+
 		return customer;
 	}
 
