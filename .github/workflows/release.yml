@@ -183,14 +183,8 @@ jobs:
 
             ---
 
-            **Docker images are built and published only once per week, based on the latest release at the time of the build.**
-            
-            For convenience, you should use the major version tag for most deployments:
-            
-            ```yaml
-            services:
-              app:
-                image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/app:${{ needs.release.outputs.major_version }}
-            ```
+            ## How to deploy
 
-            > Note: The `latest` and version-specific tags are also available, but only updated weekly. 
+            You can either pull the repository (and checkout the release tag) or use the bundled docker-compose file.
+            Docker images are only built and published once per week, based on the latest release at the time of the build, to save
+            on CI minutes and thus reduce the climate impact. (Using the AI features warm up the world enough...)
