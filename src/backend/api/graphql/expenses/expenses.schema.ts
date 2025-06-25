@@ -103,8 +103,12 @@ export class ExpenseInput
 @InputType('ExpenseWhereInput')
 export class ExpenseWhereInput {
 	@Field(() => String, { nullable: true })
+	@IsOptional()
+	@IsString()
 	search?: string;
 
 	@Field(() => Int, { nullable: true })
+	@IsOptional()
+	@IsInt()
 	year?: number;
 }

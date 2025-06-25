@@ -87,6 +87,8 @@ export async function prepareGraphqlTest() {
 		resolvers: Object.values(resolvers) as unknown as NonEmptyArray<Function>,
 		container: app,
 		authChecker,
+		// 'validate: true' enables class-transformer for input types in type-graphql
+		validate: true,
 	});
 
 	const server = new ApolloServer({
