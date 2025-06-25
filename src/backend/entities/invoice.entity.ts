@@ -348,7 +348,6 @@ export class InvoiceEntity extends DomainEntity {
 		props: { paidCents: number; paidAt: Date; paidVia: string },
 		user: string,
 	) {
-		// Todo Change Invoice State
 		this.paidCents = (this.paidCents || 0) + props.paidCents;
 		this.paidAt = props.paidAt;
 		this.paidVia = props.paidVia;

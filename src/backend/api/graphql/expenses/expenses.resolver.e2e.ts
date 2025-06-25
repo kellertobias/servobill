@@ -195,7 +195,6 @@ describe('ExpenseResolver (integration)', () => {
 	 * Skipped due to test infrastructure issue: Argument Validation Error occurs because
 	 * the test GraphQL server does not transform the 'where' input into an instance of ExpenseWhereInput,
 	 * so class-validator rejects it as an unknown value. See test infra for proper class-transformer integration.
-	 * TODO: Fix test infra to support input transformation for class-validator.
 	 */
 	it('should list expenses and filter by search/year', async () => {
 		// Create two expenses
