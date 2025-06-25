@@ -1,3 +1,10 @@
+## [1.4.0](https://github.com/kellertobias/servobill/compare/v1.3.0...v1.4.0) (2025-06-25)
+
+
+### ✨ Features
+
+* enhance release workflow with changelog extraction and upload ([357181d](https://github.com/kellertobias/servobill/commit/357181db478d5185f54f96ea769256a7bdcf5a69))
+
 ## [1.3.0](https://github.com/kellertobias/servobill/compare/v1.2.6...v1.3.0) (2025-06-25)
 
 
