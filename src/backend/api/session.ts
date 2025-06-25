@@ -63,8 +63,10 @@ const makeTokenCookieInternal = (
 	}
 
 	const expiresIn = type === 'SESSION' ? SESSION_DURATION : REFRESH_DURATION;
+	// Always use a plain object for the payload to avoid signature issues with class instances
+	const plainContent = content ? JSON.parse(JSON.stringify(content)) : null;
 	const token = content
-		? jwt.sign({ dat: { ...content, type } }, JWT_SECRET, { expiresIn })
+		? jwt.sign({ dat: { ...plainContent, type } }, JWT_SECRET, { expiresIn })
 		: '';
 
 	return cookie.serialize(

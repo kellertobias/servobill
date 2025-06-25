@@ -1,6 +1,8 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import 'reflect-metadata';
 
+import { randomUUID } from 'crypto';
+
 import { inject } from 'vitest';
 
 // Register ConfigService in DI container BEFORE any other imports
@@ -8,6 +10,8 @@ import { App, DefaultContainer } from '@/common/di';
 import { CONFIG_SERVICE } from '@/backend/services/di-tokens';
 
 process.env.VITEST = 'true';
+process.env.JWT_SECRET = randomUUID();
+process.env.INSECURE_COOKIES = 'true';
 
 // we unbind the default config to avoid it being used in the tests
 if (DefaultContainer.isBound(CONFIG_SERVICE)) {

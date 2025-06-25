@@ -159,14 +159,8 @@ jobs:
 
             ---
 
-            **Docker images are now built and published only once per week, based on the latest release at the time of the build.**
+            **Docker images are built and published only once per week, based on the latest release at the time of the build.**
             
-            The weekly Docker image will be available after the next scheduled weekly build. Images are tagged as follows:
-            - The exact release version (e.g., `v1.2.3`)
-            - The latest major version (e.g., `v1`)
-            - `latest`
-
-            # The following example uses the major version output from the release job, since GitHub Actions expressions do not support .split().
             For convenience, you should use the major version tag for most deployments:
             
             ```yaml
