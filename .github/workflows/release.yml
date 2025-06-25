@@ -118,7 +118,8 @@ jobs:
         id: extract_changelog
         run: |
           # Extract the latest section from CHANGELOG.md (from the top to the next heading)
-          awk '/^## /{i++} i==2{exit} i==1' CHANGELOG.md | tee latest-changelog.md
+          # and remove the first header line (the version header)
+          awk '/^## /{i++} i==2{exit} i==1' CHANGELOG.md | tail -n +2 | tee latest-changelog.md
         shell: bash
 
       - name: Upload latest changelog as artifact
