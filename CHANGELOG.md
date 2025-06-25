@@ -1,3 +1,15 @@
+## [1.3.0](https://github.com/kellertobias/servobill/compare/v1.2.6...v1.3.0) (2025-06-25)
+
+
+### ✨ Features
+
+* add integration tests for session management and enhance Docker image publishing ([2898e90](https://github.com/kellertobias/servobill/commit/2898e90e79049a23e75666524f3a836086e6db6a))
+
+
+### 🔧 Chores
+
+* remove unused plugins from release workflow ([ae201e3](https://github.com/kellertobias/servobill/commit/ae201e3f847a8b66cc4be9bfa97dc988f79d527a))
+
 ## [1.2.6](https://github.com/kellertobias/servobill/compare/v1.2.5...v1.2.6) (2025-06-24)
 
 
