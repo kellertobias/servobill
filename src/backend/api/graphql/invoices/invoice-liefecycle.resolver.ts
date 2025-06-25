@@ -63,7 +63,7 @@ export class InvoiceLifecycleResolver {
 		@Arg('id', () => String) invoiceId: string,
 		@Arg('as', () => InvoiceType) copyAs: InvoiceType,
 		@Ctx() context: GqlContext,
-	): Promise<Invoice> {
+	): Promise<InvoiceChangedResponse> {
 		const invoice = await this.invoiceRepository.getById(invoiceId);
 		if (!invoice) {
 			throw new Error('Invoice not found');
@@ -113,10 +113,24 @@ export class InvoiceLifecycleResolver {
 			);
 		}
 
+		// Add a CREATED_INVOICE activity to the new invoice so we can return a valid InvoiceChangedResponse
+		// (COPY is not a valid InvoiceActivityType; CREATED_INVOICE is the closest match for a copy operation)
+		const copyActivity = new InvoiceActivityEntity({
+			type: InvoiceActivityType.CREATED_INVOICE,
+			user: context.session?.user?.name || 'unknown',
+		});
+		newInvoice.addActivity(copyActivity);
+
 		await this.invoiceRepository.save(newInvoice);
 		await this.invoiceRepository.save(invoice);
 
-		return newInvoice;
+		// Return the required InvoiceChangedResponse fields
+		return {
+			id: newInvoice.id,
+			activityId: copyActivity.id,
+			updatedAt: copyActivity.activityAt,
+			change: copyActivity.type,
+		};
 	}
 
 	@Authorized()
