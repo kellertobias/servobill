@@ -77,7 +77,20 @@ export class FileStorageServiceLocal implements FileStorageService {
 	async deleteFile(key: string, options?: { bucket?: string }): Promise<void> {
 		const bucket = options?.bucket ?? this.defaultSubDirectory;
 		const filePath = path.join(this.filesDirectory, bucket, key);
-		await fs.unlink(filePath);
+		try {
+			await fs.unlink(filePath);
+		} catch (error: unknown) {
+			// Ignore file not found errors for idempotency
+			if (
+				error &&
+				typeof error === 'object' &&
+				'code' in error &&
+				(error as { code: string }).code === 'ENOENT'
+			) {
+				return;
+			}
+			throw error;
+		}
 	}
 
 	/**
