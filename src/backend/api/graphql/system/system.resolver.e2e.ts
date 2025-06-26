@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeAll } from 'vitest';
 import { gql } from 'graphql-request';
 
@@ -9,6 +10,9 @@ import {
 } from '@/backend/entities/settings.entity';
 import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
 import type { SettingsRepository } from '@/backend/repositories/settings';
+import { EXPENSE_REPOSITORY } from '@/backend/repositories/expense/di-tokens';
+import type { ExpenseRepository } from '@/backend/repositories/expense/interface';
+import { ExpenseEntity } from '@/backend/entities/expense.entity';
 
 /**
  * Additional tests for SystemResolver mutations.
@@ -203,6 +207,193 @@ describe('SystemResolver Mutations', () => {
 		expect(data?.first.company.name).toBe('Batch Company');
 		expect(data?.second.pdfTemplate).toBe('<html>batch</html>');
 		expect(data?.second.pdfStyles).toBe('body { color: green; }');
+	});
+
+	/**
+	 * Test the template query.
+	 * Verifies that the template query returns the correct invoice template and styles.
+	 */
+	it('should return the invoice template and styles via template query', async () => {
+		// First, update the template to known values
+		const input = {
+			pdfTemplate: '<html>query-template</html>',
+			pdfStyles: 'body { color: purple; }',
+		};
+		await execute({
+			source: gql`
+				mutation UpdateTemplate($input: InvoiceTemplateInput!) {
+					updateTemplate(data: $input) {
+						pdfTemplate
+						pdfStyles
+					}
+				}
+			`,
+			variableValues: { input },
+		});
+
+		// Now query the template
+		const { data, errors } = await execute({
+			source: gql`
+				query Template {
+					template {
+						pdfTemplate
+						pdfStyles
+					}
+				}
+			`,
+		});
+
+		expect(errors).toBeUndefined();
+		expect(data?.template.pdfTemplate).toBe('<html>query-template</html>');
+		expect(data?.template.pdfStyles).toBe('body { color: purple; }');
+	});
+
+	/**
+	 * Test updating expense categories by removing and adding categories.
+	 * Verifies that categories can be removed and new ones added, and the result matches the expected state.
+	 */
+	it('should remove and add expense categories correctly', async () => {
+		// Initial categories
+		const initialCategories = [
+			{ name: 'A', color: '#111111', isDefault: true },
+			{ name: 'B', color: '#222222', isDefault: false },
+			{ name: 'C', color: '#333333', isDefault: false },
+		];
+		let response = await execute({
+			source: gql`
+				mutation UpdateExpenseSettings(
+					$categories: [ExpenseCategoryInputType!]!
+				) {
+					updateExpenseSettings(categories: $categories) {
+						id
+						name
+						color
+						isDefault
+					}
+				}
+			`,
+			variableValues: { categories: initialCategories },
+		});
+		expect(response.errors).toBeUndefined();
+		expect(response.data?.updateExpenseSettings).toHaveLength(3);
+
+		// Remove 'B', add 'D'
+		// The GraphQL response is dynamic, so we use 'any' for mapping here (acceptable in integration tests)
+		const categoriesWithIds = response.data.updateExpenseSettings.map(
+			(cat: any) => ({
+				categoryId: cat.id,
+				name: cat.name,
+				color: cat.color,
+				isDefault: cat.isDefault,
+			}),
+		);
+		const updatedCategories = [
+			categoriesWithIds[0], // A
+			categoriesWithIds[2], // C
+			{ name: 'D', color: '#444444', isDefault: false },
+		];
+		response = await execute({
+			source: gql`
+				mutation UpdateExpenseSettings(
+					$categories: [ExpenseCategoryInputType!]!
+				) {
+					updateExpenseSettings(categories: $categories) {
+						id
+						name
+						color
+						isDefault
+					}
+				}
+			`,
+			variableValues: { categories: updatedCategories },
+		});
+		expect(response.errors).toBeUndefined();
+		expect(response.data?.updateExpenseSettings).toHaveLength(3);
+		// The GraphQL response is dynamic, so we use 'any' for mapping here (acceptable in integration tests)
+		const names = response.data.updateExpenseSettings.map(
+			(cat: any) => cat.name,
+		);
+		expect(names).toEqual(expect.arrayContaining(['A', 'C', 'D']));
+		expect(names).not.toContain('B');
+	});
+
+	/**
+	 * Test re-mapping of expense categories when importing.
+	 * Verifies that when fixExpensesForImport is true, expenses are re-mapped to new category IDs.
+	 */
+	it('should re-map expense categories for imported expenses', async () => {
+		// Access the DI app and expense repository
+		const result = await prepareGraphqlTest();
+		const app = result.app;
+		const expenseRepo = app.get<ExpenseRepository>(EXPENSE_REPOSITORY);
+
+		// Step 1: Create an initial category and an expense using that category
+		const initialCategories = [
+			{ name: 'ImportCat', color: '#abcabc', isDefault: true },
+		];
+		let response = await execute({
+			source: gql`
+				mutation UpdateExpenseSettings(
+					$categories: [ExpenseCategoryInputType!]!
+				) {
+					updateExpenseSettings(categories: $categories) {
+						id
+						name
+					}
+				}
+			`,
+			variableValues: { categories: initialCategories },
+		});
+		expect(response.errors).toBeUndefined();
+		const oldCategoryId = response.data.updateExpenseSettings[0].id;
+
+		// Create an expense with the old categoryId
+		const expense = new ExpenseEntity({
+			id: 'exp-import-1',
+			name: 'Imported Expense',
+			expendedCents: 1000,
+			createdAt: new Date(),
+			updatedAt: new Date(),
+			expendedAt: new Date(),
+			categoryId: oldCategoryId,
+		});
+		await expenseRepo.createWithId(expense.id);
+		await expenseRepo.save(expense);
+
+		// Step 2: Simulate import with a new category (same logical category, new client-side ID)
+		const importCategories = [
+			{
+				name: 'ImportCat',
+				color: '#abcabc',
+				isDefault: true,
+				categoryId: 'client-import-id',
+			},
+		];
+		response = await execute({
+			source: gql`
+				mutation UpdateExpenseSettings(
+					$categories: [ExpenseCategoryInputType!]!
+					$fix: Boolean
+				) {
+					updateExpenseSettings(
+						categories: $categories
+						fixExpensesForImport: $fix
+					) {
+						id
+						name
+					}
+				}
+			`,
+			variableValues: { categories: importCategories, fix: true },
+		});
+		expect(response.errors).toBeUndefined();
+		const newCategoryId = response.data.updateExpenseSettings[0].id;
+		expect(newCategoryId).not.toBe(oldCategoryId);
+
+		// Step 3: The expense should now have the new categoryId
+		const updatedExpense = await expenseRepo.getById('exp-import-1');
+		expect(updatedExpense).toBeDefined();
+		expect(updatedExpense?.categoryId).toBe(newCategoryId);
 	});
 });
 

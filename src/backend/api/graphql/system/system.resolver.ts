@@ -281,11 +281,22 @@ export class SystemResolver {
 		const categoryMap: Record<string, string> = {};
 
 		for (const category of newCategories) {
+			// Generate a single UUID for the new category.
 			const id = randomUUID();
-			categoryMap[category.categoryId || ''] = id;
+			// Map the client-side categoryId (if present) to the new server-generated ID.
+			if (category.categoryId) {
+				categoryMap[category.categoryId] = id;
+			}
+			// If a category with the same name (and color) exists, map its old server-generated ID to the new one.
+			const oldCategory = existingCategories.find(
+				(cat) => cat.name === category.name && cat.color === category.color,
+			);
+			if (oldCategory) {
+				categoryMap[oldCategory.id] = id;
+			}
 			expenseSettings.categories.push({
 				...category,
-				id: randomUUID(),
+				id, // Use the same UUID for the category's id
 				isDefault: category.isDefault || false,
 				sumForTaxSoftware: category.sumForTaxSoftware || false,
 			});
