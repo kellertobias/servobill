@@ -1,3 +1,20 @@
+## [1.4.2](https://github.com/kellertobias/servobill/compare/v1.4.1...v1.4.2) (2025-06-25)
+
+
+### 🐛 Bug Fixes
+
+* add missing validations ([e48cf20](https://github.com/kellertobias/servobill/commit/e48cf2007c23e764ca234eb8b720da9db8285f31))
+* deletion should not crash if file already deleted ([9ec34c0](https://github.com/kellertobias/servobill/commit/9ec34c0f1a80752bde28281db1c197d59771e5b5))
+
+
+### ✅ Tests
+
+* add integration tests for InventoryLocationResolver ([481e2c3](https://github.com/kellertobias/servobill/commit/481e2c3f63a291ae607ff9242ab2ed3da53c4130))
+* add integration tests for InventoryResolver ([75a074b](https://github.com/kellertobias/servobill/commit/75a074b99fd38ca9245118423cc4b8b098537153))
+* add integration tests for InventoryTypeResolver ([51c57eb](https://github.com/kellertobias/servobill/commit/51c57eb84638241873393f47079433c14775761d))
+* enhance integration tests for InvoiceLifecycleResolver ([c71b991](https://github.com/kellertobias/servobill/commit/c71b99192b409c912f59fc622e8571d8e7787563))
+* expand integration tests for AttachmentResolver ([02d8056](https://github.com/kellertobias/servobill/commit/02d8056d83fc57736c4e4a354e379975ddcfa451))
+
 ## [1.4.1](https://github.com/kellertobias/servobill/compare/v1.4.0...v1.4.1) (2025-06-25)
 
 
