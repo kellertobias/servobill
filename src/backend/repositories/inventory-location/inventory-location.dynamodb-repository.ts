@@ -1,10 +1,3 @@
-import {
-	IndexCompositeAttributes,
-	QueryBranches,
-	QueryOperations,
-	ResponseItem,
-} from 'electrodb';
-
 import { shouldRegister } from '../../services/should-register';
 import { DYNAMODB_REPOSITORY_TEST_SET } from '../di-tokens';
 
@@ -26,14 +19,6 @@ import {
 	EVENTBUS_SERVICE,
 } from '@/backend/services/di-tokens';
 import type { EventBusService } from '@/backend/services/eventbus.service';
-
-type InventoryLocationSchema = typeof entitySchema.schema;
-type InventoryLocationSchemaResponseItem = ResponseItem<
-	string,
-	string,
-	string,
-	InventoryLocationSchema
->;
 
 /**
  * DynamoDB implementation of the InventoryLocation repository.
@@ -109,58 +94,41 @@ export class InventoryLocationDynamoDBRepository
 		});
 	}
 
+	private getQueryBuilder(query: {
+		where?: { search?: string; barcode?: string; parent?: string };
+		skip?: number;
+		limit?: number;
+		cursor?: string;
+	}) {
+		if (query.where?.search) {
+			return this.store.query
+				.byName({
+					storeId: this.storeId,
+				})
+				.begins({
+					searchName: query.where.search.toLowerCase(),
+				});
+		}
+
+		return this.store.query.byName({
+			storeId: this.storeId,
+		});
+	}
+
 	/**
 	 * Lists inventory locations based on query parameters.
 	 * @param query The query parameters including filters and pagination
 	 * @returns Promise resolving to an array of inventory locations
 	 */
 	public async listByQuery(query: {
-		where?: { search?: string; barcode?: string };
+		where?: { search?: string; barcode?: string; parent?: string };
 		skip?: number;
 		limit?: number;
 		cursor?: string;
 	}): Promise<InventoryLocationEntity[]> {
-		const queryBuilder = this.store.query.byName({
-			storeId: this.storeId,
-		});
+		const queryBuilder = this.getQueryBuilder(query);
 
-		let queryExecutor:
-			| QueryBranches<
-					string,
-					string,
-					string,
-					InventoryLocationSchema,
-					InventoryLocationSchemaResponseItem,
-					IndexCompositeAttributes<
-						string,
-						string,
-						string,
-						InventoryLocationSchema,
-						'byName'
-					>
-			  >
-			| QueryOperations<
-					string,
-					string,
-					string,
-					InventoryLocationSchema,
-					unknown,
-					InventoryLocationSchemaResponseItem,
-					IndexCompositeAttributes<
-						string,
-						string,
-						string,
-						InventoryLocationSchema,
-						'byName'
-					>
-			  > = queryBuilder;
-		if (query.where?.search) {
-			queryExecutor = queryBuilder.begins({
-				searchName: query.where.search.toLowerCase(),
-			});
-		}
-
-		const data = await queryExecutor.go();
+		const data = await queryBuilder.go();
 		let entities = data.data.map((elm: InventoryLocationOrmEntity) =>
 			this.ormToDomainEntity(elm),
 		);
@@ -170,6 +138,11 @@ export class InventoryLocationDynamoDBRepository
 			entities = entities.filter(
 				(item) => item.barcode === query.where!.barcode,
 			);
+		}
+
+		// Apply parent filter if provided
+		if (query.where?.parent) {
+			entities = entities.filter((item) => item.parent === query.where!.parent);
 		}
 
 		return entities;

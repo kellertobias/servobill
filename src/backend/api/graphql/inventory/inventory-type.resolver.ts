@@ -297,6 +297,30 @@ export class InventoryTypeResolver {
 	}
 
 	/**
+	 * Field resolver for children - resolves all child types of this inventory type.
+	 * @param type The inventory type to resolve children for
+	 * @returns Array of child inventory types
+	 */
+	@Authorized()
+	@FieldResolver(() => [InventoryType], { nullable: true })
+	async children(
+		@Root() type: InventoryType,
+	): Promise<InventoryType[] | undefined> {
+		try {
+			const children = await this.inventoryTypeRepository.listByQuery({
+				where: { parent: type.id },
+			});
+			return children.map((child) => this.mapToGraphQL(child));
+		} catch (error) {
+			this.logger.error('Error resolving children for inventory type', {
+				typeId: type.id,
+				error,
+			});
+			return [];
+		}
+	}
+
+	/**
 	 * Maps a domain InventoryTypeEntity to a GraphQL InventoryType.
 	 * @param entity The domain entity to map
 	 * @returns The GraphQL representation

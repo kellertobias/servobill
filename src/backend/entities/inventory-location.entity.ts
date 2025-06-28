@@ -8,6 +8,7 @@ export class InventoryLocationEntity extends DomainEntity {
 	public id!: string;
 	public name!: string;
 	public barcode?: string; // Optional barcode for easy identification and scanning
+	public parent?: string; // UUID of parent location
 	public createdAt!: Date;
 	public updatedAt!: Date;
 

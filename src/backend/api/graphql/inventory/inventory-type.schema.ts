@@ -26,6 +26,9 @@ export class InventoryType {
 	@Field(() => String, { nullable: true })
 	parent?: string;
 
+	@Field(() => [InventoryType], { nullable: true })
+	children?: InventoryType[];
+
 	@Field(() => [InventoryItem], { nullable: true })
 	items?: InventoryItem[];
 

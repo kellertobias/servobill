@@ -93,7 +93,7 @@ export class InventoryLocationRelationalRepository
 	 * @returns Promise resolving to an array of inventory locations
 	 */
 	public async listByQuery(query: {
-		where?: { search?: string; barcode?: string };
+		where?: { search?: string; barcode?: string; parent?: string };
 		skip?: number;
 		limit?: number;
 		cursor?: string;
@@ -117,6 +117,12 @@ export class InventoryLocationRelationalRepository
 		if (where?.barcode) {
 			queryBuilder.andWhere('location.barcode = :barcode', {
 				barcode: where.barcode,
+			});
+		}
+
+		if (where?.parent) {
+			queryBuilder.andWhere('location.parent = :parent', {
+				parent: where.parent,
 			});
 		}
 

@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 
 import { Table } from '@/components/table';
@@ -11,6 +13,8 @@ import { InventoryItem, InventoryType } from '../types';
 interface InventoryTypesTableProps {
 	data: InventoryType[];
 	loading: boolean;
+	/** Optional callback when a row is clicked (for navigation to detail page). */
+	onRowClick?: (type: InventoryType) => void;
 }
 
 /**
@@ -19,11 +23,13 @@ interface InventoryTypesTableProps {
  * @param props - The component props.
  * @param props.data - The array of inventory types to display.
  * @param props.loading - A boolean indicating if the data is currently loading.
+ * @param props.onRowClick - Optional callback for row click (for navigation).
  * @returns The rendered table component.
  */
 export function InventoryTypesTable({
 	data,
 	loading,
+	onRowClick,
 }: InventoryTypesTableProps) {
 	return (
 		<Table<InventoryType>
@@ -32,6 +38,7 @@ export function InventoryTypesTable({
 			loading={loading}
 			keyField="id"
 			getCategory={(type) => type.name}
+			getLineLink={onRowClick ? (type) => () => onRowClick(type) : undefined}
 			columns={[
 				{
 					key: 'name',

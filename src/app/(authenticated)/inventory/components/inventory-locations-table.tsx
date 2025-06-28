@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 
 import { Table } from '@/components/table';
@@ -11,6 +13,8 @@ import { InventoryItem, InventoryLocation } from '../types';
 interface InventoryLocationsTableProps {
 	data: InventoryLocation[];
 	loading: boolean;
+	/** Optional callback when a row is clicked (for navigation to detail page). */
+	onRowClick?: (location: InventoryLocation) => void;
 }
 
 /**
@@ -19,11 +23,13 @@ interface InventoryLocationsTableProps {
  * @param props - The component props.
  * @param props.data - The array of inventory locations to display.
  * @param props.loading - A boolean indicating if the data is currently loading.
+ * @param props.onRowClick - Optional callback for row click (for navigation).
  * @returns The rendered table component.
  */
 export function InventoryLocationsTable({
 	data,
 	loading,
+	onRowClick,
 }: InventoryLocationsTableProps) {
 	return (
 		<Table<InventoryLocation>
@@ -32,6 +38,9 @@ export function InventoryLocationsTable({
 			loading={loading}
 			keyField="id"
 			getCategory={(location) => location.name}
+			getLineLink={
+				onRowClick ? (location) => () => onRowClick(location) : undefined
+			}
 			columns={[
 				{
 					key: 'name',

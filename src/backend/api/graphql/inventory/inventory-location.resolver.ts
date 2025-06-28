@@ -297,6 +297,30 @@ export class InventoryLocationResolver {
 	}
 
 	/**
+	 * Field resolver for children - resolves all child locations of this inventory location.
+	 * @param location The inventory location to resolve children for
+	 * @returns Array of child inventory locations
+	 */
+	@Authorized()
+	@FieldResolver(() => [InventoryLocation], { nullable: true })
+	async children(
+		@Root() location: InventoryLocation,
+	): Promise<InventoryLocation[] | undefined> {
+		try {
+			const children = await this.inventoryLocationRepository.listByQuery({
+				where: { parent: location.id },
+			});
+			return children.map((child) => this.mapToGraphQL(child));
+		} catch (error) {
+			this.logger.error('Error resolving children for inventory location', {
+				locationId: location.id,
+				error,
+			});
+			return [];
+		}
+	}
+
+	/**
 	 * Maps a domain InventoryLocationEntity to a GraphQL InventoryLocation.
 	 * @param entity The domain entity to map
 	 * @returns The GraphQL representation

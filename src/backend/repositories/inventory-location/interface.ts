@@ -10,7 +10,7 @@ export type InventoryLocationRepository = AbstractRepositoryInterface<
 	[],
 	{
 		listByQuery(query: {
-			where?: { search?: string; barcode?: string };
+			where?: { search?: string; barcode?: string; parent?: string };
 			skip?: number;
 			limit?: number;
 			cursor?: string;

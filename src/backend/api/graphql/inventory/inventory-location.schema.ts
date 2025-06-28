@@ -17,6 +17,12 @@ export class InventoryLocation {
 	@Field(() => String, { nullable: true })
 	barcode?: string;
 
+	@Field(() => String, { nullable: true })
+	parent?: string;
+
+	@Field(() => [InventoryLocation], { nullable: true })
+	children?: InventoryLocation[];
+
 	@Field(() => [InventoryItem], { nullable: true })
 	items?: InventoryItem[];
 

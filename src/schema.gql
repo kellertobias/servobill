@@ -258,11 +258,13 @@ input InventoryItemWhereInput {
 
 type InventoryLocation {
   barcode: String
+  children: [InventoryLocation!]
   createdAt: DateTime!
   id: String!
   itemCount: Float
   items: [InventoryItem!]
   name: String!
+  parent: String
   updatedAt: DateTime!
 }
 
@@ -279,6 +281,7 @@ input InventoryLocationWhereInput {
 type InventoryType {
   checkInterval: Int
   checkType: String
+  children: [InventoryType!]
   createdAt: DateTime!
   id: String!
   itemCount: Int!
