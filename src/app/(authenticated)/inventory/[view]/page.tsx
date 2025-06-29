@@ -1,5 +1,7 @@
 'use client';
 
+import '@/components/dev-utils';
+
 import { notFound, useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 
