@@ -32,6 +32,7 @@ type AuthCheckResult {
 input CreateInventoryLocationInput {
   barcode: String
   name: String!
+  parent: String
 }
 
 input CreateInventoryTypeInput {
@@ -265,6 +266,7 @@ type InventoryLocation {
   items: [InventoryItem!]
   name: String!
   parent: String
+  parentName: String
   updatedAt: DateTime!
 }
 
@@ -275,6 +277,8 @@ type InventoryLocationInfo {
 
 input InventoryLocationWhereInput {
   barcode: String
+  parent: String
+  rootOnly: Boolean
   search: String
 }
 
@@ -288,6 +292,7 @@ type InventoryType {
   items: [InventoryItem!]
   name: String!
   parent: String
+  parentName: String
   properties: [String!]!
   updatedAt: DateTime!
 }
@@ -627,10 +632,10 @@ type Query {
   getContext: GetContextResult!
   inventoryItem(barcode: String, id: String): InventoryItem
   inventoryItems(limit: Int, skip: Int, where: InventoryItemWhereInput): [InventoryItem!]!
-  inventoryLocation(id: String!): InventoryLocation
+  inventoryLocation(id: String): InventoryLocation
   inventoryLocationByBarcode(barcode: String!): InventoryLocation
   inventoryLocations(limit: Int, skip: Int, where: InventoryLocationWhereInput): [InventoryLocation!]!
-  inventoryType(id: String!): InventoryType
+  inventoryType(id: String): InventoryType
   inventoryTypes(limit: Int, skip: Int, where: InventoryTypeWhereInput): [InventoryType!]!
   invoice(id: String!): Invoice!
   invoices(limit: Int, skip: Int, where: InvoiceWhereInput): [Invoice!]!
@@ -730,6 +735,7 @@ type SettingsResultCompany {
 input UpdateInventoryLocationInput {
   barcode: String
   name: String
+  parent: String
 }
 
 input UpdateInventoryTypeInput {

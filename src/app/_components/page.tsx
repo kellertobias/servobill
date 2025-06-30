@@ -20,7 +20,7 @@ export const PageCard: React.FC<
 
 export const PageContent: React.FC<
 	React.PropsWithChildren<{
-		title: string;
+		title: string | React.ReactNode;
 		noPadding?: boolean;
 		noCard?: boolean;
 		contentClassName?: string;
