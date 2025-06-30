@@ -9,6 +9,12 @@
 
 import { API, gql } from '@/api/index';
 
+import {
+	DevToolsInventoryItemsQuery,
+	InventoryLocationsListQuery,
+	InventoryTypesListQuery,
+} from '@/common/gql/graphql';
+
 /**
  * Generates a random UUID (RFC4122 version 4 compliant, simplified for demo use).
  * @returns {string} A random UUID string.
@@ -22,6 +28,37 @@ function uuidv4(): string {
 			return v.toString(16);
 		},
 	);
+}
+
+/**
+ * Helper to create a demo inventory item object for seeding.
+ */
+function makeItem({
+	name,
+	barcode,
+	state,
+	type,
+	location,
+	properties,
+}: {
+	name: string;
+	barcode: string;
+	state: string;
+	type: { id: string; name: string };
+	location: { id: string; name: string };
+	properties?: { key: string; value: string }[];
+}) {
+	return {
+		id: uuidv4(),
+		name,
+		barcode,
+		state,
+		type: type ? { id: type.id, name: type.name } : undefined,
+		location: location ? { id: location.id, name: location.name } : undefined,
+		nextCheck: new Date().toISOString(),
+		lastScanned: new Date().toISOString(),
+		properties: properties || [],
+	};
 }
 
 // --- TypeScript interfaces for demo data ---
@@ -63,13 +100,102 @@ interface DemoInventoryLocation {
 }
 
 /**
- * Populates the backend with demo inventory types, locations, and items using GraphQL mutations.
+ * Deletes ALL inventory items, types, and locations from the backend (in this order).
+ * This is useful for resetting the inventory database during development.
  *
- * This ensures that after running this function, API queries will return the demo data.
- *
- * - Types: Some with children, some without.
- * - Locations: Some with children, some without.
- * - Items: Some attached to types/locations, some types/locations without items.
+ * Usage: await window.devUtils.deleteAllInventoryData()
+ */
+export async function deleteAllInventoryData(): Promise<void> {
+	try {
+		// --- GraphQL mutation definitions ---
+		const DELETE_ITEM_MUTATION = gql(`
+			mutation DeleteInventoryItemDevTools($id: String!) {
+				deleteInventoryItem(id: $id)
+			}
+		`);
+		const DELETE_TYPE_MUTATION = gql(`
+			mutation DeleteInventoryTypeDevTools($id: String!) {
+				deleteInventoryType(id: $id)
+			}
+		`);
+		const DELETE_LOCATION_MUTATION = gql(`
+			mutation DeleteInventoryLocationDevTools($id: String!) {
+				deleteInventoryLocation(id: $id)
+			}
+		`);
+
+		// --- Fetch all data ---
+		const { types, locations, items } = await fetchAllInventoryData();
+
+		// --- Delete all items ---
+		for (const item of items) {
+			try {
+				await API.query({
+					query: DELETE_ITEM_MUTATION,
+					variables: { id: item.id },
+				});
+				// eslint-disable-next-line no-console
+				console.log(
+					`[deleteAllInventoryData] Deleted item: ${item.name} (${item.id})`,
+				);
+			} catch (error) {
+				// eslint-disable-next-line no-console
+				console.error(
+					`[deleteAllInventoryData] Error deleting item: ${item.id}`,
+					error,
+				);
+			}
+		}
+
+		// --- Delete all types ---
+		for (const type of types) {
+			try {
+				await API.query({
+					query: DELETE_TYPE_MUTATION,
+					variables: { id: type.id },
+				});
+				// eslint-disable-next-line no-console
+				console.log(
+					`[deleteAllInventoryData] Deleted type: ${type.name} (${type.id})`,
+				);
+			} catch (error) {
+				// eslint-disable-next-line no-console
+				console.error(
+					`[deleteAllInventoryData] Error deleting type: ${type.id}`,
+					error,
+				);
+			}
+		}
+
+		// --- Delete all locations ---
+		for (const loc of locations) {
+			try {
+				await API.query({
+					query: DELETE_LOCATION_MUTATION,
+					variables: { id: loc.id },
+				});
+				// eslint-disable-next-line no-console
+				console.log(
+					`[deleteAllInventoryData] Deleted location: ${loc.name} (${loc.id})`,
+				);
+			} catch (error) {
+				// eslint-disable-next-line no-console
+				console.error(
+					`[deleteAllInventoryData] Error deleting location: ${loc.id}`,
+					error,
+				);
+			}
+		}
+		// eslint-disable-next-line no-console
+		console.log('[deleteAllInventoryData] All inventory data deleted.');
+	} catch (error) {
+		// eslint-disable-next-line no-console
+		console.error('[deleteAllInventoryData] Error during deletion:', error);
+	}
+}
+
+/**
+ * Populates the backend with the new demo inventory types, locations, and items using GraphQL mutations.
  *
  * This function is attached to window.devUtils for easy invocation in the browser console.
  *
@@ -77,209 +203,553 @@ interface DemoInventoryLocation {
  */
 export async function populateDemoInventory(): Promise<void> {
 	try {
-		// --- Generate Types (step 1: create all without children) ---
-		const typeA: DemoInventoryType = {
-			id: uuidv4(),
-			name: 'Electronics',
-			properties: ['brand', 'model'],
-			itemCount: 0,
-			items: [],
-			createdAt: new Date().toISOString(),
-			updatedAt: new Date().toISOString(),
-			children: [],
-		};
-		const typeB: DemoInventoryType = {
-			id: uuidv4(),
-			name: 'Furniture',
-			properties: ['material'],
-			itemCount: 0,
-			items: [],
-			createdAt: new Date().toISOString(),
-			updatedAt: new Date().toISOString(),
-			children: [],
-		};
-		const typeA1: DemoInventoryType = {
-			id: uuidv4(),
-			name: 'Laptops',
-			parent: typeA.id,
-			properties: ['cpu', 'ram'],
-			itemCount: 0,
-			items: [],
-			createdAt: new Date().toISOString(),
-			updatedAt: new Date().toISOString(),
-			children: [],
-		};
-		const typeA2: DemoInventoryType = {
-			id: uuidv4(),
-			name: 'Phones',
-			parent: typeA.id,
-			properties: ['os'],
-			itemCount: 0,
-			items: [],
-			createdAt: new Date().toISOString(),
-			updatedAt: new Date().toISOString(),
-			children: [],
-		};
-		const typeB1: DemoInventoryType = {
-			id: uuidv4(),
-			name: 'Chairs',
-			parent: typeB.id,
-			properties: ['color'],
-			itemCount: 0,
-			items: [],
-			createdAt: new Date().toISOString(),
-			updatedAt: new Date().toISOString(),
-			children: [],
-		};
-		const typeStationery: DemoInventoryType = {
-			id: uuidv4(),
-			name: 'Stationery',
-			properties: [],
-			itemCount: 0,
-			items: [],
-			createdAt: new Date().toISOString(),
-			updatedAt: new Date().toISOString(),
-			children: [],
-		};
-		// --- Assign children (step 2) ---
-		typeA.children = [typeA1, typeA2];
-		typeB.children = [typeB1];
-		// --- Collect all types ---
-		const types: DemoInventoryType[] = [
-			typeA,
-			typeB,
-			typeStationery,
-			typeA1,
-			typeA2,
-			typeB1,
-		];
+		// --- Define parent locations ---
+		const locStorage = { id: uuidv4(), name: 'Storage Locations' };
+		const locBags = { id: uuidv4(), name: 'Bags & Racks' };
+		const locRentals = { id: uuidv4(), name: 'Long-Term-Rentals' };
 
-		// --- Generate Locations (step 1: create all without children) ---
-		const locA: DemoInventoryLocation = {
+		// --- Define child locations with parent relations ---
+		// Storage Locations
+		const locBasement = {
 			id: uuidv4(),
-			name: 'Warehouse',
-			itemCount: 0,
-			items: [],
-			createdAt: new Date().toISOString(),
-			updatedAt: new Date().toISOString(),
-			children: [],
+			name: 'Basement Storage',
+			parent: locStorage.id,
 		};
-		const locB: DemoInventoryLocation = {
+		const locAppartment = {
 			id: uuidv4(),
-			name: 'Office',
-			itemCount: 0,
-			items: [],
-			createdAt: new Date().toISOString(),
-			updatedAt: new Date().toISOString(),
-			children: [],
+			name: 'Appartment Storage',
+			parent: locStorage.id,
 		};
-		const locA1: DemoInventoryLocation = {
+		// Bags & Racks
+		const locAllDayBag = {
 			id: uuidv4(),
-			name: 'Shelf 1',
-			parent: locA.id,
-			itemCount: 0,
-			items: [],
-			createdAt: new Date().toISOString(),
-			updatedAt: new Date().toISOString(),
-			children: [],
+			name: 'All-Day Bag',
+			parent: locBags.id,
 		};
-		const locA2: DemoInventoryLocation = {
+		const locTravelBag = {
 			id: uuidv4(),
-			name: 'Shelf 2',
-			parent: locA.id,
-			itemCount: 0,
-			items: [],
-			createdAt: new Date().toISOString(),
-			updatedAt: new Date().toISOString(),
-			children: [],
+			name: 'Travel Bag',
+			parent: locBags.id,
 		};
-		const locB1: DemoInventoryLocation = {
+		const locToolBag = { id: uuidv4(), name: 'Tool Bag', parent: locBags.id };
+		const locDJBag = { id: uuidv4(), name: 'DJ Bag', parent: locBags.id };
+		const locLightDeskCase = {
 			id: uuidv4(),
-			name: 'Desk 1',
-			parent: locB.id,
-			itemCount: 0,
-			items: [],
-			createdAt: new Date().toISOString(),
-			updatedAt: new Date().toISOString(),
-			children: [],
+			name: 'Light Desk Case',
+			parent: locBags.id,
 		};
-		const locRemote: DemoInventoryLocation = {
+		const locVideoRack = {
 			id: uuidv4(),
-			name: 'Remote Storage',
-			itemCount: 0,
-			items: [],
-			createdAt: new Date().toISOString(),
-			updatedAt: new Date().toISOString(),
-			children: [],
+			name: 'Video Rack',
+			parent: locBags.id,
 		};
-		// --- Assign children (step 2) ---
-		locA.children = [locA1, locA2];
-		locB.children = [locB1];
-		// --- Collect all locations ---
+		// Long-Term-Rentals (People)
+		const locAdam = { id: uuidv4(), name: 'Adam Apple', parent: locRentals.id };
+		const locBob = {
+			id: uuidv4(),
+			name: 'Bob Brussels',
+			parent: locRentals.id,
+		};
+		const locCathrin = {
+			id: uuidv4(),
+			name: 'Cathrin Corwell',
+			parent: locRentals.id,
+		};
+
+		// --- Compose locations array with parent-child structure ---
+		// Note: Backend API may not support parent assignment on creation; this is for local structure/UI.
 		const locations: DemoInventoryLocation[] = [
-			locA,
-			locB,
-			locRemote,
-			locA1,
-			locA2,
-			locB1,
+			// Parents
+			{
+				...locStorage,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			{
+				...locBags,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			{
+				...locRentals,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			// Children
+			{
+				...locBasement,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			{
+				...locAppartment,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			{
+				...locAllDayBag,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			{
+				...locTravelBag,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			{
+				...locToolBag,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			{
+				...locDJBag,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			{
+				...locLightDeskCase,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			{
+				...locVideoRack,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			{
+				...locAdam,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			{
+				...locBob,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			{
+				...locCathrin,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
 		];
 
-		// --- Generate Items ---
+		// --- Assign children arrays for local structure (for UI/testing) ---
+		const locationMap: Record<string, DemoInventoryLocation> = {};
+		locations.forEach((loc) => {
+			locationMap[loc.id] = loc;
+		});
+		// Assign children to parents
+		locations.forEach((loc) => {
+			if (loc.parent && locationMap[loc.parent]) {
+				locationMap[loc.parent].children.push(loc);
+			}
+		});
+
+		// --- Define new types structure ---
+		// IT-Equipment
+		const typeIT = { id: uuidv4(), name: 'IT-Equipment', properties: [] };
+		const typeScreens = {
+			id: uuidv4(),
+			name: 'Screens',
+			parent: typeIT.id,
+			properties: ['Touch', 'Resolution', 'Mobile', 'Serial'],
+		};
+		const typeUSBC = {
+			id: uuidv4(),
+			name: 'USB-C Hub Dock',
+			parent: typeIT.id,
+			properties: ['Ports', 'Power Delivery'],
+		};
+		const typeThunderbolt = {
+			id: uuidv4(),
+			name: 'Thunderbolt Docking Station',
+			parent: typeIT.id,
+			properties: ['Ports', 'Power Delivery'],
+		};
+		const typeLaptop = {
+			id: uuidv4(),
+			name: 'Laptop',
+			parent: typeIT.id,
+			properties: ['Model', 'Processor', 'Memory', 'Storage'],
+		};
+		const typeDesktop = {
+			id: uuidv4(),
+			name: 'Desktop',
+			parent: typeIT.id,
+			properties: ['Processor', 'Memory', 'Storage', 'Graphics'],
+		};
+		// Audio Equipment
+		const typeAudio = { id: uuidv4(), name: 'Audio Equipment', properties: [] };
+		const typeMicrophone = {
+			id: uuidv4(),
+			name: 'Microphone',
+			parent: typeAudio.id,
+			properties: [],
+		};
+		const typeWirelessMic = {
+			id: uuidv4(),
+			name: 'Wireless Microphone',
+			parent: typeAudio.id,
+			properties: [],
+		};
+		const typeWirelessBeltpack = {
+			id: uuidv4(),
+			name: 'Wireless Beltpack',
+			parent: typeAudio.id,
+			properties: [],
+		};
+		// Cables
+		const typeCables = { id: uuidv4(), name: 'Cables', properties: [] };
+		const typeXLR = {
+			id: uuidv4(),
+			name: 'XLR Cables',
+			parent: typeCables.id,
+			properties: [],
+		};
+		const typeXLR5m = {
+			id: uuidv4(),
+			name: '5m',
+			parent: typeXLR.id,
+			properties: [],
+		};
+		const typePower = {
+			id: uuidv4(),
+			name: 'Power Cables',
+			parent: typeCables.id,
+			properties: [],
+		};
+		const typePower3m = {
+			id: uuidv4(),
+			name: '3m',
+			parent: typePower.id,
+			properties: [],
+		};
+		const typePower5m = {
+			id: uuidv4(),
+			name: '5m',
+			parent: typePower.id,
+			properties: [],
+		};
+		const typePowerMulti3m = {
+			id: uuidv4(),
+			name: '3x Multisocket 3m',
+			parent: typePower.id,
+			properties: [],
+		};
+		const types: DemoInventoryType[] = [
+			// IT-Equipment
+			{
+				...typeIT,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			{
+				...typeScreens,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			{
+				...typeUSBC,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			{
+				...typeThunderbolt,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			{
+				...typeLaptop,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			{
+				...typeDesktop,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			// Audio Equipment
+			{
+				...typeAudio,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			{
+				...typeMicrophone,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			{
+				...typeWirelessMic,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			{
+				...typeWirelessBeltpack,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			// Cables
+			{
+				...typeCables,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			{
+				...typeXLR,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			{
+				...typeXLR5m,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			{
+				...typePower,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			{
+				...typePower3m,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			{
+				...typePower5m,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+			{
+				...typePowerMulti3m,
+				itemCount: 0,
+				items: [],
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				children: [],
+			},
+		];
+		// Assign children for hierarchy (for local structure, not backend)
+		types.forEach((type) => {
+			type.children = types.filter((t) => t.parent === type.id);
+		});
+
+		// --- Generate realistic items for these types and locations ---
 		const items: DemoInventoryItem[] = [
-			{
-				id: uuidv4(),
-				name: 'MacBook Pro',
-				barcode: 'MBP-001',
+			// IT-Equipment
+			makeItem({
+				name: 'Dell UltraSharp U2720Q',
+				barcode: 'SCR-001',
+				state: 'DEFAULT',
+				type: typeScreens,
+				location: locBasement,
+				properties: [
+					{ key: 'Resolution', value: '3840x2160' },
+					{ key: 'Touch', value: 'No' },
+					{ key: 'Serial', value: 'DU2720Q-12345' },
+				],
+			}),
+			makeItem({
+				name: 'Apple MacBook Pro 16"',
+				barcode: 'LAP-001',
 				state: 'NEW',
-				type: { id: typeA1.id, name: typeA1.name },
-				location: { id: locA1.id, name: locA1.name },
-				nextCheck: new Date().toISOString(),
-				lastScanned: new Date().toISOString(),
-			},
-			{
-				id: uuidv4(),
-				name: 'iPhone',
-				barcode: 'IPH-001',
+				type: typeLaptop,
+				location: locAppartment,
+				properties: [
+					{ key: 'Model', value: '2021 M1 Max' },
+					{ key: 'Memory', value: '32GB' },
+					{ key: 'Storage', value: '1TB' },
+				],
+			}),
+			makeItem({
+				name: 'CalDigit TS3 Plus',
+				barcode: 'TB-001',
 				state: 'DEFAULT',
-				type: { id: typeA2.id, name: typeA2.name },
-				location: { id: locA2.id, name: locA2.name },
-				nextCheck: new Date().toISOString(),
-				lastScanned: new Date().toISOString(),
-			},
-			{
-				id: uuidv4(),
-				name: 'Office Chair',
-				barcode: 'CHAIR-001',
+				type: typeThunderbolt,
+				location: locLightDeskCase,
+				properties: [
+					{ key: 'Ports', value: '15' },
+					{ key: 'Power Delivery', value: '87W' },
+				],
+			}),
+			makeItem({
+				name: 'Anker USB-C Hub',
+				barcode: 'USBC-001',
 				state: 'DEFAULT',
-				type: { id: typeB1.id, name: typeB1.name },
-				location: { id: locB1.id, name: locB1.name },
-				nextCheck: new Date().toISOString(),
-				lastScanned: new Date().toISOString(),
-			},
-			// Item with no type (one-off)
-			{
-				id: uuidv4(),
-				name: 'Whiteboard',
-				barcode: 'WB-001',
+				type: typeUSBC,
+				location: locAllDayBag,
+				properties: [
+					{ key: 'Ports', value: '7' },
+					{ key: 'Power Delivery', value: '60W' },
+				],
+			}),
+			// Audio Equipment
+			makeItem({
+				name: 'Shure SM58',
+				barcode: 'MIC-001',
 				state: 'DEFAULT',
-				location: { id: locB.id, name: locB.name },
-				nextCheck: new Date().toISOString(),
-				lastScanned: new Date().toISOString(),
-			},
-			// Item with no location (unassigned)
-			{
-				id: uuidv4(),
-				name: 'Desk Lamp',
-				barcode: 'LAMP-001',
-				state: 'NEW',
-				type: { id: typeB1.id, name: typeB1.name },
-				nextCheck: new Date().toISOString(),
-				lastScanned: new Date().toISOString(),
-			},
+				type: typeMicrophone,
+				location: locDJBag,
+			}),
+			makeItem({
+				name: 'Sennheiser EW 100 G4',
+				barcode: 'WMIC-001',
+				state: 'DEFAULT',
+				type: typeWirelessMic,
+				location: locTravelBag,
+			}),
+			makeItem({
+				name: 'Sennheiser Beltpack',
+				barcode: 'BELT-001',
+				state: 'DEFAULT',
+				type: typeWirelessBeltpack,
+				location: locToolBag,
+			}),
+			// Cables
+			makeItem({
+				name: 'Sommer XLR 5m',
+				barcode: 'XLR-5M-001',
+				state: 'DEFAULT',
+				type: typeXLR5m,
+				location: locBasement,
+			}),
+			makeItem({
+				name: 'Schuko Power 3m',
+				barcode: 'PWR-3M-001',
+				state: 'DEFAULT',
+				type: typePower3m,
+				location: locBasement,
+			}),
+			makeItem({
+				name: 'Schuko Power 5m',
+				barcode: 'PWR-5M-001',
+				state: 'DEFAULT',
+				type: typePower5m,
+				location: locBasement,
+			}),
+			makeItem({
+				name: '3x Multisocket 3m',
+				barcode: 'MULTI-3M-001',
+				state: 'DEFAULT',
+				type: typePowerMulti3m,
+				location: locBasement,
+			}),
+			// Long Term Rentals
+			makeItem({
+				name: 'MacBook Air (Adam)',
+				barcode: 'LAP-ADAM-001',
+				state: 'DEFAULT',
+				type: typeLaptop,
+				location: locAdam,
+				properties: [{ key: 'Model', value: '2020 M1' }],
+			}),
+			makeItem({
+				name: 'DJ Controller (Bob)',
+				barcode: 'DJ-BOB-001',
+				state: 'DEFAULT',
+				type: typeAudio,
+				location: locBob,
+			}),
+			makeItem({
+				name: 'Monitor Speaker (Cathrin)',
+				barcode: 'SPK-CATH-001',
+				state: 'DEFAULT',
+				type: typeAudio,
+				location: locCathrin,
+			}),
 		];
 
-		// Assign items to types and locations
+		// Assign items to types and locations (for local structure, not backend)
 		types.forEach((type) => {
 			type.items = items.filter(
 				(item) => item.type && item.type.id === type.id,
@@ -293,14 +763,8 @@ export async function populateDemoInventory(): Promise<void> {
 			loc.itemCount = loc.items.length;
 		});
 
-		/**
-		 * --- Backend Seeding Logic ---
-		 * Insert generated demo data into the backend using GraphQL mutations.
-		 * This ensures that API queries will return the demo data.
-		 *
-		 * Note: API.query is used for both queries and mutations in this codebase.
-		 */
-		// --- GraphQL mutation definitions ---
+		// --- Backend Seeding Logic ---
+		// GraphQL mutation definitions
 		const CREATE_TYPE_MUTATION = gql(`
 			mutation CreateInventoryTypeDevTools($input: CreateInventoryTypeInput!) {
 				createInventoryType(input: $input) { id name parent properties createdAt updatedAt }
@@ -317,10 +781,10 @@ export async function populateDemoInventory(): Promise<void> {
 			}
 		`);
 
-		// --- Helper: Insert types (parents first, then children) ---
+		// --- Insert types (parents first, then children) ---
 		const typeIdMap: Record<string, string> = {};
 		for (const type of types) {
-			const input: any = {
+			const input = {
 				name: type.name,
 				properties: type.properties,
 				parent: type.parent ? typeIdMap[type.parent] : undefined,
@@ -332,13 +796,12 @@ export async function populateDemoInventory(): Promise<void> {
 			typeIdMap[type.id] = res.createInventoryType.id;
 		}
 
-		// --- Helper: Insert locations (parents first, then children) ---
+		// --- Insert locations ---
 		const locationIdMap: Record<string, string> = {};
 		for (const loc of locations) {
-			const input: any = {
+			const input = {
 				name: loc.name,
 				barcode: loc.barcode,
-				// parent: loc.parent ? locationIdMap[loc.parent] : undefined, // Not supported by backend
 			};
 			const res = await API.query({
 				query: CREATE_LOCATION_MUTATION,
@@ -346,24 +809,20 @@ export async function populateDemoInventory(): Promise<void> {
 			});
 			locationIdMap[loc.id] = res.createInventoryLocation.id;
 		}
-
-		// Determine fallback locationId for items that lack a location (required by backend)
 		const fallbackLocationId = Object.values(locationIdMap)[0];
 
 		// --- Insert items ---
 		for (const item of items) {
-			const input: any = {
+			const input = {
 				name: item.name,
 				barcode: item.barcode,
 				state: item.state,
 				typeId: item.type ? typeIdMap[item.type.id] : undefined,
-				// Always provide a locationId, fallback to first location if missing (required by backend)
 				locationId: item.location
 					? locationIdMap[item.location.id]
 					: fallbackLocationId,
 				nextCheck: item.nextCheck,
-				// lastScanned: item.lastScanned, // Not allowed by backend InventoryItemInput
-				properties: [], // Add properties if needed
+				properties: item.properties || [],
 			};
 			try {
 				const result = await API.query({
@@ -400,7 +859,6 @@ export async function populateDemoInventory(): Promise<void> {
 			// eslint-disable-next-line no-console
 			console.log(`[Type] ${t.name} (UUID: ${t.id})`, t);
 		});
-
 		// eslint-disable-next-line no-console
 		console.log('==== Created Inventory Locations ====');
 		// eslint-disable-next-line no-console
@@ -409,8 +867,6 @@ export async function populateDemoInventory(): Promise<void> {
 				Type: 'Location',
 				Name: l.name,
 				UUID: l.id,
-				Parent: l.parent || '',
-				Children: l.children.length,
 				Items: l.items.length,
 			})),
 		);
@@ -418,7 +874,6 @@ export async function populateDemoInventory(): Promise<void> {
 			// eslint-disable-next-line no-console
 			console.log(`[Location] ${l.name} (UUID: ${l.id})`, l);
 		});
-
 		// eslint-disable-next-line no-console
 		console.log('==== Created Inventory Items ====');
 		// eslint-disable-next-line no-console
@@ -436,7 +891,6 @@ export async function populateDemoInventory(): Promise<void> {
 			// eslint-disable-next-line no-console
 			console.log(`[Item] ${i.name} (UUID: ${i.id})`, i);
 		});
-
 		// eslint-disable-next-line no-console
 		console.log(
 			'[populateDemoInventory] Demo inventory data generated and stored in backend.',
@@ -455,9 +909,9 @@ export async function populateDemoInventory(): Promise<void> {
  * Usage: await window.devUtils.fetchAllInventoryData()
  */
 export async function fetchAllInventoryData(): Promise<{
-	types: any[];
-	locations: any[];
-	items: any[];
+	types: InventoryTypesListQuery['entries'];
+	locations: InventoryLocationsListQuery['entries'];
+	items: DevToolsInventoryItemsQuery['inventoryItems'];
 }> {
 	try {
 		// GraphQL queries for all types, locations, and items (with unique operation names)
@@ -571,4 +1025,7 @@ if (typeof window !== 'undefined') {
 	(
 		window as unknown as { devUtils: Record<string, unknown> }
 	).devUtils.fetchAllInventoryData = fetchAllInventoryData;
+	(
+		window as unknown as { devUtils: Record<string, unknown> }
+	).devUtils.deleteAllInventoryData = deleteAllInventoryData;
 }
