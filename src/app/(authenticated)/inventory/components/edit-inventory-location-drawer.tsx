@@ -4,10 +4,9 @@ import { Drawer } from '@/components/drawer';
 import { Input } from '@/components/input';
 import { API, gql } from '@/api/index';
 import { useLoadData, useSaveCallback } from '@/hooks/load-data';
-import SelectInput from '@/components/select-input';
 
 import { useInventoryDrawer } from './use-inventory-drawer';
-import { useLocations } from './use-locations';
+import { InventoryLocationSelect } from './inventory-location-select';
 
 /**
  * Drawer component for editing an inventory location's properties: parent, name, barcode.
@@ -31,8 +30,6 @@ const EditInventoryLocationDrawer = forwardRef(
 		const { drawerId, handleClose } = useInventoryDrawer({
 			ref,
 		});
-
-		const { locations: allLocations } = useLocations(drawerId);
 
 		// useLoadData for fetching and managing location data
 		const { data, setData, initialData, reload, loading } = useLoadData(
@@ -143,20 +140,12 @@ const EditInventoryLocationDrawer = forwardRef(
 				<div className="divide-y divide-gray-200 px-4 sm:px-6">
 					<div className="space-y-6 pb-5 pt-6">
 						{/* Parent dropdown */}
-						<SelectInput
-							label="Parent Location"
-							value={data?.parent || null}
+						<InventoryLocationSelect
+							value={data?.parent || ''}
 							onChange={(parent) =>
 								setData((current) => ({ ...current, parent }))
 							}
-							options={[
-								{ value: '', label: 'No parent (root)' },
-								...allLocations.map((loc) => ({
-									value: loc.id,
-									label: loc.name,
-								})),
-							]}
-							placeholder="Select parent location (optional)"
+							excludeId={drawerId || undefined}
 						/>
 						{/* Name input */}
 						<Input

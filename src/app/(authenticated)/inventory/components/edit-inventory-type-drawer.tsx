@@ -5,9 +5,8 @@ import { Input } from '@/components/input';
 import { API, gql } from '@/api/index';
 import { useLoadData, useSaveCallback } from '@/hooks/load-data';
 import { Button } from '@/components/button';
-import SelectInput from '@/components/select-input';
 
-import { useTypes } from './use-types';
+import { InventoryTypeSelect } from './inventory-type-select';
 import { useInventoryDrawer } from './use-inventory-drawer';
 
 /**
@@ -45,9 +44,6 @@ const EditInventoryTypeDrawer = forwardRef(
 		const { drawerId, handleClose } = useInventoryDrawer({
 			ref,
 		});
-
-		// Fetch all inventory types for parent dropdown (excluding current type)
-		const { types } = useTypes(drawerId);
 
 		// useLoadData for fetching and managing type data
 		const { data, setData, initialData, reload, loading } = useLoadData<
@@ -216,8 +212,7 @@ const EditInventoryTypeDrawer = forwardRef(
 				<div className="divide-y divide-gray-200 px-4 sm:px-6">
 					<div className="space-y-6 pb-5 pt-6">
 						{/* Parent type dropdown */}
-						<SelectInput
-							label="Parent Type"
+						<InventoryTypeSelect
 							value={data.parent || ''}
 							onChange={(parent) =>
 								setData((current) => ({
@@ -225,12 +220,7 @@ const EditInventoryTypeDrawer = forwardRef(
 									parent: parent || undefined,
 								}))
 							}
-							options={[
-								{ value: '', label: 'No parent (root)' },
-								...types.map((t) => ({ value: t.id, label: t.name })),
-							]}
-							placeholder="Select parent type (optional)"
-							className="mb-2"
+							excludeId={drawerId || undefined}
 						/>
 						{/* Name input */}
 						<Input
