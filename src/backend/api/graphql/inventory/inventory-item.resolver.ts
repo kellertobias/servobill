@@ -121,37 +121,37 @@ export class InventoryResolver {
 	@Authorized()
 	@Mutation(() => InventoryItem)
 	async createInventoryItem(
-		@Arg('input', () => InventoryItemInput) input: InventoryItemInput,
+		@Arg('data', () => InventoryItemInput) data: InventoryItemInput,
 	): Promise<InventoryItem> {
 		try {
 			// check type and location for existence
-			if (input.typeId) {
-				const type = await this.inventoryTypeRepository.getById(input.typeId);
+			if (data.typeId) {
+				const type = await this.inventoryTypeRepository.getById(data.typeId);
 				if (!type) {
-					throw new Error(`Inventory type with id ${input.typeId} not found`);
+					throw new Error(`Inventory type with id ${data.typeId} not found`);
 				}
 			}
-			if (input.locationId) {
+			if (data.locationId) {
 				const location = await this.inventoryLocationRepository.getById(
-					input.locationId,
+					data.locationId,
 				);
 				if (!location) {
 					throw new Error(
-						`Inventory location with id ${input.locationId} not found`,
+						`Inventory location with id ${data.locationId} not found`,
 					);
 				}
 			}
 
 			const item = new InventoryItemEntity({
 				id: randomUUID(),
-				typeId: input.typeId,
-				name: input.name,
-				barcode: input.barcode,
-				locationId: input.locationId,
-				state: input.state || InventoryItemState.NEW,
+				typeId: data.typeId,
+				name: data.name,
+				barcode: data.barcode,
+				locationId: data.locationId,
+				state: data.state || InventoryItemState.NEW,
 				properties:
-					input.properties?.map((prop) => [prop.key, prop.value]) || [],
-				nextCheck: input.nextCheck || new Date(),
+					data.properties?.map((prop) => [prop.key, prop.value]) || [],
+				nextCheck: data.nextCheck || new Date(),
 				lastScanned: new Date(),
 				history: [],
 			});
@@ -159,7 +159,7 @@ export class InventoryResolver {
 			await this.inventoryItemRepository.save(item);
 			return this.mapToGraphQL(item);
 		} catch (error) {
-			this.logger.error('Error creating inventory item', { input, error });
+			this.logger.error('Error creating inventory item', { data, error });
 			throw error;
 		}
 	}
@@ -175,7 +175,7 @@ export class InventoryResolver {
 	async updateInventoryItem(
 		@Arg('id', () => String) id: string,
 		// we can update: name, barcode, location, type, properties, state
-		@Arg('input', () => InventoryItemInput) input: InventoryItemInput,
+		@Arg('data', () => InventoryItemInput) data: InventoryItemInput,
 	): Promise<InventoryItem> {
 		try {
 			const existingItem = await this.inventoryItemRepository.getById(id);
@@ -184,51 +184,51 @@ export class InventoryResolver {
 			}
 
 			// Update fields
-			if (input.name !== undefined) {
-				existingItem.updateName(input.name);
+			if (data.name !== undefined) {
+				existingItem.updateName(data.name);
 			}
-			if (input.barcode !== undefined) {
-				existingItem.updateBarcode(input.barcode);
+			if (data.barcode !== undefined) {
+				existingItem.updateBarcode(data.barcode);
 			}
-			if (input.locationId !== undefined) {
+			if (data.locationId !== undefined) {
 				// check location for existence
 				const location = await this.inventoryLocationRepository.getById(
-					input.locationId,
+					data.locationId,
 				);
 				if (!location) {
 					throw new Error(
-						`Inventory location with id ${input.locationId} not found`,
+						`Inventory location with id ${data.locationId} not found`,
 					);
 				}
-				existingItem.updateLocation(input.locationId);
+				existingItem.updateLocation(data.locationId);
 			}
-			if (input.typeId !== undefined) {
+			if (data.typeId !== undefined) {
 				// check type for existence
-				const type = await this.inventoryTypeRepository.getById(input.typeId);
+				const type = await this.inventoryTypeRepository.getById(data.typeId);
 				if (!type) {
-					throw new Error(`Inventory type with id ${input.typeId} not found`);
+					throw new Error(`Inventory type with id ${data.typeId} not found`);
 				}
-				existingItem.updateTypeId(input.typeId);
+				existingItem.updateTypeId(data.typeId);
 			}
-			if (input.state !== undefined) {
+			if (data.state !== undefined) {
 				// if state changes, add a history entry
-				if (existingItem.state !== input.state) {
+				if (existingItem.state !== data.state) {
 					existingItem.addNote(
-						`State changed from ${existingItem.state} to ${input.state}`,
+						`State changed from ${existingItem.state} to ${data.state}`,
 					);
 				}
-				existingItem.updateState(input.state);
+				existingItem.updateState(data.state);
 			}
 
-			if (input.properties !== undefined) {
+			if (data.properties !== undefined) {
 				existingItem.updateProperties(
-					input.properties.map(({ key, value }) => [key, value]),
+					data.properties.map(({ key, value }) => [key, value]),
 				);
 			}
 			await this.inventoryItemRepository.save(existingItem);
 			return this.mapToGraphQL(existingItem);
 		} catch (error) {
-			this.logger.error('Error updating inventory item', { id, input, error });
+			this.logger.error('Error updating inventory item', { id, data, error });
 			throw error;
 		}
 	}

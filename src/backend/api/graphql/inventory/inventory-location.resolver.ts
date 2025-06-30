@@ -15,9 +15,8 @@ import { GRAPHQL_TEST_SET } from '../di-tokens';
 
 import {
 	InventoryLocation,
-	CreateInventoryLocationInput,
-	UpdateInventoryLocationInput,
 	InventoryLocationWhereInput,
+	InventoryLocationInput,
 } from './inventory-location.schema';
 import { InventoryItem } from './inventory-item.schema';
 import { InventoryResolver } from './inventory-item.resolver';
@@ -159,22 +158,22 @@ export class InventoryLocationResolver {
 	@Authorized()
 	@Mutation(() => InventoryLocation)
 	async createInventoryLocation(
-		@Arg('input', () => CreateInventoryLocationInput)
-		input: CreateInventoryLocationInput,
+		@Arg('data', () => InventoryLocationInput)
+		data: InventoryLocationInput,
 	): Promise<InventoryLocation> {
 		try {
 			const location = new InventoryLocationEntity({
 				id: randomUUID(),
-				name: input.name,
-				barcode: input.barcode,
-				parent: input.parent,
+				name: data.name,
+				barcode: data.barcode,
+				parent: data.parent,
 				createdAt: new Date(),
 				updatedAt: new Date(),
 			});
 			await this.inventoryLocationRepository.save(location);
 			return this.mapToGraphQL(location);
 		} catch (error) {
-			this.logger.error('Error creating inventory location', { input, error });
+			this.logger.error('Error creating inventory location', { data, error });
 			throw error;
 		}
 	}
@@ -190,8 +189,8 @@ export class InventoryLocationResolver {
 	@Mutation(() => InventoryLocation)
 	async updateInventoryLocation(
 		@Arg('id', () => String) id: string,
-		@Arg('input', () => UpdateInventoryLocationInput)
-		input: UpdateInventoryLocationInput,
+		@Arg('data', () => InventoryLocationInput)
+		data: InventoryLocationInput,
 	): Promise<InventoryLocation> {
 		try {
 			const existingLocation =
@@ -200,14 +199,14 @@ export class InventoryLocationResolver {
 				throw new Error(`Inventory location with id ${id} not found`);
 			}
 
-			if (input.name !== undefined) {
-				existingLocation.name = input.name;
+			if (data.name !== undefined) {
+				existingLocation.name = data.name;
 			}
-			if (input.barcode !== undefined) {
-				existingLocation.barcode = input.barcode;
+			if (data.barcode !== undefined) {
+				existingLocation.barcode = data.barcode;
 			}
-			if (input.parent !== undefined) {
-				existingLocation.parent = input.parent;
+			if (data.parent !== undefined) {
+				existingLocation.parent = data.parent;
 			}
 			existingLocation.updatedAt = new Date();
 
@@ -216,7 +215,7 @@ export class InventoryLocationResolver {
 		} catch (error) {
 			this.logger.error('Error updating inventory location', {
 				id,
-				input,
+				data,
 				error,
 			});
 			throw error;

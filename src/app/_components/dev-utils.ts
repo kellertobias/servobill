@@ -766,18 +766,18 @@ export async function populateDemoInventory(): Promise<void> {
 		// --- Backend Seeding Logic ---
 		// GraphQL mutation definitions
 		const CREATE_TYPE_MUTATION = gql(`
-			mutation CreateInventoryTypeDevTools($input: CreateInventoryTypeInput!) {
-				createInventoryType(input: $input) { id name parent properties createdAt updatedAt }
+			mutation CreateInventoryTypeDevTools($input: InventoryTypeInput!) {
+				createInventoryType(data: $input) { id name parent properties createdAt updatedAt }
 			}
 		`);
 		const CREATE_LOCATION_MUTATION = gql(`
-			mutation CreateInventoryLocationDevTools($input: CreateInventoryLocationInput!) {
-				createInventoryLocation(input: $input) { id name barcode parent createdAt updatedAt }
+			mutation CreateInventoryLocationDevTools($input: InventoryLocationInput!) {
+				createInventoryLocation(data: $input) { id name barcode parent createdAt updatedAt }
 			}
 		`);
 		const CREATE_ITEM_MUTATION = gql(`
 			mutation CreateInventoryItemDevTools($input: InventoryItemInput!) {
-				createInventoryItem(input: $input) { id name barcode state type { id } location { id } nextCheck lastScanned createdAt updatedAt }
+				createInventoryItem(data: $input) { id name barcode state type { id } location { id } nextCheck lastScanned createdAt updatedAt }
 			}
 		`);
 

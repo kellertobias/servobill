@@ -48,8 +48,8 @@ export class InventoryLocation {
 /**
  * Input type for creating a new inventory location
  */
-@InputType('CreateInventoryLocationInput')
-export class CreateInventoryLocationInput {
+@InputType('InventoryLocationInput')
+export class InventoryLocationInput {
 	@Field(() => String)
 	@IsString()
 	@MaxLength(255)
@@ -67,32 +67,6 @@ export class CreateInventoryLocationInput {
 	/**
 	 * Optional parent location ID. If provided, sets the parent of this location on creation.
 	 */
-	parent?: string;
-}
-
-/**
- * Input type for updating an existing inventory location
- */
-@InputType('UpdateInventoryLocationInput')
-export class UpdateInventoryLocationInput {
-	@Field(() => String, { nullable: true })
-	@IsOptional()
-	@IsString()
-	@MaxLength(255)
-	name?: string;
-
-	@Field(() => String, { nullable: true })
-	@IsOptional()
-	@IsString()
-	@MaxLength(100)
-	barcode?: string;
-
-	/**
-	 * Optional parent location ID. If provided, sets or updates the parent of this location.
-	 */
-	@Field(() => String, { nullable: true })
-	@IsOptional()
-	@IsString()
 	parent?: string;
 }
 

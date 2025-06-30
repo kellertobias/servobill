@@ -91,6 +91,10 @@ const EditInventoryLocationDrawer = forwardRef(
 			}),
 		});
 
+		if (!data) {
+			return null;
+		}
+
 		return (
 			<Drawer
 				id={drawerId}
@@ -108,40 +112,69 @@ const EditInventoryLocationDrawer = forwardRef(
 				}
 				saveText={loading ? 'Saving...' : 'Save'}
 				cancelText="Cancel"
+				deleteText={{
+					title: 'Delete Inventory Location',
+					content: (
+						<>
+							Are you sure you want to delete the Inventory Location{' '}
+							<b>{data?.name}</b>? This action cannot be undone.
+						</>
+					),
+				}}
+				onDelete={
+					data.id === 'new'
+						? undefined
+						: async () => {
+								await API.query({
+									query: gql(`
+										mutation DeleteInventoryLocation($id: String!) {
+											deleteInventoryLocation(id: $id)
+										}
+									`),
+									variables: {
+										id: data.id,
+									},
+								});
+								onReload?.();
+								handleClose();
+							}
+				}
 			>
-				<div className="py-2 space-y-4">
-					{/* Parent dropdown */}
-					<SelectInput
-						label="Parent Location"
-						value={data?.parent || null}
-						onChange={(parent) =>
-							setData((current) => ({ ...current, parent }))
-						}
-						options={[
-							{ value: '', label: 'No parent (root)' },
-							...allLocations.map((loc) => ({
-								value: loc.id,
-								label: loc.name,
-							})),
-						]}
-						placeholder="Select parent location (optional)"
-					/>
-					{/* Name input */}
-					<Input
-						label="Name"
-						value={data?.name || ''}
-						onChange={(name) => setData((current) => ({ ...current, name }))}
-						placeholder="Location name"
-					/>
-					{/* Barcode input */}
-					<Input
-						label="Barcode (optional)"
-						value={data?.barcode || ''}
-						onChange={(barcode) =>
-							setData((current) => ({ ...current, barcode }))
-						}
-						placeholder="Barcode (optional)"
-					/>
+				<div className="divide-y divide-gray-200 px-4 sm:px-6">
+					<div className="space-y-6 pb-5 pt-6">
+						{/* Parent dropdown */}
+						<SelectInput
+							label="Parent Location"
+							value={data?.parent || null}
+							onChange={(parent) =>
+								setData((current) => ({ ...current, parent }))
+							}
+							options={[
+								{ value: '', label: 'No parent (root)' },
+								...allLocations.map((loc) => ({
+									value: loc.id,
+									label: loc.name,
+								})),
+							]}
+							placeholder="Select parent location (optional)"
+						/>
+						{/* Name input */}
+						<Input
+							label="Name"
+							value={data?.name || ''}
+							onChange={(name) => setData((current) => ({ ...current, name }))}
+							placeholder="Location name"
+						/>
+						{/* Barcode input */}
+						<Input
+							label="Barcode (optional)"
+							value={data?.barcode || ''}
+							onChange={(barcode) =>
+								setData((current) => ({ ...current, barcode }))
+							}
+							placeholder="Barcode (optional)"
+						/>
+					</div>
 				</div>
 			</Drawer>
 		);

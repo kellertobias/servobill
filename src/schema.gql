@@ -29,20 +29,6 @@ type AuthCheckResult {
   userName: String
 }
 
-input CreateInventoryLocationInput {
-  barcode: String
-  name: String!
-  parent: String
-}
-
-input CreateInventoryTypeInput {
-  checkInterval: Int
-  checkType: String
-  name: String!
-  parent: String
-  properties: [String!]
-}
-
 type Customer {
   city: String
   contactName: String
@@ -275,6 +261,12 @@ type InventoryLocationInfo {
   name: String!
 }
 
+input InventoryLocationInput {
+  barcode: String
+  name: String!
+  parent: String
+}
+
 input InventoryLocationWhereInput {
   barcode: String
   parent: String
@@ -302,6 +294,14 @@ type InventoryTypeInfo {
   checkType: String
   id: String!
   name: String!
+}
+
+input InventoryTypeInput {
+  checkInterval: Int
+  checkType: String
+  name: String!
+  parent: String
+  properties: [String!]
 }
 
 input InventoryTypeWhereInput {
@@ -540,9 +540,9 @@ type Mutation {
   copyInvoice(as: InvoiceType!, id: String!): InvoiceChangedResponse!
   createCustomer(data: CustomerInput!): Customer!
   createExpense(data: ExpenseInput!): Expense!
-  createInventoryItem(input: InventoryItemInput!): InventoryItem!
-  createInventoryLocation(input: CreateInventoryLocationInput!): InventoryLocation!
-  createInventoryType(input: CreateInventoryTypeInput!): InventoryType!
+  createInventoryItem(data: InventoryItemInput!): InventoryItem!
+  createInventoryLocation(data: InventoryLocationInput!): InventoryLocation!
+  createInventoryType(data: InventoryTypeInput!): InventoryType!
   createInvoice(customerId: String!, type: InvoiceType): Invoice!
   createProduct(data: ProductInput!): Product!
   deleteAttachment(attachmentId: String!): Boolean!
@@ -571,9 +571,9 @@ type Mutation {
   updateCustomer(data: CustomerInput!, id: String!): Customer!
   updateExpense(data: ExpenseInput!, id: String!): Expense!
   updateExpenseSettings(categories: [ExpenseCategoryInputType!]!, fixExpensesForImport: Boolean): [ExpenseCategoryType!]!
-  updateInventoryItem(id: String!, input: InventoryItemInput!): InventoryItem!
-  updateInventoryLocation(id: String!, input: UpdateInventoryLocationInput!): InventoryLocation!
-  updateInventoryType(id: String!, input: UpdateInventoryTypeInput!): InventoryType!
+  updateInventoryItem(data: InventoryItemInput!, id: String!): InventoryItem!
+  updateInventoryLocation(data: InventoryLocationInput!, id: String!): InventoryLocation!
+  updateInventoryType(data: InventoryTypeInput!, id: String!): InventoryType!
   updateInvoice(data: InvoiceInput!, id: String!): Invoice!
   updateProduct(data: ProductInput!, id: String!): Product!
   updateSettings(data: SettingsInput!): SettingsResult!
@@ -730,18 +730,4 @@ type SettingsResultCompany {
   vatId: String
   web: String
   zip: String
-}
-
-input UpdateInventoryLocationInput {
-  barcode: String
-  name: String
-  parent: String
-}
-
-input UpdateInventoryTypeInput {
-  checkInterval: Int
-  checkType: String
-  name: String
-  parent: String
-  properties: [String!]
 }

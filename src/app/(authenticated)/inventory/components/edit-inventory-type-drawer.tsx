@@ -5,7 +5,9 @@ import { Input } from '@/components/input';
 import { API, gql } from '@/api/index';
 import { useLoadData, useSaveCallback } from '@/hooks/load-data';
 import { Button } from '@/components/button';
+import SelectInput from '@/components/select-input';
 
+import { useTypes } from './use-types';
 import { useInventoryDrawer } from './use-inventory-drawer';
 
 /**
@@ -43,6 +45,10 @@ const EditInventoryTypeDrawer = forwardRef(
 		const { drawerId, handleClose } = useInventoryDrawer({
 			ref,
 		});
+
+		// Fetch all inventory types for parent dropdown (excluding current type)
+		const { types } = useTypes(drawerId);
+
 		// useLoadData for fetching and managing type data
 		const { data, setData, initialData, reload, loading } = useLoadData<
 			InventoryTypeDrawerData,
@@ -123,6 +129,8 @@ const EditInventoryTypeDrawer = forwardRef(
 				properties: Array.isArray(d.properties)
 					? d.properties.filter((p: string) => p && p.trim())
 					: [],
+				parent:
+					d.parent === '' || d.parent === undefined ? undefined : d.parent,
 			}),
 		});
 
@@ -177,79 +185,126 @@ const EditInventoryTypeDrawer = forwardRef(
 				}
 				saveText={loading ? 'Saving...' : 'Save'}
 				cancelText="Cancel"
+				deleteText={{
+					title: 'Delete Inventory Type',
+					content: (
+						<>
+							Are you sure you want to delete the Inventory Type
+							<b>{data?.name}</b>? This action cannot be undone.
+						</>
+					),
+				}}
+				onDelete={
+					data.id === 'new'
+						? undefined
+						: async () => {
+								await API.query({
+									query: gql(`
+									mutation DeleteInventoryType($id: String!) {
+										deleteInventoryType(id: $id)
+									}
+								`),
+									variables: {
+										id: data.id,
+									},
+								});
+								onReload?.();
+								handleClose();
+							}
+				}
 			>
-				<div className="py-2 flex flex-col gap-4">
-					{/* Parent name (read-only, if present) */}
-					{data.parentName && (
-						<div className="text-xs text-gray-500 mb-1">
-							Parent: <span className="font-semibold">{data.parentName}</span>
-						</div>
-					)}
-					{/* Name input */}
-					<Input
-						label="Name"
-						value={data.name}
-						onChange={(name) =>
-							setData((current) => ({ ...current!, name: name ?? '' }))
-						}
-						placeholder="Type name"
-					/>
-					{/* CheckInterval and CheckType in one row */}
-					<div className="flex gap-2">
-						<Input
-							label="Check Interval (days)"
-							type="number"
-							value={
-								typeof data.checkInterval === 'string'
-									? data.checkInterval
-									: data.checkInterval == null
-										? ''
-										: String(data.checkInterval)
+				<div className="divide-y divide-gray-200 px-4 sm:px-6">
+					<div className="space-y-6 pb-5 pt-6">
+						{/* Parent type dropdown */}
+						<SelectInput
+							label="Parent Type"
+							value={data.parent || ''}
+							onChange={(parent) =>
+								setData((current) => ({
+									...current!,
+									parent: parent || undefined,
+								}))
 							}
-							onChange={(v) =>
-								setData((current) => ({ ...current!, checkInterval: v ?? '' }))
-							}
-							placeholder="e.g. 30"
-							className="flex-1"
+							options={[
+								{ value: '', label: 'No parent (root)' },
+								...types.map((t) => ({ value: t.id, label: t.name })),
+							]}
+							placeholder="Select parent type (optional)"
+							className="mb-2"
 						/>
+						{/* Name input */}
 						<Input
-							label="Check Type"
-							value={data.checkType}
-							onChange={(v) =>
-								setData((current) => ({ ...current!, checkType: v ?? '' }))
+							label="Name"
+							value={data.name}
+							onChange={(name) =>
+								setData((current) => ({ ...current!, name: name ?? '' }))
 							}
-							placeholder="e.g. NONE, MANUAL, ..."
-							className="flex-1"
+							placeholder="Type name"
 						/>
-					</div>
-					{/* Properties array */}
-					<div>
-						<div className="flex items-center justify-between mb-1">
-							<label className="block text-sm font-medium leading-6 text-gray-900">
-								Properties
-							</label>
-							<Button small secondary onClick={handleAddProperty}>
-								Add
-							</Button>
+						{/* CheckInterval and CheckType in one row */}
+						<div className="flex gap-2">
+							<Input
+								label="Check Interval (days)"
+								type="number"
+								value={
+									typeof data.checkInterval === 'string'
+										? data.checkInterval
+										: data.checkInterval == null
+											? ''
+											: String(data.checkInterval)
+								}
+								onChange={(v) =>
+									setData((current) => ({
+										...current!,
+										checkInterval: v ?? '',
+									}))
+								}
+								placeholder="e.g. 30"
+								className="flex-1"
+							/>
+							<Input
+								label="Check Type"
+								value={data.checkType}
+								onChange={(v) =>
+									setData((current) => ({ ...current!, checkType: v ?? '' }))
+								}
+								placeholder="e.g. NONE, MANUAL, ..."
+								className="flex-1"
+							/>
 						</div>
-						{data.properties.length === 0 && (
-							<div className="text-xs text-gray-400">
-								No properties defined.
-							</div>
-						)}
-						{data.properties.map((prop: string, idx: number) => (
-							<div key={idx} className="flex gap-2 items-center mb-1">
-								<Input
-									value={prop}
-									onChange={(v) => handlePropertyChange(idx, v ?? '')}
-									placeholder={`Property #${idx + 1}`}
-									className="flex-1"
-								/>
-								<Button small danger onClick={() => handleRemoveProperty(idx)}>
-									Remove
+						{/* Properties array */}
+						<div>
+							<div className="flex items-center justify-between mb-1">
+								<label className="block text-sm font-medium leading-6 text-gray-900">
+									Properties
+								</label>
+								<Button small secondary onClick={handleAddProperty}>
+									Add
 								</Button>
 							</div>
-						))}
+							{data.properties.length === 0 && (
+								<div className="text-xs text-gray-400">
+									No properties defined.
+								</div>
+							)}
+							{data.properties.map((prop: string, idx: number) => (
+								<div key={idx} className="flex gap-2 items-center mb-1">
+									<Input
+										value={prop}
+										onChange={(v) => handlePropertyChange(idx, v ?? '')}
+										placeholder={`Property #${idx + 1}`}
+										className="flex-1"
+									/>
+									<Button
+										small
+										danger
+										onClick={() => handleRemoveProperty(idx)}
+									>
+										Remove
+									</Button>
+								</div>
+							))}
+						</div>
 					</div>
 				</div>
 			</Drawer>

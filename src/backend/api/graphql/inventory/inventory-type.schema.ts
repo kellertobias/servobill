@@ -54,44 +54,12 @@ export class InventoryType {
 /**
  * Input type for creating a new inventory type
  */
-@InputType('CreateInventoryTypeInput')
-export class CreateInventoryTypeInput {
+@InputType('InventoryTypeInput')
+export class InventoryTypeInput {
 	@Field(() => String)
 	@IsString()
 	@MaxLength(255)
 	name!: string;
-
-	@Field(() => Int, { nullable: true })
-	@IsOptional()
-	@IsNumber()
-	checkInterval?: number;
-
-	@Field(() => String, { nullable: true })
-	@IsOptional()
-	@IsString()
-	@MaxLength(100)
-	checkType?: string;
-
-	@Field(() => [String], { nullable: true })
-	@IsOptional()
-	properties?: string[];
-
-	@Field(() => String, { nullable: true })
-	@IsOptional()
-	@IsString()
-	parent?: string;
-}
-
-/**
- * Input type for updating an existing inventory type
- */
-@InputType('UpdateInventoryTypeInput')
-export class UpdateInventoryTypeInput {
-	@Field(() => String, { nullable: true })
-	@IsOptional()
-	@IsString()
-	@MaxLength(255)
-	name?: string;
 
 	@Field(() => Int, { nullable: true })
 	@IsOptional()

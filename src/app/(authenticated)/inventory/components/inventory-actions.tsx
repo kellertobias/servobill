@@ -69,8 +69,8 @@ export function InventoryActions() {
 				dialog.mode === 'type'
 					? await API.query({
 							query: gql(`
-								mutation CreateInventoryType($input: CreateInventoryTypeInput!) {
-									createResponse: createInventoryType(input: $input) { id }
+								mutation CreateInventoryType($input: InventoryTypeInput!) {
+									createResponse: createInventoryType(data: $input) { id }
 								}
 							`),
 							variables: {
@@ -85,8 +85,8 @@ export function InventoryActions() {
 						})
 					: await API.query({
 							query: gql(`
-								mutation CreateInventoryLocation($input: CreateInventoryLocationInput!) {
-									createResponse: createInventoryLocation(input: $input) { id }
+								mutation CreateInventoryLocation($input: InventoryLocationInput!) {
+									createResponse: createInventoryLocation(data: $input) { id }
 								}
 							`),
 							variables: { input: { name } },

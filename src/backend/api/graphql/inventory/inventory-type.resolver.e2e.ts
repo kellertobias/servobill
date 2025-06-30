@@ -95,8 +95,8 @@ describe('InventoryTypeResolver (integration)', () => {
 		 */
 		// 1. Create
 		const createMutation = `
-      mutation CreateType($input: CreateInventoryTypeInput!) {
-        createInventoryType(input: $input) {
+      mutation CreateType($input: InventoryTypeInput!) {
+        createInventoryType(data: $input) {
           id
           name
           checkInterval
@@ -231,8 +231,8 @@ describe('InventoryTypeResolver (integration)', () => {
 
 	it('should not allow creating a type with non-existent parent', async () => {
 		const createMutation = `
-      mutation CreateType($input: CreateInventoryTypeInput!) {
-        createInventoryType(input: $input) { id }
+      mutation CreateType($input: InventoryTypeInput!) {
+        createInventoryType(data: $input) { id }
       }
     `;
 		const res = await execute({
@@ -304,9 +304,9 @@ describe('InventoryTypeResolver (integration)', () => {
 	it('should support multiple mutations in a single execution (race condition check)', async () => {
 		// Create, update, and delete in one request
 		const multiMutation = `
-      mutation Multi($create: CreateInventoryTypeInput!, $update: UpdateInventoryTypeInput!) {
-        a: createInventoryType(input: $create) { id name }
-        b: updateInventoryType(id: "temp", input: $update) { id name }
+      mutation Multi($create: InventoryTypeInput!, $update: InventoryTypeInput!) {
+        a: createInventoryType(data: $create) { id name }
+        b: updateInventoryType(id: "temp", data: $update) { id name }
         c: deleteInventoryType(id: "temp")
       }
     `;

@@ -15,9 +15,8 @@ import { GRAPHQL_TEST_SET } from '../di-tokens';
 
 import {
 	InventoryType,
-	CreateInventoryTypeInput,
-	UpdateInventoryTypeInput,
 	InventoryTypeWhereInput,
+	InventoryTypeInput,
 } from './inventory-type.schema';
 import { InventoryItem } from './inventory-item.schema';
 import { InventoryResolver } from './inventory-item.resolver';
@@ -130,29 +129,29 @@ export class InventoryTypeResolver {
 	@Authorized()
 	@Mutation(() => InventoryType)
 	async createInventoryType(
-		@Arg('input', () => CreateInventoryTypeInput)
-		input: CreateInventoryTypeInput,
+		@Arg('data', () => InventoryTypeInput)
+		data: InventoryTypeInput,
 	): Promise<InventoryType> {
 		try {
 			// Validate parent exists if provided
-			if (input.parent) {
+			if (data.parent) {
 				const parentType = await this.inventoryTypeRepository.getById(
-					input.parent,
+					data.parent,
 				);
 				if (!parentType) {
 					throw new Error(
-						`Parent inventory type with id ${input.parent} not found`,
+						`Parent inventory type with id ${data.parent} not found`,
 					);
 				}
 			}
 
 			const type = new InventoryTypeEntity({
 				id: randomUUID(),
-				name: input.name,
-				checkInterval: input.checkInterval,
-				checkType: input.checkType,
-				properties: input.properties || [],
-				parent: input.parent,
+				name: data.name,
+				checkInterval: data.checkInterval,
+				checkType: data.checkType,
+				properties: data.properties || [],
+				parent: data.parent,
 				createdAt: new Date(),
 				updatedAt: new Date(),
 			});
@@ -160,7 +159,7 @@ export class InventoryTypeResolver {
 			await this.inventoryTypeRepository.save(type);
 			return this.mapToGraphQL(type);
 		} catch (error) {
-			this.logger.error('Error creating inventory type', { input, error });
+			this.logger.error('Error creating inventory type', { data, error });
 			throw error;
 		}
 	}
@@ -175,8 +174,8 @@ export class InventoryTypeResolver {
 	@Mutation(() => InventoryType)
 	async updateInventoryType(
 		@Arg('id', () => String) id: string,
-		@Arg('input', () => UpdateInventoryTypeInput)
-		input: UpdateInventoryTypeInput,
+		@Arg('data', () => InventoryTypeInput)
+		data: InventoryTypeInput,
 	): Promise<InventoryType> {
 		try {
 			const existingType = await this.inventoryTypeRepository.getById(id);
@@ -185,33 +184,33 @@ export class InventoryTypeResolver {
 			}
 
 			// Validate parent exists if provided
-			if (input.parent) {
+			if (data.parent) {
 				const parentType = await this.inventoryTypeRepository.getById(
-					input.parent,
+					data.parent,
 				);
 				if (!parentType) {
 					throw new Error(
-						`Parent inventory type with id ${input.parent} not found`,
+						`Parent inventory type with id ${data.parent} not found`,
 					);
 				}
 			}
 
 			// Update the type with new values using entity methods
-			if (input.name !== undefined) {
-				existingType.updateName(input.name);
+			if (data.name !== undefined) {
+				existingType.updateName(data.name);
 			}
-			if (input.checkInterval !== undefined) {
-				existingType.updateCheckInterval(input.checkInterval);
+			if (data.checkInterval !== undefined) {
+				existingType.updateCheckInterval(data.checkInterval);
 			}
-			if (input.checkType !== undefined) {
-				existingType.updateCheckType(input.checkType);
+			if (data.checkType !== undefined) {
+				existingType.updateCheckType(data.checkType);
 			}
-			if (input.properties !== undefined) {
-				existingType.updateProperties(input.properties);
+			if (data.properties !== undefined) {
+				existingType.updateProperties(data.properties);
 			}
-			if (input.parent !== undefined) {
-				if (input.parent) {
-					existingType.updateParent(input.parent);
+			if (data.parent !== undefined) {
+				if (data.parent) {
+					existingType.updateParent(data.parent);
 				} else {
 					existingType.removeParent();
 				}
@@ -220,7 +219,7 @@ export class InventoryTypeResolver {
 			await this.inventoryTypeRepository.save(existingType);
 			return this.mapToGraphQL(existingType);
 		} catch (error) {
-			this.logger.error('Error updating inventory type', { id, input, error });
+			this.logger.error('Error updating inventory type', { id, data, error });
 			throw error;
 		}
 	}

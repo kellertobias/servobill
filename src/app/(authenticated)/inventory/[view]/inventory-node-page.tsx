@@ -3,21 +3,132 @@
 import '@/components/dev-utils';
 
 import { notFound, useRouter } from 'next/navigation';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+
+import { PencilIcon } from '@heroicons/react/24/outline';
 
 import { PageCard, PageContent } from '@/components/page';
 import { Button } from '@/components/button';
+import { API, gql } from '@/api/index';
 
 import { InventoryHeader } from '../components/inventory-header';
 import { InventoryTypesTable } from '../components/inventory-types-table';
 import { InventoryLocationsTable } from '../components/inventory-locations-table';
-import { InventoryView, InventoryType, InventoryLocation } from '../types';
+import {
+	InventoryView,
+	InventoryType,
+	InventoryLocation,
+	InventoryItem,
+} from '../types';
 import { EditInventoryTypeDrawer } from '../components/edit-inventory-type-drawer';
 import { EditInventoryLocationDrawer } from '../components/edit-inventory-location-drawer';
 
 import { useInventoryListData } from './use-inventory-list-data';
 
 const ALLOWED_VIEWS = new Set(['type', 'location']);
+
+/**
+ * Custom hook to fetch inventory items for the current node or all items at root.
+ * @param id - The current type/location ID (or undefined/null for root)
+ * @param view - 'type' or 'location'
+ * @returns { items, loading }
+ */
+function useNodeInventoryItems(id: string | undefined, view: InventoryView) {
+	const [items, setItems] = useState<InventoryItem[]>([]);
+	const [loading, setLoading] = useState(false);
+
+	useEffect(() => {
+		let cancelled = false;
+		async function fetchItems() {
+			setLoading(true);
+			const where = id
+				? view === 'type'
+					? { typeId: id }
+					: { locationId: id }
+				: {};
+			const res = await API.query({
+				query: gql(`
+					query NodeInventoryItems($where: InventoryItemWhereInput) {
+						inventoryItems(where: $where) {
+							id
+							name
+							barcode
+							state
+							type { id name }
+							location { id name }
+							nextCheck
+							lastScanned
+						}
+					}
+				`) as unknown as import('@graphql-typed-document-node/core').TypedDocumentNode<
+					unknown,
+					unknown
+				>,
+				variables: { where },
+			});
+			const itemsResult = res as { inventoryItems?: InventoryItem[] };
+			if (!cancelled) {
+				setItems(itemsResult.inventoryItems || []);
+			}
+			setLoading(false);
+		}
+		fetchItems();
+		return () => {
+			cancelled = true;
+		};
+	}, [id, view]);
+
+	return { items, loading };
+}
+
+/**
+ * InventoryItemsList displays a list of inventory items for all visible nodes.
+ * Shows type and location for each item.
+ * Responsive: side-by-side with the main table on desktop, below on mobile.
+ * @param items - Array of inventory items to display
+ * @param loading - Loading state
+ */
+function InventoryItemsList({
+	items,
+	loading,
+}: {
+	items: InventoryItem[];
+	loading: boolean;
+}) {
+	return (
+		<PageCard className="w-full md:w-3/5 mt-4 md:mt-0">
+			<div className="font-bold text-lg mb-2">Items</div>
+			{loading ? (
+				<div className="p-4 text-gray-400">Loading items...</div>
+			) : items.length === 0 ? (
+				<div className="p-4 text-gray-400">No items found for these nodes.</div>
+			) : (
+				<ul className="divide-y divide-gray-200">
+					{items.map((item) => (
+						<li key={item.id} className="p-3 flex flex-col gap-1">
+							<span className="font-medium text-gray-900">
+								{item.name || '(Unnamed Item)'}
+							</span>
+							<span className="text-xs text-gray-500">
+								Barcode: {item.barcode || '—'}
+							</span>
+							<span className="text-xs text-gray-500">State: {item.state}</span>
+							<span className="text-xs text-gray-500">
+								Type: {item.type?.name || '—'}
+							</span>
+							<span className="text-xs text-gray-500">
+								Location: {item.location?.name || '—'}
+							</span>
+							<span className="text-xs text-gray-500">
+								Last scanned: {item.lastScanned}
+							</span>
+						</li>
+					))}
+				</ul>
+			)}
+		</PageCard>
+	);
+}
 
 /**
  * Main inventory list page for /inventory/[view].
@@ -71,22 +182,29 @@ export default function InventoryNodePage({
 		return notFound();
 	}
 
-	const title = (
-		<div className="pt-4 -mb-2 flex flex-row justify-between">
-			<div>
-				Inventory {view === 'type' ? 'Types' : 'Locations'}
-				{node && <span className="text-gray-500"> - {node.name}</span>}
-			</div>
+	// Only show items for the current node, or all items if at root
+	const { items, loading: itemsLoading } = useNodeInventoryItems(
+		params.id,
+		view,
+	);
 
-			{node && (
-				<div className="flex justify-end gap-2">
+	/**
+	 * NodeInfoCard displays the current type/location node context and action buttons.
+	 * Shown above the tables when a node is selected (not at root).
+	 */
+	const NodeInfoCard = node ? (
+		<PageCard className="mb-4">
+			<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+				<div>
+					<span className="font-semibold">
+						Inventory {view === 'type' ? 'Type' : 'Location'}
+					</span>
+					{node && <span className="text-gray-500"> - {node.name}</span>}
+				</div>
+				<div className="flex flex-col md:flex-row gap-2 justify-end">
 					<Button
-						small
 						secondary
-						/**
-						 * Navigates back to the parent node. If a 'fromId' query param is present, use it to go back to the previous node.
-						 * If 'fromId' is null or empty, go to the root inventory page for the current view.
-						 */
+						className="min-w-[130px] text-center justify-center"
 						onClick={() => {
 							if (fromId) {
 								router.push(`/inventory/${view}/${fromId}`);
@@ -97,13 +215,18 @@ export default function InventoryNodePage({
 					>
 						Back to parent
 					</Button>
-					<Button small secondary onClick={() => openEditDrawer?.(node.id)}>
+					<Button
+						icon={PencilIcon}
+						secondary
+						className="min-w-[130px] text-center justify-center"
+						onClick={() => openEditDrawer?.(node.id)}
+					>
 						Edit
 					</Button>
 				</div>
-			)}
-		</div>
-	);
+			</div>
+		</PageCard>
+	) : null;
 
 	return (
 		<>
@@ -130,39 +253,50 @@ export default function InventoryNodePage({
 					searchQuery={searchQuery}
 					onSearchQueryChange={setSearchQuery}
 				/>
-				<PageCard noPadding>
-					{view === 'type' ? (
-						<InventoryTypesTable
-							title={title}
-							data={entries as InventoryType[]}
-							loading={loading}
-							/**
-							 * When a row is clicked, navigate to the selected type's page, passing the current node id as 'fromId' in the query params.
-							 * This allows the child page to know where the user came from for back navigation.
-							 */
-							onRowClick={(typeId) => {
-								const from = node?.id ?? '';
-								router.push(`/inventory/type/${typeId}?fromId=${from}`);
-							}}
-							openEditDrawer={openEditDrawer}
-						/>
-					) : (
-						<InventoryLocationsTable
-							title={title}
-							data={entries as InventoryLocation[]}
-							loading={loading}
-							/**
-							 * When a row is clicked, navigate to the selected location's page, passing the current node id as 'fromId' in the query params.
-							 * This allows the child page to know where the user came from for back navigation.
-							 */
-							onRowClick={(locationId) => {
-								const from = node?.id ?? '';
-								router.push(`/inventory/location/${locationId}?fromId=${from}`);
-							}}
-							openEditDrawer={openEditDrawer}
-						/>
-					)}
-				</PageCard>
+				{/* Node info card above the tables, only if a node is selected */}
+				{NodeInfoCard}
+				{/* Responsive flex: items list first, then main table (side by side on desktop, stacked on mobile) */}
+				<div className="flex flex-col md:flex-row md:items-start gap-0 md:gap-4">
+					{/* Items list appears first (left/above) */}
+					<InventoryItemsList items={items} loading={itemsLoading} />
+					<div className="flex-1 min-w-0 col-span-2">
+						<PageCard noPadding>
+							{view === 'type' ? (
+								<InventoryTypesTable
+									title={<div className="pt-6">Inventory Types</div>}
+									data={entries as InventoryType[]}
+									loading={loading}
+									/**
+									 * When a row is clicked, navigate to the selected type's page, passing the current node id as 'fromId' in the query params.
+									 * This allows the child page to know where the user came from for back navigation.
+									 */
+									onRowClick={(typeId) => {
+										const from = node?.id ?? '';
+										router.push(`/inventory/type/${typeId}?fromId=${from}`);
+									}}
+									openEditDrawer={openEditDrawer}
+								/>
+							) : (
+								<InventoryLocationsTable
+									title={<div className="pt-6">Inventory Locations</div>}
+									data={entries as InventoryLocation[]}
+									loading={loading}
+									/**
+									 * When a row is clicked, navigate to the selected location's page, passing the current node id as 'fromId' in the query params.
+									 * This allows the child page to know where the user came from for back navigation.
+									 */
+									onRowClick={(locationId) => {
+										const from = node?.id ?? '';
+										router.push(
+											`/inventory/location/${locationId}?fromId=${from}`,
+										);
+									}}
+									openEditDrawer={openEditDrawer}
+								/>
+							)}
+						</PageCard>
+					</div>
+				</div>
 			</PageContent>
 		</>
 	);
