@@ -1,3 +1,28 @@
+## [1.5.0](https://github.com/kellertobias/servobill/compare/v1.4.3...v1.5.0) (2025-06-30)
+
+
+### ✨ Features
+
+* add development utilities for demo inventory data ([9bb543c](https://github.com/kellertobias/servobill/commit/9bb543c29b47966a7de88fe3b8111699447227ca))
+* add item management functionality to inventory node page ([93e0bf5](https://github.com/kellertobias/servobill/commit/93e0bf52b29ec7254ad8c1bcb901e1a461051160))
+* enhance inventory management with parent-child relationships ([0fc6d62](https://github.com/kellertobias/servobill/commit/0fc6d620bd60ddbc9396d7ef9a9debc976b68bdd))
+* enhance inventory node page with back navigation support ([7bf88f7](https://github.com/kellertobias/servobill/commit/7bf88f70728cece92c66c8ef8735f090e0e0f465))
+* enhance inventory node page with edit drawers and refactor ([63787ea](https://github.com/kellertobias/servobill/commit/63787eaa0a81670e3e196c5b01482df38569fb9f))
+* inventory prototype done ([1298283](https://github.com/kellertobias/servobill/commit/12982833b153783ef26b84509679f6c27172e9b4))
+* refactor inventory edit drawers to use new select components ([8ca7035](https://github.com/kellertobias/servobill/commit/8ca70355ddaca1bda30e58dfbac87b5528a72f41))
+* refactor inventory input types and enhance inventory management ([2fec1ec](https://github.com/kellertobias/servobill/commit/2fec1ec5948bc84a2f760897bf6373f2638870be))
+* unify code for inventory types and locations ([8715712](https://github.com/kellertobias/servobill/commit/87157120e6fe328db832ccaa07d0363bfcfc038e))
+
+
+### 🐛 Bug Fixes
+
+* update GraphQL mutations to use 'data' argument for inventory items, locations, and types ([ece1412](https://github.com/kellertobias/servobill/commit/ece1412933c4967024af4626273049f40b9ba953))
+
+
+### ✅ Tests
+
+* add some real world like test data ([967a1aa](https://github.com/kellertobias/servobill/commit/967a1aa809521719ad12677ac364d75c6b40962d))
+
 ## [1.4.3](https://github.com/kellertobias/servobill/compare/v1.4.2...v1.4.3) (2025-06-26)
 
 
