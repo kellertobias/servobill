@@ -18,7 +18,16 @@ export class InventoryLocation {
 	barcode?: string;
 
 	@Field(() => String, { nullable: true })
+	/**
+	 * The ID of the parent inventory location, if any.
+	 */
 	parent?: string;
+
+	@Field(() => String, { nullable: true })
+	/**
+	 * The name of the parent inventory location, if any. Resolved via a field resolver for convenience in the UI.
+	 */
+	parentName?: string;
 
 	@Field(() => [InventoryLocation], { nullable: true })
 	children?: InventoryLocation[];
@@ -51,6 +60,14 @@ export class CreateInventoryLocationInput {
 	@IsString()
 	@MaxLength(100)
 	barcode?: string;
+
+	@Field(() => String, { nullable: true })
+	@IsOptional()
+	@IsString()
+	/**
+	 * Optional parent location ID. If provided, sets the parent of this location on creation.
+	 */
+	parent?: string;
 }
 
 /**
@@ -69,6 +86,14 @@ export class UpdateInventoryLocationInput {
 	@IsString()
 	@MaxLength(100)
 	barcode?: string;
+
+	/**
+	 * Optional parent location ID. If provided, sets or updates the parent of this location.
+	 */
+	@Field(() => String, { nullable: true })
+	@IsOptional()
+	@IsString()
+	parent?: string;
 }
 
 /**
@@ -85,4 +110,21 @@ export class InventoryLocationWhereInput {
 	@IsOptional()
 	@IsString()
 	barcode?: string;
+
+	/**
+	 * Optional parent location ID to filter locations by their parent.
+	 * If provided, only locations with this parent ID will be returned.
+	 */
+	@Field(() => String, { nullable: true })
+	@IsOptional()
+	@IsString()
+	parent?: string;
+
+	/**
+	 * If true, only locations without a parent (root locations) will be returned.
+	 * This is mutually exclusive with the 'parent' filter.
+	 */
+	@Field(() => Boolean, { nullable: true })
+	@IsOptional()
+	rootOnly?: boolean;
 }

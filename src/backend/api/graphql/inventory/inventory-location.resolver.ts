@@ -60,8 +60,11 @@ export class InventoryLocationResolver {
 	@Authorized()
 	@Query(() => InventoryLocation, { nullable: true })
 	async inventoryLocation(
-		@Arg('id', () => String) id: string,
+		@Arg('id', () => String, { nullable: true }) id: string | null,
 	): Promise<InventoryLocation | null> {
+		if (!id) {
+			return null;
+		}
 		try {
 			const location = await this.inventoryLocationRepository.getById(id);
 			return location ? this.mapToGraphQL(location) : null;
@@ -113,13 +116,24 @@ export class InventoryLocationResolver {
 		@Arg('limit', () => Int, { nullable: true }) limit?: number,
 	): Promise<InventoryLocation[]> {
 		try {
+			// Build query filter, supporting rootOnly
+			let queryWhere: Partial<InventoryLocationWhereInput> | undefined =
+				undefined;
+			if (where) {
+				if (where.rootOnly) {
+					// rootOnly: true means only locations with no parent
+					queryWhere = { ...where, rootOnly: true };
+					delete queryWhere.parent; // ensure parent is not set
+				} else {
+					queryWhere = {
+						search: where.search,
+						barcode: where.barcode,
+						parent: where.parent,
+					};
+				}
+			}
 			const locations = await this.inventoryLocationRepository.listByQuery({
-				where: where
-					? {
-							search: where.search,
-							barcode: where.barcode,
-						}
-					: undefined,
+				where: queryWhere,
 				skip,
 				limit,
 			});
@@ -138,6 +152,7 @@ export class InventoryLocationResolver {
 
 	/**
 	 * Creates a new inventory location.
+	 * Supports optional parent for hierarchy.
 	 * @param input The inventory location data
 	 * @returns The newly created inventory location
 	 */
@@ -152,10 +167,10 @@ export class InventoryLocationResolver {
 				id: randomUUID(),
 				name: input.name,
 				barcode: input.barcode,
+				parent: input.parent,
 				createdAt: new Date(),
 				updatedAt: new Date(),
 			});
-
 			await this.inventoryLocationRepository.save(location);
 			return this.mapToGraphQL(location);
 		} catch (error) {
@@ -166,6 +181,7 @@ export class InventoryLocationResolver {
 
 	/**
 	 * Updates an existing inventory location.
+	 * Supports optional parent for hierarchy.
 	 * @param id The unique identifier of the inventory location to update
 	 * @param input The updated inventory location data
 	 * @returns The updated inventory location
@@ -184,13 +200,16 @@ export class InventoryLocationResolver {
 				throw new Error(`Inventory location with id ${id} not found`);
 			}
 
-			// Update the location with new values
 			if (input.name !== undefined) {
-				existingLocation.updateName(input.name);
+				existingLocation.name = input.name;
 			}
 			if (input.barcode !== undefined) {
-				existingLocation.updateBarcode(input.barcode);
+				existingLocation.barcode = input.barcode;
 			}
+			if (input.parent !== undefined) {
+				existingLocation.parent = input.parent;
+			}
+			existingLocation.updatedAt = new Date();
 
 			await this.inventoryLocationRepository.save(existingLocation);
 			return this.mapToGraphQL(existingLocation);
@@ -321,15 +340,34 @@ export class InventoryLocationResolver {
 	}
 
 	/**
-	 * Maps a domain InventoryLocationEntity to a GraphQL InventoryLocation.
-	 * @param entity The domain entity to map
-	 * @returns The GraphQL representation
+	 * Field resolver for parentName - resolves the name of the parent inventory location, if any.
+	 * This allows clients to easily display hierarchical relationships without extra queries.
+	 * @param location The inventory location to resolve the parent name for
+	 * @returns The name of the parent inventory location, or undefined if no parent
+	 */
+	@Authorized()
+	@FieldResolver(() => String, { nullable: true })
+	async parentName(
+		@Root() location: InventoryLocation,
+	): Promise<string | undefined> {
+		if (!location.parent) {
+			return undefined;
+		}
+		const parent = await this.inventoryLocationRepository.getById(
+			location.parent,
+		);
+		return parent?.name;
+	}
+
+	/**
+	 * Maps a domain InventoryLocationEntity to the GraphQL type, ensuring parent is undefined for root nodes.
 	 */
 	private mapToGraphQL(entity: InventoryLocationEntity): InventoryLocation {
 		return {
 			id: entity.id,
 			name: entity.name,
 			barcode: entity.barcode,
+			parent: entity.parent ?? undefined,
 			items: undefined, // Will be resolved by field resolver if requested
 			itemCount: undefined, // Will be resolved by field resolver if requested
 			createdAt: entity.createdAt,

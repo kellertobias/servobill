@@ -16,8 +16,10 @@ type InventoryLocation = NonNullable<
 	InventoryLocationCategory['children']
 >[number];
 type InventoryLocationFlattened = InventoryLocation & {
+	parent: InventoryLocationCategory;
 	parentName: string;
 	isCategory: boolean;
+	isEmpty?: boolean;
 };
 
 interface InventoryLocationTableProps {
@@ -25,7 +27,7 @@ interface InventoryLocationTableProps {
 	data: InventoryLocationCategory[];
 	loading: boolean;
 	/** Optional callback when a row is clicked (for navigation to detail page). */
-	onRowClick?: (location: InventoryLocationFlattened) => void;
+	onRowClick?: (locationId: string) => void;
 	/** Optional callback to open the edit drawer. */
 	openEditDrawer?: (id: string) => void;
 }
@@ -47,20 +49,30 @@ export function InventoryLocationsTable({
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	openEditDrawer,
 }: InventoryLocationTableProps) {
-	const itemsFlattened = (data || []).flatMap(
-		(location): InventoryLocationFlattened[] => [
-			{
-				...location,
-				itemCount: 0,
-				isCategory: true,
-				parentName: location.name,
-			},
-			...(location.children?.map((c) => ({
-				...c,
-				isCategory: false,
-				parentName: location.name,
-			})) || []),
-		],
+	/**
+	 * Flattens the inventory location data, ensuring every category is represented in the table.
+	 * If a category has no children, a dummy child is added to allow the category divider to render.
+	 */
+	const itemsFlattened: InventoryLocationFlattened[] = (data || []).flatMap(
+		(location: InventoryLocationCategory): InventoryLocationFlattened[] =>
+			location.children && location.children.length > 0
+				? location.children.map((c: InventoryLocation) => ({
+						...c,
+						isCategory: false,
+						parent: location,
+						parentName: location.name,
+					}))
+				: [
+						{
+							id: `${location.id}-empty`,
+							name: '(No locations in this category)',
+							itemCount: 0,
+							isCategory: false,
+							parent: location,
+							parentName: location.name,
+							isEmpty: true,
+						} as InventoryLocationFlattened,
+					],
 	);
 
 	return (
@@ -70,15 +82,43 @@ export function InventoryLocationsTable({
 			loading={loading}
 			keyField="id"
 			getCategory={(location) => location.parentName}
+			notFound={{
+				title: 'No locations found',
+				subtitle: 'There are no locations to show in this category',
+			}}
+			renderCategoryDivider={(location) => (
+				<div
+					onClick={(e) => {
+						if (
+							e.target instanceof HTMLButtonElement ||
+							e.currentTarget.closest('button')
+						) {
+							return;
+						}
+						onRowClick?.(location.parent.id);
+					}}
+					className="text-sm font-medium leading-6 text-gray-900 flex justify-between"
+				>
+					<div className="flex-1 font-bold">{location.parentName}</div>
+					<div className="flex justify-end gap-2">
+						<Button
+							small
+							secondary
+							onClick={() => openEditDrawer?.(location.parent.id)}
+						>
+							Edit
+						</Button>
+					</div>
+				</div>
+			)}
 			getLineLink={
-				onRowClick ? (location) => () => onRowClick(location) : undefined
+				onRowClick ? (location) => () => onRowClick(location.id) : undefined
 			}
 			columns={[
 				{
 					key: 'name',
 					title: 'Location Name',
 					className: 'py-5',
-					colSpan: 3,
 					render: (location) => (
 						<>
 							<div className="text-sm font-medium leading-6 text-gray-900">
@@ -87,9 +127,15 @@ export function InventoryLocationsTable({
 										Category Root: <br />
 									</span>
 								) : null}
-								{location.name}
+								{location.isEmpty ? (
+									<span className="italic text-gray-400">
+										No locations in this category
+									</span>
+								) : (
+									location.name
+								)}
 							</div>
-							{!location.isCategory && (
+							{!location.isCategory && !location.isEmpty && (
 								<div className="mt-1 text-xs leading-5 text-gray-500">
 									<span className="text-gray-900">
 										{location.itemCount} items
@@ -103,13 +149,17 @@ export function InventoryLocationsTable({
 					key: 'actions',
 					title: 'Actions',
 					className: 'py-5',
-					colSpan: 1,
 					render: (location) => (
 						<>
 							<div className="text-xs leading-6 text-gray-500 flex justify-end gap-2">
-								<Button secondary onClick={() => openEditDrawer?.(location.id)}>
-									Edit
-								</Button>
+								{!location.isEmpty && (
+									<Button
+										secondary
+										onClick={() => openEditDrawer?.(location.id)}
+									>
+										Edit
+									</Button>
+								)}
 							</div>
 						</>
 					),

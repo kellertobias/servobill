@@ -7,6 +7,10 @@ import { NotFound } from './not-found';
 export const Table = <T extends Record<string, unknown>>(props: {
 	data: T[] | null | undefined;
 	loading?: boolean;
+	notFound?: {
+		title?: string;
+		subtitle?: string;
+	};
 	columns: {
 		key: string;
 		title: string;
@@ -19,7 +23,16 @@ export const Table = <T extends Record<string, unknown>>(props: {
 
 	getLineLink?: (data: T) => string | null | (() => void);
 	getCategory?: (data: T) => string;
+	/**
+	 * Optional table title, rendered above the table.
+	 */
 	title?: string | React.ReactNode;
+	/**
+	 * Optional custom render function for the category divider row. If provided, this function will be called
+	 * with the first element of the new category and should return a React node to render as the divider row.
+	 * If not provided, the default divider row will be used.
+	 */
+	renderCategoryDivider?: (firstElement: T) => React.ReactNode;
 }) => {
 	let lastCategory: string | undefined;
 
@@ -39,8 +52,10 @@ export const Table = <T extends Record<string, unknown>>(props: {
 					<LoadingSkeleton />
 				) : (
 					<NotFound
-						title="Nothing to Show"
-						subtitle="There are no results to show"
+						title={props.notFound?.title || 'Nothing to Show'}
+						subtitle={
+							props.notFound?.subtitle || 'There are no results to show'
+						}
 					/>
 				)
 			) : (
@@ -83,7 +98,14 @@ export const Table = <T extends Record<string, unknown>>(props: {
 														colSpan={props.columns.length}
 														className="relative isolate py-2 font-semibold"
 													>
-														{category}
+														{props.renderCategoryDivider
+															? /**
+																 * If a custom renderCategoryDivider is provided, use it to render the divider row.
+																 * Otherwise, fall back to the default rendering.
+																 */
+																props.renderCategoryDivider(data)
+															: category}
+
 														<div className="absolute inset-y-0 right-full -z-10 w-screen border-b border-gray-200 bg-gray-50" />
 														<div className="absolute inset-y-0 left-0 -z-10 w-screen border-b border-gray-200 bg-gray-50" />
 													</th>

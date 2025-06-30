@@ -327,4 +327,67 @@ describe('InventoryTypeResolver (integration)', () => {
 		const stillThere = await inventoryTypeRepo.getById('temp');
 		expect(stillThere).toBeNull();
 	});
+
+	/**
+	 * Test filtering inventory types by rootOnly.
+	 * This test creates a root and a child type, then queries with rootOnly: true and asserts only the root is returned.
+	 */
+	it('should filter inventory types by rootOnly', async () => {
+		// Create a root type
+		const rootId = `type_${Math.random().toString(36).slice(2)}`;
+		const root = new InventoryTypeEntity({
+			id: rootId,
+			name: 'RootType',
+			checkInterval: 10,
+			checkType: 'NONE',
+			properties: [],
+			createdAt: new Date(),
+			updatedAt: new Date(),
+		});
+		await inventoryTypeRepo.save(root);
+
+		// Create a child type with parent set
+		const childId = `type_${Math.random().toString(36).slice(2)}`;
+		const child = new InventoryTypeEntity({
+			id: childId,
+			name: 'ChildOfRoot',
+			parent: rootId,
+			checkInterval: 10,
+			checkType: 'NONE',
+			properties: [],
+			createdAt: new Date(),
+			updatedAt: new Date(),
+		});
+		await inventoryTypeRepo.save(child);
+
+		const query = `
+			query ListTypes($where: InventoryTypeWhereInput) {
+				inventoryTypes(where: $where) {
+					id
+					name
+					parent
+				}
+			}
+		`;
+		const res = await execute({
+			source: query,
+			variableValues: { where: { rootOnly: true } },
+		});
+		expect(res.errors).toBeFalsy();
+		const types = res.data.inventoryTypes as Array<{
+			id: string;
+			parent?: string;
+		}>;
+		expect(Array.isArray(types)).toBe(true);
+		// Only the root should be returned
+		const rootResult = types.find((t) => t.id === rootId);
+		expect(rootResult).toBeDefined();
+		expect(rootResult!.parent).toBeFalsy();
+		// The child should not be returned
+		const childResult = types.find((t) => t.id === childId);
+		expect(childResult).toBeUndefined();
+		// Cleanup
+		await inventoryTypeRepo.delete(childId);
+		await inventoryTypeRepo.delete(rootId);
+	});
 });

@@ -53,6 +53,7 @@ export class InventoryLocationDynamoDBRepository
 
 	/**
 	 * Converts a DynamoDB entity to a domain InventoryLocationEntity.
+	 * Maps the parent field for hierarchy support.
 	 */
 	public ormToDomainEntitySafe(
 		entity: Omit<InventoryLocationOrmEntity, 'storeId'>,
@@ -61,6 +62,7 @@ export class InventoryLocationDynamoDBRepository
 			id: entity.inventoryLocationId,
 			name: entity.name,
 			barcode: entity.barcode,
+			parent: entity.parent || undefined,
 			createdAt: new Date(entity.createdAt),
 			updatedAt: new Date(entity.updatedAt),
 		});
@@ -68,6 +70,7 @@ export class InventoryLocationDynamoDBRepository
 
 	/**
 	 * Converts a domain InventoryLocationEntity to a DynamoDB entity.
+	 * Maps the parent field for hierarchy support.
 	 */
 	public domainToOrmEntity(
 		domainEntity: InventoryLocationEntity,
@@ -77,6 +80,7 @@ export class InventoryLocationDynamoDBRepository
 			name: domainEntity.name,
 			searchName: domainEntity.name.toLowerCase(),
 			barcode: domainEntity.barcode,
+			parent: domainEntity.parent ?? undefined,
 			createdAt: domainEntity.createdAt.toISOString(),
 			updatedAt: domainEntity.updatedAt.toISOString(),
 		};
@@ -117,11 +121,17 @@ export class InventoryLocationDynamoDBRepository
 
 	/**
 	 * Lists inventory locations based on query parameters.
+	 * Supports filtering by search, barcode, parent, and rootOnly (only locations with no parent).
 	 * @param query The query parameters including filters and pagination
 	 * @returns Promise resolving to an array of inventory locations
 	 */
 	public async listByQuery(query: {
-		where?: { search?: string; barcode?: string; parent?: string };
+		where?: {
+			search?: string;
+			barcode?: string;
+			parent?: string;
+			rootOnly?: boolean;
+		};
 		skip?: number;
 		limit?: number;
 		cursor?: string;
@@ -130,7 +140,7 @@ export class InventoryLocationDynamoDBRepository
 
 		const data = await queryBuilder.go();
 		let entities = data.data.map((elm: InventoryLocationOrmEntity) =>
-			this.ormToDomainEntity(elm),
+			this.ormToDomainEntitySafe(elm),
 		);
 
 		// Apply barcode filter if provided
@@ -140,8 +150,18 @@ export class InventoryLocationDynamoDBRepository
 			);
 		}
 
-		// Apply parent filter if provided
-		if (query.where?.parent) {
+		// If rootOnly is set, ignore the parent filter and only return root nodes
+		if (query.where?.rootOnly) {
+			// Only include locations with no parent (root nodes)
+			entities = entities.filter(
+				(item) =>
+					(item.parent === null ||
+						item.parent === undefined ||
+						item.parent === '') &&
+					item.parent !== item.id,
+			);
+		} else if (query.where?.parent) {
+			// Only apply parent filter if rootOnly is not set
 			entities = entities.filter((item) => item.parent === query.where!.parent);
 		}
 

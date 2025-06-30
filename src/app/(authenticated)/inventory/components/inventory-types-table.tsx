@@ -14,8 +14,10 @@ import { InventoryTypesListQuery } from '@/common/gql/graphql';
 type InventoryTypeCategory = InventoryTypesListQuery['entries'][number];
 type InventoryType = NonNullable<InventoryTypeCategory['children']>[number];
 type InventoryTypeFlattened = InventoryType & {
+	parent: InventoryTypeCategory;
 	parentName: string;
 	isCategory: boolean;
+	isEmpty?: boolean; // Indicates a dummy row for empty category
 };
 
 interface InventoryTypesTableProps {
@@ -23,7 +25,7 @@ interface InventoryTypesTableProps {
 	data: InventoryTypeCategory[];
 	loading: boolean;
 	/** Optional callback when a row is clicked (for navigation to detail page). */
-	onRowClick?: (type: InventoryType) => void;
+	onRowClick?: (typeId: string) => void;
 	/** Optional callback to open the edit drawer. */
 	openEditDrawer?: (id: string) => void;
 }
@@ -45,20 +47,30 @@ export function InventoryTypesTable({
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	openEditDrawer,
 }: InventoryTypesTableProps) {
-	const itemsFlattened = (data || []).flatMap(
-		(type): InventoryTypeFlattened[] => [
-			{
-				...type,
-				itemCount: 0,
-				isCategory: true,
-				parentName: type.name,
-			},
-			...(type.children?.map((c) => ({
-				...c,
-				isCategory: false,
-				parentName: type.name,
-			})) || []),
-		],
+	/**
+	 * Flattens the inventory location data, ensuring every category is represented in the table.
+	 * If a category has no children, a dummy child is added to allow the category divider to render.
+	 */
+	const itemsFlattened: InventoryTypeFlattened[] = (data || []).flatMap(
+		(type: InventoryTypeCategory): InventoryTypeFlattened[] =>
+			type.children && type.children.length > 0
+				? type.children.map((c: InventoryType) => ({
+						...c,
+						isCategory: false,
+						parent: type,
+						parentName: type.name,
+					}))
+				: [
+						{
+							id: `${type.id}-empty`,
+							name: '(No types in this category)',
+							itemCount: 0,
+							isCategory: false,
+							parent: type,
+							parentName: type.name,
+							isEmpty: true,
+						} as InventoryTypeFlattened,
+					],
 	);
 
 	return (
@@ -68,13 +80,37 @@ export function InventoryTypesTable({
 			loading={loading}
 			keyField="id"
 			getCategory={(type) => type.parentName}
-			getLineLink={onRowClick ? (type) => () => onRowClick(type) : undefined}
+			notFound={{
+				title: 'No types found',
+				subtitle: 'There are no types to show in this category',
+			}}
+			renderCategoryDivider={(type) => (
+				<div
+					onClick={(e) => {
+						if (
+							e.target instanceof HTMLButtonElement ||
+							e.currentTarget.closest('button')
+						) {
+							return;
+						}
+						onRowClick?.(type.parent.id);
+					}}
+					className="text-sm font-medium leading-6 text-gray-900 flex justify-between"
+				>
+					<div className="flex-1 font-bold">{type.parentName}</div>
+					<div className="flex justify-end gap-2">
+						<Button small secondary onClick={() => openEditDrawer?.(type.id)}>
+							Edit
+						</Button>
+					</div>
+				</div>
+			)}
+			getLineLink={onRowClick ? (type) => () => onRowClick(type.id) : undefined}
 			columns={[
 				{
 					key: 'name',
 					title: 'Type Name',
 					className: 'py-5',
-					colSpan: 3,
 					render: (type) => (
 						<>
 							<div className="text-sm font-medium leading-6 text-gray-900">
@@ -83,9 +119,15 @@ export function InventoryTypesTable({
 										Category Root: <br />
 									</span>
 								) : null}
-								{type.name}
+								{type.isEmpty ? (
+									<span className="italic text-gray-400">
+										No types in this category
+									</span>
+								) : (
+									type.name
+								)}
 							</div>
-							{!type.isCategory && (
+							{!type.isCategory && !type.isEmpty && (
 								<div className="mt-1 text-xs leading-5 text-gray-500">
 									<span className="text-gray-900">{type.itemCount} items</span>
 								</div>
@@ -97,13 +139,14 @@ export function InventoryTypesTable({
 					key: 'actions',
 					title: 'Actions',
 					className: 'py-5',
-					colSpan: 1,
 					render: (type) => (
 						<>
 							<div className="text-xs leading-6 text-gray-500 flex justify-end gap-2">
-								<Button secondary onClick={() => openEditDrawer?.(type.id)}>
-									Edit
-								</Button>
+								{!type.isEmpty && (
+									<Button secondary onClick={() => openEditDrawer?.(type.id)}>
+										Edit
+									</Button>
+								)}
 							</div>
 						</>
 					),

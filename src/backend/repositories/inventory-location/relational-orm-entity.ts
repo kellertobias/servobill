@@ -26,4 +26,11 @@ export class InventoryLocationOrmEntity {
 
 	@Column('timestamp')
 	updatedAt!: Date;
+
+	/**
+	 * Optional parent location ID for supporting hierarchical locations.
+	 * If null, this location is a root node.
+	 */
+	@Column('text', { nullable: true })
+	parent?: string;
 }

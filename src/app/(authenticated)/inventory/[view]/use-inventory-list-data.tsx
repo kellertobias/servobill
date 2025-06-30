@@ -25,6 +25,7 @@ const QUERY_TYPE = gql(`
       node: inventoryType(id: $id) {
         id
         name
+		parent
       }
     }
   `);
@@ -46,7 +47,8 @@ const QUERY_LOCATION = gql(`
       node: inventoryLocation(id: $id) {
         id
         name
-        barcode 
+        barcode
+		parent
       }
     }
   `);
@@ -61,6 +63,7 @@ export const useInventoryListData = ({
 	const [searchQuery, setSearchQuery] = useState('');
 	const { data, loading, reload } = useLoadData(
 		async () => {
+			console.log({ id, view });
 			const where: InventoryTypeWhereInput | InventoryLocationWhereInput = {};
 			if (id) {
 				where.parent = id;
@@ -73,7 +76,7 @@ export const useInventoryListData = ({
 			if (view === 'type') {
 				return API.query({
 					query: QUERY_TYPE,
-					variables: { where },
+					variables: { where, id: id ?? null },
 				});
 			}
 			if (view === 'location') {

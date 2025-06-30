@@ -46,6 +46,7 @@ export class InventoryLocationRelationalRepository
 
 	/**
 	 * Converts a relational ORM entity to a domain InventoryLocationEntity (safe version).
+	 * Maps the parent field for hierarchy support.
 	 */
 	public ormToDomainEntitySafe(
 		entity: InventoryLocationOrmEntity,
@@ -54,6 +55,7 @@ export class InventoryLocationRelationalRepository
 			id: entity.id,
 			name: entity.name,
 			barcode: entity.barcode,
+			parent: entity.parent,
 			createdAt: entity.createdAt,
 			updatedAt: entity.updatedAt,
 		});
@@ -61,6 +63,7 @@ export class InventoryLocationRelationalRepository
 
 	/**
 	 * Converts a domain InventoryLocationEntity to a relational ORM entity.
+	 * Maps the parent field for hierarchy support.
 	 */
 	public domainToOrmEntity(
 		domainEntity: InventoryLocationEntity,
@@ -70,6 +73,7 @@ export class InventoryLocationRelationalRepository
 			name: domainEntity.name,
 			searchName: domainEntity.name.toLowerCase(),
 			barcode: domainEntity.barcode,
+			parent: domainEntity.parent ?? undefined,
 			createdAt: domainEntity.createdAt,
 			updatedAt: domainEntity.updatedAt,
 		};
@@ -93,7 +97,12 @@ export class InventoryLocationRelationalRepository
 	 * @returns Promise resolving to an array of inventory locations
 	 */
 	public async listByQuery(query: {
-		where?: { search?: string; barcode?: string; parent?: string };
+		where?: {
+			search?: string;
+			barcode?: string;
+			parent?: string;
+			rootOnly?: boolean;
+		};
 		skip?: number;
 		limit?: number;
 		cursor?: string;
@@ -124,6 +133,10 @@ export class InventoryLocationRelationalRepository
 			queryBuilder.andWhere('location.parent = :parent', {
 				parent: where.parent,
 			});
+		}
+
+		if (where?.rootOnly) {
+			queryBuilder.andWhere('location.parent IS NULL');
 		}
 
 		// Apply pagination

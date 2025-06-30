@@ -60,10 +60,15 @@ export class InventoryTypeResolver {
 	@Authorized()
 	@Query(() => InventoryType, { nullable: true })
 	async inventoryType(
-		@Arg('id', () => String) id: string,
+		@Arg('id', () => String, { nullable: true }) id: string | null,
 	): Promise<InventoryType | null> {
+		console.log({ id });
+		if (!id) {
+			return null;
+		}
 		try {
 			const type = await this.inventoryTypeRepository.getById(id);
+			console.log({ type });
 			return type ? this.mapToGraphQL(type) : null;
 		} catch (error) {
 			this.logger.error('Error fetching inventory type by id', { id, error });
@@ -87,14 +92,22 @@ export class InventoryTypeResolver {
 		@Arg('limit', () => Int, { nullable: true }) limit?: number,
 	): Promise<InventoryType[]> {
 		try {
+			// Build query filter, supporting rootOnly
+			let queryWhere: Partial<InventoryTypeWhereInput> | undefined = undefined; // Use Partial for flexible filter
+			if (where) {
+				if (where.rootOnly) {
+					// rootOnly: true means only types with no parent
+					queryWhere = { ...where, rootOnly: true };
+					delete queryWhere.parent; // ensure parent is not set
+				} else {
+					queryWhere = {
+						search: where.search,
+						parent: where.parent,
+					};
+				}
+			}
 			const types = await this.inventoryTypeRepository.listByQuery({
-				where: where
-					? {
-							search: where.search,
-							parent: where.parent,
-							rootOnly: where.rootOnly,
-						}
-					: undefined,
+				where: queryWhere,
 				skip,
 				limit,
 			});
@@ -321,9 +334,23 @@ export class InventoryTypeResolver {
 	}
 
 	/**
-	 * Maps a domain InventoryTypeEntity to a GraphQL InventoryType.
-	 * @param entity The domain entity to map
-	 * @returns The GraphQL representation
+	 * Field resolver for parentName - resolves the name of the parent inventory type, if any.
+	 * This allows clients to easily display hierarchical relationships without extra queries.
+	 * @param type The inventory type to resolve the parent name for
+	 * @returns The name of the parent inventory type, or undefined if no parent
+	 */
+	@Authorized()
+	@FieldResolver(() => String, { nullable: true })
+	async parentName(@Root() type: InventoryType): Promise<string | undefined> {
+		if (!type.parent) {
+			return undefined;
+		}
+		const parent = await this.inventoryTypeRepository.getById(type.parent);
+		return parent?.name;
+	}
+
+	/**
+	 * Maps a domain InventoryTypeEntity to the GraphQL type, ensuring parent is undefined for root nodes.
 	 */
 	private mapToGraphQL(entity: InventoryTypeEntity): InventoryType {
 		return {
@@ -332,9 +359,9 @@ export class InventoryTypeResolver {
 			checkInterval: entity.checkInterval,
 			checkType: entity.checkType,
 			properties: entity.properties,
-			parent: entity.parent,
-			items: undefined, // Will be resolved by field resolver if requested
-			itemCount: 0, // Will be resolved by field resolver
+			parent: entity.parent ?? undefined,
+			items: undefined,
+			itemCount: 0,
 			createdAt: entity.createdAt,
 			updatedAt: entity.updatedAt,
 		};

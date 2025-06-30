@@ -40,6 +40,13 @@ export const entitySchema = DynamoDBService.getSchema({
 		barcode: {
 			type: 'string',
 		},
+		/**
+		 * Optional parent location ID for supporting hierarchical locations.
+		 * If not set, this location is a root node.
+		 */
+		parent: {
+			type: 'string',
+		},
 	},
 	indexes: {
 		byId: {

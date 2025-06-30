@@ -24,7 +24,16 @@ export class InventoryType {
 	properties!: string[];
 
 	@Field(() => String, { nullable: true })
+	/**
+	 * The ID of the parent inventory type, if any.
+	 */
 	parent?: string;
+
+	@Field(() => String, { nullable: true })
+	/**
+	 * The name of the parent inventory type, if any. Resolved via a field resolver for convenience in the UI.
+	 */
+	parentName?: string;
 
 	@Field(() => [InventoryType], { nullable: true })
 	children?: InventoryType[];

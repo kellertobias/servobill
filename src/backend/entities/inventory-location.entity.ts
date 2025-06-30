@@ -35,6 +35,15 @@ export class InventoryLocationEntity extends DomainEntity {
 	}
 
 	/**
+	 * Updates the parent of the inventory location
+	 * @param parent The new parent
+	 */
+	public updateParent(parent: string): void {
+		this.parent = parent;
+		this.updatedAt = new Date();
+	}
+
+	/**
 	 * Updates the barcode of the inventory location
 	 * @param barcode The new barcode (optional)
 	 */

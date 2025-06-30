@@ -802,6 +802,7 @@ export async function populateDemoInventory(): Promise<void> {
 			const input = {
 				name: loc.name,
 				barcode: loc.barcode,
+				parent: loc.parent ? locationIdMap[loc.parent] : undefined,
 			};
 			const res = await API.query({
 				query: CREATE_LOCATION_MUTATION,
