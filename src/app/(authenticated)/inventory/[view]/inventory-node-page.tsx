@@ -60,6 +60,13 @@ export default function InventoryNodePage({
 		[typeDrawerRef, locationDrawerRef],
 	);
 
+	// Extract 'fromId' from the query params for back navigation
+	const searchParams =
+		typeof window === 'undefined'
+			? null
+			: new URLSearchParams(window.location.search);
+	const fromId = searchParams?.get('fromId');
+
 	if (!ALLOWED_VIEWS.has(view)) {
 		return notFound();
 	}
@@ -76,9 +83,17 @@ export default function InventoryNodePage({
 					<Button
 						small
 						secondary
-						onClick={() =>
-							router.push(`/inventory/${view}/${node.parent || ''}`)
-						}
+						/**
+						 * Navigates back to the parent node. If a 'fromId' query param is present, use it to go back to the previous node.
+						 * If 'fromId' is null or empty, go to the root inventory page for the current view.
+						 */
+						onClick={() => {
+							if (fromId) {
+								router.push(`/inventory/${view}/${fromId}`);
+							} else {
+								router.push(`/inventory/${view}`);
+							}
+						}}
 					>
 						Back to parent
 					</Button>
@@ -121,7 +136,14 @@ export default function InventoryNodePage({
 							title={title}
 							data={entries as InventoryType[]}
 							loading={loading}
-							onRowClick={(typeId) => router.push(`/inventory/type/${typeId}`)}
+							/**
+							 * When a row is clicked, navigate to the selected type's page, passing the current node id as 'fromId' in the query params.
+							 * This allows the child page to know where the user came from for back navigation.
+							 */
+							onRowClick={(typeId) => {
+								const from = node?.id ?? '';
+								router.push(`/inventory/type/${typeId}?fromId=${from}`);
+							}}
 							openEditDrawer={openEditDrawer}
 						/>
 					) : (
@@ -129,9 +151,14 @@ export default function InventoryNodePage({
 							title={title}
 							data={entries as InventoryLocation[]}
 							loading={loading}
-							onRowClick={(locationId) =>
-								router.push(`/inventory/location/${locationId}`)
-							}
+							/**
+							 * When a row is clicked, navigate to the selected location's page, passing the current node id as 'fromId' in the query params.
+							 * This allows the child page to know where the user came from for back navigation.
+							 */
+							onRowClick={(locationId) => {
+								const from = node?.id ?? '';
+								router.push(`/inventory/location/${locationId}?fromId=${from}`);
+							}}
 							openEditDrawer={openEditDrawer}
 						/>
 					)}
