@@ -1,10 +1,13 @@
-import React, { forwardRef, useImperativeHandle } from 'react';
+import React, { forwardRef } from 'react';
 
 import { Drawer } from '@/components/drawer';
 import { Input } from '@/components/input';
 import { API, gql } from '@/api/index';
 import { useLoadData, useSaveCallback } from '@/hooks/load-data';
 import SelectInput from '@/components/select-input';
+
+import { useInventoryDrawer } from './use-inventory-drawer';
+import { useLocations } from './use-locations';
 
 /**
  * Drawer component for editing an inventory location's properties: parent, name, barcode.
@@ -19,22 +22,24 @@ import SelectInput from '@/components/select-input';
 const EditInventoryLocationDrawer = forwardRef(
 	(
 		{
-			reloadRef,
+			onReload,
 		}: {
-			reloadRef: React.MutableRefObject<() => void>;
+			onReload: () => void;
 		},
 		ref: React.Ref<{ openDrawer: (id: string) => void }>,
 	) => {
-		const [drawerId, setDrawerId] = React.useState<string | null>(null);
+		const { drawerId, handleClose } = useInventoryDrawer({
+			ref,
+		});
 
-		// State for all locations (for parent dropdown)
-		const [allLocations, setAllLocations] = React.useState<
-			Array<{ id: string; name: string }>
-		>([]);
+		const { locations: allLocations } = useLocations(drawerId);
 
 		// useLoadData for fetching and managing location data
 		const { data, setData, initialData, reload, loading } = useLoadData(
 			async ({ locationId }) => {
+				if (!locationId) {
+					return null;
+				}
 				if (locationId === 'new') {
 					return { id: 'new', name: '', barcode: '', parent: null };
 				}
@@ -69,60 +74,22 @@ const EditInventoryLocationDrawer = forwardRef(
 			{ locationId: drawerId },
 		);
 
-		// Fetch all locations for parent dropdown (excluding self)
-		React.useEffect(() => {
-			if (!drawerId) {
-				return;
-			}
-			API.query({
-				query: gql(`
-					query AllInventoryLocationsForParent {
-						inventoryLocations { id name }
-					}
-				`),
-			})
-				.then((res) => {
-					let locations = (res.inventoryLocations || []) as Array<{
-						id: string;
-						name: string;
-					}>;
-					if (drawerId !== 'new') {
-						locations = locations.filter((loc) => loc.id !== drawerId);
-					}
-					setAllLocations(locations);
-					return;
-				})
-				.catch(() => {});
-		}, [drawerId]);
-
 		// useSaveCallback for saving changes
 		const { onSave } = useSaveCallback({
 			id: drawerId || 'new',
 			entityName: 'InventoryLocation',
 			data,
 			initialData,
-			reload,
+			reload: () => {
+				reload();
+				onReload?.();
+			},
 			mapper: (data) => ({
 				name: data.name,
 				barcode: data.barcode || undefined,
 				parent: data.parent || undefined,
 			}),
 		});
-
-		// Expose openDrawer(id) to parent via ref
-		useImperativeHandle(ref, () => ({
-			openDrawer: (newId: string) => {
-				setDrawerId(newId);
-			},
-		}));
-
-		// Reset drawer state when closed
-		const handleClose = () => {
-			setDrawerId(null);
-			if (reloadRef && typeof reloadRef.current === 'function') {
-				reloadRef.current();
-			}
-		};
 
 		return (
 			<Drawer

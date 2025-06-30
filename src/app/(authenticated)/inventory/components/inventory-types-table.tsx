@@ -99,7 +99,11 @@ export function InventoryTypesTable({
 				>
 					<div className="flex-1 font-bold">{type.parentName}</div>
 					<div className="flex justify-end gap-2">
-						<Button small secondary onClick={() => openEditDrawer?.(type.id)}>
+						<Button
+							small
+							secondary
+							onClick={() => openEditDrawer?.(type.parent.id)}
+						>
 							Edit
 						</Button>
 					</div>

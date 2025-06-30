@@ -101,7 +101,14 @@ export const Button: React.FC<
 				},
 				className,
 			)}
-			onClick={disabled || loading ? undefined : onClick}
+			onClick={
+				disabled || loading
+					? undefined
+					: (e) => {
+							e.stopPropagation();
+							onClick?.();
+						}
+			}
 			href={disabled || loading ? undefined : href}
 			disabled={disabled}
 		>

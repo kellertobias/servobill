@@ -2,10 +2,8 @@ import React, { useImperativeHandle } from 'react';
 
 export const useInventoryDrawer = ({
 	ref,
-	reloadRef,
 }: {
 	ref: React.Ref<{ openDrawer: (id: string) => void }>;
-	reloadRef: React.MutableRefObject<() => void>;
 }) => {
 	const [drawerId, setDrawerId] = React.useState<string | null>(null);
 
@@ -19,9 +17,6 @@ export const useInventoryDrawer = ({
 	// Reset drawer state when closed
 	const handleClose = () => {
 		setDrawerId(null);
-		if (reloadRef && typeof reloadRef.current === 'function') {
-			reloadRef.current();
-		}
 	};
 
 	return {

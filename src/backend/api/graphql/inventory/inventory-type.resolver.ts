@@ -62,13 +62,11 @@ export class InventoryTypeResolver {
 	async inventoryType(
 		@Arg('id', () => String, { nullable: true }) id: string | null,
 	): Promise<InventoryType | null> {
-		console.log({ id });
 		if (!id) {
 			return null;
 		}
 		try {
 			const type = await this.inventoryTypeRepository.getById(id);
-			console.log({ type });
 			return type ? this.mapToGraphQL(type) : null;
 		} catch (error) {
 			this.logger.error('Error fetching inventory type by id', { id, error });

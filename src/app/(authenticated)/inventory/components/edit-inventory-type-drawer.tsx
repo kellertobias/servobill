@@ -34,22 +34,24 @@ type InventoryTypeDrawerData = {
 const EditInventoryTypeDrawer = forwardRef(
 	(
 		{
-			reloadRef,
+			onReload,
 		}: {
-			reloadRef: React.MutableRefObject<() => void>;
+			onReload: () => void;
 		},
 		ref: React.Ref<{ openDrawer: (id: string) => void }>,
 	) => {
 		const { drawerId, handleClose } = useInventoryDrawer({
 			ref,
-			reloadRef,
 		});
 		// useLoadData for fetching and managing type data
 		const { data, setData, initialData, reload, loading } = useLoadData<
 			InventoryTypeDrawerData,
 			{ typeId: string }
 		>(
-			async ({ typeId }): Promise<InventoryTypeDrawerData> => {
+			async ({ typeId }) => {
+				if (!typeId) {
+					return null;
+				}
 				const empty = {
 					id: 'new',
 					name: '',
@@ -105,7 +107,10 @@ const EditInventoryTypeDrawer = forwardRef(
 			entityName: 'InventoryType',
 			data,
 			initialData,
-			reload,
+			reload: () => {
+				reload();
+				onReload?.();
+			},
 			mapper: (d) => ({
 				name: d.name,
 				checkInterval:

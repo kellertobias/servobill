@@ -63,7 +63,6 @@ export const useInventoryListData = ({
 	const [searchQuery, setSearchQuery] = useState('');
 	const { data, loading, reload } = useLoadData(
 		async () => {
-			console.log({ id, view });
 			const where: InventoryTypeWhereInput | InventoryLocationWhereInput = {};
 			if (id) {
 				where.parent = id;
