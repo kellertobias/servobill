@@ -80,8 +80,8 @@ describe('InventoryResolver (integration)', () => {
 	 */
 	it('should create an inventory item', async () => {
 		const mutation = `
-      mutation CreateItem($input: InventoryItemInput!) {
-        createInventoryItem(input: $input) {
+      mutation CreateItem($data: InventoryItemInput!) {
+        createInventoryItem(data: $data) {
           id
           name
           barcode
@@ -99,7 +99,10 @@ describe('InventoryResolver (integration)', () => {
 			state: InventoryItemState.NEW,
 			properties: [{ key: 'color', value: 'red' }],
 		};
-		const res = await execute({ source: mutation, variableValues: { input } });
+		const res = await execute({
+			source: mutation,
+			variableValues: { data: input },
+		});
 		expect(!res.errors || res.errors.length === 0).toBe(true);
 		const item = res.data.createInventoryItem;
 		expect(item.name).toBe('TestItem');
@@ -216,8 +219,8 @@ describe('InventoryResolver (integration)', () => {
 		});
 		await itemRepo.save(item);
 		const mutation = `
-      mutation UpdateItem($id: String!, $input: InventoryItemInput!) {
-        updateInventoryItem(id: $id, input: $input) {
+      mutation UpdateItem($id: String!, $data: InventoryItemInput!) {
+        updateInventoryItem(id: $id, data: $data) {
           id
           name
           barcode
@@ -228,7 +231,7 @@ describe('InventoryResolver (integration)', () => {
 			source: mutation,
 			variableValues: {
 				id: item.id,
-				input: { name: 'Updated', barcode: 'UPD2' },
+				data: { name: 'Updated', barcode: 'UPD2' },
 			},
 		});
 		expect(!res.errors || res.errors.length === 0).toBe(true);

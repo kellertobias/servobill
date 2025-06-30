@@ -18,6 +18,11 @@ function hasClose(obj: unknown): obj is { close: () => Promise<void> } {
 }
 
 /**
+ * NOTE: The GraphQL schema uses a single input type 'InventoryLocationInput' for both create and update mutations.
+ * The argument name must be 'data' to match the resolver and schema. This fixes schema mismatch errors in tests.
+ */
+
+/**
  * Integration tests for InventoryLocationResolver.
  *
  * This suite covers all queries and mutations, and verifies DB state after mutations.
@@ -139,8 +144,8 @@ describe('InventoryLocationResolver (integration)', () => {
 	 */
 	it('should create an inventory location', async () => {
 		const mutation = `
-      mutation CreateLocation($input: CreateInventoryLocationInput!) {
-        createInventoryLocation(input: $input) {
+      mutation CreateLocation($data: InventoryLocationInput!) {
+        createInventoryLocation(data: $data) {
           id
           name
           barcode
@@ -151,7 +156,10 @@ describe('InventoryLocationResolver (integration)', () => {
 			name: 'NewLocation',
 			barcode: 'NEW-LOC-001',
 		};
-		const res = await execute({ source: mutation, variableValues: { input } });
+		const res = await execute({
+			source: mutation,
+			variableValues: { data: input },
+		});
 		expect(res.errors).toBeUndefined();
 		const loc = res.data.createInventoryLocation;
 		expect(loc.name).toBe('NewLocation');
@@ -176,8 +184,8 @@ describe('InventoryLocationResolver (integration)', () => {
 		});
 		await repo.save(entity);
 		const mutation = `
-      mutation UpdateLocation($id: String!, $input: UpdateInventoryLocationInput!) {
-        updateInventoryLocation(id: $id, input: $input) {
+      mutation UpdateLocation($id: String!, $data: InventoryLocationInput!) {
+        updateInventoryLocation(id: $id, data: $data) {
           id
           name
           barcode
@@ -187,7 +195,7 @@ describe('InventoryLocationResolver (integration)', () => {
 		const input = { name: 'UpdatedName', barcode: 'UPDATED-001' };
 		const res = await execute({
 			source: mutation,
-			variableValues: { id: entity.id, input },
+			variableValues: { id: entity.id, data: input },
 		});
 		expect(res.errors).toBeUndefined();
 		const updated = res.data.updateInventoryLocation;
@@ -235,9 +243,9 @@ describe('InventoryLocationResolver (integration)', () => {
 	 */
 	it('should handle create, update, and delete in a single execution', async () => {
 		const mutation = `
-      mutation Combo($create: CreateInventoryLocationInput!, $update: UpdateInventoryLocationInput!, $deleteId: String!) {
-        a: createInventoryLocation(input: $create) { id name barcode }
-        b: updateInventoryLocation(id: $deleteId, input: $update) { id name barcode }
+      mutation Combo($create: InventoryLocationInput!, $update: InventoryLocationInput!, $deleteId: String!) {
+        a: createInventoryLocation(data: $create) { id name barcode }
+        b: updateInventoryLocation(id: $deleteId, data: $update) { id name barcode }
         c: deleteInventoryLocation(id: $deleteId)
       }
     `;
@@ -463,13 +471,13 @@ describe('InventoryLocationResolver (integration)', () => {
 		// Create a parent location
 		const parentInput = { name: 'ParentForCreateWithParent' };
 		const createParentMutation = `
-      mutation CreateLocation($input: CreateInventoryLocationInput!) {
-        createInventoryLocation(input: $input) { id name }
+      mutation CreateLocation($data: InventoryLocationInput!) {
+        createInventoryLocation(data: $data) { id name }
       }
     `;
 		const parentRes = await execute({
 			source: createParentMutation,
-			variableValues: { input: parentInput },
+			variableValues: { data: parentInput },
 		});
 		expect(parentRes.errors).toBeUndefined();
 		const parentLoc = parentRes.data.createInventoryLocation;
@@ -477,13 +485,13 @@ describe('InventoryLocationResolver (integration)', () => {
 		// Create a child location with parent set
 		const childInput = { name: 'ChildWithParent', parent: parentLoc.id };
 		const createChildMutation = `
-      mutation CreateLocation($input: CreateInventoryLocationInput!) {
-        createInventoryLocation(input: $input) { id name parent }
+      mutation CreateLocation($data: InventoryLocationInput!) {
+        createInventoryLocation(data: $data) { id name parent }
       }
     `;
 		const childRes = await execute({
 			source: createChildMutation,
-			variableValues: { input: childInput },
+			variableValues: { data: childInput },
 		});
 		expect(childRes.errors).toBeUndefined();
 		const childLoc = childRes.data.createInventoryLocation;

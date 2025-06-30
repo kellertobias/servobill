@@ -95,8 +95,8 @@ describe('InventoryTypeResolver (integration)', () => {
 		 */
 		// 1. Create
 		const createMutation = `
-      mutation CreateType($input: InventoryTypeInput!) {
-        createInventoryType(data: $input) {
+      mutation CreateType($data: InventoryTypeInput!) {
+        createInventoryType(data: $data) {
           id
           name
           checkInterval
@@ -116,7 +116,7 @@ describe('InventoryTypeResolver (integration)', () => {
 		};
 		const createRes = await execute({
 			source: createMutation,
-			variableValues: { input: createInput },
+			variableValues: { data: createInput },
 		});
 		expect(createRes.errors).toBeFalsy();
 		const created = createRes.data.createInventoryType;
@@ -158,8 +158,8 @@ describe('InventoryTypeResolver (integration)', () => {
 
 		// 3. Update
 		const updateMutation = `
-      mutation UpdateType($id: String!, $input: UpdateInventoryTypeInput!) {
-        updateInventoryType(id: $id, input: $input) {
+      mutation UpdateType($id: String!, $data: InventoryTypeInput!) {
+        updateInventoryType(id: $id, data: $data) {
           id
           name
           checkInterval
@@ -176,7 +176,7 @@ describe('InventoryTypeResolver (integration)', () => {
 		};
 		const updateRes = await execute({
 			source: updateMutation,
-			variableValues: { id: created.id, input: updateInput },
+			variableValues: { id: created.id, data: updateInput },
 		});
 		expect(updateRes.errors).toBeFalsy();
 		expect(updateRes.data.updateInventoryType).toMatchObject({
@@ -231,14 +231,14 @@ describe('InventoryTypeResolver (integration)', () => {
 
 	it('should not allow creating a type with non-existent parent', async () => {
 		const createMutation = `
-      mutation CreateType($input: InventoryTypeInput!) {
-        createInventoryType(data: $input) { id }
+      mutation CreateType($data: InventoryTypeInput!) {
+        createInventoryType(data: $data) { id }
       }
     `;
 		const res = await execute({
 			source: createMutation,
 			variableValues: {
-				input: {
+				data: {
 					name: 'Child',
 					checkInterval: 10,
 					checkType: 'NONE',
