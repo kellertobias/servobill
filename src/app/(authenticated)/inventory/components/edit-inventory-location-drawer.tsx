@@ -27,9 +27,16 @@ const EditInventoryLocationDrawer = forwardRef(
 		},
 		ref: React.Ref<{ openDrawer: (id: string) => void }>,
 	) => {
-		const { drawerId, handleClose } = useInventoryDrawer({
-			ref,
-		});
+		// Use a ref to store the pending parentId for new location creation
+		const pendingParentIdRef = React.useRef<string | undefined>();
+		React.useImperativeHandle(ref, () => ({
+			openDrawer: (id: string, parentId?: string) => {
+				pendingParentIdRef.current = parentId;
+				// @ts-expect-error: Imperative handle for drawer open
+				ref.current?.openDrawer(id);
+			},
+		}));
+		const { drawerId, handleClose } = useInventoryDrawer({ ref });
 
 		// useLoadData for fetching and managing location data
 		const { data, setData, initialData, reload, loading } = useLoadData(
@@ -38,7 +45,12 @@ const EditInventoryLocationDrawer = forwardRef(
 					return null;
 				}
 				if (locationId === 'new') {
-					return { id: 'new', name: '', barcode: '', parent: null };
+					return {
+						id: 'new',
+						name: '',
+						barcode: '',
+						parent: pendingParentIdRef.current ?? null,
+					};
 				}
 				// Fetch location detail
 				type LocationDetail = {

@@ -41,9 +41,16 @@ const EditInventoryTypeDrawer = forwardRef(
 		},
 		ref: React.Ref<{ openDrawer: (id: string) => void }>,
 	) => {
-		const { drawerId, handleClose } = useInventoryDrawer({
-			ref,
-		});
+		// Use a ref to store the pending parentId for new type creation
+		const pendingParentIdRef = React.useRef<string | undefined>();
+		React.useImperativeHandle(ref, () => ({
+			openDrawer: (id: string, parentId?: string) => {
+				pendingParentIdRef.current = parentId;
+				// @ts-expect-error: Imperative handle for drawer open
+				ref.current?.openDrawer(id);
+			},
+		}));
+		const { drawerId, handleClose } = useInventoryDrawer({ ref });
 
 		// useLoadData for fetching and managing type data
 		const { data, setData, initialData, reload, loading } = useLoadData<
@@ -60,7 +67,7 @@ const EditInventoryTypeDrawer = forwardRef(
 					checkInterval: undefined,
 					checkType: '',
 					properties: [],
-					parent: undefined,
+					parent: pendingParentIdRef.current,
 					parentName: undefined,
 				};
 

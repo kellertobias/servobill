@@ -5,7 +5,7 @@ import '@/components/dev-utils';
 import { notFound, useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { PencilIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, PlusIcon } from '@heroicons/react/24/outline';
 
 import { PageCard, PageContent } from '@/components/page';
 import { Button } from '@/components/button';
@@ -22,6 +22,7 @@ import {
 } from '../types';
 import { EditInventoryTypeDrawer } from '../components/edit-inventory-type-drawer';
 import { EditInventoryLocationDrawer } from '../components/edit-inventory-location-drawer';
+import { EditInventoryItemDrawer } from '../components/edit-inventory-item-drawer';
 
 import { useInventoryListData } from './use-inventory-list-data';
 
@@ -157,8 +158,15 @@ export default function InventoryNodePage({
 
 	// const reloadRef = useRef<() => void>(() => {});
 	// Create refs for the drawers to control them imperatively
-	const typeDrawerRef = useRef<{ openDrawer: (id: string) => void }>(null);
-	const locationDrawerRef = useRef<{ openDrawer: (id: string) => void }>(null);
+	const typeDrawerRef = useRef<{
+		openDrawer: (id: string, parentId?: string) => void;
+	}>(null);
+	const locationDrawerRef = useRef<{
+		openDrawer: (id: string, parentId?: string) => void;
+	}>(null);
+	const itemDrawerRef = useRef<{
+		openDrawer: (id: string, parentId?: string) => void;
+	}>(null);
 
 	const openEditDrawer = React.useCallback(
 		(id: string) => {
@@ -187,6 +195,28 @@ export default function InventoryNodePage({
 		params.id,
 		view,
 	);
+
+	/**
+	 * Opens the item drawer in 'new' mode for creating a new item, preselecting the current node as parent if available.
+	 */
+	const openNewItemDrawer = () => {
+		// If viewing a type or location node, preselect as parent
+		const parentTypeId = view === 'type' ? node?.id ?? undefined : undefined;
+		const parentLocationId =
+			view === 'location' ? node?.id ?? undefined : undefined;
+		itemDrawerRef.current?.openDrawer('new', parentTypeId || parentLocationId);
+	};
+
+	/**
+	 * Opens the type or location drawer in 'new' mode, preselecting the current node as parent if available.
+	 */
+	const openNewTypeOrLocationDrawer = () => {
+		if (view === 'type') {
+			typeDrawerRef.current?.openDrawer('new', node?.id ?? undefined);
+		} else {
+			locationDrawerRef.current?.openDrawer('new', node?.id ?? undefined);
+		}
+	};
 
 	/**
 	 * NodeInfoCard displays the current type/location node context and action buttons.
@@ -238,12 +268,35 @@ export default function InventoryNodePage({
 					onReload={reload}
 				/>
 			)}
+			<EditInventoryItemDrawer ref={itemDrawerRef} onReload={reload} />
 			<PageContent
 				title={
 					<>{view === 'type' ? 'Inventory Types' : 'Inventory Locations'}</>
 				}
 				noCard
 				contentClassName="pt-6"
+				right={
+					<>
+						<div className="flex flex-row gap-2 mb-4">
+							<Button
+								icon={PlusIcon}
+								onClick={openNewItemDrawer}
+								className="min-w-[130px]"
+								header
+							>
+								Add Item
+							</Button>
+							<Button
+								icon={PlusIcon}
+								onClick={openNewTypeOrLocationDrawer}
+								className="min-w-[130px]"
+								header
+							>
+								{view === 'type' ? 'Add Type' : 'Add Location'}
+							</Button>
+						</div>
+					</>
+				}
 			>
 				<InventoryHeader
 					activeTab={view === 'type' ? 'types' : 'locations'}
@@ -253,6 +306,7 @@ export default function InventoryNodePage({
 					searchQuery={searchQuery}
 					onSearchQueryChange={setSearchQuery}
 				/>
+
 				{/* Node info card above the tables, only if a node is selected */}
 				{NodeInfoCard}
 				{/* Responsive flex: items list first, then main table (side by side on desktop, stacked on mobile) */}

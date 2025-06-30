@@ -122,6 +122,8 @@ export const Button: React.FC<
 						'text-red-500': danger,
 						'text-green-500': success,
 						'text-blue-500': primary,
+						'text-gray-500': secondary,
+						'text-gray-100': header,
 					})}
 				/>
 			)}
