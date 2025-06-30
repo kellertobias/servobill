@@ -1,6 +1,15 @@
 import { randomUUID } from 'crypto';
 
-import { Arg, Mutation, Query, Resolver, Int, Authorized } from 'type-graphql';
+import {
+	Arg,
+	Mutation,
+	Query,
+	Resolver,
+	Int,
+	Authorized,
+	FieldResolver,
+	Root,
+} from 'type-graphql';
 
 import { GRAPHQL_TEST_SET } from '../di-tokens';
 
@@ -9,6 +18,8 @@ import {
 	InventoryItemInput,
 	InventoryItemWhereInput,
 } from './inventory-item.schema';
+import { InventoryType } from './inventory-type.schema';
+import { InventoryLocation } from './inventory-location.schema';
 
 import { INVENTORY_ITEM_REPOSITORY } from '@/backend/repositories/inventory-item/di-tokens';
 import { type InventoryItemRepository } from '@/backend/repositories/inventory-item/interface';
@@ -23,8 +34,6 @@ import { type InventoryLocationRepository } from '@/backend/repositories/invento
 import { INVENTORY_LOCATION_REPOSITORY } from '@/backend/repositories/inventory-location/di-tokens';
 import { INVENTORY_TYPE_REPOSITORY } from '@/backend/repositories/inventory-type/di-tokens';
 import { type InventoryTypeRepository } from '@/backend/repositories/inventory-type/interface';
-import { InventoryLocationEntity } from '@/backend/entities/inventory-location.entity';
-import { InventoryTypeEntity } from '@/backend/entities/inventory-type.entity';
 
 /**
  * GraphQL resolver for inventory item operations.
@@ -323,45 +332,12 @@ export class InventoryResolver {
 	 * @param entity The domain entity to map
 	 * @returns The GraphQL representation
 	 */
-
-	// eslint-disable-next-line type-graphql/require-authorized-decorator
+	@Authorized()
 	public async mapToGraphQL(
 		entity: InventoryItemEntity,
-		extras?: {
-			location?: Pick<InventoryLocationEntity, 'id' | 'name'>;
-			type?: Pick<
-				InventoryTypeEntity,
-				'id' | 'name' | 'checkInterval' | 'checkType'
-			>;
-		},
 	): Promise<InventoryItem> {
-		const location =
-			extras?.location ||
-			(entity.locationId
-				? await this.inventoryLocationRepository.getById(entity.locationId)
-				: null);
-		const type =
-			extras?.type ||
-			(entity.typeId
-				? await this.inventoryTypeRepository.getById(entity.typeId)
-				: null);
-
 		return {
 			id: entity.id,
-			type: type
-				? {
-						id: type.id,
-						name: type.name,
-						checkInterval: type.checkInterval,
-						checkType: type.checkType,
-					}
-				: undefined,
-			location: location
-				? {
-						id: location.id,
-						name: location.name,
-					}
-				: undefined,
 			name: entity.name,
 			barcode: entity.barcode,
 			state: entity.state,
@@ -379,6 +355,66 @@ export class InventoryResolver {
 			})),
 			createdAt: entity.createdAt,
 			updatedAt: entity.updatedAt,
+			typeId: entity.typeId,
+			locationId: entity.locationId,
+		};
+	}
+
+	/**
+	 * Field resolver for the type/category of an inventory item.
+	 * Resolves the full InventoryType, including its properties.
+	 */
+	@Authorized()
+	@FieldResolver(() => InventoryType, { nullable: true })
+	async type(@Root() item: InventoryItem): Promise<InventoryType | undefined> {
+		if (!item || !item.id || !item.typeId) {
+			return undefined;
+		}
+		const type = await this.inventoryTypeRepository.getById(item.typeId);
+		if (!type) {
+			return undefined;
+		}
+		// Map to GraphQL InventoryType
+		return {
+			id: type.id,
+			name: type.name,
+			checkInterval: type.checkInterval,
+			checkType: type.checkType,
+			properties: type.properties,
+			parent: type.parent ?? undefined,
+			itemCount: 0,
+			createdAt: type.createdAt,
+			updatedAt: type.updatedAt,
+		};
+	}
+
+	/**
+	 * Field resolver for the location of an inventory item.
+	 * Resolves the full InventoryLocation.
+	 */
+	@Authorized()
+	@FieldResolver(() => InventoryLocation, { nullable: true })
+	async location(
+		@Root() item: InventoryItem,
+	): Promise<InventoryLocation | undefined> {
+		if (!item || !item.id || !item.locationId) {
+			return undefined;
+		}
+		const location = await this.inventoryLocationRepository.getById(
+			item.locationId,
+		);
+		if (!location) {
+			return undefined;
+		}
+		// Map to GraphQL InventoryLocation
+		return {
+			id: location.id,
+			name: location.name,
+			barcode: location.barcode,
+			parent: location.parent ?? undefined,
+			itemCount: 0,
+			createdAt: location.createdAt,
+			updatedAt: location.updatedAt,
 		};
 	}
 }

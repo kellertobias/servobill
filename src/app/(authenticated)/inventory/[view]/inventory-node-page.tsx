@@ -96,6 +96,8 @@ function InventoryItemsList({
 	items: InventoryItem[];
 	loading: boolean;
 }) {
+	const router = useRouter();
+
 	return (
 		<PageCard className="w-full md:w-3/5 mt-4 md:mt-0">
 			<div className="font-bold text-lg mb-2">Items</div>
@@ -104,11 +106,17 @@ function InventoryItemsList({
 			) : items.length === 0 ? (
 				<div className="p-4 text-gray-400">No items found for these nodes.</div>
 			) : (
-				<ul className="divide-y divide-gray-200">
+				<ul className="divide-y divide-gray-200 cursor-pointer">
 					{items.map((item) => (
-						<li key={item.id} className="p-3 flex flex-col gap-1">
+						<li
+							key={item.id}
+							className="p-3 flex flex-col gap-1"
+							onClick={() => {
+								router.push(`/inventory/item/${item.id}`);
+							}}
+						>
 							<span className="font-medium text-gray-900">
-								{item.name || '(Unnamed Item)'}
+								{item.name || `(Unnamed ${item.type?.name || 'Item'})`}
 							</span>
 							<span className="text-xs text-gray-500">
 								Barcode: {item.barcode || '—'}

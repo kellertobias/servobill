@@ -1,4 +1,4 @@
-import { Field, ObjectType, InputType, Int } from 'type-graphql';
+import { Field, ObjectType, InputType } from 'type-graphql';
 import {
 	IsOptional,
 	IsString,
@@ -9,6 +9,9 @@ import {
 	IsBoolean,
 	MaxLength,
 } from 'class-validator';
+
+import { InventoryType } from './inventory-type.schema';
+import { InventoryLocation } from './inventory-location.schema';
 
 import {
 	InventoryItemState,
@@ -47,36 +50,6 @@ export class InventoryItemHistory {
 }
 
 /**
- * GraphQL type for inventory type information
- */
-@ObjectType('InventoryTypeInfo')
-export class InventoryTypeInfo {
-	@Field(() => String)
-	id!: string;
-
-	@Field(() => String)
-	name!: string;
-
-	@Field(() => Int, { nullable: true })
-	checkInterval?: number;
-
-	@Field(() => String, { nullable: true })
-	checkType?: string;
-}
-
-/**
- * GraphQL type for inventory location information
- */
-@ObjectType('InventoryLocationInfo')
-export class InventoryLocationInfo {
-	@Field(() => String)
-	id!: string;
-
-	@Field(() => String)
-	name!: string;
-}
-
-/**
  * Main GraphQL type for inventory items
  */
 @ObjectType('InventoryItem')
@@ -84,11 +57,23 @@ export class InventoryItem {
 	@Field(() => String)
 	id!: string;
 
-	@Field(() => InventoryTypeInfo, { nullable: true })
-	type?: InventoryTypeInfo;
+	/**
+	 * The type/category of this inventory item. Resolved via a field resolver.
+	 */
+	@Field(() => InventoryType, { nullable: true })
+	type?: InventoryType;
 
-	@Field(() => InventoryLocationInfo, { nullable: true })
-	location?: InventoryLocationInfo;
+	@Field(() => String, { nullable: true })
+	typeId?: string;
+
+	/**
+	 * The location where this inventory item is stored. Resolved via a field resolver.
+	 */
+	@Field(() => InventoryLocation, { nullable: true })
+	location?: InventoryLocation;
+
+	@Field(() => String, { nullable: true })
+	locationId?: string;
 
 	@Field(() => String, { nullable: true })
 	name?: string;

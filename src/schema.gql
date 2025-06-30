@@ -190,12 +190,14 @@ type InventoryItem {
   history: [InventoryItemHistory!]!
   id: String!
   lastScanned: DateTime!
-  location: InventoryLocationInfo
+  location: InventoryLocation
+  locationId: String
   name: String
   nextCheck: DateTime!
   properties: [InventoryItemProperty!]!
   state: InventoryItemState!
-  type: InventoryTypeInfo
+  type: InventoryType
+  typeId: String
   updatedAt: DateTime!
 }
 
@@ -256,11 +258,6 @@ type InventoryLocation {
   updatedAt: DateTime!
 }
 
-type InventoryLocationInfo {
-  id: String!
-  name: String!
-}
-
 input InventoryLocationInput {
   barcode: String
   name: String!
@@ -287,13 +284,6 @@ type InventoryType {
   parentName: String
   properties: [String!]!
   updatedAt: DateTime!
-}
-
-type InventoryTypeInfo {
-  checkInterval: Int
-  checkType: String
-  id: String!
-  name: String!
 }
 
 input InventoryTypeInput {
