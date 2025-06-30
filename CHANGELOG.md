@@ -1,3 +1,10 @@
+## [1.4.3](https://github.com/kellertobias/servobill/compare/v1.4.2...v1.4.3) (2025-06-26)
+
+
+### 🐛 Bug Fixes
+
+* enhance integration tests for SystemResolver ([8cc4a93](https://github.com/kellertobias/servobill/commit/8cc4a932167e0ff99caa10fd5028fcf325541c0d))
+
 ## [1.4.2](https://github.com/kellertobias/servobill/compare/v1.4.1...v1.4.2) (2025-06-25)
 
 
