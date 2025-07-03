@@ -1,3 +1,12 @@
+## [1.6.0](https://github.com/kellertobias/servobill/compare/v1.5.0...v1.6.0) (2025-07-03)
+
+
+### ✨ Features
+
+* enhance inventory item detail page with new components and layout ([e76839c](https://github.com/kellertobias/servobill/commit/e76839cc940dadbe368afb7fe18c4e438820638e))
+* enhance inventory type selection and item details with type name support ([634e907](https://github.com/kellertobias/servobill/commit/634e907adffdac913c1c83174235c24d7d35d2c0))
+* refactor inventory item detail page with new components and improved functionality ([7d656ea](https://github.com/kellertobias/servobill/commit/7d656ea912e20eb7aa54b0fc2d602299c5833b16))
+
 ## [1.5.0](https://github.com/kellertobias/servobill/compare/v1.4.3...v1.5.0) (2025-06-30)
 
 
