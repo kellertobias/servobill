@@ -67,6 +67,7 @@ export default function InventoryItemDetailPage({
 			name: data?.name || '',
 			barcode: data?.barcode || '',
 			type: data?.type?.id || '',
+			typeName: data?.type?.name || undefined,
 			properties: data?.properties || [],
 		}),
 	);
@@ -81,6 +82,7 @@ export default function InventoryItemDetailPage({
 				name: data.name || '',
 				barcode: data.barcode || '',
 				type: data.type?.id || '',
+				typeName: data.type?.name || undefined,
 				properties: data.properties || [],
 			});
 			setLocation(data.location?.id || '');

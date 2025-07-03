@@ -54,7 +54,7 @@ export function InventoryTypeSelect({
 	placeholder = 'Select parent type (optional)',
 }: {
 	value: string | null | undefined;
-	onChange: (value: string | null) => void;
+	onChange: (value: string | null, name: string | null) => void;
 	excludeId?: string;
 	label?: string;
 	placeholder?: string;
@@ -97,7 +97,9 @@ export function InventoryTypeSelect({
 		<SelectInput
 			label={label}
 			value={value || ''}
-			onChange={onChange}
+			onChange={(v) =>
+				onChange(v || null, options.find((o) => o.value === v)?.label || null)
+			}
 			options={[
 				{ value: '', label: 'No parent (root)' },
 				...options.map((opt) => ({

@@ -12,11 +12,13 @@ import { InventoryItemProperties } from './inventory-item-properties';
 
 /**
  * State shape for inventory item details.
+ * Now includes both type id and type name for display.
  */
 export interface InventoryItemDetailsState {
 	name: string;
 	barcode: string;
-	type: string;
+	type: string; // type id
+	typeName?: string; // human-readable type name
 	properties: { key: string; value: string }[];
 }
 
@@ -49,42 +51,56 @@ export const InventoryItemDetails: React.FC<InventoryItemDetailsProps> = ({
 
 	return (
 		<div className="px-4 py-8 sm:mx-0 sm:px-8 sm:pb-14 xl:px-16 xl:pb-20 xl:pt-16 shadow-sm ring-1 ring-gray-900/5 rounded-lg bg-white">
-			<h2 className="text-base font-semibold leading-6 text-gray-900 mb-4">
-				Item Details
-			</h2>
 			<div className="space-y-4">
-				{/* Inline editable name */}
-				<InlineEditableText
-					value={details.name}
-					onChange={(name: string) => {
-						setDetails((d) => ({ ...d, name }));
-						setDetailsChanged(true);
-					}}
-					placeholder="Item name (optional)"
-					empty="Item name"
-					locked={false}
-				/>
-				{/* Inline editable barcode */}
-				<InlineEditableText
-					value={details.barcode}
-					onChange={(barcode: string) => {
-						setDetails((d) => ({ ...d, barcode }));
-						setDetailsChanged(true);
-					}}
-					placeholder="Barcode (optional)"
-					empty="Barcode"
-					locked={false}
-				/>
+				{/* Inline editable name with label */}
+				<div>
+					{/* Note: Label is not programmatically associated due to InlineEditableText limitations. */}
+					<label className="block text-sm font-bold leading-6 text-gray-900 mb-1">
+						Item Name
+					</label>
+					<InlineEditableText
+						value={details.name}
+						onChange={(name: string) => {
+							setDetails((d) => ({ ...d, name }));
+							setDetailsChanged(true);
+						}}
+						placeholder="Item name (optional)"
+						empty="Item name"
+						locked={false}
+					/>
+				</div>
+				{/* Inline editable barcode with label */}
+				<div>
+					{/* Note: Label is not programmatically associated due to InlineEditableText limitations. */}
+					<label className="block text-sm  font-bold leading-6 text-gray-900 mb-1">
+						Barcode
+					</label>
+					<InlineEditableText
+						value={details.barcode}
+						onChange={(barcode: string) => {
+							setDetails((d) => ({ ...d, barcode }));
+							setDetailsChanged(true);
+						}}
+						placeholder="Barcode (optional)"
+						empty="Barcode"
+						locked={false}
+					/>
+				</div>
 				{/* Type field with edit toggle */}
 				<div>
-					<label className="block text-sm font-medium leading-6 text-gray-900 mb-1">
+					<label className="block text-sm font-bold leading-6 text-gray-900 mb-1">
 						Type
 					</label>
 					{editingType ? (
 						<InventoryTypeSelect
 							value={details.type}
-							onChange={(type: string | null) => {
-								setDetails((d) => ({ ...d, type: type || '' }));
+							onChange={(type: string | null, name: string | null) => {
+								// When type changes, clear typeName (will be set by parent on reload)
+								setDetails((d) => ({
+									...d,
+									type: type || '',
+									typeName: name || undefined,
+								}));
 								setDetailsChanged(true);
 								setEditingType(false);
 							}}
@@ -93,7 +109,10 @@ export const InventoryItemDetails: React.FC<InventoryItemDetailsProps> = ({
 					) : (
 						<div className="flex items-center gap-2">
 							<span className="text-gray-900">
-								{details.type || <span className="text-gray-400">No type</span>}
+								{/* Show the type name if available, otherwise fallback to 'No type' */}
+								{details.typeName || (
+									<span className="text-gray-400">No type</span>
+								)}
 							</span>
 							<button
 								type="button"
