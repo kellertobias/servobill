@@ -1,9 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-import { Input } from '@/components/input';
+import { PencilIcon } from '@heroicons/react/24/outline';
+
 import { Button } from '@/components/button';
 
 import { InventoryTypeSelect } from '../../../components/inventory-type-select';
+// Import inline editing and divider utilities from invoice helpers
+import { InlineEditableText } from '../../../../invoices/[invoiceId]/helpers';
+
+import { InventoryItemProperties } from './inventory-item-properties';
 
 /**
  * State shape for inventory item details.
@@ -28,7 +33,7 @@ export interface InventoryItemDetailsProps {
 
 /**
  * Renders the editable details card for an inventory item (name, barcode, type, properties).
- * Used on the left side of the inventory item detail page.
+ * Uses inline editing for fields, and invoice-style add/remove for properties.
  *
  * @param props - InventoryItemDetailsProps
  */
@@ -39,107 +44,85 @@ export const InventoryItemDetails: React.FC<InventoryItemDetailsProps> = ({
 	setDetailsChanged,
 	onSave,
 }) => {
+	// Local state to control type edit mode
+	const [editingType, setEditingType] = useState(false);
+
 	return (
 		<div className="px-4 py-8 sm:mx-0 sm:px-8 sm:pb-14 xl:px-16 xl:pb-20 xl:pt-16 shadow-sm ring-1 ring-gray-900/5 rounded-lg bg-white">
 			<h2 className="text-base font-semibold leading-6 text-gray-900 mb-4">
 				Item Details
 			</h2>
 			<div className="space-y-4">
-				<Input
-					label="Name"
+				{/* Inline editable name */}
+				<InlineEditableText
 					value={details.name}
-					onChange={(name) => {
+					onChange={(name: string) => {
 						setDetails((d) => ({ ...d, name }));
 						setDetailsChanged(true);
 					}}
 					placeholder="Item name (optional)"
+					empty="Item name"
+					locked={false}
 				/>
-				<Input
-					label="Barcode"
+				{/* Inline editable barcode */}
+				<InlineEditableText
 					value={details.barcode}
-					onChange={(barcode) => {
+					onChange={(barcode: string) => {
 						setDetails((d) => ({ ...d, barcode }));
 						setDetailsChanged(true);
 					}}
 					placeholder="Barcode (optional)"
+					empty="Barcode"
+					locked={false}
 				/>
-				<InventoryTypeSelect
-					value={details.type}
-					onChange={(type: string | null) => {
-						setDetails((d) => ({ ...d, type: type || '' }));
-						setDetailsChanged(true);
-					}}
-					label="Type"
-				/>
-				{/* Properties key/value pairs */}
+				{/* Type field with edit toggle */}
 				<div>
 					<label className="block text-sm font-medium leading-6 text-gray-900 mb-1">
-						Properties
+						Type
 					</label>
-					{details.properties && details.properties.length > 0 ? (
-						details.properties.map(({ key, value }, idx) => (
-							<div key={idx} className="flex gap-2 mb-2">
-								<Input
-									value={key}
-									onChange={(k) => {
-										const newProps = [...details.properties];
-										newProps[idx] = { ...newProps[idx], key: k };
-										setDetails((d) => ({ ...d, properties: newProps }));
-										setDetailsChanged(true);
-									}}
-									placeholder="Key"
-									className="flex-1"
-								/>
-								<Input
-									value={value}
-									onChange={(v) => {
-										const newProps = [...details.properties];
-										newProps[idx] = { ...newProps[idx], value: v };
-										setDetails((d) => ({ ...d, properties: newProps }));
-										setDetailsChanged(true);
-									}}
-									placeholder="Value"
-									className="flex-1"
-								/>
-								<Button
-									small
-									secondary
-									onClick={() => {
-										const newProps = details.properties.filter(
-											(_, i) => i !== idx,
-										);
-										setDetails((d) => ({ ...d, properties: newProps }));
-										setDetailsChanged(true);
-									}}
-								>
-									Remove
-								</Button>
-							</div>
-						))
+					{editingType ? (
+						<InventoryTypeSelect
+							value={details.type}
+							onChange={(type: string | null) => {
+								setDetails((d) => ({ ...d, type: type || '' }));
+								setDetailsChanged(true);
+								setEditingType(false);
+							}}
+							label="Type"
+						/>
 					) : (
-						<div className="text-gray-400 text-sm mb-2">No properties set.</div>
+						<div className="flex items-center gap-2">
+							<span className="text-gray-900">
+								{details.type || <span className="text-gray-400">No type</span>}
+							</span>
+							<button
+								type="button"
+								className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
+								onClick={() => setEditingType(true)}
+							>
+								<PencilIcon className="w-3 h-3" /> Edit
+							</button>
+						</div>
 					)}
+				</div>
+				{/* Properties key/value pairs, now using dedicated component */}
+				<InventoryItemProperties
+					properties={details.properties}
+					setProperties={(props) =>
+						setDetails((d) => ({ ...d, properties: props }))
+					}
+					setDetailsChanged={setDetailsChanged}
+				/>
+				<div className="pt-4 flex justify-end">
 					<Button
-						small
-						onClick={() => {
-							setDetails((d) => ({
-								...d,
-								properties: [...(d.properties || []), { key: '', value: '' }],
-							}));
-							setDetailsChanged(true);
-						}}
+						className="mt-4"
+						primary
+						disabled={!detailsChanged}
+						onClick={onSave}
 					>
-						Add Property
+						Save Details
 					</Button>
 				</div>
-				<Button
-					className="mt-4"
-					primary
-					disabled={!detailsChanged}
-					onClick={onSave}
-				>
-					Save Details
-				</Button>
 			</div>
 		</div>
 	);
