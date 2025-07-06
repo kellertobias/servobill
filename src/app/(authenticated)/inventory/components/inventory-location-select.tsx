@@ -24,13 +24,14 @@ function flattenLocationTree(
 		}
 		result.push({ value: node.id, label: node.name, depth });
 		if (node.children && node.children.length > 0) {
-			result = result.concat(
-				flattenLocationTree(
+			result = [
+				...result,
+				...flattenLocationTree(
 					node.children as InventoryLocationDetail[],
 					depth + 1,
 					excludeId,
 				),
-			);
+			];
 		}
 	});
 	return result;

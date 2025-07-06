@@ -24,13 +24,14 @@ function flattenTypeTree(
 		}
 		result.push({ value: node.id, label: node.name, depth });
 		if (node.children && node.children.length > 0) {
-			result = result.concat(
-				flattenTypeTree(
+			result = [
+				...result,
+				...flattenTypeTree(
 					node.children as InventoryTypeDetail[],
 					depth + 1,
 					excludeId,
 				),
-			);
+			];
 		}
 	});
 	return result;
