@@ -50,7 +50,7 @@ export function InventoryLocationSelect({
 	value,
 	onChange,
 	excludeId,
-	label = 'Parent Location',
+	label,
 	placeholder = 'Select parent location (optional)',
 }: {
 	value: string | null | undefined;

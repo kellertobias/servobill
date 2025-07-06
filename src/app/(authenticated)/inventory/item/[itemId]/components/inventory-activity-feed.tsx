@@ -8,6 +8,7 @@ import {
 	CheckCircleIcon,
 	ExclamationCircleIcon,
 	ArrowPathIcon,
+	PencilIcon,
 } from '@heroicons/react/24/outline';
 
 import { InventoryActivityForm } from './inventory-activity-form';
@@ -27,7 +28,7 @@ export interface InventoryActivityFeedProps {
 		note?: string | null;
 	}>;
 	itemId: string;
-	reload?: () => void;
+	reload: () => void;
 }
 
 const getHistoryIcon = (
@@ -56,6 +57,9 @@ const getHistoryIcon = (
 		case InventoryHistoryType.StateChange: {
 			return <ClockIcon className="h-5 w-5 text-gray-400" />;
 		}
+		case InventoryHistoryType.Update: {
+			return <PencilIcon className="h-5 w-5 text-gray-400" />;
+		}
 		default: {
 			return <ClockIcon className="h-5 w-5 text-gray-400" />;
 		}
@@ -67,7 +71,7 @@ const getHistoryText = (
 ) => {
 	switch (entry.type) {
 		case InventoryHistoryType.Note: {
-			return entry.note || 'Note added';
+			return 'Note added';
 		}
 		case InventoryHistoryType.Check: {
 			if (entry.state === InventoryCheckState.Pass) {
@@ -77,15 +81,18 @@ const getHistoryText = (
 				return 'Check failed';
 			}
 			if (entry.state === InventoryCheckState.Recheck) {
-				return 'Check needs recheck';
+				return 'Needs recheck';
 			}
 			return 'Check performed';
 		}
 		case InventoryHistoryType.StateChange: {
-			return entry.note || 'State changed';
+			return 'State changed';
+		}
+		case InventoryHistoryType.Update: {
+			return 'Item updated';
 		}
 		default: {
-			return entry.note || 'Activity';
+			return 'Activity';
 		}
 	}
 };
@@ -103,13 +110,13 @@ export const InventoryActivityFeed: React.FC<InventoryActivityFeedProps> = ({
 			{history && history.length > 0 ? (
 				<ul className="space-y-4 mb-6">
 					{history.map((entry, idx) => (
-						<li key={idx} className="flex items-start gap-3">
-							<div className="flex-shrink-0 mt-1">
+						<li key={idx} className="w-full flex items-start gap-3">
+							<div className="flex-shrink-0 mt-0">
 								{getHistoryIcon(entry.type, entry.state)}
 							</div>
-							<div className="flex-1">
-								<div className="flex items-center gap-2">
-									<span className="text-sm text-gray-700">
+							<div className="flex-1 flex flex-col">
+								<div className="flex flex-row justify-between items-center gap-2">
+									<span className="text-sm text-gray-700 font-semibold">
 										{getHistoryText(entry)}
 									</span>
 									<span className="text-xs text-gray-400">

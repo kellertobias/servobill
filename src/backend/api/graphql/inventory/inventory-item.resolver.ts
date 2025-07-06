@@ -209,7 +209,11 @@ export class InventoryResolver {
 						`Inventory location with id ${data.locationId} not found`,
 					);
 				}
-				existingItem.updateLocation(data.locationId);
+				const oldLocation = await this.inventoryLocationRepository.getById(
+					existingItem.locationId,
+				);
+				const note = `Location changed from ${oldLocation?.name} to ${location.name}`;
+				existingItem.updateLocation(data.locationId, note);
 			}
 			if (data.typeId !== undefined) {
 				// check type for existence

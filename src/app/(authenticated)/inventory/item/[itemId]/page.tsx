@@ -220,7 +220,11 @@ export default function InventoryItemDetailPage({
 								saving={savingLocation}
 							/>
 						</div>
-						<InventoryActivityFeed history={data.history} itemId={data.id} />
+						<InventoryActivityFeed
+							history={data.history}
+							itemId={data.id}
+							reload={reload}
+						/>
 					</div>
 					{/* Left: Item details card */}
 					<div className="-mx-4 sm:mx-0 lg:col-span-2 lg:row-span-2 lg:row-end-2">

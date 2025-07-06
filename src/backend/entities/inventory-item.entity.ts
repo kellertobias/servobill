@@ -17,6 +17,7 @@ export enum InventoryHistoryType {
 	NOTE = 'NOTE',
 	CHECK = 'CHECK',
 	STATE_CHANGE = 'STATE_CHANGE',
+	UPDATE = 'UPDATE',
 }
 
 /**
@@ -158,15 +159,14 @@ export class InventoryItemEntity extends DomainEntity {
 			return;
 		}
 
-		const oldLocation = this.locationId;
 		this.locationId = locationId;
 		this.updatedAt = new Date();
 
 		// Add history entry for location change
 		this.history.push({
-			type: InventoryHistoryType.NOTE,
+			type: InventoryHistoryType.UPDATE,
 			date: new Date(),
-			note: note || `Location changed from ${oldLocation} to ${locationId}`,
+			note: note || `Location changed.`,
 		});
 	}
 
@@ -193,8 +193,14 @@ export class InventoryItemEntity extends DomainEntity {
 	 * @param barcode The new barcode (optional)
 	 */
 	public updateBarcode(barcode?: string): void {
+		const oldBarcode = this.barcode;
 		this.barcode = barcode;
 		this.updatedAt = new Date();
+		this.history.push({
+			type: InventoryHistoryType.UPDATE,
+			date: new Date(),
+			note: `Barcode changed from ${oldBarcode} to ${barcode}`,
+		});
 	}
 
 	/**

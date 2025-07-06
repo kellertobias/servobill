@@ -18,11 +18,25 @@ const CHECK_STATES = [
 	{ value: 'FAIL', label: 'FAIL' },
 ];
 
+/**
+ * Props for InventoryActivityForm.
+ * @property itemId - The ID of the inventory item to add history to.
+ * @property reload - Callback to reload the parent data after successful submission.
+ */
 export interface InventoryActivityFormProps {
 	itemId: string;
-	reload?: () => void;
+	reload: () => void; // Now required
 }
 
+/**
+ * InventoryActivityForm allows users to add a note or a check result to an inventory item's history.
+ * - If a check state is selected, it submits a check (optionally with a note).
+ * - If only a note is entered, it submits a note.
+ * - After successful submission, it resets the form and triggers reload.
+ *
+ * @param itemId - The inventory item ID
+ * @param reload - Callback to reload parent data
+ */
 export const InventoryActivityForm: React.FC<InventoryActivityFormProps> = ({
 	itemId,
 	reload,
@@ -33,32 +47,48 @@ export const InventoryActivityForm: React.FC<InventoryActivityFormProps> = ({
 	);
 	const [submitting, setSubmitting] = React.useState(false);
 
+	// Autosize textarea based on content or placeholder
 	const ref = useAutoSizeTextArea(
 		note ||
 			(checkState ? 'Optional note for check result...' : 'Add a note...'),
 	);
 
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault();
+	/**
+	 * Handles form submission for adding a note or check.
+	 * Prevents whitespace-only notes. Logs actions for debugging.
+	 */
+	const handleSubmit = async () => {
 		setSubmitting(true);
 		try {
+			// Prevent submitting whitespace-only notes
+			const trimmedNote = note.trim();
 			if (checkState) {
+				console.log('Submitting inventory check', {
+					itemId,
+					checkState,
+					note: trimmedNote,
+				});
 				await API.query({
 					query: gql(`
             mutation AddInventoryCheck($id: String!, $state: InventoryCheckState!, $note: String) {
               addInventoryCheck(id: $id, state: $state, note: $note)
             }
           `),
-					variables: { id: itemId, state: checkState, note: note || undefined },
+					variables: {
+						id: itemId,
+						state: checkState,
+						note: trimmedNote || undefined,
+					},
 				});
-			} else if (note) {
+			} else if (trimmedNote) {
+				console.log('Submitting inventory note', { itemId, note: trimmedNote });
 				await API.query({
 					query: gql(`
             mutation AddInventoryNote($id: String!, $note: String!) {
               addInventoryNote(id: $id, note: $note)
             }
           `),
-					variables: { id: itemId, note },
+					variables: { id: itemId, note: trimmedNote },
 				});
 			} else {
 				doToast({
@@ -71,8 +101,11 @@ export const InventoryActivityForm: React.FC<InventoryActivityFormProps> = ({
 			setNote('');
 			setCheckState('');
 			doToast({ message: 'History entry added!', type: 'success' });
-			reload?.();
-		} catch {
+			console.log('Reloading parent data after submit');
+			reload();
+		} catch (error) {
+			// Log error for debugging
+			console.error('Failed to add history entry', error);
 			doToast({ message: 'Failed to add history entry', type: 'danger' });
 		} finally {
 			setSubmitting(false);
@@ -138,7 +171,8 @@ export const InventoryActivityForm: React.FC<InventoryActivityFormProps> = ({
 						<Button
 							primary
 							className="h-[38px] min-w-[110px]"
-							disabled={submitting || (!note && !checkState)}
+							disabled={submitting || (!note.trim() && !checkState)}
+							onClick={() => handleSubmit()}
 						>
 							{checkState ? 'Add Result' : 'Add Note'}
 						</Button>

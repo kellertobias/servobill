@@ -182,6 +182,7 @@ enum InventoryHistoryType {
   CHECK
   NOTE
   STATE_CHANGE
+  UPDATE
 }
 
 type InventoryItem {
