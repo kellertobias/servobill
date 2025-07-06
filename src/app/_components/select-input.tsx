@@ -31,7 +31,16 @@ const SelectInput: React.FC<{
 	className?: string;
 	label?: string;
 	placeholder?: string;
-}> = ({ value, onChange, options, className, label, placeholder = '' }) => {
+	clearable?: boolean; // Whether to show a clear (x) button when an option is selected
+}> = ({
+	value,
+	onChange,
+	options,
+	className,
+	label,
+	placeholder = '',
+	clearable = true,
+}) => {
 	// Find the selected option object based on value
 	const selectedOption = options.find((opt) => opt.value === value) || null;
 
@@ -86,7 +95,7 @@ const SelectInput: React.FC<{
 								: placeholder || 'Select...'}
 						</span>
 						{/* Show clear (x) button if a value is selected */}
-						{selectedOption && (
+						{selectedOption && clearable && (
 							<span
 								className="flex items-center absolute right-8 top-1/2 -translate-y-1/2 z-10 cursor-pointer"
 								onClick={handleClear}

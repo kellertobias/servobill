@@ -52,7 +52,7 @@ export const InventoryItemLocationEditor: React.FC<
 	}, [localLocation, dirty, onSave]);
 
 	return (
-		<div className="rounded-lg bg-gray-50 shadow-sm ring-1 ring-gray-900/5 p-6 mb-4">
+		<div>
 			<h2 className="text-base font-semibold leading-6 text-gray-900 mb-2">
 				Location
 			</h2>

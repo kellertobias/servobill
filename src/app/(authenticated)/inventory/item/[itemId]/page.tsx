@@ -203,21 +203,24 @@ export default function InventoryItemDetailPage({
 				<div className="mx-auto grid max-w-2xl grid-cols-1 grid-rows-1 items-start gap-x-8 gap-y-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
 					{/* Right: Status/location/activity */}
 					<div className="lg:col-start-3 lg:row-end-1 flex flex-col gap-6">
-						<InventoryItemStatusCard
-							status={status}
-							onStatusChange={handleStatusChange}
-							nextCheck={data.nextCheck}
-							lastScanned={data.lastScanned}
-							createdAt={data.createdAt}
-							updatedAt={data.updatedAt}
-						/>
-						<InventoryItemLocationEditor
-							location={location}
-							onSave={handleSaveLocation}
-							onScanBarcode={handleScanBarcode}
-							saving={savingLocation}
-						/>
-						<InventoryActivityFeed />
+						<div className="rounded-lg bg-gray-50 shadow-sm ring-1 ring-gray-900/5 p-6 mb-4">
+							<InventoryItemStatusCard
+								status={status}
+								onStatusChange={handleStatusChange}
+								nextCheck={data.nextCheck}
+								lastScanned={data.lastScanned}
+								createdAt={data.createdAt}
+								updatedAt={data.updatedAt}
+							/>
+							<div className="mt-6 pt-6 border-t border-t-gray-200 border-t-px" />
+							<InventoryItemLocationEditor
+								location={location}
+								onSave={handleSaveLocation}
+								onScanBarcode={handleScanBarcode}
+								saving={savingLocation}
+							/>
+						</div>
+						<InventoryActivityFeed history={data.history} itemId={data.id} />
 					</div>
 					{/* Left: Item details card */}
 					<div className="-mx-4 sm:mx-0 lg:col-span-2 lg:row-span-2 lg:row-end-2">

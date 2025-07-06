@@ -39,7 +39,7 @@ export const InventoryItemStatusCard: React.FC<
 	];
 
 	return (
-		<div className="rounded-lg bg-gray-50 shadow-sm ring-1 ring-gray-900/5 p-6 mb-4">
+		<div className="">
 			<h2 className="text-base font-semibold leading-6 text-gray-900 mb-2">
 				Status
 			</h2>
@@ -68,6 +68,7 @@ export const InventoryItemStatusCard: React.FC<
 					))}
 				</div>
 			</div>
+			<div className="mt-6 pt-6 border-t border-t-gray-200 border-t-px" />
 			{/* Dates with improved layout */}
 			<div className="space-y-3">
 				<div>
