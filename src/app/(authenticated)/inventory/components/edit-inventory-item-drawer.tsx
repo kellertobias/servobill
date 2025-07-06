@@ -156,7 +156,12 @@ const useInventoryItemDrawer = ({
 				type: 'success',
 				icon: CheckCircleIcon,
 			});
-			setData({ ...INITIAL_DATA });
+			setData((current) => ({
+				...current,
+				barcode: '',
+				id: 'new',
+				state: INITIAL_DATA.state,
+			}));
 		},
 		openCreated: (id) => {
 			if (onCreatedRef.current) {
