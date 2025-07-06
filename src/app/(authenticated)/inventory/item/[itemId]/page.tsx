@@ -92,15 +92,6 @@ export default function InventoryItemDetailPage({
 	}, [data]);
 
 	/**
-	 * Handler for barcode scan button (to be implemented)
-	 */
-	// eslint-disable-next-line unicorn/consistent-function-scoping
-	function handleScanBarcode() {
-		// TODO: Implement barcode scanning logic
-		alert('Barcode scan not implemented yet.');
-	}
-
-	/**
 	 * Handler for saving item details (name, barcode, type, properties)
 	 */
 	const handleSaveDetails = async () => {
@@ -219,7 +210,6 @@ export default function InventoryItemDetailPage({
 							<InventoryItemLocationEditor
 								location={location}
 								onSave={handleSaveLocation}
-								onScanBarcode={handleScanBarcode}
 								saving={savingLocation}
 							/>
 						</div>

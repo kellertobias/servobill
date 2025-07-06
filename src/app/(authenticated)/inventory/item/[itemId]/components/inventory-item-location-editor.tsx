@@ -8,7 +8,6 @@ import { InventoryLocationSelect } from '../../../components/inventory-location-
 export interface InventoryItemLocationEditorProps {
 	location: string;
 	onSave: (loc: string) => Promise<void> | void;
-	onScanBarcode?: () => void;
 	saving?: boolean;
 }
 
@@ -19,7 +18,7 @@ export interface InventoryItemLocationEditorProps {
  */
 export const InventoryItemLocationEditor: React.FC<
 	InventoryItemLocationEditorProps
-> = ({ location, onSave, onScanBarcode, saving }) => {
+> = ({ location, onSave, saving }) => {
 	const [localLocation, setLocalLocation] = useState(location);
 	const [dirty, setDirty] = useState(false);
 	const debounceRef = useRef<NodeJS.Timeout | null>(null);
