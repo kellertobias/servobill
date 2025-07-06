@@ -1,6 +1,10 @@
 import { ExpenseCategory } from '@/backend/entities/settings.entity';
 
-export default (rawEmailText: string, categories: ExpenseCategory[]) => {
+export default (
+	rawEmailText: string,
+	categories: ExpenseCategory[],
+	currency: string,
+) => {
 	return `
     <context>
 	You are a bookkeeper. You are given an incoming invoice and need
@@ -17,6 +21,11 @@ export default (rawEmailText: string, categories: ExpenseCategory[]) => {
     (e.g. "Office Supplies" if there are multiple office supplies and all of them belong to the same category)
 
     If you are not sure about the category, you can leave it empty.
+
+    Today's date is ${new Date().toISOString().split('T')[0]}.
+
+    The local currency is ${currency}.
+    All prices need to be converted to the local currency.
     </context>
 
     <output-format>
@@ -34,6 +43,7 @@ export default (rawEmailText: string, categories: ExpenseCategory[]) => {
 
     <guidelines>
     - Convert all amounts to cents (e.g., $10.00 = 1000 cents)
+    - all prices need to be converted to the local currency. If a conversion took place, add an internal note to the "notes" with the conversion rate and where you got it from..
     - Use ISO 8601 format for dates
     - If no specific date is found, leave it empty
     - Only include categoryId if you can confidently match an item to a category. If no category matches, leave it empty.

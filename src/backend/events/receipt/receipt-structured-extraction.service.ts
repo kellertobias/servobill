@@ -47,6 +47,7 @@ export class ReceiptStructuredExtractionService
 			mimeType: string;
 			id: string;
 		}[];
+		currency: string;
 	}): Promise<ReceiptResult> {
 		throw new Error('Not implemented');
 	}

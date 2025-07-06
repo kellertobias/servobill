@@ -23,6 +23,7 @@ export interface ExtractedExpenseItem {
 	taxCents: number;
 	expendedAt: Date;
 	description?: string;
+	notes?: string;
 	categoryId?: string;
 }
 
@@ -51,10 +52,15 @@ export class ReceiptLLMExtractionService implements ReceiptExtractorService {
 			mimeType: string;
 			id: string;
 		}[];
+		currency: string;
 	}): Promise<ReceiptResult> {
 		try {
 			const { categories } = await this.loadData();
-			const systemPrompt = getExtractionPrompt(source.text, categories);
+			const systemPrompt = getExtractionPrompt(
+				source.text,
+				categories,
+				source.currency,
+			);
 			const prompt = source.text
 				? `<email-body>${source.text}</email-body>`
 				: 'Please Extract from Attachment';
@@ -72,6 +78,7 @@ export class ReceiptLLMExtractionService implements ReceiptExtractorService {
 				expenseEntity.taxCents = expense.taxCents;
 				expenseEntity.expendedAt = expense.expendedAt;
 				expenseEntity.description = expense.description;
+				expenseEntity.notes = expense.notes;
 				expenseEntity.categoryId = expense.categoryId;
 
 				await this.expenseRepository.save(expenseEntity);
@@ -141,6 +148,7 @@ export class ReceiptLLMExtractionService implements ReceiptExtractorService {
 				taxCents: Math.round(item.taxCents || 0),
 				expendedAt: new Date(item.expendedAt),
 				description: item.description,
+				notes: item.notes,
 				categoryId: item.categoryId,
 			}));
 		} catch (error) {

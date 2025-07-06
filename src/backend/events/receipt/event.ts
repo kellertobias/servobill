@@ -26,9 +26,20 @@ export class ReceiptEvent {
 	@IsString()
 	emailText?: string;
 
+	/**
+	 * The currency code (ISO 4217, e.g. 'EUR', 'USD') for this receipt event.
+	 * Used for extraction and summary email.
+	 */
+	@IsOptional()
+	@IsString()
+	currency?: string;
+
 	constructor(props?: ReceiptEvent) {
 		if (props) {
 			Object.assign(this, props);
+			if (!this.currency) {
+				this.currency = props.currency || 'EUR';
+			}
 		}
 	}
 }

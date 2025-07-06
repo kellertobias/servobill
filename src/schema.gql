@@ -659,6 +659,7 @@ input SettingsCompanyInput {
 
 input SettingsInput {
   company: SettingsCompanyInput
+  currency: String
   customerNumbersIncrementTemplate: String
   customerNumbersLast: String
   customerNumbersTemplate: String
@@ -685,6 +686,7 @@ input SettingsInput {
 type SettingsResult {
   categories: [ExpenseCategoryType!]
   company: SettingsResultCompany
+  currency: String
   customerNumbersIncrementTemplate: String
   customerNumbersLast: String
   customerNumbersTemplate: String

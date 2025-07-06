@@ -15,6 +15,8 @@ import { doToast } from '@/components/toast';
 import { exportSettings, importSettings } from '@/api/import-export/settings';
 import { SettingsBlock } from '@/components/settings-block';
 
+import SelectInput from '@/app/_components/select-input';
+
 import { Numbering } from '@/common/numbers';
 
 function NumberValidity({
@@ -90,6 +92,7 @@ export default function SettingsHomePage() {
 								bankIban
 								bankBic
 							}
+							currency
 						}
 					}
 				`),
@@ -110,6 +113,7 @@ export default function SettingsHomePage() {
 				companyBankAccountHolder: res.settings.company?.bankAccountHolder || '',
 				companyBankIban: res.settings.company?.bankIban || '',
 				companyBankBic: res.settings.company?.bankBic || '',
+				currency: res.settings.currency || 'EUR',
 			}));
 			return data;
 		},
@@ -254,6 +258,26 @@ export default function SettingsHomePage() {
 									companyWeb,
 								}));
 							}}
+						/>
+						<SelectInput
+							label="Currency"
+							value={data?.currency || 'EUR'}
+							onChange={(currency: string | null) => {
+								setData((current) => ({
+									...current,
+									currency: currency || 'EUR',
+								}));
+							}}
+							options={[
+								{ value: 'EUR', label: 'Euro (EUR)' },
+								{ value: 'USD', label: 'US Dollar (USD)' },
+								{ value: 'GBP', label: 'British Pound (GBP)' },
+								{ value: 'CHF', label: 'Swiss Franc (CHF)' },
+								{ value: 'JPY', label: 'Japanese Yen (JPY)' },
+								{ value: 'AUD', label: 'Australian Dollar (AUD)' },
+								{ value: 'CAD', label: 'Canadian Dollar (CAD)' },
+							]}
+							className="w-full"
 						/>
 					</SettingsBlock>
 					<SettingsBlock
@@ -817,6 +841,7 @@ export default function SettingsHomePage() {
 												invoiceCompanyLogo: data.invoiceCompanyLogo || '',
 												emailCompanyLogo: data.emailCompanyLogo || '',
 												defaultInvoiceFooterText: data.defaultInvoiceFooterText,
+												currency: data.currency,
 											},
 										},
 									});

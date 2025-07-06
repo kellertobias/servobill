@@ -4,11 +4,12 @@ import type { ExpenseEntity } from '@/backend/entities/expense.entity';
 
 /**
  * Helper function to format currency from cents to display format
+ * Accepts a currency code (ISO 4217)
  */
-const formatCurrency = (cents: number): string => {
+const formatCurrency = (cents: number, currency: string): string => {
 	return new Intl.NumberFormat('en-US', {
 		style: 'currency',
-		currency: 'USD',
+		currency,
 	}).format(cents / 100);
 };
 
@@ -35,12 +36,14 @@ const formatDate = (date: Date): string => {
  * @param expenses Array of extracted expense entities
  * @param attachments Array of processed attachments
  * @param event The receipt event that was processed
+ * @param currency The currency code to use for formatting
  * @returns Complete HTML email content
  */
 export function generateExpensesSummaryHtml(
 	expenses: ExpenseEntity[],
 	attachments: { content: Buffer; mimeType: string; name: string }[],
 	event: ReceiptEvent,
+	currency: string,
 ): string {
 	const totalAmount = expenses.reduce(
 		(sum, expense) => sum + expense.expendedCents,
@@ -58,9 +61,11 @@ export function generateExpensesSummaryHtml(
 					<td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${expense.name}</td>
 					<td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${formatCurrency(
 						expense.expendedCents,
+						currency,
 					)}</td>
 					<td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${formatCurrency(
 						expense.taxCents || 0,
+						currency,
 					)}</td>
 					<td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${formatDate(
 						expense.expendedAt,
@@ -94,8 +99,8 @@ export function generateExpensesSummaryHtml(
 				<p><strong>Event ID:</strong> ${event.id}</p>
 				<p><strong>Processed Files:</strong> ${attachments.length}</p>
 				<p><strong>Extracted Expenses:</strong> ${expenses.length}</p>
-				<p><strong>Total Amount:</strong> ${formatCurrency(totalAmount)}</p>
-				<p><strong>Total Tax:</strong> ${formatCurrency(totalTax)}</p>
+				<p><strong>Total Amount:</strong> ${formatCurrency(totalAmount, currency)}</p>
+				<p><strong>Total Tax:</strong> ${formatCurrency(totalTax, currency)}</p>
 			</div>
 
 			${

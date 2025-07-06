@@ -79,15 +79,24 @@ export class HandlerExecution {
 					? this.structuredExtractionService
 					: this.llmExtractionService;
 
+			// Load company currency if not present in event
+			let currency = event.currency;
+			if (!currency) {
+				const companyData =
+					await this.settingsRepository.getSetting(CompanyDataSetting);
+				currency = companyData.currency || 'EUR';
+			}
+
 			const result = await strategy.extract({
 				text: event.emailText || '',
 				attachments,
+				currency, // Pass currency to extraction
 			});
 
-			const firstExpenseId = result.expenses[0]?.id;
-
 			for (const { attachmentEntity } of attachments) {
-				attachmentEntity.addExpenseId(firstExpenseId);
+				for (const expense of result.expenses) {
+					attachmentEntity.addExpenseId(expense.id);
+				}
 				await this.attachmentRepository.save(attachmentEntity);
 			}
 
@@ -98,11 +107,12 @@ export class HandlerExecution {
 				attachmentCount: attachments.length,
 			});
 
-			// Send email notification with extracted expenses summary
+			// Send email notification with extracted expenses summary, passing currency
 			await this.sendExtractionSummaryEmail(
 				event,
 				result.expenses,
 				attachments,
+				currency,
 			);
 		} catch (error) {
 			this.logger.error('Receipt processing failed', {
@@ -120,6 +130,7 @@ export class HandlerExecution {
 		event: ReceiptEvent,
 		expenses: ExpenseEntity[],
 		attachments: { content: Buffer; mimeType: string; name: string }[],
+		currency: string, // Add currency param
 	): Promise<void> {
 		try {
 			// Get company settings for email configuration
@@ -141,7 +152,12 @@ export class HandlerExecution {
 			}
 
 			const subject = `Receipt Processing Complete - ${expenses.length} Expenses Extracted`;
-			const html = generateExpensesSummaryHtml(expenses, attachments, event);
+			const html = generateExpensesSummaryHtml(
+				expenses,
+				attachments,
+				event,
+				currency,
+			); // Pass currency
 
 			await this.sesService.sendEmail({
 				from: companyData.sendFrom,

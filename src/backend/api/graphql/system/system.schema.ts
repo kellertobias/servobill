@@ -315,6 +315,12 @@ export class SettingsResult {
 	 */
 	@Field(() => [ExpenseCategoryType], { nullable: true })
 	categories?: ExpenseCategoryType[];
+
+	/**
+	 * The currency code (ISO 4217, e.g. 'EUR', 'USD') used for all monetary values in the company context.
+	 */
+	@Field(() => String, { nullable: true })
+	currency?: string;
 }
 
 @InputType('SettingsCompanyInput')
@@ -457,6 +463,10 @@ export class SettingsInput implements Partial<SettingsResult> {
 
 	@Field(() => SettingsCompanyInput, { nullable: true })
 	company?: SettingsCompanyInput;
+
+	@IsString()
+	@Field(() => String, { nullable: true })
+	currency?: string;
 }
 
 @ObjectType('InvoiceTemplateResult')

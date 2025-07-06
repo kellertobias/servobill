@@ -48,6 +48,12 @@ export class CompanyDataSetting extends AbstractSettingsEntity {
 	public sendFrom!: string;
 	public replyTo!: string;
 
+	/**
+	 * The currency code (ISO 4217, e.g. 'EUR', 'USD') used for all monetary values in the company context.
+	 * This setting is used for receipts, invoices, and summary emails.
+	 */
+	public currency!: string;
+
 	constructor(
 		params: Partial<ObjectProperties<CompanyDataSetting>>,
 		private saveInner: (data: string) => Promise<void>,
@@ -100,6 +106,9 @@ export class CompanyDataSetting extends AbstractSettingsEntity {
 				},
 			};
 		}
+		if (!this.currency) {
+			this.currency = params.currency || 'EUR';
+		}
 	}
 
 	public serializable() {
@@ -114,6 +123,7 @@ export class CompanyDataSetting extends AbstractSettingsEntity {
 			sendFrom: this.sendFrom,
 			replyTo: this.replyTo,
 			companyData: this.companyData,
+			currency: this.currency,
 		};
 	}
 

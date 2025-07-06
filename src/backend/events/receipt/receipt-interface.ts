@@ -13,5 +13,6 @@ export interface ReceiptExtractorService {
 			mimeType: string;
 			id: string;
 		}[];
+		currency: string; // Currency code for extraction context
 	}): Promise<ReceiptResult>;
 }

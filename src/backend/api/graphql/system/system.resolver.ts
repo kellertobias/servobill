@@ -106,6 +106,7 @@ export class SystemResolver {
 			categories: expenses
 				? (expenses.categories || []).map((cat) => ({ ...cat }))
 				: undefined,
+			currency: company.currency || 'EUR',
 		};
 	}
 
@@ -206,6 +207,10 @@ export class SystemResolver {
 			nextData.company?.bankAccountHolder || '';
 		companyData.companyData.bank.iban = nextData.company?.bankIban || '';
 		companyData.companyData.bank.bic = nextData.company?.bankBic || '';
+
+		if (nextData.currency) {
+			companyData.currency = nextData.currency;
+		}
 
 		await companyData.save();
 
