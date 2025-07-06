@@ -30,23 +30,46 @@ const ALLOWED_VIEWS = new Set(['type', 'location']);
 
 /**
  * Custom hook to fetch inventory items for the current node or all items at root.
+ * Now supports filtering by search query using the 'search' field in the GraphQL input.
  * @param id - The current type/location ID (or undefined/null for root)
  * @param view - 'type' or 'location'
+ * @param searchQuery - Optional search string to filter items (matches name, barcode, etc. via backend)
  * @returns { items, loading }
  */
-function useNodeInventoryItems(id: string | undefined, view: InventoryView) {
+function useNodeInventoryItems(
+	id: string | undefined,
+	view: InventoryView,
+	searchQuery?: string,
+) {
 	const [items, setItems] = useState<InventoryItem[]>([]);
 	const [loading, setLoading] = useState(false);
+
+	// Type matching the GraphQL InventoryItemWhereInput
+	type InventoryItemWhereInput = {
+		barcode?: string;
+		locationId?: string;
+		overdue?: boolean;
+		search?: string;
+		state?: string;
+		typeId?: string;
+	};
 
 	useEffect(() => {
 		let cancelled = false;
 		async function fetchItems() {
 			setLoading(true);
-			const where = id
+			/**
+			 * The 'where' variable matches the GraphQL InventoryItemWhereInput.
+			 * The 'search' field enables full-text search (name, barcode, etc.) on the backend.
+			 */
+			const where: InventoryItemWhereInput = id
 				? view === 'type'
 					? { typeId: id }
 					: { locationId: id }
 				: {};
+			if (searchQuery && searchQuery.trim() !== '') {
+				where.search = searchQuery;
+			}
 			const res = await API.query({
 				query: gql(`
 					query NodeInventoryItems($where: InventoryItemWhereInput) {
@@ -77,7 +100,7 @@ function useNodeInventoryItems(id: string | undefined, view: InventoryView) {
 		return () => {
 			cancelled = true;
 		};
-	}, [id, view]);
+	}, [id, view, searchQuery]);
 
 	return { items, loading };
 }
@@ -202,6 +225,7 @@ export default function InventoryNodePage({
 	const { items, loading: itemsLoading } = useNodeInventoryItems(
 		params.id,
 		view,
+		searchQuery,
 	);
 
 	/**
