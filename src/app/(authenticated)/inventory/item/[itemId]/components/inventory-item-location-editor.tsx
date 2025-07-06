@@ -1,7 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-import { Button } from '@/components/button';
-
 import { InventoryLocationSelect } from '../../../components/inventory-location-select';
 
 /**
@@ -68,19 +66,6 @@ export const InventoryItemLocationEditor: React.FC<
 							setDirty(true);
 						}}
 					/>
-				</div>
-				<div className="ml-2 mt-2 pt-px">
-					<Button
-						onClick={onScanBarcode}
-						aria-label="Scan barcode for location"
-						disabled={!onScanBarcode}
-						secondary
-					>
-						{/* TODO: Replace with barcode icon from Heroicons if available */}
-						<span role="img" aria-label="Barcode">
-							📷
-						</span>
-					</Button>
 				</div>
 			</div>
 		</div>

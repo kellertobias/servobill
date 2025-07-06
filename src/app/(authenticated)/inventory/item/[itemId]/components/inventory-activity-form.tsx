@@ -1,8 +1,6 @@
 import React from 'react';
 import clsx from 'clsx';
 
-import { UserCircleIcon } from '@heroicons/react/20/solid';
-
 import { API, gql } from '@/api/index';
 import { Button } from '@/components/button';
 import { doToast } from '@/components/toast';
@@ -114,11 +112,6 @@ export const InventoryActivityForm: React.FC<InventoryActivityFormProps> = ({
 
 	return (
 		<div className={clsx('mt-6 flex gap-x-3 w-full flex-row -mr-px')}>
-			<UserCircleIcon
-				className={clsx(
-					'h-6 w-6 flex-none rounded-full bg-gray-50 text-gray-300',
-				)}
-			/>
 			<form
 				className={clsx('relative flex-grow min-w-0')}
 				onSubmit={handleSubmit}

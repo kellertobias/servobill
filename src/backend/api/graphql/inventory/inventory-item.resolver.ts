@@ -70,7 +70,18 @@ export class InventoryResolver {
 			if (id) {
 				item = await this.inventoryItemRepository.getById(id);
 			} else if (barcode) {
+				console.log('finding by barcode', barcode);
 				item = await this.inventoryItemRepository.findByBarcode(barcode);
+
+				if (item) {
+					console.log('updating last scanned', item.lastScanned);
+					const lastLastScanned = item.lastScanned;
+					item.lastScanned = new Date();
+					await this.inventoryItemRepository.save(item);
+
+					// set it back for returning the last scanned date
+					item.lastScanned = lastLastScanned;
+				}
 			}
 
 			if (!item) {
