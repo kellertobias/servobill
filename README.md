@@ -28,7 +28,7 @@ These are the high level next steps:
 - [X] Local file storage (rather than S3)
 - [X] Semantic versioning and automated releases
 - [X] Auto-Generate expenses (based on incoming invoices with AI)
-- [ ] Inventory Management (WIP)
+- [X] Inventory Management
 - [ ] Auto-Generate expenses (based on incoming structured invoices, e.g. ZUGFeRD/ X-Rechnung)
 - [ ] Digital outgoing invoices
 - [ ] Full Standalone (Local User Management, Multi-user support, automatic backups, etc.)

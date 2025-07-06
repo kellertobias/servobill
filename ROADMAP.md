@@ -19,10 +19,10 @@ We will update this roadmap as we progress with the development of Servobill.
 - [X] Add support for dockerized deployments
 
 ## Milestone "Inventory Management" (planned till end of June 2025):
-- [ ] Create, edit and delete inventory items
-- [ ] Add history/ notes on inventory items (e.g. when serviced, etc.)
-- [ ] Add simple Barcode scanner for inventory items (e.g. for QR codes)
-- [ ] Add service scan mode: define messages, scan item and select which message to add to item (e.g. "Serviced on 2025-06-20"/ "Service Check Failed on 2025-06-20")
+- [X] Create, edit and delete inventory items
+- [X] Add history/ notes on inventory items (e.g. when serviced, etc.)
+- [X] Add simple Barcode scanner for inventory items (e.g. for QR codes)
+
 
 ## Milestone "Auto-Generate expenses" (based on incoming invoices) (planned till end of July 2025):
 - [X] Add AI Upload of invoices (e.g. from PDF) to automatically create expenses and inventory items
