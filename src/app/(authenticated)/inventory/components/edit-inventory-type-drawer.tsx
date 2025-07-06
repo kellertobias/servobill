@@ -109,7 +109,7 @@ const useInventoryTypeDrawer = ({
 				d.checkInterval === undefined ||
 				d.checkInterval === null ||
 				d.checkInterval === ''
-					? null
+					? undefined
 					: Number(d.checkInterval),
 			checkType: d.checkType || null,
 			properties: Array.isArray(d.properties)
