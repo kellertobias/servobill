@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 
 import { CheckCircleIcon } from '@heroicons/react/20/solid';
@@ -26,6 +26,156 @@ type InventoryItem = {
 	properties: { key: string; value: string }[];
 };
 
+const INITIAL_DATA = {
+	id: 'new',
+	name: '',
+	barcode: '',
+	type: '',
+	location: '',
+	state: 'DEFAULT',
+	properties: [],
+};
+
+const useTypeProperties = (
+	typeId: string | undefined,
+	setProperties: (properties: { key: string; value: string }[]) => void,
+) => {
+	const [defaultPropertyKeys, setDefaultPropertyKeys] = React.useState<
+		string[]
+	>([]);
+
+	/**
+	 * Fetches the default properties for a given inventory type id and updates the form state.
+	 * Called whenever the type selection changes.
+	 * @param typeId The selected inventory type id
+	 */
+	const fetchTypeProperties = React.useCallback(
+		async (typeId: string | null | undefined) => {
+			if (!typeId) {
+				setDefaultPropertyKeys([]);
+				setProperties([]);
+				return;
+			}
+			try {
+				const res = await API.query({
+					query: gql(`
+						query InventoryItemCreationTypeProperties($id: String!) {
+							inventoryType(id: $id) {
+								properties
+							}
+						}
+					`),
+					variables: { id: typeId },
+				});
+
+				const keys = res?.inventoryType?.properties || [];
+				setDefaultPropertyKeys(keys);
+				// Pre-populate properties with keys and empty values if not already set
+
+				setProperties(keys.map((key: string) => ({ key, value: '' })));
+			} catch {
+				setDefaultPropertyKeys([]);
+			}
+		},
+		[],
+	);
+
+	// When the type changes, fetch its default properties
+	React.useEffect(() => {
+		fetchTypeProperties(typeId);
+	}, [typeId, fetchTypeProperties]);
+
+	return {
+		defaultPropertyKeys,
+	};
+};
+
+const useInventoryItemDrawer = ({
+	ref,
+	onReload,
+}: {
+	ref: React.Ref<{ openDrawer: (id: string) => void }>;
+	onReload: () => void;
+}) => {
+	const params = useParams() as { view?: string; id?: string };
+
+	const { drawerId, handleClose } = useInventoryDrawer({
+		ref,
+		onReload,
+	});
+
+	const [data, setData] = React.useState<Partial<InventoryItem>>({
+		...INITIAL_DATA,
+	});
+
+	// When the drawer is opened, reset data to initialData (for new item)
+	React.useEffect(() => {
+		setData(() => ({
+			...INITIAL_DATA,
+			type: params.view === 'type' ? params.id : undefined,
+			location: params.view === 'location' ? params.id : undefined,
+		}));
+		// Only run when drawer is opened (drawerId changes)
+	}, [drawerId]);
+
+	const { defaultPropertyKeys } = useTypeProperties(
+		data.type,
+		(nextProperties) => {
+			setData((current) => ({
+				...current,
+				properties: nextProperties,
+			}));
+		},
+	);
+
+	// Ref to hold the latest onCreated callback for create actions
+	const onCreatedRef = React.useRef<((id: string) => void) | null>(null);
+
+	// useSaveCallback must be called at the top level, not inside a callback
+	const { onSave } = useSaveCallback({
+		id: 'new',
+		entityName: 'InventoryItem',
+		data,
+		initialData: INITIAL_DATA,
+		reload: () => onReload?.(),
+		mapper: (data) => ({
+			name: data.name,
+			barcode: data.barcode || undefined,
+			typeId: data.type || undefined,
+			locationId: data.location || undefined,
+			state: data.state || undefined,
+			properties: Array.isArray(data.properties)
+				? data.properties
+						.filter((p) => p.key && p.key.trim())
+						.map((p) => ({ key: p.key, value: p.value }))
+				: [],
+		}),
+		onSaved: () => {
+			doToast({
+				message: 'Item created!',
+				type: 'success',
+				icon: CheckCircleIcon,
+			});
+			setData({ ...INITIAL_DATA });
+		},
+		openCreated: (id) => {
+			if (onCreatedRef.current) {
+				onCreatedRef.current(id);
+			}
+		},
+	});
+
+	return {
+		drawerId,
+		data,
+		setData,
+		defaultPropertyKeys,
+		onSave,
+		onCreatedRef,
+		handleClose,
+	};
+};
+
 /**
  * Drawer component for creating or editing an inventory item.
  * Exposes an imperative openDrawer(id) method via ref.
@@ -40,9 +190,6 @@ const EditInventoryItemDrawer = forwardRef(
 		{ onReload }: { onReload: () => void },
 		ref: React.Ref<{ openDrawer: (id: string) => void }>,
 	) => {
-		// Use a ref to store the pending parentId for new item creation
-		const pendingParentIdRef = React.useRef<string | undefined>();
-
 		/**
 		 * Get current route params using Next.js app router.
 		 * - 'view' is the inventory type (e.g., electronics, furniture, etc.)
@@ -50,153 +197,48 @@ const EditInventoryItemDrawer = forwardRef(
 		 *
 		 * This allows us to pre-select type/location when creating a new item.
 		 */
-		const params = useParams() as { view?: string; id?: string };
 
 		const router = useRouter();
-
-		React.useImperativeHandle(ref, () => ({
-			openDrawer: (id: string, parentId?: string) => {
-				pendingParentIdRef.current = parentId;
-				// @ts-expect-error: Imperative handle for drawer open
-				ref.current?.openDrawer(id);
-			},
-		}));
-		const { drawerId, handleClose } = useInventoryDrawer({ ref });
-
-		// State for default property keys fetched from the selected type
-		const [defaultPropertyKeys, setDefaultPropertyKeys] = React.useState<
-			string[]
-		>([]);
-
-		/**
-		 * Compute initial data for the drawer.
-		 * If creating a new item, pre-select type/location from route params if available.
-		 * Otherwise, use defaults or parentId if provided.
-		 */
-		const initialData = React.useMemo(() => {
-			return {
-				id: 'new',
-				name: '',
-				barcode: '',
-				type: '',
-				location: '',
-				state: 'DEFAULT',
-				properties: [],
-			};
-		}, []);
-
-		const [data, setData] = React.useState<Partial<InventoryItem>>({
-			...initialData,
-		});
-
-		// When the drawer is opened, reset data to initialData (for new item)
-		React.useEffect(() => {
-			setData(() => ({
-				...initialData,
-				type: params.view === 'type' ? params.id : undefined,
-				location: params.view === 'location' ? params.id : undefined,
-			}));
-			// Only run when drawer is opened (drawerId changes)
-		}, [drawerId]);
-
-		/**
-		 * Fetches the default properties for a given inventory type id and updates the form state.
-		 * Called whenever the type selection changes.
-		 * @param typeId The selected inventory type id
-		 */
-		const fetchTypeProperties = React.useCallback(
-			async (typeId: string | null | undefined) => {
-				if (!typeId) {
-					setDefaultPropertyKeys([]);
-					setData((current) => ({ ...current, properties: [] }));
-					return;
-				}
-				try {
-					const res = await API.query({
-						query: gql(`
-							query InventoryItemCreationTypeProperties($id: String!) {
-								inventoryType(id: $id) {
-									properties
-								}
-							}
-						`),
-						variables: { id: typeId },
-					});
-
-					const keys = res?.inventoryType?.properties || [];
-					setDefaultPropertyKeys(keys);
-					// Pre-populate properties with keys and empty values if not already set
-
-					setData((current) => ({
-						...current,
-						properties: keys.map((key: string) => ({ key, value: '' })),
-					}));
-				} catch {
-					setDefaultPropertyKeys([]);
-				}
-			},
-			[],
-		);
-
-		// When the type changes, fetch its default properties
-		React.useEffect(() => {
-			fetchTypeProperties(data.type);
-		}, [data.type, fetchTypeProperties]);
-
-		// Ref to hold the latest onCreated callback for create actions
-		const onCreatedRef = React.useRef<((id: string) => void) | null>(null);
-
-		// useSaveCallback must be called at the top level, not inside a callback
-		const { onSave } = useSaveCallback({
-			id: 'new',
-			entityName: 'InventoryItem',
+		const {
+			drawerId,
 			data,
-			initialData,
-			reload: () => onReload?.(),
-			mapper: (data) => ({
-				name: data.name,
-				barcode: data.barcode || undefined,
-				typeId: data.type || undefined,
-				locationId: data.location || undefined,
-				state: data.state || undefined,
-				properties: Array.isArray(data.properties)
-					? data.properties
-							.filter((p) => p.key && p.key.trim())
-							.map((p) => ({ key: p.key, value: p.value }))
-					: [],
-			}),
-			openCreated: (id) => {
-				if (onCreatedRef.current) {
-					onCreatedRef.current(id);
-				}
-			},
-		});
+			setData,
+			defaultPropertyKeys,
+			onSave,
+			onCreatedRef,
+			handleClose,
+		} = useInventoryItemDrawer({ ref, onReload });
 
 		// Helper to determine if a property key is a default (from type)
-		const isDefaultPropertyKey = (key: string) =>
-			defaultPropertyKeys.includes(key);
+		const isDefaultPropertyKey = useCallback(
+			(key: string) => defaultPropertyKeys.includes(key),
+			[defaultPropertyKeys],
+		);
 
 		/**
 		 * Adds a new custom property row (empty key/value) to the properties array.
 		 */
-		const handleAddCustomProperty = () => {
+		const handleAddCustomProperty = useCallback(() => {
 			setData((current) => ({
 				...current,
 				properties: [...(current.properties || []), { key: '', value: '' }],
 			}));
-		};
+		}, [setData]);
 
 		/**
 		 * Removes a property row by index. Allows removing both default and custom properties.
 		 * @param idx Index of the property to remove
 		 */
-		const handleRemoveProperty = (idx: number) => {
-			setData((current) => {
-				const next = [...(current.properties || [])];
-				next.splice(idx, 1);
-				return { ...current, properties: next };
-			});
-		};
+		const handleRemoveProperty = useCallback(
+			(idx: number) => {
+				setData((current) => {
+					const next = [...(current.properties || [])];
+					next.splice(idx, 1);
+					return { ...current, properties: next };
+				});
+			},
+			[setData],
+		);
 
 		/**
 		 * Updates a property key or value by index.
@@ -205,23 +247,22 @@ const EditInventoryItemDrawer = forwardRef(
 		 * @param field 'key' or 'value'
 		 * @param newValue New value for the field
 		 */
-		const handlePropertyChange = (
-			idx: number,
-			field: 'key' | 'value',
-			newValue: string,
-		) => {
-			setData((current) => {
-				const next = [...(current.properties || [])];
-				if (
-					field === 'key' && // Prevent duplicate keys
-					next.some((p, i) => i !== idx && p.key === newValue)
-				) {
-					return current;
-				}
-				next[idx] = { ...next[idx], [field]: newValue };
-				return { ...current, properties: next };
-			});
-		};
+		const handlePropertyChange = useCallback(
+			(idx: number, field: 'key' | 'value', newValue: string) => {
+				setData((current) => {
+					const next = [...(current.properties || [])];
+					if (
+						field === 'key' && // Prevent duplicate keys
+						next.some((p, i) => i !== idx && p.key === newValue)
+					) {
+						return current;
+					}
+					next[idx] = { ...next[idx], [field]: newValue };
+					return { ...current, properties: next };
+				});
+			},
+			[setData],
+		);
 
 		// State for loading status of create actions
 		const [creating, setCreating] = React.useState<'next' | 'open' | null>(
@@ -232,52 +273,30 @@ const EditInventoryItemDrawer = forwardRef(
 		 * Handler for creating an item and then resetting the form (Create & Next).
 		 * Shows a success toast and resets the form for a new item.
 		 */
-		const handleCreateAndNext = async () => {
+		const handleCreateAndNext = useCallback(async () => {
 			setCreating('next');
-			onCreatedRef.current = () => {};
-			try {
-				await onSave?.();
-				doToast({
-					message: 'Item created!',
-					type: 'success',
-					icon: CheckCircleIcon,
-				});
-				// Reset form to initial state
-				setData({ ...initialData });
-				// Optionally, refetch default properties if type is set
-				if (data.type) {
-					fetchTypeProperties(data.type);
-				}
-			} catch (error) {
-				console.error('Failed to create item', error);
-				doToast({ message: 'Failed to create item', type: 'danger' });
-			} finally {
+			onCreatedRef.current = () => {
 				setCreating(null);
 				onCreatedRef.current = null;
-			}
-		};
+			};
+			await onSave?.();
+		}, [onSave, onCreatedRef]);
 
 		/**
 		 * Handler for creating an item and navigating to its detail page (Create & Open).
 		 * Navigates to the new item's page on success.
 		 */
-		const handleCreateAndOpen = async () => {
+		const handleCreateAndOpen = useCallback(async () => {
 			setCreating('open');
 			onCreatedRef.current = (createdId) => {
 				if (createdId) {
 					router.push(`/inventory/item/${createdId}`);
 				}
-			};
-			try {
-				await onSave?.();
-			} catch (error) {
-				console.error('Failed to create item', error);
-				doToast({ message: 'Failed to create item', type: 'danger' });
-			} finally {
 				setCreating(null);
 				onCreatedRef.current = null;
-			}
-		};
+			};
+			await onSave?.();
+		}, [onSave, onCreatedRef, router]);
 
 		if (!data) {
 			return null;
@@ -287,7 +306,7 @@ const EditInventoryItemDrawer = forwardRef(
 			<Drawer
 				id={drawerId}
 				title={'New Item'}
-				subtitle={initialData?.name}
+				subtitle={data.name}
 				onClose={handleClose}
 				onCancel={handleClose}
 				cancelText="Cancel"
@@ -330,6 +349,50 @@ const EditInventoryItemDrawer = forwardRef(
 							}
 							placeholder="Barcode (optional)"
 						/>
+
+						<div>
+							<label className="block text-sm font-medium leading-6 text-gray-900 mb-1">
+								State
+							</label>
+							<div
+								className="flex space-x-1 bg-gray-100 p-1 rounded-lg"
+								role="group"
+								aria-label="Item state selector"
+							>
+								{(
+									[
+										{ value: 'NEW', label: 'New' },
+										{ value: 'DEFAULT', label: 'Active' },
+										{ value: 'BROKEN', label: 'Broken' },
+										{ value: 'REMOVED', label: 'Retired' },
+									] satisfies {
+										value: keyof typeof InventoryItemState;
+										label: string;
+									}[]
+								).map((option) => (
+									<button
+										key={option.value}
+										onClick={() =>
+											setData((current) => ({
+												...current,
+												state: option.value,
+											}))
+										}
+										type="button"
+										className={[
+											'px-3 py-2 text-sm font-medium rounded-md transition-colors focus:outline-none',
+											data.state === option.value
+												? 'bg-white text-gray-900 shadow-sm'
+												: 'text-gray-500 hover:text-gray-700',
+										].join(' ')}
+										aria-pressed={data.state === option.value}
+									>
+										{option.label}
+									</button>
+								))}
+							</div>
+						</div>
+
 						{/* Type select */}
 						<InventoryTypeSelect
 							value={data.type}
@@ -394,49 +457,6 @@ const EditInventoryItemDrawer = forwardRef(
 								>
 									+ Add property
 								</button>
-							</div>
-						</div>
-
-						<div>
-							<label className="block text-sm font-medium leading-6 text-gray-900 mb-1">
-								State
-							</label>
-							<div
-								className="flex space-x-1 bg-gray-100 p-1 rounded-lg"
-								role="group"
-								aria-label="Item state selector"
-							>
-								{(
-									[
-										{ value: 'NEW', label: 'New' },
-										{ value: 'DEFAULT', label: 'Active' },
-										{ value: 'BROKEN', label: 'Broken' },
-										{ value: 'REMOVED', label: 'Retired' },
-									] satisfies {
-										value: keyof typeof InventoryItemState;
-										label: string;
-									}[]
-								).map((option) => (
-									<button
-										key={option.value}
-										onClick={() =>
-											setData((current) => ({
-												...current,
-												state: option.value,
-											}))
-										}
-										type="button"
-										className={[
-											'px-3 py-2 text-sm font-medium rounded-md transition-colors focus:outline-none',
-											data.state === option.value
-												? 'bg-white text-gray-900 shadow-sm'
-												: 'text-gray-500 hover:text-gray-700',
-										].join(' ')}
-										aria-pressed={data.state === option.value}
-									>
-										{option.label}
-									</button>
-								))}
 							</div>
 						</div>
 					</div>

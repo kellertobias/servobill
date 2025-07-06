@@ -4,8 +4,10 @@ import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
 import useDebouncedMemo from '@sevenoutman/use-debounced-memo';
+import { XCircleIcon } from '@heroicons/react/20/solid';
 
 import { API, gql } from '@/api/index';
+import { doToast } from '@/components/toast';
 
 export type UseLoadData<T> = {
 	error: null | string;
@@ -84,6 +86,7 @@ export const useSaveCallback = <T>({
 	data,
 	initialData,
 	mapper,
+	onSaved,
 	openCreated,
 	reload,
 	hasChanges: hasChangesProp,
@@ -93,13 +96,16 @@ export const useSaveCallback = <T>({
 	data: T;
 	initialData: T;
 	mapper?: (data: Omit<NonNullable<T>, 'id'>) => unknown;
+	onSaved?: (id: string, data: T) => void;
 	openCreated?: (id: string) => void;
 	reload?: () => void;
 	hasChanges?: boolean;
 }) => {
 	const hasChanges =
 		hasChangesProp || useHasChanges(initialData as never, data as never);
+
 	const isNew = id === 'new';
+
 	const query = isNew
 		? gql(`mutation Create${entityName}($data: ${entityName}Input!) {
 		create: create${entityName}(data: $data) {
@@ -118,22 +124,36 @@ export const useSaveCallback = <T>({
 	const onSave =
 		hasChanges && data
 			? async () => {
-					// eslint-disable-next-line @typescript-eslint/no-unused-vars
-					const { id: dataId, ...rest } = data as T & { id: string };
-					const response = (await API.query({
-						query: query as never,
-						variables: {
-							id,
-							data: mapper ? mapper(rest) : rest,
-						},
-					})) as { create?: { id: string }; update?: { id: string } };
+					try {
+						// eslint-disable-next-line @typescript-eslint/no-unused-vars
+						const { id: dataId, ...rest } = data as T & { id: string };
+						const response = (await API.query({
+							query: query as never,
+							variables: {
+								id,
+								data: mapper ? mapper(rest) : rest,
+							},
+						})) as { create?: { id: string }; update?: { id: string } };
 
-					if (isNew) {
-						if (response.create?.id) {
-							openCreated?.(response.create?.id);
+						if (onSaved) {
+							onSaved(response.create?.id ?? response.update?.id ?? '', data);
 						}
-					} else {
-						reload?.();
+
+						if (isNew) {
+							if (response.create?.id) {
+								openCreated?.(response.create?.id);
+							}
+						} else {
+							reload?.();
+						}
+					} catch (error) {
+						// eslint-disable-next-line no-console
+						console.error(error);
+						doToast({
+							message: 'Failed to save',
+							type: 'danger',
+							icon: XCircleIcon,
+						});
 					}
 				}
 			: undefined;

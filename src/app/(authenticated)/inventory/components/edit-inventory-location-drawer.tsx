@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useCallback } from 'react';
 
 import { Drawer } from '@/components/drawer';
 import { Input } from '@/components/input';
@@ -7,6 +7,93 @@ import { useLoadData, useSaveCallback } from '@/hooks/load-data';
 
 import { useInventoryDrawer } from './use-inventory-drawer';
 import { InventoryLocationSelect } from './inventory-location-select';
+
+const useInventoryLocationDrawer = ({
+	ref,
+	onReload,
+}: {
+	ref: React.Ref<{ openDrawer: (id: string) => void }>;
+	onReload: () => void;
+}) => {
+	const { drawerId, handleClose, parentIdRef, reloadRef } = useInventoryDrawer({
+		ref,
+		onReload,
+	});
+
+	// useLoadData for fetching and managing location data
+	const { data, setData, initialData, reload, loading } = useLoadData(
+		async ({ locationId }) => {
+			if (!locationId) {
+				return null;
+			}
+			if (locationId === 'new') {
+				return {
+					id: 'new',
+					name: '',
+					barcode: '',
+					parent: parentIdRef.current ?? null,
+				};
+			}
+			// Fetch location detail
+			type LocationDetail = {
+				id: string;
+				name?: string;
+				barcode?: string;
+				parent?: string | null;
+			};
+			const res = await API.query({
+				query: gql(`
+						query InventoryLocationDetail($id: String!) {
+							inventoryLocation(id: $id) {
+								id
+								name
+								barcode
+								parent
+							}
+						}
+					`),
+				variables: { id: locationId },
+			});
+			const loc = (res.inventoryLocation || {}) as LocationDetail;
+			return {
+				id: loc.id,
+				name: loc.name || '',
+				barcode: loc.barcode || '',
+				parent: loc.parent || null,
+			};
+		},
+		{ locationId: drawerId },
+	);
+
+	// useSaveCallback for saving changes
+	const { onSave } = useSaveCallback({
+		id: drawerId || 'new',
+		entityName: 'InventoryLocation',
+		data,
+		initialData,
+		onSaved: () => {
+			reload();
+			onReload?.();
+		},
+		mapper: (data) => ({
+			name: data.name,
+			barcode: data.barcode || undefined,
+			parent: data.parent || undefined,
+		}),
+	});
+
+	return {
+		data,
+		setData,
+		initialData,
+		reload,
+		loading,
+		onSave,
+		drawerId,
+		handleClose,
+		reloadRef,
+	};
+};
 
 /**
  * Drawer component for editing an inventory location's properties: parent, name, barcode.
@@ -27,78 +114,39 @@ const EditInventoryLocationDrawer = forwardRef(
 		},
 		ref: React.Ref<{ openDrawer: (id: string) => void }>,
 	) => {
-		// Use a ref to store the pending parentId for new location creation
-		const pendingParentIdRef = React.useRef<string | undefined>();
-		React.useImperativeHandle(ref, () => ({
-			openDrawer: (id: string, parentId?: string) => {
-				pendingParentIdRef.current = parentId;
-				// @ts-expect-error: Imperative handle for drawer open
-				ref.current?.openDrawer(id);
-			},
-		}));
-		const { drawerId, handleClose } = useInventoryDrawer({ ref });
-
-		// useLoadData for fetching and managing location data
-		const { data, setData, initialData, reload, loading } = useLoadData(
-			async ({ locationId }) => {
-				if (!locationId) {
-					return null;
-				}
-				if (locationId === 'new') {
-					return {
-						id: 'new',
-						name: '',
-						barcode: '',
-						parent: pendingParentIdRef.current ?? null,
-					};
-				}
-				// Fetch location detail
-				type LocationDetail = {
-					id: string;
-					name?: string;
-					barcode?: string;
-					parent?: string | null;
-				};
-				const res = await API.query({
-					query: gql(`
-						query InventoryLocationDetail($id: String!) {
-							inventoryLocation(id: $id) {
-								id
-								name
-								barcode
-								parent
-							}
-						}
-					`),
-					variables: { id: locationId },
-				});
-				const loc = (res.inventoryLocation || {}) as LocationDetail;
-				return {
-					id: loc.id,
-					name: loc.name || '',
-					barcode: loc.barcode || '',
-					parent: loc.parent || null,
-				};
-			},
-			{ locationId: drawerId },
-		);
-
-		// useSaveCallback for saving changes
-		const { onSave } = useSaveCallback({
-			id: drawerId || 'new',
-			entityName: 'InventoryLocation',
+		const {
 			data,
+			setData,
 			initialData,
-			reload: () => {
-				reload();
-				onReload?.();
-			},
-			mapper: (data) => ({
-				name: data.name,
-				barcode: data.barcode || undefined,
-				parent: data.parent || undefined,
-			}),
+			loading,
+			onSave,
+			drawerId,
+			handleClose,
+			reloadRef,
+		} = useInventoryLocationDrawer({
+			ref,
+			onReload,
 		});
+
+		const drawerOnSave = useCallback(async () => {
+			await onSave?.();
+			handleClose();
+		}, [onSave, handleClose]);
+
+		const drawerOnDelete = useCallback(async () => {
+			await API.query({
+				query: gql(`
+					mutation DeleteInventoryLocation($id: String!) {
+						deleteInventoryLocation(id: $id)
+					}
+				`),
+				variables: {
+					id: data?.id,
+				},
+			});
+			reloadRef.current?.();
+			handleClose();
+		}, [data?.id, reloadRef, handleClose]);
 
 		if (!data) {
 			return null;
@@ -111,14 +159,7 @@ const EditInventoryLocationDrawer = forwardRef(
 				subtitle={initialData?.name}
 				onClose={handleClose}
 				onCancel={handleClose}
-				onSave={
-					onSave
-						? async () => {
-								await onSave?.();
-								handleClose();
-							}
-						: undefined
-				}
+				onSave={drawerOnSave}
 				saveText={loading ? 'Saving...' : 'Save'}
 				cancelText="Cancel"
 				deleteText={{
@@ -130,24 +171,7 @@ const EditInventoryLocationDrawer = forwardRef(
 						</>
 					),
 				}}
-				onDelete={
-					data.id === 'new'
-						? undefined
-						: async () => {
-								await API.query({
-									query: gql(`
-										mutation DeleteInventoryLocation($id: String!) {
-											deleteInventoryLocation(id: $id)
-										}
-									`),
-									variables: {
-										id: data.id,
-									},
-								});
-								onReload?.();
-								handleClose();
-							}
-				}
+				onDelete={drawerOnDelete}
 			>
 				<div className="divide-y divide-gray-200 px-4 sm:px-6">
 					<div className="space-y-6 pb-5 pt-6">

@@ -198,7 +198,7 @@ export default function InventoryItemDetailPage({
 
 	return (
 		<PageContent
-			title={`Inventory Item: ${data.barcode || data.id}`}
+			title={`Inventory Item: ${data.barcode || data.name}`}
 			noPadding
 			contentClassName="px-6 pt-6"
 		>

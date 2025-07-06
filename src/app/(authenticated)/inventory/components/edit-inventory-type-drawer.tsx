@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useCallback } from 'react';
 
 import { Drawer } from '@/components/drawer';
 import { Input } from '@/components/input';
@@ -23,6 +23,115 @@ type InventoryTypeDrawerData = {
 	parentName?: string;
 };
 
+const useInventoryTypeDrawer = ({
+	ref,
+	onReload,
+}: {
+	ref: React.Ref<{ openDrawer: (id: string) => void }>;
+	onReload: () => void;
+}) => {
+	const { drawerId, handleClose, parentIdRef, reloadRef } = useInventoryDrawer({
+		ref,
+		onReload,
+	});
+
+	// useLoadData for fetching and managing type data
+	const { data, setData, initialData, reload, loading } = useLoadData<
+		InventoryTypeDrawerData,
+		{ typeId: string }
+	>(
+		async ({ typeId }) => {
+			if (!typeId) {
+				return null;
+			}
+			const empty = {
+				id: 'new',
+				name: '',
+				checkInterval: undefined,
+				checkType: '',
+				properties: [],
+				parent: parentIdRef.current,
+				parentName: undefined,
+			};
+
+			if (typeId === 'new') {
+				return empty;
+			}
+
+			const res = await API.query({
+				query: gql(`
+					query InventoryTypeDetail($id: String!) {
+						inventoryType(id: $id) {
+							id
+							name
+							checkInterval
+							checkType
+							properties
+							parent
+						}
+					}
+				`),
+				variables: { id: typeId },
+			});
+
+			if (!res || !res.inventoryType) {
+				throw new Error('Inventory type not found');
+			}
+			const { inventoryType } = res;
+			return {
+				id: inventoryType.id,
+				name: inventoryType.name,
+				checkInterval: inventoryType.checkInterval
+					? Number(inventoryType.checkInterval).toFixed(0)
+					: undefined,
+				checkType: inventoryType.checkType ?? undefined,
+				properties: inventoryType.properties,
+				parent: inventoryType.parent ?? undefined,
+				parentName: undefined,
+			};
+		},
+		{ typeId: drawerId ?? 'new' },
+	);
+
+	// useSaveCallback for saving changes
+	const { onSave } = useSaveCallback({
+		id: drawerId || 'new',
+		entityName: 'InventoryType',
+		data,
+		initialData,
+		onSaved: () => {
+			reload();
+			reloadRef.current?.();
+		},
+		mapper: (d) => ({
+			name: d.name,
+			checkInterval:
+				d.checkInterval === undefined ||
+				d.checkInterval === null ||
+				d.checkInterval === ''
+					? null
+					: Number(d.checkInterval),
+			checkType: d.checkType || null,
+			properties: Array.isArray(d.properties)
+				? d.properties.filter((p: string) => p && p.trim())
+				: [],
+			parent: d.parent === '' || d.parent === undefined ? undefined : d.parent,
+		}),
+	});
+
+	return {
+		data,
+		setData,
+		initialData,
+		reload,
+		loading,
+		onSave,
+		drawerId,
+		handleClose,
+		reloadRef,
+	};
+};
+
 /**
  * Drawer component for editing an inventory type's properties.
  * Now supports editing name, checkInterval, checkType, and properties (array of string),
@@ -41,131 +150,77 @@ const EditInventoryTypeDrawer = forwardRef(
 		},
 		ref: React.Ref<{ openDrawer: (id: string) => void }>,
 	) => {
-		// Use a ref to store the pending parentId for new type creation
-		const pendingParentIdRef = React.useRef<string | undefined>();
-		React.useImperativeHandle(ref, () => ({
-			openDrawer: (id: string, parentId?: string) => {
-				pendingParentIdRef.current = parentId;
-				// @ts-expect-error: Imperative handle for drawer open
-				ref.current?.openDrawer(id);
-			},
-		}));
-		const { drawerId, handleClose } = useInventoryDrawer({ ref });
-
-		// useLoadData for fetching and managing type data
-		const { data, setData, initialData, reload, loading } = useLoadData<
-			InventoryTypeDrawerData,
-			{ typeId: string }
-		>(
-			async ({ typeId }) => {
-				if (!typeId) {
-					return null;
-				}
-				const empty = {
-					id: 'new',
-					name: '',
-					checkInterval: undefined,
-					checkType: '',
-					properties: [],
-					parent: pendingParentIdRef.current,
-					parentName: undefined,
-				};
-
-				if (typeId === 'new') {
-					return empty;
-				}
-
-				const res = await API.query({
-					query: gql(`
-						query InventoryTypeDetail($id: String!) {
-							inventoryType(id: $id) {
-								id
-								name
-								checkInterval
-								checkType
-								properties
-								parent
-							}
-						}
-					`),
-					variables: { id: typeId },
-				});
-
-				if (!res || !res.inventoryType) {
-					throw new Error('Inventory type not found');
-				}
-				const { inventoryType } = res;
-				return {
-					id: inventoryType.id,
-					name: inventoryType.name,
-					checkInterval: inventoryType.checkInterval
-						? Number(inventoryType.checkInterval).toFixed(0)
-						: undefined,
-					checkType: inventoryType.checkType ?? undefined,
-					properties: inventoryType.properties,
-					parent: inventoryType.parent ?? undefined,
-					parentName: undefined,
-				};
-			},
-			{ typeId: drawerId ?? 'new' },
-		);
-
-		// useSaveCallback for saving changes
-		const { onSave } = useSaveCallback({
-			id: drawerId || 'new',
-			entityName: 'InventoryType',
+		const {
 			data,
+			setData,
 			initialData,
-			reload: () => {
-				reload();
-				onReload?.();
-			},
-			mapper: (d) => ({
-				name: d.name,
-				checkInterval:
-					d.checkInterval === undefined ||
-					d.checkInterval === null ||
-					d.checkInterval === ''
-						? null
-						: Number(d.checkInterval),
-				checkType: d.checkType || null,
-				properties: Array.isArray(d.properties)
-					? d.properties.filter((p: string) => p && p.trim())
-					: [],
-				parent:
-					d.parent === '' || d.parent === undefined ? undefined : d.parent,
-			}),
+			loading,
+			onSave,
+			drawerId,
+			handleClose,
+			reloadRef,
+		} = useInventoryTypeDrawer({
+			ref,
+			onReload,
 		});
 
 		// --- UI for properties array ---
-		const handlePropertyChange = (idx: number, value: string) => {
-			setData((current) => {
-				if (!current) {
-					return current;
-				}
-				const next = [...(current.properties || [])];
-				next[idx] = value ?? '';
-				return { ...current, properties: next };
-			});
-		};
-		const handleAddProperty = () => {
+		const handlePropertyChange = useCallback(
+			(idx: number, value: string) => {
+				setData((current) => {
+					if (!current) {
+						return current;
+					}
+					const next = [...(current.properties || [])];
+					next[idx] = value ?? '';
+					return { ...current, properties: next };
+				});
+			},
+			[setData],
+		);
+
+		const handleAddProperty = useCallback(() => {
 			setData((current) => {
 				if (!current) {
 					return current;
 				}
 				return { ...current, properties: [...(current.properties || []), ''] };
 			});
-		};
-		const handleRemoveProperty = (idx: number) => {
-			setData((current) => {
-				if (!current) {
-					return current;
+		}, [setData]);
+
+		const handleRemoveProperty = useCallback(
+			(idx: number) => {
+				setData((current) => {
+					if (!current) {
+						return current;
+					}
+					const next = [...(current.properties || [])];
+					next.splice(idx, 1);
+					return { ...current, properties: next };
+				});
+			},
+			[setData],
+		);
+
+		const drawerOnSave = useCallback(async () => {
+			await onSave?.();
+			handleClose();
+		}, [onSave, handleClose]);
+
+		const drawerOnDelete = useCallback(async () => {
+			await API.query({
+				query: gql(`
+				mutation DeleteInventoryType($id: String!) {
+					deleteInventoryType(id: $id)
 				}
-				const next = [...(current.properties || [])];
-				next.splice(idx, 1);
-				return { ...current, properties: next };
+			`),
+				variables: {
+					id: data?.id,
+				},
 			});
-		};
+			reloadRef.current?.();
+			handleClose();
+		}, [data?.id, reloadRef, handleClose]);
 
 		if (!data) {
 			return null;
@@ -178,14 +233,7 @@ const EditInventoryTypeDrawer = forwardRef(
 				subtitle={initialData?.name}
 				onClose={handleClose}
 				onCancel={handleClose}
-				onSave={
-					onSave
-						? async () => {
-								await onSave?.();
-								handleClose();
-							}
-						: undefined
-				}
+				onSave={drawerOnSave}
 				saveText={loading ? 'Saving...' : 'Save'}
 				cancelText="Cancel"
 				deleteText={{
@@ -197,24 +245,7 @@ const EditInventoryTypeDrawer = forwardRef(
 						</>
 					),
 				}}
-				onDelete={
-					data.id === 'new'
-						? undefined
-						: async () => {
-								await API.query({
-									query: gql(`
-									mutation DeleteInventoryType($id: String!) {
-										deleteInventoryType(id: $id)
-									}
-								`),
-									variables: {
-										id: data.id,
-									},
-								});
-								onReload?.();
-								handleClose();
-							}
-				}
+				onDelete={drawerOnDelete}
 			>
 				<div className="divide-y divide-gray-200 px-4 sm:px-6">
 					<div className="space-y-6 pb-5 pt-6">
