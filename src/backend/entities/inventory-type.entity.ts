@@ -44,7 +44,16 @@ export class InventoryTypeEntity extends DomainEntity {
 	 * Updates the check interval for this inventory type
 	 * @param checkInterval The check interval in days
 	 */
-	public updateCheckInterval(checkInterval: number): void {
+	public updateCheckInterval(checkInterval: number | null | undefined): void {
+		if (typeof checkInterval !== 'number') {
+			throw new TypeError('Check interval must be a number');
+		}
+		if (checkInterval < 0) {
+			throw new RangeError('Check interval must be greater than 0');
+		}
+		if (checkInterval === null || checkInterval === undefined) {
+			checkInterval = undefined;
+		}
 		this.checkInterval = checkInterval;
 		this.updatedAt = new Date();
 	}
@@ -53,7 +62,13 @@ export class InventoryTypeEntity extends DomainEntity {
 	 * Updates the check type for this inventory type
 	 * @param checkType The type of check to perform
 	 */
-	public updateCheckType(checkType: string): void {
+	public updateCheckType(checkType: string | null | undefined): void {
+		if (checkType && typeof checkType !== 'string') {
+			throw new TypeError('Check type must be a string');
+		}
+		if (checkType === null || checkType === undefined) {
+			checkType = undefined;
+		}
 		this.checkType = checkType;
 		this.updatedAt = new Date();
 	}
