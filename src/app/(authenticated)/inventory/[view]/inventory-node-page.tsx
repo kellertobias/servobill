@@ -6,12 +6,14 @@ import { notFound, useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { PencilIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { QrCodeIcon } from '@heroicons/react/20/solid';
 
 import { PageCard, PageContent } from '@/components/page';
 import { Button } from '@/components/button';
 import { API, gql } from '@/api/index';
 import { exportInventory } from '@/api/import-export/inventory-export';
 import { importInventoryItemsFromCSV } from '@/api/import-export/inventory-import-csv';
+import { importInventoryLocationsAndTypesFromJSON } from '@/api/import-export/inventory-import-json';
 
 import { InventoryHeader } from '../components/inventory-header';
 import { InventoryTypesTable } from '../components/inventory-types-table';
@@ -75,7 +77,7 @@ function useNodeInventoryItems(
 			const res = await API.query({
 				query: gql(`
 					query NodeInventoryItems($where: InventoryItemWhereInput) {
-						inventoryItems(where: $where) {
+						inventoryItems(where: $where, limit: 50) {
 							id
 							name
 							barcode
@@ -312,6 +314,7 @@ export default function InventoryNodePage({
 				right={
 					<>
 						<div className="flex flex-row gap-2 mb-4">
+							<Button icon={QrCodeIcon} href="/inventory/scan" header />
 							<Button
 								icon={PlusIcon}
 								onClick={openNewItemDrawer}
@@ -344,6 +347,18 @@ export default function InventoryNodePage({
 								}}
 							>
 								Import from CSV
+							</a>{' '}
+							&bull;{' '}
+							<a
+								className="text-xs text-gray-500 hover:text-gray-900 cursor-pointer"
+								onClick={async () => {
+									await importInventoryLocationsAndTypesFromJSON();
+									// wait 3 seconds
+									await new Promise((resolve) => setTimeout(resolve, 3000));
+									reload();
+								}}
+							>
+								Import from Types & Locations from JSON
 							</a>{' '}
 							&bull;{' '}
 							<a
