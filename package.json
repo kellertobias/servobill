@@ -78,6 +78,7 @@
     "react-hot-toast": "^2.4.1",
     "react-modal-hook": "^3.0.2",
     "react-popper": "^2.3.0",
+    "react-qr-code": "^2.0.18",
     "reflect-metadata": "^0.2.1",
     "sst": "3.17.3",
     "tailwind-datepicker-react": "^1.4.3",

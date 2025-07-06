@@ -68,10 +68,10 @@ export const InventoryActivityForm: React.FC<InventoryActivityFormProps> = ({
 				});
 				await API.query({
 					query: gql(`
-            mutation AddInventoryCheck($id: String!, $state: InventoryCheckState!, $note: String) {
-              addInventoryCheck(id: $id, state: $state, note: $note)
-            }
-          `),
+						mutation AddInventoryCheck($id: String!, $state: InventoryCheckState!, $note: String) {
+							addInventoryCheck(id: $id, state: $state, note: $note)
+						}
+          			`),
 					variables: {
 						id: itemId,
 						state: checkState,

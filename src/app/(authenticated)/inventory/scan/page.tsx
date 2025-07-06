@@ -4,8 +4,10 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import clsx from 'clsx';
+import QRCode from 'react-qr-code';
 
 import { API, gql } from '@/api/index';
+import { doToast } from '@/components/toast';
 
 import { InventoryActivityForm } from '../item/[itemId]/components/inventory-activity-form';
 
@@ -19,6 +21,20 @@ const Scanner = dynamic(
 	() => import('@yudiel/react-qr-scanner').then((mod) => mod.Scanner),
 	{ ssr: false },
 );
+
+/**
+ * Utility to detect if the user is on a desktop device.
+ * Uses window.matchMedia to check for pointer and hover capabilities.
+ * Returns true for desktop, false for touch/mobile/tablet.
+ */
+function isDesktop() {
+	if (typeof window === 'undefined') {
+		return false;
+	}
+	return window.matchMedia(
+		'(hover: hover) and (pointer: fine) and (min-width: 768px)',
+	).matches;
+}
 
 /**
  * Inventory scanner page for /inventory/scan.
@@ -41,6 +57,7 @@ export default function InventoryScanPage() {
 	const [useCamera, setUseCamera] = useState(true); // true = camera, false = manual input
 	const router = useRouter();
 	const inputRef = useRef<HTMLInputElement>(null);
+	const [isDesktopDevice, setIsDesktopDevice] = useState(false);
 
 	// On mount, restore scanner mode from localStorage
 	useEffect(() => {
@@ -55,18 +72,71 @@ export default function InventoryScanPage() {
 		localStorage.setItem('inventoryScanMode', useCamera ? 'camera' : 'manual');
 	}, [useCamera]);
 
+	// Detect desktop on mount and on resize
+	useEffect(() => {
+		const checkDesktop = () => setIsDesktopDevice(isDesktop());
+		checkDesktop();
+		window.addEventListener('resize', checkDesktop);
+		return () => window.removeEventListener('resize', checkDesktop);
+	}, []);
+
+	// Action QR code definitions
+	const quickActions = [
+		{ label: 'Quick Add Pass', value: 'action: pass' },
+		{ label: 'Quick Add Retest', value: 'action: retest' },
+		{ label: 'Quick Add Failed', value: 'action: fail' },
+	];
+
 	/**
 	 * Handles scanning (from camera or manual input)
 	 * @param code Barcode/QR code string
 	 */
-	const handleScan = useCallback(async (code: string) => {
-		setScannedCode(code);
-		setLoading(true);
-		setNotFound(false);
-		setItem(null);
-		// Lookup item by barcode
-		const res = await API.query({
-			query: gql(`
+	const handleScan = useCallback(
+		async (code: string) => {
+			// Check for quick action QR codes
+			if (
+				(code === 'action: pass' ||
+					code === 'action: retest' ||
+					code === 'action: fail') && // Only submit if an item is loaded
+				item
+			) {
+				const stateMap = {
+					'action: pass': 'PASS',
+					'action: retest': 'RECHECK',
+					'action: fail': 'FAIL',
+				};
+
+				await API.query({
+					query: gql(`
+						mutation AddInventoryCheck($id: String!, $state: InventoryCheckState!, $note: String) {
+							addInventoryCheck(id: $id, state: $state, note: $note)
+						}
+          			`),
+					variables: {
+						id: item.id,
+						state: stateMap[code],
+						note: `Quick action via Scan`,
+					},
+				});
+
+				doToast({
+					title: 'Quick action added',
+					message: `Quick action ${stateMap[code]} added for ${item.name}`,
+					type: 'success',
+				});
+
+				setScannedCode(null);
+				setNotFound(false);
+
+				return;
+			}
+			setScannedCode(code);
+			setLoading(true);
+			setNotFound(false);
+			setItem(null);
+			// Lookup item by barcode
+			const res = await API.query({
+				query: gql(`
                 query FindInventoryItem($barcode: String!) {
                     inventoryItem( barcode: $barcode ) {
                         id
@@ -80,14 +150,16 @@ export default function InventoryScanPage() {
                     }
                 }
             `),
-			variables: { barcode: code },
-		});
-		const found = res.inventoryItem || null;
+				variables: { barcode: code },
+			});
+			const found = res.inventoryItem || null;
 
-		setItem(found);
-		setNotFound(!found);
-		setLoading(false);
-	}, []);
+			setItem(found);
+			setNotFound(!found);
+			setLoading(false);
+		},
+		[item],
+	);
 
 	/**
 	 * Focuses the manual input field (if present)
@@ -143,34 +215,52 @@ export default function InventoryScanPage() {
 						/>
 					) : (
 						// Manual input field for barcode/QR code
-						<form
-							className="w-full max-w-xs flex flex-row gap-2 items-center"
-							onSubmit={async (e) => {
-								e.preventDefault();
-								const value = inputRef.current?.value?.trim();
-								if (inputRef.current && value) {
-									await handleScan(value);
-									inputRef.current.value = '';
-								}
-							}}
-						>
-							<input
-								ref={inputRef}
-								type="text"
-								placeholder={scannedCode || 'Enter barcode or QR code'}
-								className="border rounded px-3 py-2 w-full text-center text-lg font-mono focus:outline-none focus:ring-2 focus:ring-blue-400"
-								disabled={loading}
-								defaultValue={scannedCode || ''}
-								autoFocus
-							/>
-							<button
-								type="submit"
-								className="px-4 py-2.5 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300"
-								disabled={loading}
+						<>
+							<form
+								className="w-full max-w-xs flex flex-row gap-2 items-center"
+								onSubmit={async (e) => {
+									e.preventDefault();
+									const value = inputRef.current?.value?.trim();
+									if (inputRef.current && value) {
+										await handleScan(value);
+										inputRef.current.value = '';
+									}
+								}}
 							>
-								Scan
-							</button>
-						</form>
+								<input
+									ref={inputRef}
+									type="text"
+									placeholder={scannedCode || 'Enter barcode or QR code'}
+									className="border rounded px-3 py-2 w-full text-center text-lg font-mono focus:outline-none focus:ring-2 focus:ring-blue-400"
+									disabled={loading}
+									defaultValue={scannedCode || ''}
+									autoFocus
+								/>
+								<button
+									type="submit"
+									className="px-4 py-2.5 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300"
+									disabled={loading}
+								>
+									Scan
+								</button>
+							</form>
+							{/* Render quick action QR codes for desktop/manual mode */}
+							{isDesktopDevice && (
+								<div className="flex flex-row gap-6 mt-6 w-full justify-between px-20">
+									{quickActions.map((action) => (
+										<div
+											key={action.value}
+											className="flex flex-col items-center"
+										>
+											<QRCode value={action.value} size={80} />
+											<span className="mt-2 text-xs text-gray-700 font-medium text-center">
+												{action.label}
+											</span>
+										</div>
+									))}
+								</div>
+							)}
+						</>
 					)}
 					{useCamera && scannedCode && (
 						<div className="mt-2 px-3 py-1 bg-gray-200 rounded text-sm font-mono text-gray-700">
