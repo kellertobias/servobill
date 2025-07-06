@@ -1,3 +1,15 @@
+## [1.8.0](https://github.com/kellertobias/servobill/compare/v1.7.0...v1.8.0) (2025-07-06)
+
+
+### ✨ Features
+
+* enhance inventory item creation with new actions and UI updates ([225d42f](https://github.com/kellertobias/servobill/commit/225d42fdff0dd2e17028d3212de81075566a075f))
+
+
+### 🐛 Bug Fixes
+
+* dynamodb inventory creation ([d337e90](https://github.com/kellertobias/servobill/commit/d337e9007f5bcf97034e84de105918d0908e6cdf))
+
 ## [1.7.0](https://github.com/kellertobias/servobill/compare/v1.6.0...v1.7.0) (2025-07-06)
 
 
