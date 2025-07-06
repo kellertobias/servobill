@@ -1,3 +1,32 @@
+## [1.9.0](https://github.com/kellertobias/servobill/compare/v1.8.0...v1.9.0) (2025-07-06)
+
+
+### ✨ Features
+
+* add inventory type & location import ([c8a7320](https://github.com/kellertobias/servobill/commit/c8a7320ffda02b1b1c1633537f69bbb0199e463d))
+* allow AI receipt extraction to know about currencies ([0e3cb00](https://github.com/kellertobias/servobill/commit/0e3cb002c2ea2320e8111b6c1d03a7facd1143f5))
+* code scanner for inventory ([a33ae9f](https://github.com/kellertobias/servobill/commit/a33ae9f9d425c6e0cca45a335dc379b9c64dfd62))
+* import inventory from csv ([59da7b1](https://github.com/kellertobias/servobill/commit/59da7b1f0660af20f08bea5a59466d11afc49187))
+* keyboard/ handscanner code entry for inventory scan search ([754b9ea](https://github.com/kellertobias/servobill/commit/754b9ead86866a549d264745355889a58d2a211b))
+* scanner only interface for faster stocktaking and item maintenance tracking ([f6ada0a](https://github.com/kellertobias/servobill/commit/f6ada0a667c0ce04eb0eb3c47d86d94ee0cf8288))
+
+
+### 🐛 Bug Fixes
+
+* add missing packet ([9aa31fd](https://github.com/kellertobias/servobill/commit/9aa31fd5e7467d56d2e6b75fc8c17e5669add872))
+* do not reset full form on "save & next" to speed up rapid item creation ([ebc083a](https://github.com/kellertobias/servobill/commit/ebc083a57467f1e95db3f66be2ccb9cfa86c11d9))
+* improve readability and debug items not reloading after save ([3ef2e81](https://github.com/kellertobias/servobill/commit/3ef2e81c6382d5d36276e0d5274c75ffbd6c331f))
+* improve validation for checkInterval and checkType in InventoryTypeEntity ([d09cb39](https://github.com/kellertobias/servobill/commit/d09cb392ac1758aa0d5f54ee0778735369330ea7))
+* limit results to 50 ([eb0ba1f](https://github.com/kellertobias/servobill/commit/eb0ba1fb4d46a07257e3ac4b9062d712d55ec4c6))
+* linter suggests spread over concat ([d7fb52d](https://github.com/kellertobias/servobill/commit/d7fb52d79c2992ee56c886f56871780007216512))
+* remove unused variables ([04ee2f2](https://github.com/kellertobias/servobill/commit/04ee2f2a7e7f484157b3868c00673f2523b1af5f))
+* update checkInterval handling in inventory type drawer ([97e3022](https://github.com/kellertobias/servobill/commit/97e30223adcd95038e244013138fbfa2c7a1ac07))
+
+
+### ♻️ Code Refactoring
+
+* implement consistent error formatting for GraphQL server ([eca6cc4](https://github.com/kellertobias/servobill/commit/eca6cc4f013e29c4e39b501be84f07ea91e3da79))
+
 ## [1.8.0](https://github.com/kellertobias/servobill/compare/v1.7.0...v1.8.0) (2025-07-06)
 
 
