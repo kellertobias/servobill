@@ -1,10 +1,14 @@
 import React, { forwardRef } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+
+import { CheckCircleIcon } from '@heroicons/react/20/solid';
 
 import { Drawer } from '@/components/drawer';
 import { Input } from '@/components/input';
 import { useSaveCallback } from '@/hooks/load-data';
 import { API, gql } from '@/api/index';
+import { doToast } from '@/components/toast';
+import { Button } from '@/components/button';
 
 import { useInventoryDrawer } from './use-inventory-drawer';
 import { InventoryTypeSelect } from './inventory-type-select';
@@ -47,6 +51,8 @@ const EditInventoryItemDrawer = forwardRef(
 		 * This allows us to pre-select type/location when creating a new item.
 		 */
 		const params = useParams() as { view?: string; id?: string };
+
+		const router = useRouter();
 
 		React.useImperativeHandle(ref, () => ({
 			openDrawer: (id: string, parentId?: string) => {
@@ -137,15 +143,16 @@ const EditInventoryItemDrawer = forwardRef(
 			fetchTypeProperties(data.type);
 		}, [data.type, fetchTypeProperties]);
 
-		// useSaveCallback for saving changes
+		// Ref to hold the latest onCreated callback for create actions
+		const onCreatedRef = React.useRef<((id: string) => void) | null>(null);
+
+		// useSaveCallback must be called at the top level, not inside a callback
 		const { onSave } = useSaveCallback({
 			id: 'new',
 			entityName: 'InventoryItem',
 			data,
 			initialData,
-			reload: () => {
-				onReload?.();
-			},
+			reload: () => onReload?.(),
 			mapper: (data) => ({
 				name: data.name,
 				barcode: data.barcode || undefined,
@@ -158,6 +165,11 @@ const EditInventoryItemDrawer = forwardRef(
 							.map((p) => ({ key: p.key, value: p.value }))
 					: [],
 			}),
+			openCreated: (id) => {
+				if (onCreatedRef.current) {
+					onCreatedRef.current(id);
+				}
+			},
 		});
 
 		// Helper to determine if a property key is a default (from type)
@@ -211,6 +223,62 @@ const EditInventoryItemDrawer = forwardRef(
 			});
 		};
 
+		// State for loading status of create actions
+		const [creating, setCreating] = React.useState<'next' | 'open' | null>(
+			null,
+		);
+
+		/**
+		 * Handler for creating an item and then resetting the form (Create & Next).
+		 * Shows a success toast and resets the form for a new item.
+		 */
+		const handleCreateAndNext = async () => {
+			setCreating('next');
+			onCreatedRef.current = () => {};
+			try {
+				await onSave?.();
+				doToast({
+					message: 'Item created!',
+					type: 'success',
+					icon: CheckCircleIcon,
+				});
+				// Reset form to initial state
+				setData({ ...initialData });
+				// Optionally, refetch default properties if type is set
+				if (data.type) {
+					fetchTypeProperties(data.type);
+				}
+			} catch (error) {
+				console.error('Failed to create item', error);
+				doToast({ message: 'Failed to create item', type: 'danger' });
+			} finally {
+				setCreating(null);
+				onCreatedRef.current = null;
+			}
+		};
+
+		/**
+		 * Handler for creating an item and navigating to its detail page (Create & Open).
+		 * Navigates to the new item's page on success.
+		 */
+		const handleCreateAndOpen = async () => {
+			setCreating('open');
+			onCreatedRef.current = (createdId) => {
+				if (createdId) {
+					router.push(`/inventory/item/${createdId}`);
+				}
+			};
+			try {
+				await onSave?.();
+			} catch (error) {
+				console.error('Failed to create item', error);
+				doToast({ message: 'Failed to create item', type: 'danger' });
+			} finally {
+				setCreating(null);
+				onCreatedRef.current = null;
+			}
+		};
+
 		if (!data) {
 			return null;
 		}
@@ -222,16 +290,27 @@ const EditInventoryItemDrawer = forwardRef(
 				subtitle={initialData?.name}
 				onClose={handleClose}
 				onCancel={handleClose}
-				onSave={
-					onSave
-						? async () => {
-								await onSave?.();
-								handleClose();
-							}
-						: undefined
-				}
-				saveText={'Create'}
 				cancelText="Cancel"
+				customButtons={
+					<div className="flex gap-2 justify-end">
+						<Button
+							onClick={handleCreateAndNext}
+							primary
+							loading={creating === 'next'}
+							disabled={creating !== null}
+						>
+							Create & Next
+						</Button>
+						<Button
+							onClick={handleCreateAndOpen}
+							success
+							loading={creating === 'open'}
+							disabled={creating !== null}
+						>
+							Create & Open
+						</Button>
+					</div>
+				}
 			>
 				<div className="divide-y divide-gray-200 px-4 sm:px-6">
 					<div className="space-y-6 pb-5 pt-6">

@@ -168,6 +168,8 @@ export class InventoryResolver {
 				data.properties?.map((prop) => [prop.key, prop.value]) || [],
 			);
 
+			item.history = [];
+
 			await this.inventoryItemRepository.save(item);
 			return this.mapToGraphQL(item);
 		} catch (error) {
@@ -227,12 +229,6 @@ export class InventoryResolver {
 				existingItem.updateTypeId(data.typeId);
 			}
 			if (data.state !== undefined) {
-				// if state changes, add a history entry
-				if (existingItem.state !== data.state) {
-					existingItem.addNote(
-						`State changed from ${existingItem.state} to ${data.state}`,
-					);
-				}
 				existingItem.updateState(data.state);
 			}
 

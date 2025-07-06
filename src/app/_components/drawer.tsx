@@ -21,6 +21,7 @@ export function Drawer(props: {
 	};
 	cancelText?: string;
 	saveText?: string;
+	customButtons?: React.ReactNode;
 }) {
 	const { title, subtitle, children, onClose, id } = props;
 
@@ -148,16 +149,17 @@ export function Drawer(props: {
 											)}
 											<div className="flex flex-shrink-0 justify-end gap-2">
 												<Button
-													primary={!props.onSave}
-													secondary={!!props.onSave}
+													primary={!props.onSave && !props.customButtons}
+													secondary={!!props.onSave || !!props.customButtons}
 													onClick={() => {
 														props.onCancel?.();
 														setOpen(false);
 													}}
 												>
-													{props.cancelText || !props.onSave
-														? 'Close'
-														: 'Cancel'}
+													{props.cancelText ??
+														(!props.onSave && !props.customButtons
+															? 'Close'
+															: 'Cancel')}
 												</Button>
 
 												{props.onSave && (
@@ -175,6 +177,7 @@ export function Drawer(props: {
 														{props.saveText || 'Save'}
 													</Button>
 												)}
+												{props.customButtons}
 											</div>
 										</div>
 									</form>

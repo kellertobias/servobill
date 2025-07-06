@@ -89,6 +89,7 @@ export class InventoryItemEntity extends DomainEntity {
 			return;
 		}
 
+		const oldState = this.state;
 		this.state = newState;
 		this.updatedAt = new Date();
 
@@ -96,7 +97,7 @@ export class InventoryItemEntity extends DomainEntity {
 		this.history.push({
 			type: InventoryHistoryType.STATE_CHANGE,
 			date: new Date(),
-			note: note || `State changed from ${this.state} to ${newState}`,
+			note: note || `State changed from ${oldState} to ${newState}`,
 		});
 	}
 
