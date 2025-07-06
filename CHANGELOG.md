@@ -1,3 +1,18 @@
+## [1.7.0](https://github.com/kellertobias/servobill/compare/v1.6.0...v1.7.0) (2025-07-06)
+
+
+### ✨ Features
+
+* add UPDATE type to inventory history and enhance activity feed ([a55d014](https://github.com/kellertobias/servobill/commit/a55d014b1e3aa9f3fb3c06a909c0a316666a334d))
+* enhance inventory list data loading with search functionality ([944c0a4](https://github.com/kellertobias/servobill/commit/944c0a42e978f0c4897c93aa7393f3847afcc7e2))
+* finalize inventory MVP with item search ([b1bfe85](https://github.com/kellertobias/servobill/commit/b1bfe857fd29230d19ede57f488b555257e45cf2))
+* implement inventory activity feed and form components with history management ([2bf0268](https://github.com/kellertobias/servobill/commit/2bf0268003154f16c0a328908cbadd09da7c7e37))
+
+
+### 🐛 Bug Fixes
+
+* prevent unnecessary status updates in inventory item detail page ([a13c300](https://github.com/kellertobias/servobill/commit/a13c300b67c9eb159c54ef15e6bf182d190f00ef))
+
 ## [1.6.0](https://github.com/kellertobias/servobill/compare/v1.5.0...v1.6.0) (2025-07-03)
 
 
