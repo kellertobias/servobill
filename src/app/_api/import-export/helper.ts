@@ -1,3 +1,5 @@
+import Papa from 'papaparse';
+
 import { doToast } from '@/components/toast';
 
 export const requestFile = async () => {
@@ -57,3 +59,70 @@ export const downloadFile = (options: {
 	linkElement.setAttribute('download', options.filename);
 	linkElement.click();
 };
+
+/**
+ * Parses a CSV string or File in the browser and returns an array of objects keyed by header.
+ * Uses PapaParse if available, otherwise falls back to a simple parser (not RFC-complete).
+ * @param fileOrString - The File object or CSV string to parse
+ * @returns Promise resolving to an array of objects (rows)
+ */
+export async function parseCsvFileOrString(
+	fileOrString: File | string,
+): Promise<Record<string, string>[]> {
+	// Try to use PapaParse if available (recommended for robust parsing)
+	try {
+		return await new Promise((resolve, reject) => {
+			if (typeof fileOrString === 'string') {
+				const result = Papa.parse(fileOrString, {
+					header: true,
+					skipEmptyLines: true,
+					transformHeader: (header) => header.trim().toLowerCase(),
+				});
+				if (result.errors && result.errors.length > 0) {
+					reject(result.errors);
+				} else {
+					resolve(result.data as Record<string, string>[]);
+				}
+			} else {
+				Papa.parse(fileOrString, {
+					header: true,
+					skipEmptyLines: true,
+					transformHeader: (header) => header.trim().toLowerCase(),
+					complete: (results: {
+						data: Record<string, string>[];
+						errors: unknown[];
+					}) => {
+						if (results.errors && results.errors.length > 0) {
+							reject(results.errors);
+						} else {
+							resolve(results.data);
+						}
+					},
+					error: reject,
+				});
+			}
+		});
+	} catch {
+		// Fallback: very basic CSV parser (assumes comma, no quoted fields)
+		// Only use for simple files, not production-grade!
+		// eslint-disable-next-line no-console
+		console.warn(
+			'PapaParse not found, using fallback CSV parser. Install papaparse for robust parsing.',
+		);
+		let csv = '';
+		csv =
+			typeof fileOrString === 'string'
+				? fileOrString
+				: await fileOrString.text();
+		const [headerLine, ...lines] = csv.split(/\r?\n/).filter(Boolean);
+		const headers = headerLine.split(',').map((h) => h.trim());
+		return lines.map((line) => {
+			const values = line.split(',');
+			const obj: Record<string, string> = {};
+			headers.forEach((h, i) => {
+				obj[h] = values[i]?.trim() || '';
+			});
+			return obj;
+		});
+	}
+}

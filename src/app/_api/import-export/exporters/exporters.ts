@@ -203,4 +203,72 @@ export class Exporters {
 
 		return data;
 	}
+
+	static async inventory() {
+		// Fetch all types
+		const typesRes = await API.query({
+			query: gql(`
+                query ExportAllInventoryTypes {
+                    inventoryTypes {
+                        id
+                        name
+                        checkInterval
+                        checkType
+                        properties
+                        parent
+                        createdAt
+                        updatedAt
+                    }
+                }
+            `),
+		});
+
+		// Fetch all locations
+		const locationsRes = await API.query({
+			query: gql(`
+                query ExportAllInventoryLocations {
+                    inventoryLocations { 
+                        id
+                        name
+                        barcode
+                        parent
+                        createdAt
+                        updatedAt
+                    }
+                }
+            `),
+		});
+
+		// Fetch all items
+		const itemsRes = await API.query({
+			query: gql(`
+                query ExportAllInventoryItems {
+                    inventoryItems {
+                        id
+                        name
+                        barcode
+                        state
+                        typeId
+                        locationId
+                        nextCheck
+                        lastScanned
+                        createdAt
+                        updatedAt
+                        history {
+                            type
+                            state
+                            date
+                            note
+                        }
+                    }
+                }
+            `),
+		});
+
+		return {
+			types: typesRes.inventoryTypes,
+			locations: locationsRes.inventoryLocations,
+			items: itemsRes.inventoryItems,
+		};
+	}
 }

@@ -10,6 +10,8 @@ import { PencilIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { PageCard, PageContent } from '@/components/page';
 import { Button } from '@/components/button';
 import { API, gql } from '@/api/index';
+import { exportInventory } from '@/api/import-export/inventory-export';
+import { importInventoryItemsFromCSV } from '@/api/import-export/inventory-import-csv';
 
 import { InventoryHeader } from '../components/inventory-header';
 import { InventoryTypesTable } from '../components/inventory-types-table';
@@ -326,6 +328,32 @@ export default function InventoryNodePage({
 							>
 								{view === 'type' ? 'Add Type' : 'Add Location'}
 							</Button>
+						</div>
+					</>
+				}
+				footer={
+					<>
+						<div className="flex justify-center mt-6 gap-1 text-gray-500 text-xs">
+							<a
+								className="text-xs text-gray-500 hover:text-gray-900 cursor-pointer"
+								onClick={async () => {
+									await importInventoryItemsFromCSV();
+									// wait 3 seconds
+									await new Promise((resolve) => setTimeout(resolve, 3000));
+									reload();
+								}}
+							>
+								Import from CSV
+							</a>{' '}
+							&bull;{' '}
+							<a
+								className="text-xs text-gray-500 hover:text-gray-900 cursor-pointer"
+								onClick={async () => {
+									await exportInventory();
+								}}
+							>
+								Export to JSON
+							</a>
 						</div>
 					</>
 				}
