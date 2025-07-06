@@ -1,5 +1,3 @@
-import { randomUUID } from 'crypto';
-
 import {
 	Arg,
 	Mutation,
@@ -145,16 +143,20 @@ export class InventoryTypeResolver {
 				}
 			}
 
-			const type = new InventoryTypeEntity({
-				id: randomUUID(),
-				name: data.name,
-				checkInterval: data.checkInterval,
-				checkType: data.checkType,
-				properties: data.properties || [],
-				parent: data.parent,
-				createdAt: new Date(),
-				updatedAt: new Date(),
-			});
+			const type = await this.inventoryTypeRepository.create();
+			type.updateName(data.name);
+			if (data.checkInterval) {
+				type.updateCheckInterval(data.checkInterval);
+			}
+			if (data.checkType) {
+				type.updateCheckType(data.checkType);
+			}
+			if (data.properties) {
+				type.updateProperties(data.properties);
+			}
+			if (data.parent) {
+				type.updateParent(data.parent);
+			}
 
 			await this.inventoryTypeRepository.save(type);
 			return this.mapToGraphQL(type);
@@ -272,11 +274,7 @@ export class InventoryTypeResolver {
 			});
 
 			return Promise.all(
-				items.map((item) =>
-					this.inventoryResolver.mapToGraphQL(item, {
-						type,
-					}),
-				),
+				items.map((item) => this.inventoryResolver.mapToGraphQL(item)),
 			);
 		} catch (error) {
 			this.logger.error('Error resolving items for inventory type', {

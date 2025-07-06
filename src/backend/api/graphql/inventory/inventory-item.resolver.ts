@@ -1,5 +1,3 @@
-import { randomUUID } from 'crypto';
-
 import {
 	Arg,
 	Mutation,
@@ -25,7 +23,6 @@ import { INVENTORY_ITEM_REPOSITORY } from '@/backend/repositories/inventory-item
 import { type InventoryItemRepository } from '@/backend/repositories/inventory-item/interface';
 import {
 	InventoryItemEntity,
-	InventoryItemState,
 	InventoryCheckState,
 } from '@/backend/entities/inventory-item.entity';
 import { Logger } from '@/backend/services/logger.service';
@@ -151,19 +148,25 @@ export class InventoryResolver {
 				}
 			}
 
-			const item = new InventoryItemEntity({
-				id: randomUUID(),
-				typeId: data.typeId,
-				name: data.name,
-				barcode: data.barcode,
-				locationId: data.locationId,
-				state: data.state || InventoryItemState.NEW,
-				properties:
-					data.properties?.map((prop) => [prop.key, prop.value]) || [],
-				nextCheck: data.nextCheck || new Date(),
-				lastScanned: new Date(),
-				history: [],
-			});
+			const item = await this.inventoryItemRepository.create();
+			if (data.name) {
+				item.updateName(data.name);
+			}
+			if (data.barcode) {
+				item.updateBarcode(data.barcode);
+			}
+			if (data.locationId) {
+				item.updateLocation(data.locationId, 'Created from GraphQL');
+			}
+			if (data.typeId) {
+				item.updateTypeId(data.typeId);
+			}
+			if (data.state) {
+				item.updateState(data.state);
+			}
+			item.updateProperties(
+				data.properties?.map((prop) => [prop.key, prop.value]) || [],
+			);
 
 			await this.inventoryItemRepository.save(item);
 			return this.mapToGraphQL(item);

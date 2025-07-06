@@ -1,5 +1,3 @@
-import { randomUUID } from 'crypto';
-
 import {
 	Arg,
 	Mutation,
@@ -162,14 +160,13 @@ export class InventoryLocationResolver {
 		data: InventoryLocationInput,
 	): Promise<InventoryLocation> {
 		try {
-			const location = new InventoryLocationEntity({
-				id: randomUUID(),
-				name: data.name,
-				barcode: data.barcode,
-				parent: data.parent,
-				createdAt: new Date(),
-				updatedAt: new Date(),
-			});
+			const location = await this.inventoryLocationRepository.create();
+			location.updateName(data.name);
+			location.updateBarcode(data.barcode);
+			if (data.parent) {
+				location.updateParent(data.parent);
+			}
+
 			await this.inventoryLocationRepository.save(location);
 			return this.mapToGraphQL(location);
 		} catch (error) {
@@ -273,11 +270,7 @@ export class InventoryLocationResolver {
 			}
 
 			return Promise.all(
-				items.map((item) =>
-					this.inventoryResolver.mapToGraphQL(item, {
-						location: locationEntity,
-					}),
-				),
+				items.map((item) => this.inventoryResolver.mapToGraphQL(item)),
 			);
 		} catch (error) {
 			this.logger.error('Error resolving items for inventory location', {
