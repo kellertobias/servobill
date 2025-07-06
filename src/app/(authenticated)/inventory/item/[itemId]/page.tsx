@@ -149,6 +149,9 @@ export default function InventoryItemDetailPage({
 	 * Handler for changing item status (state) with auto-save and loading indicator
 	 */
 	const handleStatusChange = async (newStatus: string) => {
+		if (newStatus === status) {
+			return;
+		}
 		setStatus(newStatus);
 		doToast({ message: 'Saving status...' });
 		try {

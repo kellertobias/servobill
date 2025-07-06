@@ -1,4 +1,5 @@
 import React from 'react';
+import clsx from 'clsx';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -9,7 +10,7 @@ import {
 	ExclamationCircleIcon,
 	ArrowPathIcon,
 	PencilIcon,
-} from '@heroicons/react/24/outline';
+} from '@heroicons/react/20/solid';
 
 import { InventoryActivityForm } from './inventory-activity-form';
 
@@ -50,9 +51,10 @@ const getHistoryIcon = (
 				case InventoryCheckState.Recheck: {
 					return <ArrowPathIcon className="h-5 w-5 text-yellow-500" />;
 				}
-				// No default
+				default: {
+					return <CheckCircleIcon className="h-5 w-5 text-gray-400" />;
+				}
 			}
-			return <CheckCircleIcon className="h-5 w-5 text-gray-400" />;
 		}
 		case InventoryHistoryType.StateChange: {
 			return <ClockIcon className="h-5 w-5 text-gray-400" />;
@@ -108,27 +110,43 @@ export const InventoryActivityFeed: React.FC<InventoryActivityFeedProps> = ({
 				Activity & History
 			</h2>
 			{history && history.length > 0 ? (
-				<ul className="space-y-4 mb-6">
-					{history.map((entry, idx) => (
-						<li key={idx} className="w-full flex items-start gap-3">
-							<div className="flex-shrink-0 mt-0">
-								{getHistoryIcon(entry.type, entry.state)}
-							</div>
-							<div className="flex-1 flex flex-col">
-								<div className="flex flex-row justify-between items-center gap-2">
-									<span className="text-sm text-gray-700 font-semibold">
-										{getHistoryText(entry)}
-									</span>
-									<span className="text-xs text-gray-400">
-										{dayjs(entry.date).fromNow()}
-									</span>
-								</div>
-								{entry.note && entry.type !== InventoryHistoryType.Note && (
-									<div className="text-xs text-gray-500 mt-1">{entry.note}</div>
-								)}
-							</div>
-						</li>
-					))}
+				<ul role="list" className="mt-6 space-y-6">
+					{history?.map(
+						(activity, index) =>
+							activity && (
+								<li key={index} className="relative flex gap-x-4">
+									<div
+										className={clsx(
+											index === history.length - 1 ? 'h-6' : '-bottom-6',
+											'absolute left-0 top-0 flex w-6 justify-center',
+										)}
+									>
+										<div className="w-px bg-gray-200" />
+									</div>
+									<>
+										<div className="relative flex h-6 w-6 flex-none items-center justify-center bg-white">
+											{getHistoryIcon(activity.type, activity.state)}
+										</div>
+										<div className="flex flex-col w-full">
+											<div className="flex flex-row justify-between gap-x-4 w-full">
+												<p className="flex-auto py-0.5 text-xs leading-5 text-gray-500 font-semibold">
+													{getHistoryText(activity)}
+												</p>
+												<time
+													dateTime={activity.date}
+													className="flex-none py-0.5 text-xs leading-5 text-gray-500"
+												>
+													{dayjs(activity.date).fromNow()}
+												</time>
+											</div>
+											<p className="flex-auto py-0.5 text-xs leading-5 text-gray-500">
+												{activity.note}
+											</p>
+										</div>
+									</>
+								</li>
+							),
+					)}
 				</ul>
 			) : (
 				<div className="text-gray-400 text-sm mb-6">No activity yet.</div>
