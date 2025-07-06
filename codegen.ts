@@ -6,6 +6,7 @@ const config: CodegenConfig = {
 		'src/app/**/*.ts',
 		'src/app/**/*.tsx',
 		'!src/app/_hooks/load-data.ts',
+		'!src/app/_api/import-export/inventory-import-json.tsx',
 	],
 	generates: {
 		'./src/common/gql/': {
