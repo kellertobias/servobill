@@ -41,6 +41,7 @@
     "@sevenoutman/use-debounced-memo": "^1.0.0",
     "@sparticuz/chromium": "^137.0.1",
     "@uiw/react-textarea-code-editor": "^3.0.2",
+    "@yudiel/react-qr-scanner": "^2.3.1",
     "apollo-server-core": "^3.13.0",
     "apollo-server-lambda": "^3.13.0",
     "aws-sdk": "^2.1519.0",
