@@ -12,6 +12,127 @@ import {
 	PdfTemplateSetting,
 } from '@/backend/entities/settings.entity';
 
+type CurrencyCode =
+	ProfileBasic['transaction']['tradeSettlement']['currencyCode'];
+
+type Totals = {
+	taxTotals: Record<string, { taxAmount: number; netAmount: number }>;
+	totalTaxAmount: number;
+	totalNetAmount: number;
+};
+
+function mapInvoiceItemsToProfileBasic(invoice: InvoiceEntity): {
+	line: ProfileBasic['transaction']['line'];
+	totals: Totals;
+} {
+	const taxTotals: Totals['taxTotals'] = {};
+	let totalNetAmount: Totals['totalNetAmount'] = 0;
+	let totalTaxAmount: Totals['totalTaxAmount'] = 0;
+
+	return {
+		line: (invoice.items || []).map((item, idx) => {
+			const itemNetAmount =
+				((item.priceCents ?? 0) * (item.quantity ?? 1)) / 100;
+			totalNetAmount += itemNetAmount;
+
+			const itemTaxAmount = itemNetAmount * (item.taxPercentage / 100);
+			totalTaxAmount += itemTaxAmount;
+
+			const itemTaxCode = item.taxPercentage.toString();
+
+			taxTotals[itemTaxCode] = {
+				taxAmount: (taxTotals[itemTaxCode]?.taxAmount ?? 0) + itemTaxAmount,
+				netAmount: (taxTotals[itemTaxCode]?.netAmount ?? 0) + itemNetAmount,
+			};
+
+			return {
+				identifier: item.id || `ITEM${idx + 1}`,
+				description: item.description,
+				tradeProduct: {
+					name: item.name || `Item ${idx + 1}`,
+				},
+				tradeAgreement: {
+					netTradePrice: {
+						chargeAmount: Number((item.priceCents ?? 0) / 100).toFixed(2),
+					},
+				},
+				tradeDelivery: {
+					billedQuantity: {
+						amount: item.quantity || 1,
+						unitMeasureCode: 'C62', // Default to 'C62' (unit)
+					},
+				},
+				tradeSettlement: {
+					tradeTax: {
+						typeCode: 'VAT',
+						categoryCode: item.taxPercentage.toString() === '0' ? 'E' : 'S',
+						rateApplicablePercent: item.taxPercentage.toFixed(2),
+						calculatedAmount: Number(
+							item.priceCents * (item.taxPercentage / 100),
+						).toFixed(2),
+						basisAmount: Number(item.priceCents / 100).toFixed(2),
+					},
+				},
+			};
+		}),
+		totals: {
+			taxTotals,
+			totalNetAmount,
+			totalTaxAmount,
+		},
+	};
+}
+
+function mapInvoiceTotalsToProfileBasic(
+	invoice: InvoiceEntity,
+	companyData: CompanyDataSetting,
+	totals: Totals,
+): {
+	tradeSettlement: ProfileBasic['transaction']['tradeSettlement'];
+} {
+	return {
+		tradeSettlement: {
+			currencyCode: (companyData.currency ||
+				'EUR') as ProfileBasic['transaction']['tradeSettlement']['currencyCode'],
+			monetarySummation: {
+				lineTotalAmount: Number((totals.totalNetAmount ?? 0) / 100).toFixed(2), // Required by schema
+				taxBasisTotalAmount: Number(totals.totalNetAmount).toFixed(2),
+				taxTotal: {
+					amount: Number(totals.totalTaxAmount).toFixed(2),
+					currencyCode: (companyData.currency || 'EUR') as CurrencyCode,
+				},
+				paidAmount: invoice.paidCents
+					? Number(invoice.paidCents / 100).toFixed(2)
+					: 0,
+				grandTotalAmount: Number((invoice.totalCents ?? 0) / 100).toFixed(2),
+				duePayableAmount: Number(
+					((invoice.totalCents ?? 0) - (invoice.paidCents ?? 0)) / 100,
+				).toFixed(2),
+			},
+			vatBreakdown: Object.entries(totals.taxTotals).map(([key, value]) => ({
+				categoryCode: key === '0' ? 'E' : 'S',
+				rateApplicablePercent: Number(key).toFixed(2),
+				calculatedAmount: value.taxAmount,
+				typeCode: 'VAT',
+				basisAmount: value.netAmount,
+			})),
+			paymentInstruction: {
+				typeCode: '30', // 30 = Payment due by bank transfer
+				transfers: [
+					{
+						paymentAccountIdentifier: companyData.companyData.bank.iban,
+					},
+				],
+			},
+			paymentTerms: {
+				dueDate: invoice.dueAt,
+			},
+			// TODO: [ERROR: BR-CO-25] If duePayableAmount > 0, must provide payment terms: either payment due date or payment terms description (ram:SpecifiedTradePaymentTerms)
+			// Add specifiedTradePaymentTerms with due date or description if invoice is payable.
+		},
+	};
+}
+
 /**
  * Helper to map InvoiceEntity and settings to ProfileBasic for ZUGFeRD.
  * Only minimal required fields are mapped for now; extend as needed.
@@ -27,11 +148,30 @@ function mapInvoiceToProfileBasic(
 	// Extract company data from the nested structure
 	const sellerData = companyData.companyData;
 
+	const { line, totals } = mapInvoiceItemsToProfileBasic(invoice);
+	const { tradeSettlement } = mapInvoiceTotalsToProfileBasic(
+		invoice,
+		companyData,
+		totals,
+	);
+
 	return {
 		number: invoice.invoiceNumber || invoice.id, // Required: Invoice number
 		typeCode: '380', // Required: '380' = Commercial invoice (default for most B2B invoices)
-		issueDate: invoice.createdAt || new Date(), // Required: Issue date
+		/* 
+		From the docs:
+		380: Commercial Invoice
+		381: Credit note
+		384: Corrected invoice
+		389: Self-billied invoice (created by the buyer on behalf of the supplier)
+		261: Self billed credit note (not accepted by CHORUSPRO)
+		386: Prepayment invoice
+		751: Invoice information for accounting purposes (not accepted by CHORUSPRO)
+		*/
+		issueDate: invoice.invoicedAt || invoice.createdAt || new Date(), // Required: Issue date
+		includedNote: invoice.footerText ? [{ content: invoice.footerText }] : [],
 		transaction: {
+			line,
 			tradeAgreement: {
 				seller: {
 					name: sellerData.name,
@@ -41,10 +181,19 @@ function mapInvoiceToProfileBasic(
 						postCode: sellerData.zip || '',
 						line1: sellerData.street || '',
 					},
-					taxRegistration: {
-						localIdentifier: sellerData.taxId,
-						vatIdentifier: sellerData.vatId,
+					taxRegistration:
+						sellerData.taxId || sellerData.vatId
+							? {
+									localIdentifier: sellerData.taxId,
+									vatIdentifier: sellerData.vatId,
+								}
+							: undefined,
+					electronicAddress: {
+						value: sellerData.email,
+						schemeIdentifier: 'EM',
 					},
+					// TODO: [NOTICE: BR-DE-2] Seller contact (BG-6) must be provided (ram:DefinedTradeContact)
+					// Add seller contact details if available
 				},
 				buyer: {
 					name: invoice.customer?.name || 'Unknown',
@@ -54,48 +203,27 @@ function mapInvoiceToProfileBasic(
 						postCode: invoice.customer?.zip || '',
 						line1: invoice.customer?.street || '',
 					},
+					electronicAddress: {
+						value: invoice.customer?.email,
+						schemeIdentifier: 'EM',
+					},
 				},
+				// TODO: [NOTICE: BR-DE-15] Buyer reference (BT-10) must be provided (ram:BuyerReference)
+				// Add buyer reference if available
 			},
-			// Required: line items for the invoice
-			line: (invoice.items || []).map((item, idx) => ({
-				identifier: item.id || `ITEM${idx + 1}`,
-				description: item.description,
-				tradeProduct: {
-					name: item.name || `Item ${idx + 1}`,
-				},
-				tradeAgreement: {
-					netTradePrice: {
-						chargeAmount: (item.priceCents ?? 0) / 100,
-					},
-				},
-				tradeDelivery: {
-					billedQuantity: {
-						amount: item.quantity || 1,
-						unitMeasureCode: 'H87', // Default to 'H87' (piece)
-					},
-				},
-			})),
+
 			// Required: minimal tradeSettlement
-			tradeSettlement: {
-				currencyCode: (companyData.currency ||
-					'EUR') as ProfileBasic['transaction']['tradeSettlement']['currencyCode'],
-				monetarySummation: {
-					lineTotalAmount: (invoice.totalCents ?? 0) / 100, // Required by schema
-					taxBasisTotalAmount: (invoice.totalCents ?? 0) / 100,
-					taxTotal: {
-						amount: (invoice.totalTax ?? 0) / 100,
-						currencyCode: ((invoice as unknown as { currency?: string })
-							.currency ||
-							companyData.currency ||
-							'EUR') as ProfileBasic['transaction']['tradeSettlement']['currencyCode'],
-					},
-					grandTotalAmount: (invoice.totalCents ?? 0) / 100,
-					duePayableAmount: (invoice.totalCents ?? 0) / 100,
+			tradeSettlement,
+			// Required: minimal tradeDelivery (empty object, as allowed by schema)
+			tradeDelivery: {
+				information: {
+					deliveryDate: invoice.invoicedAt || invoice.createdAt || new Date(),
 				},
 			},
-			// Required: minimal tradeDelivery (empty object, as allowed by schema)
-			tradeDelivery: {},
 		},
+		// TODO: [NOTICE: PEPPOL-EN16931-R001, BR-DE-21] Business process and specification identifier should be provided in ExchangedDocumentContext (ram:BusinessProcessSpecifiedDocumentContextParameter/ram:ID, ram:GuidelineSpecifiedDocumentContextParameter/ram:ID)
+		// TODO: [NOTICE: BR-DE-1] Payment instructions (BG-16) should be included (ram:SpecifiedTradeSettlementPaymentMeans)
+		// Add payment means (e.g., bank transfer details) if available
 		// Add more top-level fields as needed (e.g., specificationIdentifier, businessProcessType)
 	};
 }
