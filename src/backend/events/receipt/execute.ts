@@ -75,9 +75,9 @@ export class HandlerExecution {
 				await ReceiptClassificationService.classifyReceipt(attachments);
 
 			const strategy =
-				classification === ReceiptClassification.Structured
-					? this.structuredExtractionService
-					: this.llmExtractionService;
+				classification === ReceiptClassification.Extraction
+					? this.llmExtractionService
+					: this.structuredExtractionService;
 
 			// Load company currency if not present in event
 			let currency = event.currency;

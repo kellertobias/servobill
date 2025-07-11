@@ -55,7 +55,7 @@ export class CustomerOrmEntity {
 
 	/** Country */
 	@Column('text', { nullable: true })
-	country?: string;
+	countryCode?: string;
 
 	/** Notes */
 	@Column('text', { nullable: true })

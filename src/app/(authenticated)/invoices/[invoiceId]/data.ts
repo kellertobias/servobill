@@ -24,7 +24,7 @@ export const useInvoiceData = () =>
 							zip
 							city
 							state
-							country
+							countryCode
 							showContact
 							email
 						}

@@ -29,7 +29,7 @@ export const importSingleCustomer = async (customer: Partial<Customer>) => {
 					street
 					zip
 					city
-					country
+					countryCode
 					state
 				}
 			}

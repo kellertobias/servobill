@@ -28,7 +28,7 @@ export class Exporters {
                             street
                             zip
                             city
-                            country
+                            countryCode
                             state
                             notes
                             showContact
@@ -106,7 +106,7 @@ export class Exporters {
 							street
 							zip
 							city
-							country
+							countryCode
 							state
 							notes
 							showContact

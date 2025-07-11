@@ -14,6 +14,7 @@ import { Button } from '@/components/button';
 import { doToast } from '@/components/toast';
 import { exportSettings, importSettings } from '@/api/import-export/settings';
 import { SettingsBlock } from '@/components/settings-block';
+import { CountryCodeSelection } from '@/components/country-code-selection';
 
 import SelectInput from '@/app/_components/select-input';
 
@@ -53,7 +54,7 @@ function NumberValidity({
 export default function SettingsHomePage() {
 	const { data, setData, initialData, loading, reload } = useLoadData(
 		async () => {
-			const data = await API.query({
+			const res = await API.query({
 				query: gql(`
 					query GetSettings {
 						settings {
@@ -91,12 +92,16 @@ export default function SettingsHomePage() {
 								bankAccountHolder
 								bankIban
 								bankBic
+								countryCode
 							}
 							currency
+							invoiceOutputFormat
 						}
 					}
 				`),
-			}).then((res) => ({
+			});
+
+			return {
 				...res.settings,
 				company: undefined,
 				defaultInvoiceDueDays: String(res.settings.defaultInvoiceDueDays),
@@ -113,9 +118,10 @@ export default function SettingsHomePage() {
 				companyBankAccountHolder: res.settings.company?.bankAccountHolder || '',
 				companyBankIban: res.settings.company?.bankIban || '',
 				companyBankBic: res.settings.company?.bankBic || '',
+				companyCountryCode: res.settings.company?.countryCode || 'DE',
 				currency: res.settings.currency || 'EUR',
-			}));
-			return data;
+				invoiceOutputFormat: res.settings.invoiceOutputFormat || 'PDF',
+			};
 		},
 	);
 
@@ -278,6 +284,13 @@ export default function SettingsHomePage() {
 								{ value: 'CAD', label: 'Canadian Dollar (CAD)' },
 							]}
 							className="w-full"
+						/>
+						<CountryCodeSelection
+							value={data?.companyCountryCode || 'DE'}
+							onChange={(code) =>
+								setData((prev) => ({ ...prev, countryCode: code }))
+							}
+							className="col-span-3"
 						/>
 					</SettingsBlock>
 					<SettingsBlock
@@ -583,6 +596,23 @@ export default function SettingsHomePage() {
 								}));
 							}}
 						/>
+						<SelectInput
+							label="Invoice Output Format"
+							value={data?.invoiceOutputFormat || 'PDF'}
+							onChange={(invoiceOutputFormat: string | null) => {
+								setData((current) => ({
+									...current,
+									invoiceOutputFormat: invoiceOutputFormat || 'PDF',
+								}));
+							}}
+							options={[
+								{ value: 'PDF', label: 'PDF (Standard)' },
+								{ value: 'XRECHNUNG_PDF', label: 'XRechnung + PDF' },
+								{ value: 'XRECHNUNG', label: 'XRechnung (XML Only)' },
+								{ value: 'ZUGFERD', label: 'ZUGFeRD' },
+							]}
+							className="w-full"
+						/>
 					</SettingsBlock>
 					<SettingsBlock
 						title="Logo URLs"
@@ -812,6 +842,7 @@ export default function SettingsHomePage() {
 														data.companyBankAccountHolder || '',
 													bankIban: data.companyBankIban || '',
 													bankBic: data.companyBankBic || '',
+													countryCode: data.companyCountryCode || 'DE',
 												},
 												defaultInvoiceDueDays: Number(
 													data.defaultInvoiceDueDays || '0',
@@ -842,6 +873,7 @@ export default function SettingsHomePage() {
 												emailCompanyLogo: data.emailCompanyLogo || '',
 												defaultInvoiceFooterText: data.defaultInvoiceFooterText,
 												currency: data.currency,
+												invoiceOutputFormat: data.invoiceOutputFormat || 'PDF',
 											},
 										},
 									});

@@ -34,6 +34,7 @@
     "@aws-sdk/client-ses": "^3.484.0",
     "@aws-sdk/lib-dynamodb": "^3.478.0",
     "@aws-sdk/s3-request-presigner": "^3.481.0",
+    "@e-invoice-eu/core": "^2.1.8",
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",
     "@opentelemetry/api": "^1.7.0",
@@ -63,10 +64,12 @@
     "jsonwebtoken": "^9.0.2",
     "next": "14.0.4",
     "node-fetch": "^3.3.2",
+    "node-zugferd": "^0.0.10-beta.2",
     "nodemailer": "^6.9.7",
     "openai": "^4.104.0",
     "papaparse": "^5.5.3",
     "parse-multipart-data": "^1.5.0",
+    "pdf-lib": "^1.17.1",
     "pdfkit": "^0.14.0",
     "pg": "^8.16.0",
     "pino": "^8.17.2",
@@ -83,7 +86,8 @@
     "sst": "3.17.3",
     "tailwind-datepicker-react": "^1.4.3",
     "type-graphql": "^1.1.1",
-    "typeorm": "^0.3.24"
+    "typeorm": "^0.3.24",
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^5.0.0",
@@ -113,6 +117,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/sqlite3": "^3.1.11",
+    "@types/xml2js": "^0.4.14",
     "@typescript-eslint/eslint-plugin": "^6.14.0",
     "@typescript-eslint/parser": "^6.21.0",
     "@typescript-eslint/utils": "^8.33.1",

@@ -1,7 +1,10 @@
 import { Field, InputType, Int, ObjectType } from 'type-graphql';
 import { IsBoolean, IsString } from 'class-validator';
 
-import { PdfTemplateSetting } from '@/backend/entities/settings.entity';
+import {
+	InvoiceOutputFormat,
+	PdfTemplateSetting,
+} from '@/backend/entities/settings.entity';
 import { ObjectProperties } from '@/common/ts-helpers';
 
 @ObjectType('SettingsResultCompany')
@@ -77,6 +80,12 @@ export class SettingsResultCompany {
 	 */
 	@Field(() => String, { nullable: true })
 	bankBic?: string;
+
+	/**
+	 * Country code. Now nullable.
+	 */
+	@Field(() => String, { nullable: true })
+	countryCode?: string;
 }
 
 @InputType('ExpenseCategoryInputType')
@@ -305,6 +314,12 @@ export class SettingsResult {
 	defaultInvoiceFooterText?: string;
 
 	/**
+	 * Output format for digital invoices (PDF, XRechnung, ZUGFeRD, etc).
+	 */
+	@Field(() => InvoiceOutputFormat, { nullable: true })
+	invoiceOutputFormat?: InvoiceOutputFormat;
+
+	/**
 	 * Company settings. Now nullable.
 	 */
 	@Field(() => SettingsResultCompany, { nullable: true })
@@ -372,6 +387,10 @@ export class SettingsCompanyInput implements Partial<SettingsResultCompany> {
 	@IsString()
 	@Field(() => String, { nullable: true })
 	bankBic?: string;
+
+	@IsString()
+	@Field(() => String, { nullable: true })
+	countryCode?: string;
 }
 
 /**
@@ -460,6 +479,12 @@ export class SettingsInput implements Partial<SettingsResult> {
 	@IsString()
 	@Field(() => String, { nullable: true })
 	defaultInvoiceFooterText?: string;
+
+	/**
+	 * Output format for digital invoices (PDF, XRechnung, ZUGFeRD, etc).
+	 */
+	@Field(() => InvoiceOutputFormat, { nullable: true })
+	invoiceOutputFormat?: InvoiceOutputFormat;
 
 	@Field(() => SettingsCompanyInput, { nullable: true })
 	company?: SettingsCompanyInput;

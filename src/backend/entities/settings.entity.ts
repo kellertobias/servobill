@@ -5,6 +5,16 @@ import { CustomJson } from '@/common/json';
 import { Numbering } from '@/common/numbers';
 import { ObjectProperties } from '@/common/ts-helpers';
 
+/**
+ * Enum for supported invoice output formats.
+ */
+export enum InvoiceOutputFormat {
+	PDF = 'PDF',
+	XRECHNUNG_PDF = 'XRECHNUNG_PDF',
+	XRECHNUNG = 'XRECHNUNG',
+	ZUGFERD = 'ZUGFERD',
+}
+
 export abstract class AbstractSettingsEntity {
 	public async save(): Promise<void> {}
 	public static settingId: string;
@@ -43,6 +53,260 @@ export class CompanyDataSetting extends AbstractSettingsEntity {
 			iban: string;
 			bic: string;
 		};
+		/**
+		 * The ISO 3166-1 alpha-2 country code (e.g. 'DE', 'US') representing the company's country.
+		 * Used for address formatting, tax calculations, and compliance.
+		 */
+		countryCode:
+			| 'AF'
+			| 'AL'
+			| 'DZ'
+			| 'AS'
+			| 'AD'
+			| 'AO'
+			| 'AI'
+			| 'AQ'
+			| 'AG'
+			| 'AR'
+			| 'AM'
+			| 'AW'
+			| 'AU'
+			| 'AT'
+			| 'AZ'
+			| 'BS'
+			| 'BH'
+			| 'BD'
+			| 'BB'
+			| 'BY'
+			| 'BE'
+			| 'BZ'
+			| 'BJ'
+			| 'BM'
+			| 'AX'
+			| 'BT'
+			| 'BO'
+			| 'BQ'
+			| 'BA'
+			| 'BW'
+			| 'BV'
+			| 'BR'
+			| 'IO'
+			| 'BN'
+			| 'BG'
+			| 'BF'
+			| 'BI'
+			| 'CV'
+			| 'KH'
+			| 'CM'
+			| 'CA'
+			| 'KY'
+			| 'CF'
+			| 'TD'
+			| 'CL'
+			| 'CN'
+			| 'CX'
+			| 'CC'
+			| 'CO'
+			| 'KM'
+			| 'CD'
+			| 'CG'
+			| 'CK'
+			| 'CR'
+			| 'HR'
+			| 'CU'
+			| 'CW'
+			| 'CY'
+			| 'CZ'
+			| 'CI'
+			| 'DK'
+			| 'DJ'
+			| 'DM'
+			| 'DO'
+			| 'EC'
+			| 'EG'
+			| 'SV'
+			| 'GQ'
+			| 'ER'
+			| 'EE'
+			| 'SZ'
+			| 'ET'
+			| 'FK'
+			| 'FO'
+			| 'FJ'
+			| 'FI'
+			| 'FR'
+			| 'GF'
+			| 'PF'
+			| 'TF'
+			| 'GA'
+			| 'GM'
+			| 'GE'
+			| 'DE'
+			| 'GH'
+			| 'GI'
+			| 'GR'
+			| 'GL'
+			| 'GD'
+			| 'GP'
+			| 'GU'
+			| 'GT'
+			| 'GG'
+			| 'GN'
+			| 'GW'
+			| 'GY'
+			| 'HT'
+			| 'HM'
+			| 'VA'
+			| 'HN'
+			| 'HK'
+			| 'HU'
+			| 'IS'
+			| 'IN'
+			| 'ID'
+			| 'IR'
+			| 'IQ'
+			| 'IE'
+			| 'IM'
+			| 'IL'
+			| 'IT'
+			| 'JM'
+			| 'JP'
+			| 'JE'
+			| 'JO'
+			| 'KZ'
+			| 'KE'
+			| 'KI'
+			| 'KP'
+			| 'KR'
+			| 'KW'
+			| 'KG'
+			| 'LA'
+			| 'LV'
+			| 'LB'
+			| 'LS'
+			| 'LR'
+			| 'LY'
+			| 'LI'
+			| 'LT'
+			| 'LU'
+			| 'MO'
+			| 'MG'
+			| 'MW'
+			| 'MY'
+			| 'MV'
+			| 'ML'
+			| 'MT'
+			| 'MH'
+			| 'MQ'
+			| 'MR'
+			| 'MU'
+			| 'YT'
+			| 'MX'
+			| 'FM'
+			| 'MD'
+			| 'MC'
+			| 'MN'
+			| 'ME'
+			| 'MS'
+			| 'MA'
+			| 'MZ'
+			| 'MM'
+			| 'NA'
+			| 'NR'
+			| 'NP'
+			| 'NL'
+			| 'NC'
+			| 'NZ'
+			| 'NI'
+			| 'NE'
+			| 'NG'
+			| 'NU'
+			| 'NF'
+			| 'MK'
+			| 'MP'
+			| 'NO'
+			| 'OM'
+			| 'PK'
+			| 'PW'
+			| 'PS'
+			| 'PA'
+			| 'PG'
+			| 'PY'
+			| 'PE'
+			| 'PH'
+			| 'PN'
+			| 'PL'
+			| 'PT'
+			| 'PR'
+			| 'QA'
+			| 'RO'
+			| 'RU'
+			| 'RW'
+			| 'RE'
+			| 'BL'
+			| 'SH'
+			| 'KN'
+			| 'LC'
+			| 'MF'
+			| 'PM'
+			| 'VC'
+			| 'WS'
+			| 'SM'
+			| 'ST'
+			| 'SA'
+			| 'SN'
+			| 'RS'
+			| 'SC'
+			| 'SL'
+			| 'SG'
+			| 'SX'
+			| 'SK'
+			| 'SI'
+			| 'SB'
+			| 'SO'
+			| 'ZA'
+			| 'GS'
+			| 'SS'
+			| 'ES'
+			| 'LK'
+			| 'SD'
+			| 'SR'
+			| 'SJ'
+			| 'SE'
+			| 'CH'
+			| 'SY'
+			| 'TW'
+			| 'TJ'
+			| 'TZ'
+			| 'TH'
+			| 'TL'
+			| 'TG'
+			| 'TK'
+			| 'TO'
+			| 'TT'
+			| 'TN'
+			| 'TM'
+			| 'TC'
+			| 'TV'
+			| 'TR'
+			| 'UG'
+			| 'UA'
+			| 'AE'
+			| 'GB'
+			| 'UM'
+			| 'US'
+			| 'UY'
+			| 'UZ'
+			| 'VU'
+			| 'VE'
+			| 'VN'
+			| 'VG'
+			| 'VI'
+			| 'WF'
+			| 'EH'
+			| 'YE'
+			| 'ZM'
+			| 'ZW';
 	};
 
 	public sendFrom!: string;
@@ -104,6 +368,7 @@ export class CompanyDataSetting extends AbstractSettingsEntity {
 					iban: params.companyData?.bank?.iban || '',
 					bic: params.companyData?.bank?.bic || '',
 				},
+				countryCode: params.companyData?.countryCode || 'DE',
 			};
 		}
 		if (!this.currency) {
@@ -229,6 +494,9 @@ class IncrementNumberBehavior {
 	}
 }
 
+/**
+ * Settings for invoice numbering, output format, and defaults.
+ */
 export class InvoiceSettingsEntity extends AbstractSettingsEntity {
 	public static settingId = 'invoice-numbers';
 	public invoiceNumbers!: IncrementNumberBehavior;
@@ -237,6 +505,17 @@ export class InvoiceSettingsEntity extends AbstractSettingsEntity {
 	public offerValidityDays!: number;
 	public defaultInvoiceDueDays!: number;
 	public defaultInvoiceFooterText!: string;
+
+	/**
+	 * Determines the output format for digital invoices.
+	 * - PDF: Only PDF is generated
+	 * - XRECHNUNG_PDF: Both XRechnung and PDF are generated
+	 * - XRECHNUNG: Only XRechnung is generated
+	 * - ZUGFERD: ZUGFeRD format is generated
+	 *
+	 * This setting is used by invoice creation handlers to decide which formats to generate and send.
+	 */
+	public invoiceOutputFormat: InvoiceOutputFormat = InvoiceOutputFormat.PDF;
 
 	constructor(
 		params: Partial<ObjectProperties<InvoiceSettingsEntity>>,
@@ -258,6 +537,17 @@ export class InvoiceSettingsEntity extends AbstractSettingsEntity {
 		this.offerValidityDays = params.offerValidityDays || 14;
 		this.defaultInvoiceDueDays = params.defaultInvoiceDueDays || 14;
 		this.defaultInvoiceFooterText = params.defaultInvoiceFooterText || '';
+		// Accept both string and enum for backward compatibility, but always store as enum
+		if (typeof params.invoiceOutputFormat === 'string') {
+			this.invoiceOutputFormat =
+				InvoiceOutputFormat[
+					params.invoiceOutputFormat as keyof typeof InvoiceOutputFormat
+				] || InvoiceOutputFormat.PDF;
+		} else if (params.invoiceOutputFormat) {
+			this.invoiceOutputFormat = params.invoiceOutputFormat;
+		} else {
+			this.invoiceOutputFormat = InvoiceOutputFormat.PDF;
+		}
 	}
 
 	public serializable() {
@@ -268,6 +558,8 @@ export class InvoiceSettingsEntity extends AbstractSettingsEntity {
 			offerValidityDays: this.offerValidityDays,
 			defaultInvoiceDueDays: this.defaultInvoiceDueDays,
 			defaultInvoiceFooterText: this.defaultInvoiceFooterText,
+			// Always serialize as enum value (string)
+			invoiceOutputFormat: this.invoiceOutputFormat,
 		};
 	}
 

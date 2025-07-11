@@ -22,6 +22,7 @@ import {
 	PdfTemplateSetting,
 	CompanyDataSetting,
 	ExpenseSettingsEntity,
+	InvoiceOutputFormat,
 } from '@/backend/entities/settings.entity';
 import type { EventBusService } from '@/backend/services/eventbus.service';
 import { GenerateTemplatePreviewEvent } from '@/backend/events/template/event';
@@ -48,6 +49,10 @@ export class SystemResolver {
 		private fileStorageService: FileStorageService,
 	) {}
 
+	/**
+	 * Maps the InvoiceSettingsEntity and related entities to the GraphQL SettingsResult type.
+	 * Ensures the invoiceOutputFormat is included in the response.
+	 */
 	private mapInvoiceSettingsEntityToResponse({
 		invoices,
 		company,
@@ -107,6 +112,9 @@ export class SystemResolver {
 				? (expenses.categories || []).map((cat) => ({ ...cat }))
 				: undefined,
 			currency: company.currency || 'EUR',
+			invoiceOutputFormat: invoices.invoiceOutputFormat as
+				| InvoiceOutputFormat
+				| undefined,
 		};
 	}
 
@@ -172,6 +180,11 @@ export class SystemResolver {
 			nextData.defaultInvoiceDueDays || 28;
 		genericSettings.defaultInvoiceFooterText =
 			nextData.defaultInvoiceFooterText || 'Created by Servobill';
+
+		// Set the invoice output format if provided, otherwise keep current or default
+		if (nextData.invoiceOutputFormat) {
+			genericSettings.invoiceOutputFormat = nextData.invoiceOutputFormat;
+		}
 
 		await genericSettings.save();
 

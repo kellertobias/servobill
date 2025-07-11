@@ -4,6 +4,7 @@ import { IsString } from 'class-validator';
 import { FilteredObjectProperties } from '../types';
 
 import { CustomerEntity } from '@/backend/entities/customer.entity';
+import { CompanyDataSetting } from '@/backend/entities/settings.entity';
 
 @ObjectType('Customer')
 export class Customer implements FilteredObjectProperties<CustomerEntity> {
@@ -37,8 +38,13 @@ export class Customer implements FilteredObjectProperties<CustomerEntity> {
 	@Field(() => String, { nullable: true })
 	state?: string;
 
+	/**
+	 * The ISO 3166-1 alpha-2 country code (e.g. 'DE', 'US') representing the customer's country.
+	 * Used for address formatting, tax calculations, and compliance.
+	 * Should match the type used in CompanyDataSetting.companyData.countryCode.
+	 */
 	@Field(() => String, { nullable: true })
-	country?: string;
+	countryCode?: CompanyDataSetting['companyData']['countryCode'];
 
 	@Field(() => String, { nullable: true })
 	notes?: string;
@@ -83,8 +89,13 @@ export class CustomerInput
 	@Field(() => String, { nullable: true })
 	state?: string;
 
+	/**
+	 * The ISO 3166-1 alpha-2 country code (e.g. 'DE', 'US') representing the customer's country.
+	 * Used for address formatting, tax calculations, and compliance.
+	 * Should match the type used in CompanyDataSetting.companyData.countryCode.
+	 */
 	@Field(() => String, { nullable: true })
-	country?: string;
+	countryCode?: CompanyDataSetting['companyData']['countryCode'];
 
 	@Field(() => String, { nullable: true })
 	notes?: string;

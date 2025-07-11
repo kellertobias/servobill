@@ -8,6 +8,7 @@ import {
 	InventoryCheckState,
 	InventoryHistoryType,
 } from '@/backend/entities/inventory-item.entity';
+import { InvoiceOutputFormat } from '@/backend/entities/settings.entity';
 
 // Register enums for GraphQL
 registerEnumType(InventoryItemState, {
@@ -43,4 +44,9 @@ registerEnumType(InvoiceActivityType, {
 registerEnumType(InvoiceSubmissionType, {
 	name: 'InvoiceSubmissionType',
 	description: 'The way(s) the invoice was submitted',
+});
+
+registerEnumType(InvoiceOutputFormat, {
+	name: 'InvoiceOutputFormat',
+	description: 'Supported output formats for digital invoices',
 });

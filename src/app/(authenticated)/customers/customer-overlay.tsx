@@ -6,6 +6,7 @@ import { Drawer } from '@/components/drawer';
 import { Input } from '@/components/input';
 import { LoadingSkeleton } from '@/components/loading';
 import { Toggle } from '@/components/toggle';
+import { CountryCodeSelection } from '@/components/country-code-selection';
 
 export default function CustomerOverlay({
 	customerId,
@@ -28,7 +29,7 @@ export default function CustomerOverlay({
 						street: '',
 						zip: '',
 						city: '',
-						country: '',
+						countryCode: '',
 						state: '',
 						notes: '',
 						showContact: false,
@@ -45,7 +46,7 @@ export default function CustomerOverlay({
 									street
 									zip
 									city
-									country
+									countryCode
 									state
 									notes
 									showContact
@@ -148,7 +149,7 @@ export default function CustomerOverlay({
 
 							<Toggle
 								label="Show Contact on Letters"
-								value={data.showContact}
+								value={data.showContact ?? false}
 								onChange={(showContact) => {
 									setData((prev) => ({ ...prev, showContact }));
 								}}
@@ -195,14 +196,12 @@ export default function CustomerOverlay({
 								displayFirst
 							/>
 
-							<Input
+							<CountryCodeSelection
+								value={data.countryCode || 'DE'}
+								onChange={(code) =>
+									setData((prev) => ({ ...prev, countryCode: code }))
+								}
 								className="col-span-3"
-								label="Country"
-								value={data.country}
-								onChange={(country) => {
-									setData((prev) => ({ ...prev, country }));
-								}}
-								displayFirst
 							/>
 							<Input
 								className="col-span-3"

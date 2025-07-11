@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 
 import { DomainEntity, DomainEntityKeys } from './abstract.entity';
+import { CompanyDataSetting } from './settings.entity';
 
 import { ObjectProperties } from '@/common/ts-helpers';
 
@@ -15,8 +16,13 @@ export class CustomerEntity extends DomainEntity {
 	public zip?: string;
 	public city?: string;
 	public state?: string;
-	public country?: string;
 	public notes?: string;
+	/**
+	 * The ISO 3166-1 alpha-2 country code (e.g. 'DE', 'US') representing the customer's country.
+	 * Used for address formatting, tax calculations, and compliance.
+	 * Should match the type used in CompanyDataSetting.companyData.countryCode.
+	 */
+	public countryCode?: CompanyDataSetting['companyData']['countryCode'];
 	public createdAt!: Date;
 	public updatedAt!: Date;
 

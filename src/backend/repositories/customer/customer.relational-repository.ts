@@ -17,6 +17,7 @@ import {
 	RELATIONALDB_SERVICE,
 } from '@/backend/services/di-tokens';
 import type { EventBusService } from '@/backend/services/eventbus.service';
+import type { CompanyDataSetting } from '@/backend/entities/settings.entity';
 
 /**
  * Unified repository for Customer using TypeORM (Postgres or SQLite).
@@ -57,7 +58,9 @@ export class CustomerRelationalRepository
 			zip: orm.zip,
 			city: orm.city,
 			state: orm.state,
-			country: orm.country,
+			countryCode:
+				(orm.countryCode as CompanyDataSetting['companyData']['countryCode']) ||
+				'DE',
 			notes: orm.notes,
 			createdAt: orm.createdAt,
 			updatedAt: orm.updatedAt,
@@ -80,7 +83,7 @@ export class CustomerRelationalRepository
 			zip: domain.zip,
 			city: domain.city,
 			state: domain.state,
-			country: domain.country,
+			countryCode: domain.countryCode,
 			notes: domain.notes,
 			createdAt: domain.createdAt,
 			updatedAt: domain.updatedAt,

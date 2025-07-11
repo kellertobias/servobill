@@ -32,7 +32,7 @@ type AuthCheckResult {
 type Customer {
   city: String
   contactName: String
-  country: String
+  countryCode: String
   createdAt: DateTime!
   customerNumber: String!
   email: String
@@ -49,7 +49,7 @@ type Customer {
 input CustomerInput {
   city: String
   contactName: String
-  country: String
+  countryCode: String
   customerNumber: String
   email: String
   name: String!
@@ -459,6 +459,14 @@ type InvoiceLinks {
   offerId: String
 }
 
+"""Supported output formats for digital invoices"""
+enum InvoiceOutputFormat {
+  PDF
+  XRECHNUNG
+  XRECHNUNG_PDF
+  ZUGFERD
+}
+
 input InvoicePaymentInput {
   cents: Int!
   via: String!
@@ -647,6 +655,7 @@ input SettingsCompanyInput {
   bankBic: String
   bankIban: String
   city: String
+  countryCode: String
   email: String
   name: String
   phone: String
@@ -675,6 +684,7 @@ input SettingsInput {
   invoiceNumbersIncrementTemplate: String
   invoiceNumbersLast: String
   invoiceNumbersTemplate: String
+  invoiceOutputFormat: InvoiceOutputFormat
   offerNumbersIncrementTemplate: String
   offerNumbersLast: String
   offerNumbersTemplate: String
@@ -702,6 +712,7 @@ type SettingsResult {
   invoiceNumbersIncrementTemplate: String
   invoiceNumbersLast: String
   invoiceNumbersTemplate: String
+  invoiceOutputFormat: InvoiceOutputFormat
   offerNumbersIncrementTemplate: String
   offerNumbersLast: String
   offerNumbersTemplate: String
@@ -715,6 +726,7 @@ type SettingsResultCompany {
   bankBic: String
   bankIban: String
   city: String
+  countryCode: String
   email: String
   name: String
   phone: String

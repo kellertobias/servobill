@@ -30,7 +30,7 @@ export function SelectCustomerModal({
                             street
                             zip
                             city
-                            country
+                            countryCode
                             state
                             email
                         }
@@ -68,9 +68,7 @@ export function SelectCustomerModal({
 							<dd className="truncate">
 								{item.street}
 								<br />
-								{item.zip} {item.city}, {item.state}
-								<br />
-								{item.country}
+								{item.countryCode}-{item.zip} {item.city}, {item.state}
 							</dd>
 							<dt className="col-end-1 font-semibold text-gray-900">Email</dt>
 							<dd className="truncate">{item.email}</dd>

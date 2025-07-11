@@ -62,10 +62,8 @@ export function InvoiceHeader({
 									<br />
 									{data.customer?.street}
 									<br />
-									{data.customer?.zip} {data.customer?.city},{' '}
-									{data.customer?.state}
-									<br />
-									{data.customer?.country}
+									{data.customer.countryCode}-{data.customer?.zip}{' '}
+									{data.customer?.city}, {data.customer?.state}
 								</dd>
 							</>
 						)}
