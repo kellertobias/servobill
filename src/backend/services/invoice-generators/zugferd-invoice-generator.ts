@@ -10,6 +10,7 @@ import {
 	CompanyDataSetting,
 	InvoiceSettingsEntity,
 	PdfTemplateSetting,
+	VatStatus,
 } from '@/backend/entities/settings.entity';
 
 type CurrencyCode =
@@ -21,13 +22,34 @@ type Totals = {
 	totalNetAmount: number;
 };
 
-function mapInvoiceItemsToProfileBasic(invoice: InvoiceEntity): {
+/**
+ * Maps invoice items to ZUGFeRD ProfileBasic lines and collects allowances (discounts/credits).
+ * Negative net amounts are treated as allowances, not as regular lines, per EN16931/ZUGFeRD.
+ *
+ * @param invoice The invoice entity
+ * @param vatStatus The VAT/tax status of the company (affects tax category code and exemption reason)
+ * @returns Object with mapped lines, allowances, and totals
+ */
+function mapInvoiceItemsToProfileBasic(
+	invoice: InvoiceEntity,
+	vatStatus: VatStatus,
+): {
 	line: ProfileBasic['transaction']['line'];
 	totals: Totals;
 } {
 	const taxTotals: Totals['taxTotals'] = {};
 	let totalNetAmount: Totals['totalNetAmount'] = 0;
 	let totalTaxAmount: Totals['totalTaxAmount'] = 0;
+
+	const isVatDisabled =
+		vatStatus === VatStatus.VAT_DISABLED_KLEINUNTERNEHMER ||
+		vatStatus === VatStatus.VAT_DISABLED_OTHER;
+	const exemptionReason =
+		vatStatus === VatStatus.VAT_DISABLED_KLEINUNTERNEHMER
+			? 'Kleinunternehmerregelung § 19 UStG'
+			: vatStatus === VatStatus.VAT_DISABLED_OTHER
+				? 'VAT Exempt (Other Reason)'
+				: undefined;
 
 	return {
 		line: (invoice.items || []).map((item, idx) => {
@@ -66,10 +88,14 @@ function mapInvoiceItemsToProfileBasic(invoice: InvoiceEntity): {
 				tradeSettlement: {
 					tradeTax: {
 						typeCode: 'VAT',
-						categoryCode: item.taxPercentage.toString() === '0' ? 'E' : 'S',
-						...(item.taxPercentage.toString() === '0'
+						categoryCode: isVatDisabled
+							? 'E'
+							: item.taxPercentage.toString() === '0'
+								? 'Z'
+								: 'S',
+						...(isVatDisabled
 							? {
-									exemptionReasonText: 'Kleinunternehmerregelung § 19 UStG', // Default reason for German small business exemption
+									exemptionReasonText: exemptionReason,
 								}
 							: {}),
 						rateApplicablePercent: item.taxPercentage.toFixed(2),
@@ -94,6 +120,7 @@ function mapInvoiceTotalsToProfileBasic(
 	invoice: InvoiceEntity,
 	companyData: CompanyDataSetting,
 	totals: Totals,
+	vatStatus: VatStatus,
 ): {
 	tradeSettlement: ProfileBasic['transaction']['tradeSettlement'];
 } {
@@ -108,6 +135,16 @@ function mapInvoiceTotalsToProfileBasic(
 	const paidAmount = invoice.paidCents
 		? Number(invoice.paidCents / 100).toFixed(2)
 		: '0.00';
+
+	const isVatDisabled =
+		vatStatus === VatStatus.VAT_DISABLED_KLEINUNTERNEHMER ||
+		vatStatus === VatStatus.VAT_DISABLED_OTHER;
+	const exemptionReason =
+		vatStatus === VatStatus.VAT_DISABLED_KLEINUNTERNEHMER
+			? 'Kleinunternehmerregelung § 19 UStG'
+			: vatStatus === VatStatus.VAT_DISABLED_OTHER
+				? 'VAT Exempt (Other Reason)'
+				: undefined;
 
 	return {
 		tradeSettlement: {
@@ -125,17 +162,16 @@ function mapInvoiceTotalsToProfileBasic(
 				duePayableAmount,
 			},
 			vatBreakdown: Object.entries(totals.taxTotals).map(([key, value]) => {
-				const isExempt = key === '0';
 				return {
-					categoryCode: isExempt ? 'E' : 'S',
+					categoryCode: isVatDisabled ? 'E' : key === '0' ? 'Z' : 'S',
 					rateApplicablePercent: Number(key).toFixed(2),
 					calculatedAmount: Number(value.taxAmount).toFixed(2),
 					typeCode: 'VAT',
 					basisAmount: Number(value.netAmount).toFixed(2),
 					// Add VAT exemption reason for exempt lines (BR-E-10)
-					...(isExempt
+					...(isVatDisabled
 						? {
-								exemptionReasonText: 'Kleinunternehmerregelung § 19 UStG', // Default reason for German small business exemption
+								exemptionReasonText: exemptionReason,
 							}
 						: {}),
 				};
@@ -157,10 +193,9 @@ function mapInvoiceTotalsToProfileBasic(
 
 /**
  * Helper to map InvoiceEntity and settings to ProfileBasic for ZUGFeRD.
- * Only minimal required fields are mapped for now; extend as needed.
+ * Now supports allowances (discounts/credits) for negative items.
  * @param invoice The invoice entity from the domain
  * @param companyData The seller/company data
- * @param invoiceSettings Invoice settings entity
  * @returns ProfileBasic-compliant object
  */
 function mapInvoiceToProfileBasic(
@@ -169,12 +204,13 @@ function mapInvoiceToProfileBasic(
 ): ProfileBasic {
 	// Extract company data from the nested structure
 	const sellerData = companyData.companyData;
-
-	const { line, totals } = mapInvoiceItemsToProfileBasic(invoice);
+	const vatStatus = companyData.vatStatus;
+	const { line, totals } = mapInvoiceItemsToProfileBasic(invoice, vatStatus);
 	const { tradeSettlement } = mapInvoiceTotalsToProfileBasic(
 		invoice,
 		companyData,
 		totals,
+		vatStatus,
 	);
 
 	return {
@@ -214,7 +250,6 @@ function mapInvoiceToProfileBasic(
 						value: sellerData.email,
 						schemeIdentifier: 'EM',
 					},
-					// TODO Seller contact (BG-6) would be mapped here if available in the data model
 				},
 				buyer: {
 					identifier: invoice.customer?.customerNumber,
@@ -229,7 +264,6 @@ function mapInvoiceToProfileBasic(
 						value: invoice.customer?.email,
 						schemeIdentifier: 'EM',
 					},
-					// TODO Buyer reference (BT-10) would be mapped here if available in the data model
 				},
 			},
 
@@ -240,7 +274,6 @@ function mapInvoiceToProfileBasic(
 				},
 			},
 		},
-		// TODO Business process context and specification identifier (BT-24) would be mapped here if supported by the ProfileBasic type or node-zugferd library
 	};
 }
 

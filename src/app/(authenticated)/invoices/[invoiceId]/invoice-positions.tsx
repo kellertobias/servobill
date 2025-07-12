@@ -11,17 +11,31 @@ import {
 	getInvoiceTaxTotal,
 	getInvoiceTotal,
 } from '@/common/invoice';
+import { VatStatus } from '@/common/gql/graphql';
 
+/**
+ * InvoicePositions renders the invoice item table and summary.
+ *
+ * @param data - The invoice data, including items and totals.
+ * @param onChange - Callback for when invoice data changes.
+ * @param locked - Whether the invoice is locked for editing.
+ * @param vatStatus - The VAT/tax status of the company (controls VAT column visibility).
+ */
 export function InvoicePositions({
 	data,
 	onChange,
 	locked,
+	vatStatus,
 }: {
 	data: InvoiceData;
 	onChange: (data: Partial<InvoiceData>) => void;
 	locked: boolean;
+	vatStatus: string;
 }) {
-	const columns = 'sm:grid-cols-[auto_60px_80px_50px_90px]';
+	const columns =
+		vatStatus === VatStatus.VatEnabled
+			? 'sm:grid-cols-[auto_60px_80px_50px_90px]'
+			: 'sm:grid-cols-[auto_60px_80px_90px]';
 	const singleColumn = 'col-span-1';
 	const itemPricePart = 'grid grid-cols-[auto_90px]';
 	const itemPricePartName = 'font-medium text-gray-900 sm:hidden';
@@ -41,9 +55,11 @@ export function InvoicePositions({
 				<div className={clsx(singleColumn, 'text-right hidden sm:block')}>
 					Price
 				</div>
-				<div className={clsx(singleColumn, 'text-right hidden sm:block')}>
-					Tax
-				</div>
+				{vatStatus === 'VAT_ENABLED' && (
+					<div className={clsx(singleColumn, 'text-right hidden sm:block')}>
+						Tax
+					</div>
+				)}
 				<div className={clsx(singleColumn, 'text-right')}>Total</div>
 			</div>
 			{data.items?.map((item, index) => (
@@ -58,6 +74,7 @@ export function InvoicePositions({
 					index={index}
 					onChange={onChange}
 					locked={locked}
+					vatStatus={vatStatus}
 				/>
 			))}
 
@@ -102,12 +119,14 @@ export function InvoicePositions({
 							{API.centsToPrice(getInvoiceSubTotal(data))} €
 						</div>
 					</div>
-					<div className={clsx(itemPricePart, 'py-1')}>
-						<div className="col-span-1 text-right">Tax</div>
-						<div className="col-span-1 text-right">
-							{API.centsToPrice(getInvoiceTaxTotal(data))} €
+					{vatStatus === 'VAT_ENABLED' && (
+						<div className={clsx(itemPricePart, 'py-1')}>
+							<div className="col-span-1 text-right">Tax</div>
+							<div className="col-span-1 text-right">
+								{API.centsToPrice(getInvoiceTaxTotal(data))} €
+							</div>
 						</div>
-					</div>
+					)}
 					<div className={clsx(itemPricePart, 'font-semibold py-1')}>
 						<div className="col-span-1 text-right">Total</div>
 						<div className="col-span-1 text-right">

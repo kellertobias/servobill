@@ -23,21 +23,27 @@ We will update this roadmap as we progress with the development of Servobill.
 - [X] Add history/ notes on inventory items (e.g. when serviced, etc.)
 - [X] Add simple Barcode scanner for inventory items (e.g. for QR codes)
 
-
 ## Milestone "Auto-Generate expenses" (based on incoming invoices) (planned till end of July 2025):
 - [X] Add AI Upload of invoices (e.g. from PDF) to automatically create expenses and inventory items
-- [ ] Add support for incoming digital invoices (e.g. X-Rechnung/ ZugFeRD)
 - [ ] Add support for incoming invoice emails (either parse digital invoice or use AI to parse)
 
-## Milestone "Digital outgoing invoices" (planned till end of August 2025):
-- [X] Add support for sending digital invoices (e.g. X-Rechnung/ ZugFeRD)
-- [ ] Add support for automatically sending invoices at a given date
+
+## Milestone "Digital outgoing invoices" (planned till end of July 2025):
+- [X] Add basic support for sending e-invoices (e.g. X-Rechnung)
+- [X] Add basic support for sending e-invoices (e.g. ZugFeRD)
+- [ ] Support VAT types (e.g. VAT_DISABLED_KLEINUNTERNEHMER)
+- [ ] Support discounts on e-invoices
+
+## Milestone "Incoming e-invoices" (planned till end of July 2025):
+- [ ] Add support for incoming digital invoices (e.g. X-Rechnung/ ZugFeRD)
+
 
 ## Milestone "Full Standalone" (planned till end of September 2025):
 - [ ] Add automatic backups of data (e.g. via email or to S3)
 - [ ] Add local user management (e.g. for self-hosted deployments)
 
 ## Long term (MRs welcome after PRD and TDD discussions):
+- [ ] Add support for automatically sending invoices at a given date
 - [ ] Add "Projects" assign inventory items to projects (e.g. for packing lists, etc.)
 - [ ] Add S3 lifecycle rules to automatically archive old data (e.g. glacier to save on storage)
 - [ ] Add pagination to all lists

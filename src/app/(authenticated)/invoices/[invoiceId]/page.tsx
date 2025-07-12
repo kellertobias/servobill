@@ -11,7 +11,7 @@ import { API, gql } from '@/api/index';
 import { doToast } from '@/components/toast';
 import { confirmDialog } from '@/components/dialog';
 
-import { useInvoiceData } from './data';
+import { useInvoiceData, useInvoiceSettingsData } from './data';
 import { InvoiceStatusPaid } from './invoice-status/invoice-status-paid';
 import { InvoiceStatusSent } from './invoice-status/invoice-status-sent';
 import { InvoiceStatusDraft } from './invoice-status/invoice-status-draft';
@@ -22,11 +22,13 @@ import { InvoicePositions } from './invoice-positions';
 import { InvoiceHeader } from './invoice-header';
 import { InvoiceStatusCancelled } from './invoice-status/invoice-status-cancelled';
 
-import { InvoiceStatus, InvoiceType } from '@/common/gql/graphql';
+import { InvoiceStatus, InvoiceType, VatStatus } from '@/common/gql/graphql';
 
 export default function InvoiceDetailPage() {
 	const router = useRouter();
 	const { data, initialData, setData, loading, reload } = useInvoiceData();
+	const { data: settings } = useInvoiceSettingsData();
+
 	const hasChanges = useHasChanges(data, initialData, (inv) => ({
 		customer: {
 			id: inv?.customer?.id,
@@ -222,6 +224,7 @@ export default function InvoiceDetailPage() {
 									setData((current) => ({ ...current, ...changes }))
 								}
 								locked={locked}
+								vatStatus={settings?.company?.vatStatus || VatStatus.VatEnabled}
 							/>
 						</div>
 						<div className="mt-4 flex flex-row justify-end gap-2 text-right lg:-mb-12">

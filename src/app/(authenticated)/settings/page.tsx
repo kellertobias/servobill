@@ -19,6 +19,7 @@ import { CountryCodeSelection } from '@/components/country-code-selection';
 import SelectInput from '@/app/_components/select-input';
 
 import { Numbering } from '@/common/numbers';
+import { VatStatus } from '@/common/gql/graphql';
 
 function NumberValidity({
 	template,
@@ -93,6 +94,7 @@ export default function SettingsHomePage() {
 								bankIban
 								bankBic
 								countryCode
+								vatStatus
 							}
 							currency
 							invoiceOutputFormat
@@ -119,6 +121,7 @@ export default function SettingsHomePage() {
 				companyBankIban: res.settings.company?.bankIban || '',
 				companyBankBic: res.settings.company?.bankBic || '',
 				companyCountryCode: res.settings.company?.countryCode || 'DE',
+				vatStatus: res.settings.company?.vatStatus || VatStatus.VatEnabled,
 				currency: res.settings.currency || 'EUR',
 				invoiceOutputFormat: res.settings.invoiceOutputFormat || 'PDF',
 			};
@@ -302,6 +305,44 @@ export default function SettingsHomePage() {
 							</div>
 						}
 					>
+						{/* VAT/tax status selector */}
+						{/*
+							This select allows the user to specify the VAT/tax status of the company.
+							- VAT Enabled: Standard VAT applies, invoices include VAT.
+							- VAT Disabled (Kleinunternehmerregelung § 19 UStG): For small businesses in Germany exempt from VAT.
+							- VAT Disabled (Other): For other legal reasons (e.g., non-profit, foreign entity).
+						*/}
+						<SelectInput
+							label="VAT/Tax Status"
+							value={data?.vatStatus || VatStatus.VatEnabled}
+							onChange={(vatStatus: string | null) => {
+								setData((current) => ({
+									...current,
+									vatStatus: (vatStatus || VatStatus.VatEnabled) as VatStatus,
+								}));
+							}}
+							options={[
+								{
+									value: VatStatus.VatEnabled,
+									label: 'VAT Enabled',
+									description:
+										'Invoices include VAT. Standard for most businesses.',
+								},
+								{
+									value: VatStatus.VatDisabledKleinunternehmer,
+									label: 'VAT Disabled (Kleinunternehmerregelung § 19 UStG)',
+									description:
+										'Small business exemption (Germany). No VAT on invoices.',
+								},
+								{
+									value: VatStatus.VatDisabledOther,
+									label: 'VAT Disabled (Other)',
+									description:
+										'No VAT for other legal reasons (e.g., non-profit, foreign entity).',
+								},
+							]}
+							className="w-full"
+						/>
 						<Input
 							label="Tax ID"
 							value={data?.companyTaxId}
@@ -849,6 +890,8 @@ export default function SettingsHomePage() {
 													bankIban: data.companyBankIban || '',
 													bankBic: data.companyBankBic || '',
 													countryCode: data.companyCountryCode || 'DE',
+													// Add VAT/tax status to mutation payload
+													vatStatus: data.vatStatus || 'VAT_ENABLED',
 												},
 												defaultInvoiceDueDays: Number(
 													data.defaultInvoiceDueDays || '0',

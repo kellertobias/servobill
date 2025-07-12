@@ -77,6 +77,7 @@ export class SystemResolver {
 				bankAccountHolder: company.companyData.bank.accountHolder || '',
 				bankIban: company.companyData.bank.iban || '',
 				bankBic: company.companyData.bank.bic || '',
+				vatStatus: company.vatStatus,
 			},
 			sendFrom: company.sendFrom || '',
 			replyTo: company.replyTo || '',
@@ -223,6 +224,10 @@ export class SystemResolver {
 
 		if (nextData.currency) {
 			companyData.currency = nextData.currency;
+		}
+
+		if (nextData.company?.vatStatus) {
+			companyData.vatStatus = nextData.company.vatStatus;
 		}
 
 		await companyData.save();

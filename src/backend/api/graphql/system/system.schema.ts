@@ -4,6 +4,7 @@ import { IsBoolean, IsString } from 'class-validator';
 import {
 	InvoiceOutputFormat,
 	PdfTemplateSetting,
+	VatStatus,
 } from '@/backend/entities/settings.entity';
 import { ObjectProperties } from '@/common/ts-helpers';
 
@@ -86,6 +87,12 @@ export class SettingsResultCompany {
 	 */
 	@Field(() => String, { nullable: true })
 	countryCode?: string;
+
+	/**
+	 * VAT/tax status of the company. Determines if VAT is shown on invoices and which legal regime applies.
+	 */
+	@Field(() => VatStatus, { nullable: true })
+	vatStatus?: VatStatus;
 }
 
 @InputType('ExpenseCategoryInputType')
@@ -391,6 +398,12 @@ export class SettingsCompanyInput implements Partial<SettingsResultCompany> {
 	@IsString()
 	@Field(() => String, { nullable: true })
 	countryCode?: string;
+
+	/**
+	 * VAT/tax status of the company. Determines if VAT is shown on invoices and which legal regime applies.
+	 */
+	@Field(() => VatStatus, { nullable: true })
+	vatStatus?: VatStatus;
 }
 
 /**

@@ -15,6 +15,20 @@ export enum InvoiceOutputFormat {
 	ZUGFERD = 'ZUGFERD',
 }
 
+/**
+ * Enum representing the VAT/tax status of the company.
+ *
+ * - VAT_ENABLED: VAT is enabled and invoices include VAT.
+ * - VAT_DISABLED_KLEINUNTERNEHMER: VAT is disabled due to Kleinunternehmerregelung (§ 19 UStG, Germany).
+ * - VAT_DISABLED_OTHER: VAT is disabled for other reasons (e.g., non-profit, foreign entity, etc).
+ */
+export enum VatStatus {
+	VAT_ENABLED = 'VAT_ENABLED',
+	VAT_DISABLED_KLEINUNTERNEHMER = 'VAT_DISABLED_KLEINUNTERNEHMER',
+	// Feel free to open a PR to add more VAT statuses
+	VAT_DISABLED_OTHER = 'VAT_DISABLED_OTHER',
+}
+
 export abstract class AbstractSettingsEntity {
 	public async save(): Promise<void> {}
 	public static settingId: string;
@@ -318,6 +332,14 @@ export class CompanyDataSetting extends AbstractSettingsEntity {
 	 */
 	public currency!: string;
 
+	/**
+	 * The VAT/tax status of the company. Determines if VAT is shown on invoices and which legal regime applies.
+	 * - VAT_ENABLED: VAT is enabled and invoices include VAT.
+	 * - VAT_DISABLED_KLEINUNTERNEHMER: VAT is disabled due to Kleinunternehmerregelung (§ 19 UStG, Germany).
+	 * - VAT_DISABLED_OTHER: VAT is disabled for other reasons (e.g., non-profit, foreign entity, etc).
+	 */
+	public vatStatus: VatStatus = VatStatus.VAT_ENABLED;
+
 	constructor(
 		params: Partial<ObjectProperties<CompanyDataSetting>>,
 		private saveInner: (data: string) => Promise<void>,
@@ -374,6 +396,19 @@ export class CompanyDataSetting extends AbstractSettingsEntity {
 		if (!this.currency) {
 			this.currency = params.currency || 'EUR';
 		}
+		if (
+			params.vatStatus &&
+			Object.values(VatStatus).includes(params.vatStatus)
+		) {
+			this.vatStatus = params.vatStatus;
+		} else if (
+			typeof params.vatStatus === 'string' &&
+			VatStatus[params.vatStatus as keyof typeof VatStatus]
+		) {
+			this.vatStatus = VatStatus[params.vatStatus as keyof typeof VatStatus];
+		} else {
+			this.vatStatus = VatStatus.VAT_ENABLED;
+		}
 	}
 
 	public serializable() {
@@ -389,6 +424,7 @@ export class CompanyDataSetting extends AbstractSettingsEntity {
 			replyTo: this.replyTo,
 			companyData: this.companyData,
 			currency: this.currency,
+			vatStatus: this.vatStatus,
 		};
 	}
 

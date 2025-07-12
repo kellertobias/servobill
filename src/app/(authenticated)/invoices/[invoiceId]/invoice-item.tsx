@@ -12,6 +12,13 @@ import {
 } from './helpers';
 import { ProductCatalogModal } from './product-catalog-modal';
 
+import { VatStatus } from '@/common/gql/graphql';
+
+/**
+ * InvoiceItem renders a single invoice item row.
+ *
+ * @param vatStatus - The VAT/tax status of the company (controls VAT cell visibility).
+ */
 export function InvoiceItem({
 	data,
 	item,
@@ -22,6 +29,7 @@ export function InvoiceItem({
 	singleColumn,
 	itemPricePart,
 	itemPricePartName,
+	vatStatus,
 }: {
 	data: InvoiceData['items'];
 	item: InvoiceData['items'][number];
@@ -32,6 +40,7 @@ export function InvoiceItem({
 	singleColumn: string;
 	itemPricePart: string;
 	itemPricePartName: string;
+	vatStatus: string;
 }) {
 	const onChangeItem = (change: Partial<InvoiceData['items'][number]>) => {
 		onChange({
@@ -185,29 +194,31 @@ export function InvoiceItem({
 							/>
 						</div>
 					</div>
-					<div className={clsx(singleColumn, itemPricePart, 'text-right')}>
-						<div className={itemPricePartName}>Tax</div>
-						<div>
-							<InlineEditableText
-								placeholder="Tax"
-								value={item.taxPercentage.toString()}
-								postfix="%"
-								textRight
-								onChange={(taxPercentage) => {
-									onChangeItem({
-										taxPercentage: taxPercentage as unknown as number,
-									});
-								}}
-								locked={locked}
-							/>
+					{vatStatus === VatStatus.VatEnabled && (
+						<div className={clsx(singleColumn, itemPricePart, 'text-right')}>
+							<div className={itemPricePartName}>Tax</div>
+							<div>
+								<InlineEditableText
+									placeholder="Tax"
+									value={item.taxPercentage.toString()}
+									postfix="%"
+									textRight
+									onChange={(taxPercentage) => {
+										onChangeItem({
+											taxPercentage: taxPercentage as unknown as number,
+										});
+									}}
+									locked={locked}
+								/>
+							</div>
 						</div>
-					</div>
+					)}
 					<div className={clsx(singleColumn, itemPricePart, 'text-right')}>
 						<div className={itemPricePartName}>Total</div>
 						<div>
 							{Number(
 								((Number(item.priceCents) * Number(item.quantity)) / 100) *
-									(1 + Number(item.taxPercentage) / 100),
+									(1 + Number(item.taxPercentage || 0) / 100),
 							).toFixed(2)}{' '}
 							€
 						</div>

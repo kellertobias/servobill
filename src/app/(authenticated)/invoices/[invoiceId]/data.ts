@@ -74,6 +74,17 @@ export const useInvoiceData = () =>
 		})),
 	);
 
+export const useInvoiceSettingsData = () =>
+	useLoadData(async () =>
+		API.query({
+			query: gql(`
+				query GetSettingsVatStatus {
+					settings { company { vatStatus } }
+				}
+			`),
+		}).then((data) => data.settings),
+	);
+
 export type InvoiceData = NonNullable<
 	ReturnType<typeof useInvoiceData>['data']
 >;

@@ -3,6 +3,7 @@ import { Invoice, InvoiceService } from '@e-invoice-eu/core';
 import {
 	InvoiceCurrencyCode,
 	PaymentMeansTypeCode,
+	VATBREAKDOWN,
 	VATCategoryCode,
 } from '@e-invoice-eu/core/dist/invoice/invoice.interface';
 
@@ -13,28 +14,38 @@ import {
 	CompanyDataSetting,
 	InvoiceSettingsEntity,
 	PdfTemplateSetting,
+	VatStatus,
 } from '@/backend/entities/settings.entity';
 import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
 
-// Helper to determine if all items are 0% tax
-function allItemsExempt(items: InvoiceItemEntity[]): boolean {
-	return items.length > 0 && items.every((item) => item.taxPercentage === 0);
-}
-
-// Helper to determine VAT category code based on tax percentage and exemption
+/**
+ * Helper to determine VAT category code based on tax percentage, exemption, and company VAT status.
+ *
+ * @param taxPercentage - The tax percentage for the item
+ * @param allExempt - Whether all items are exempt
+ * @param vatStatus - The VAT/tax status of the company
+ * @returns VATCategoryCode ('E', 'S', or 'Z')
+ */
 function getVatCategoryCode(
 	taxPercentage: number,
 	allExempt: boolean,
+	vatStatus: string,
 ): VATCategoryCode {
+	if (
+		vatStatus === VatStatus.VAT_DISABLED_KLEINUNTERNEHMER ||
+		vatStatus === VatStatus.VAT_DISABLED_OTHER
+	) {
+		return 'E';
+	}
 	if (allExempt) {
 		return 'E';
-	} // All exempt
+	}
 	if (taxPercentage > 0) {
 		return 'S';
-	} // Standard rate
+	}
 	if (taxPercentage === 0) {
 		return 'Z';
-	} // Zero-rated
+	}
 	return 'E'; // Fallback
 }
 
@@ -43,8 +54,9 @@ function mapInvoiceLineToUbl(
 	idx: number,
 	currency: string,
 	allExempt: boolean,
+	vatStatus: string,
 ): Invoice['ubl:Invoice']['cac:InvoiceLine'][number] {
-	const vatCode = getVatCategoryCode(item.taxPercentage, allExempt);
+	const vatCode = getVatCategoryCode(item.taxPercentage, allExempt, vatStatus);
 	return {
 		'cbc:ID': String(idx + 1),
 		'cbc:InvoicedQuantity': item.quantity.toFixed(2),
@@ -56,7 +68,6 @@ function mapInvoiceLineToUbl(
 		'cbc:LineExtensionAmount@currencyID': currency as InvoiceCurrencyCode,
 		'cac:Item': {
 			'cbc:Name': item.name,
-			// Only include Description if non-empty, else fallback to name
 			...(item.description
 				? { 'cbc:Description': item.description }
 				: { 'cbc:Description': item.name }),
@@ -84,6 +95,7 @@ function mapInvoiceToUbl(
 	const seller = companyData.companyData;
 	const buyer = invoice.customer;
 	const currency = companyData.currency || 'EUR';
+	const vatStatus = companyData.vatStatus;
 
 	if (!buyer.email) {
 		throw new Error('Buyer email is required for XRechnung');
@@ -93,7 +105,11 @@ function mapInvoiceToUbl(
 	const totalNet = ((invoice.totalCents || 0) - (invoice.totalTax || 0)) / 100;
 	const grandTotal = (invoice.totalCents || 0) / 100;
 
-	const allExempt = allItemsExempt(items);
+	const allExempt =
+		vatStatus === VatStatus.VAT_DISABLED_KLEINUNTERNEHMER ||
+		vatStatus === VatStatus.VAT_DISABLED_OTHER
+			? true
+			: items.length > 0 && items.every((item) => item.taxPercentage === 0);
 
 	// Group items by VAT rate and code for tax subtotals
 	let taxGroups;
@@ -107,7 +123,7 @@ function mapInvoiceToUbl(
 			{ rate: number; code: string; items: InvoiceItemEntity[] }
 		> = {};
 		for (const item of items) {
-			const code = getVatCategoryCode(item.taxPercentage, false);
+			const code = getVatCategoryCode(item.taxPercentage, false, vatStatus);
 			const rate = item.taxPercentage || 0;
 			const key = `${code}_${rate}`;
 			if (!groups[key]) {
@@ -118,7 +134,7 @@ function mapInvoiceToUbl(
 		taxGroups = Object.values(groups);
 	}
 
-	const taxSubtotals = taxGroups.map((group) => {
+	const taxSubtotals = taxGroups.map((group): VATBREAKDOWN => {
 		const taxableAmount = group.items.reduce(
 			(sum, item) => sum + (item.priceCents * item.quantity) / 100,
 			0,
@@ -126,6 +142,23 @@ function mapInvoiceToUbl(
 		const percent = group.rate;
 		const taxAmount = +(taxableAmount * (percent / 100)).toFixed(2); // round to two decimals
 		const vatCode = group.code as VATCategoryCode;
+
+		/**
+		 * XRechnung BR-E-10: If VAT Category code is 'E' (Exempt), a VAT exemption reason text (BT-120) must be provided.
+		 * - For Kleinunternehmerregelung, use 'Kleinunternehmerregelung § 19 UStG'.
+		 * - For other exemptions, use a generic reason.
+		 */
+		let exemptionReason: string | undefined;
+		if (vatCode === 'E') {
+			if (vatStatus === VatStatus.VAT_DISABLED_KLEINUNTERNEHMER) {
+				exemptionReason = 'Kleinunternehmerregelung § 19 UStG';
+			} else if (vatStatus === VatStatus.VAT_DISABLED_OTHER) {
+				exemptionReason = 'VAT Exempt (Other Reason)';
+			} else {
+				exemptionReason = 'VAT Exempt';
+			}
+		}
+
 		return {
 			'cbc:TaxableAmount': taxableAmount.toFixed(2),
 			'cbc:TaxableAmount@currencyID': currency as InvoiceCurrencyCode,
@@ -135,6 +168,10 @@ function mapInvoiceToUbl(
 				'cbc:ID': vatCode,
 				'cbc:Percent': percent.toFixed(2),
 				'cac:TaxScheme': { 'cbc:ID': 'VAT' },
+				// Add exemption reason if required by XRechnung
+				...(exemptionReason
+					? { 'cbc:TaxExemptionReason': exemptionReason }
+					: {}),
 			},
 		};
 	});
@@ -238,7 +275,7 @@ function mapInvoiceToUbl(
 			},
 		},
 		'cac:InvoiceLine': items.map((item, idx) =>
-			mapInvoiceLineToUbl(item, idx, currency, allExempt),
+			mapInvoiceLineToUbl(item, idx, currency, allExempt, vatStatus),
 		) as Invoice['ubl:Invoice']['cac:InvoiceLine'],
 		'cac:TaxTotal': [
 			{

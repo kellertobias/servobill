@@ -8,7 +8,10 @@ import {
 	InventoryCheckState,
 	InventoryHistoryType,
 } from '@/backend/entities/inventory-item.entity';
-import { InvoiceOutputFormat } from '@/backend/entities/settings.entity';
+import {
+	InvoiceOutputFormat,
+	VatStatus,
+} from '@/backend/entities/settings.entity';
 
 // Register enums for GraphQL
 registerEnumType(InventoryItemState, {
@@ -49,4 +52,17 @@ registerEnumType(InvoiceSubmissionType, {
 registerEnumType(InvoiceOutputFormat, {
 	name: 'InvoiceOutputFormat',
 	description: 'Supported output formats for digital invoices',
+});
+
+/**
+ * Enum representing the VAT/tax status of the company.
+ *
+ * - VAT_ENABLED: VAT is enabled and invoices include VAT.
+ * - VAT_DISABLED_KLEINUNTERNEHMER: VAT is disabled due to Kleinunternehmerregelung (§ 19 UStG, Germany).
+ * - VAT_DISABLED_OTHER: VAT is disabled for other reasons (e.g., non-profit, foreign entity, etc).
+ */
+registerEnumType(VatStatus, {
+	name: 'VatStatus',
+	description:
+		'VAT/tax status of the company (affects invoice tax display and legal compliance)',
 });

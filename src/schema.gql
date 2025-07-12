@@ -662,6 +662,7 @@ input SettingsCompanyInput {
   street: String
   taxId: String
   vatId: String
+  vatStatus: VatStatus
   web: String
   zip: String
 }
@@ -733,6 +734,16 @@ type SettingsResultCompany {
   street: String
   taxId: String
   vatId: String
+  vatStatus: VatStatus
   web: String
   zip: String
+}
+
+"""
+VAT/tax status of the company (affects invoice tax display and legal compliance)
+"""
+enum VatStatus {
+  VAT_DISABLED_KLEINUNTERNEHMER
+  VAT_DISABLED_OTHER
+  VAT_ENABLED
 }
