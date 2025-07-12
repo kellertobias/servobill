@@ -1,5 +1,6 @@
 // PDFInvoiceGenerator: Strategy for generating PDF invoices only.
 import { InvoiceGeneratorStrategy } from './interface';
+import { StorageLoaderStrategy } from './storage';
 
 import { InvoiceEntity } from '@/backend/entities/invoice.entity';
 import {
@@ -21,7 +22,7 @@ import { DefaultContainer } from '@/common/di';
 export class PDFInvoiceGenerator extends InvoiceGeneratorStrategy {
 	private readonly cqrs: CqrsBus;
 
-	constructor() {
+	constructor(private readonly storageStrategy?: StorageLoaderStrategy) {
 		super();
 		this.cqrs = CqrsBus.forRoot({
 			handlers: [CreateInvoicePdfHandler, GenerateInvoiceHtmlHandler],
@@ -39,7 +40,15 @@ export class PDFInvoiceGenerator extends InvoiceGeneratorStrategy {
 			invoiceSettings: InvoiceSettingsEntity;
 			template: PdfTemplateSetting;
 		},
-	): Promise<{ content: Buffer; filename: string; mimeType: string }[]> {
+	): Promise<{ content: Buffer; filename: string; mimeType?: string }[]> {
+		if (
+			invoice.pdf?.forContentHash === invoice.contentHash &&
+			invoice.pdf?.key &&
+			this.storageStrategy
+		) {
+			return await this.storageStrategy.generate(invoice, options);
+		}
+
 		// Generate HTML for the invoice
 		const { html } = await this.cqrs.execute(
 			new GenerateInvoiceHtmlCommand({
@@ -57,9 +66,15 @@ export class PDFInvoiceGenerator extends InvoiceGeneratorStrategy {
 				html,
 			}),
 		);
+
 		if (!success) {
 			throw new Error('PDF generation failed');
 		}
+
+		if (this.storageStrategy) {
+			await this.storageStrategy.store(invoice, pdf, 'invoice.pdf');
+		}
+
 		return [
 			{
 				content: pdf,

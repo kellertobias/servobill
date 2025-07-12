@@ -283,11 +283,23 @@ function mapInvoiceToProfileBasic(
  * The combine(pdf, xml) method is stubbed for now.
  */
 export class ZugferdInvoiceGenerator extends InvoiceGeneratorStrategy {
-	private readonly pdfStrategy: PDFInvoiceGenerator;
-
-	constructor() {
+	constructor(private readonly pdfStrategy?: PDFInvoiceGenerator) {
 		super();
-		this.pdfStrategy = new PDFInvoiceGenerator();
+	}
+
+	private async getOptionalPdf(
+		invoice: InvoiceEntity,
+		options: {
+			companyData: CompanyDataSetting;
+			invoiceSettings: InvoiceSettingsEntity;
+			template: PdfTemplateSetting;
+		},
+	) {
+		if (this.pdfStrategy) {
+			const pdf = await this.pdfStrategy.generate(invoice, options);
+			return pdf[0].content;
+		}
+		return;
 	}
 
 	/**
@@ -304,8 +316,7 @@ export class ZugferdInvoiceGenerator extends InvoiceGeneratorStrategy {
 		},
 	): Promise<{ content: Buffer; filename: string; mimeType: string }[]> {
 		// Generate PDF using the PDF strategy
-		const pdfResult = await this.pdfStrategy.generate(invoice, options);
-		const pdfBuffer = pdfResult[0].content;
+		const pdfBuffer = await this.getOptionalPdf(invoice, options);
 
 		// Map InvoiceEntity to ProfileBasic (domain-specific mapping)
 		const profileData: ProfileBasic = mapInvoiceToProfileBasic(
@@ -315,6 +326,17 @@ export class ZugferdInvoiceGenerator extends InvoiceGeneratorStrategy {
 
 		const invoicer = zugferd({ profile: BASIC, strict: false });
 		const zugferdInvoice = invoicer.create(profileData);
+
+		if (!pdfBuffer) {
+			const data = await zugferdInvoice.toXML();
+			return [
+				{
+					content: Buffer.from(data, 'utf8'),
+					filename: 'zugferd.xml',
+					mimeType: 'application/xml',
+				},
+			];
+		}
 
 		// Convert Node.js Buffer to Uint8Array for compatibility
 		const pdfUint8 = new Uint8Array(

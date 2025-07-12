@@ -21,12 +21,10 @@ import {
 } from '@/backend/services/file-storage.service';
 import { DefaultContainer, Inject, Service } from '@/common/di';
 import { Logger } from '@/backend/services/logger.service';
-import { InvoiceEntity } from '@/backend/entities/invoice.entity';
 import { InvoiceOutputFormat } from '@/backend/entities/settings.entity';
 import { PDFInvoiceGenerator } from '@/backend/services/invoice-generators/pdf-invoice-generator';
 import { ZugferdInvoiceGenerator } from '@/backend/services/invoice-generators/zugferd-invoice-generator';
 import { XRechnungInvoiceGenerator } from '@/backend/services/invoice-generators/xrechnung-invoice-generator';
-import { XRechnungPdfInvoiceGenerator } from '@/backend/services/invoice-generators/xrechnung-pdf-invoice-generator';
 import { StorageLoaderStrategy } from '@/backend/services/invoice-generators/storage';
 import type { ConfigService } from '@/backend/services/config.service';
 import { CONFIG_SERVICE } from '@/backend/services/di-tokens';
@@ -81,29 +79,13 @@ export class HandlerExecution {
 		const outputFormat =
 			invoiceSettings.invoiceOutputFormat as InvoiceOutputFormat;
 
-		const generator = await this.getGenerator(invoice, outputFormat);
-		const attachments = await generator.generate(invoice, {
+		const generator = await this.getGenerator(outputFormat);
+
+		const baseAttachments = await generator.generate(invoice, {
 			companyData,
 			invoiceSettings,
 			template,
 		});
-
-		if (!(generator instanceof StorageLoaderStrategy)) {
-			// upload the new pdf to s3
-			let relevantKey = '';
-			for (const attachment of attachments) {
-				const key = `${invoice.id}/${attachment.filename}`;
-				await this.fileStorageService.saveFile(key, attachment.content, {
-					bucket: this.config.buckets.files,
-				});
-				relevantKey = key;
-			}
-			invoice.updatePdf({
-				bucket: this.config.buckets.files,
-				key: relevantKey,
-				region: this.config.region,
-			});
-		}
 
 		const extraAttachments =
 			await this.invoiceEmailSender.getAttachments(invoice);
@@ -115,39 +97,33 @@ export class HandlerExecution {
 		await this.invoiceRepository.save(invoice);
 
 		// Compose attachments array based on output format
-		const emailAttachments = [...attachments, ...extraAttachments];
+		const attachments = [...baseAttachments, ...extraAttachments];
 
 		this.invoiceEmailSender.sendEmail(
 			event.id,
 			invoice,
 			companyData,
-			emailAttachments,
+			attachments,
 		);
 	}
 
-	private async getGenerator(
-		invoice: InvoiceEntity,
-		outputFormat: InvoiceOutputFormat,
-	) {
-		if (
-			invoice.pdf?.forContentHash === invoice.contentHash &&
-			invoice.pdf?.key
-		) {
-			return new StorageLoaderStrategy(this.fileStorageService);
-		}
+	private async getGenerator(outputFormat: InvoiceOutputFormat) {
+		const pdfGenerator = new PDFInvoiceGenerator(
+			new StorageLoaderStrategy(this.fileStorageService, this.config),
+		);
 
 		switch (outputFormat) {
 			case InvoiceOutputFormat.PDF: {
-				return new PDFInvoiceGenerator();
+				return pdfGenerator;
 			}
 			case InvoiceOutputFormat.XRECHNUNG_PDF: {
-				return new XRechnungPdfInvoiceGenerator();
+				return new XRechnungInvoiceGenerator(pdfGenerator);
 			}
 			case InvoiceOutputFormat.XRECHNUNG: {
 				return new XRechnungInvoiceGenerator();
 			}
 			case InvoiceOutputFormat.ZUGFERD: {
-				return new ZugferdInvoiceGenerator();
+				return new ZugferdInvoiceGenerator(pdfGenerator);
 			}
 		}
 	}

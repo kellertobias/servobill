@@ -1,4 +1,5 @@
 // PDFInvoiceGenerator: Strategy for generating PDF invoices only.
+import { ConfigService } from '../config.service';
 import { FileStorageService } from '../file-storage.service';
 import { Logger } from '../logger.service';
 
@@ -18,8 +19,24 @@ import {
 export class StorageLoaderStrategy extends InvoiceGeneratorStrategy {
 	private readonly logger = new Logger('StorageLoaderStrategy');
 
-	constructor(private fileStorageService: FileStorageService) {
+	constructor(
+		private fileStorageService: FileStorageService,
+		private config: ConfigService,
+	) {
 		super();
+	}
+
+	async store(invoice: InvoiceEntity, file: Buffer, filename: string) {
+		const key = `${invoice.id}/${Date.now()}_${filename}`;
+		await this.fileStorageService.saveFile(key, file, {
+			bucket: this.config.buckets.files,
+		});
+
+		invoice.updatePdf({
+			bucket: this.config.buckets.files,
+			key,
+			region: this.config.region,
+		});
 	}
 
 	/**

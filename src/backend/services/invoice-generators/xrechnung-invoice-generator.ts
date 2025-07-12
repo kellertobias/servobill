@@ -8,6 +8,7 @@ import {
 } from '@e-invoice-eu/core/dist/invoice/invoice.interface';
 
 import { InvoiceGeneratorStrategy } from './interface';
+import { PDFInvoiceGenerator } from './pdf-invoice-generator';
 
 import { InvoiceEntity } from '@/backend/entities/invoice.entity';
 import {
@@ -385,6 +386,26 @@ function mapInvoiceToUbl(
  * XRechnungInvoiceGenerator generates an XRechnung XML invoice using @e-invoice-eu/core.
  */
 export class XRechnungInvoiceGenerator extends InvoiceGeneratorStrategy {
+	constructor(private readonly pdfStrategy?: PDFInvoiceGenerator) {
+		super();
+	}
+
+	/**
+	 * Generates a PDF invoice using the CQRS bus and returns it as a single attachment.
+	 */
+	private async getOptionalPdf(
+		invoice: InvoiceEntity,
+		options: {
+			companyData: CompanyDataSetting;
+			invoiceSettings: InvoiceSettingsEntity;
+			template: PdfTemplateSetting;
+		},
+	) {
+		if (this.pdfStrategy) {
+			return await this.pdfStrategy.generate(invoice, options);
+		}
+		return [];
+	}
 	/**
 	 * Generates XRechnung XML using @e-invoice-eu/core (format: xrechnung-ubl).
 	 * @param invoice The invoice entity to export
@@ -398,7 +419,9 @@ export class XRechnungInvoiceGenerator extends InvoiceGeneratorStrategy {
 			invoiceSettings: InvoiceSettingsEntity;
 			template: PdfTemplateSetting;
 		},
-	): Promise<{ content: Buffer; filename: string; mimeType: string }[]> {
+	): Promise<{ content: Buffer; filename: string; mimeType?: string }[]> {
+		const pdf = await this.getOptionalPdf(invoice, options);
+
 		// Map InvoiceEntity to UBL invoice object and wrap as { 'ubl:Invoice': ... }
 		const ublInvoice = {
 			'ubl:Invoice': mapInvoiceToUbl(invoice, options.companyData),
@@ -415,6 +438,7 @@ export class XRechnungInvoiceGenerator extends InvoiceGeneratorStrategy {
 		const xml = typeof result === 'string' ? result : result.toString();
 
 		return [
+			...pdf,
 			{
 				content: Buffer.from(xml, 'utf8'),
 				filename: 'xrechnung.xml',
