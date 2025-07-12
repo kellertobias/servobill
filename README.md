@@ -29,8 +29,8 @@ These are the high level next steps:
 - [X] Semantic versioning and automated releases
 - [X] Auto-Generate expenses (based on incoming invoices with AI)
 - [X] Inventory Management
+- [X] Digital outgoing invoices (ZUGFeRD Standard)
 - [ ] Auto-Generate expenses (based on incoming structured invoices, e.g. ZUGFeRD/ X-Rechnung)
-- [ ] Digital outgoing invoices
 - [ ] Full Standalone (Local User Management, Multi-user support, automatic backups, etc.)
 
 ## Developing & Deploying
@@ -109,6 +109,10 @@ We also have added tools that do not have web interfaces, but are set up when ru
 - DynamoDB Simulation (`dynamodb-local`)
 - SES Simulation (`aws-ses-local`)
 - Postgres
+
+For validating the generated invoices, you can use the following tools:
+
+- [eRechnung Validator](https://erechnungs-validator.de)
 
 ### Building your Invoice Template
 

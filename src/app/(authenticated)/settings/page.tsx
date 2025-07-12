@@ -607,9 +607,15 @@ export default function SettingsHomePage() {
 							}}
 							options={[
 								{ value: 'PDF', label: 'PDF (Standard)' },
-								{ value: 'XRECHNUNG_PDF', label: 'XRechnung + PDF' },
-								{ value: 'XRECHNUNG', label: 'XRechnung (XML Only)' },
 								{ value: 'ZUGFERD', label: 'ZUGFeRD' },
+								{
+									value: 'XRECHNUNG_PDF',
+									label: 'XRechnung + PDF (Work in Progress)',
+								},
+								{
+									value: 'XRECHNUNG',
+									label: 'XRechnung (XML Only) (Work in Progress)',
+								},
 							]}
 							className="w-full"
 						/>

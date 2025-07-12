@@ -31,8 +31,9 @@ function mapInvoiceItemsToProfileBasic(invoice: InvoiceEntity): {
 
 	return {
 		line: (invoice.items || []).map((item, idx) => {
-			const itemNetAmount =
-				((item.priceCents ?? 0) * (item.quantity ?? 1)) / 100;
+			const itemSinglePrice = item.priceCents ?? 0;
+			const itemQuantity = item.quantity ?? 1;
+			const itemNetAmount = (itemSinglePrice * itemQuantity) / 100;
 			totalNetAmount += itemNetAmount;
 
 			const itemTaxAmount = itemNetAmount * (item.taxPercentage / 100);
@@ -46,14 +47,14 @@ function mapInvoiceItemsToProfileBasic(invoice: InvoiceEntity): {
 			};
 
 			return {
-				identifier: item.id || `ITEM${idx + 1}`,
+				identifier: `${idx + 1}`,
 				description: item.description,
 				tradeProduct: {
 					name: item.name || `Item ${idx + 1}`,
 				},
 				tradeAgreement: {
 					netTradePrice: {
-						chargeAmount: Number((item.priceCents ?? 0) / 100).toFixed(2),
+						chargeAmount: Number(itemSinglePrice / 100).toFixed(2),
 					},
 				},
 				tradeDelivery: {
@@ -66,11 +67,17 @@ function mapInvoiceItemsToProfileBasic(invoice: InvoiceEntity): {
 					tradeTax: {
 						typeCode: 'VAT',
 						categoryCode: item.taxPercentage.toString() === '0' ? 'E' : 'S',
+						...(item.taxPercentage.toString() === '0'
+							? {
+									exemptionReasonText: 'Kleinunternehmerregelung § 19 UStG', // Default reason for German small business exemption
+								}
+							: {}),
 						rateApplicablePercent: item.taxPercentage.toFixed(2),
-						calculatedAmount: Number(
-							item.priceCents * (item.taxPercentage / 100),
-						).toFixed(2),
-						basisAmount: Number(item.priceCents / 100).toFixed(2),
+						calculatedAmount: Number(itemTaxAmount).toFixed(2),
+						basisAmount: Number(itemNetAmount).toFixed(2),
+					},
+					monetarySummation: {
+						lineTotalAmount: Number(itemNetAmount).toFixed(2),
 					},
 				},
 			};
@@ -90,32 +97,49 @@ function mapInvoiceTotalsToProfileBasic(
 ): {
 	tradeSettlement: ProfileBasic['transaction']['tradeSettlement'];
 } {
+	// Calculate the sum of all line net amounts for header totals
+	const lineTotalAmount = Number(totals.totalNetAmount).toFixed(2);
+	const taxBasisTotalAmount = Number(totals.totalNetAmount).toFixed(2);
+	const taxTotalAmount = Number(totals.totalTaxAmount).toFixed(2);
+	const grandTotalAmount = Number((invoice.totalCents ?? 0) / 100).toFixed(2);
+	const duePayableAmount = Number(
+		((invoice.totalCents ?? 0) - (invoice.paidCents ?? 0)) / 100,
+	).toFixed(2);
+	const paidAmount = invoice.paidCents
+		? Number(invoice.paidCents / 100).toFixed(2)
+		: '0.00';
+
 	return {
 		tradeSettlement: {
 			currencyCode: (companyData.currency ||
 				'EUR') as ProfileBasic['transaction']['tradeSettlement']['currencyCode'],
 			monetarySummation: {
-				lineTotalAmount: Number((totals.totalNetAmount ?? 0) / 100).toFixed(2), // Required by schema
-				taxBasisTotalAmount: Number(totals.totalNetAmount).toFixed(2),
+				lineTotalAmount,
+				taxBasisTotalAmount,
 				taxTotal: {
-					amount: Number(totals.totalTaxAmount).toFixed(2),
+					amount: taxTotalAmount,
 					currencyCode: (companyData.currency || 'EUR') as CurrencyCode,
 				},
-				paidAmount: invoice.paidCents
-					? Number(invoice.paidCents / 100).toFixed(2)
-					: 0,
-				grandTotalAmount: Number((invoice.totalCents ?? 0) / 100).toFixed(2),
-				duePayableAmount: Number(
-					((invoice.totalCents ?? 0) - (invoice.paidCents ?? 0)) / 100,
-				).toFixed(2),
+				paidAmount,
+				grandTotalAmount,
+				duePayableAmount,
 			},
-			vatBreakdown: Object.entries(totals.taxTotals).map(([key, value]) => ({
-				categoryCode: key === '0' ? 'E' : 'S',
-				rateApplicablePercent: Number(key).toFixed(2),
-				calculatedAmount: value.taxAmount,
-				typeCode: 'VAT',
-				basisAmount: value.netAmount,
-			})),
+			vatBreakdown: Object.entries(totals.taxTotals).map(([key, value]) => {
+				const isExempt = key === '0';
+				return {
+					categoryCode: isExempt ? 'E' : 'S',
+					rateApplicablePercent: Number(key).toFixed(2),
+					calculatedAmount: Number(value.taxAmount).toFixed(2),
+					typeCode: 'VAT',
+					basisAmount: Number(value.netAmount).toFixed(2),
+					// Add VAT exemption reason for exempt lines (BR-E-10)
+					...(isExempt
+						? {
+								exemptionReasonText: 'Kleinunternehmerregelung § 19 UStG', // Default reason for German small business exemption
+							}
+						: {}),
+				};
+			}),
 			paymentInstruction: {
 				typeCode: '30', // 30 = Payment due by bank transfer
 				transfers: [
@@ -127,8 +151,6 @@ function mapInvoiceTotalsToProfileBasic(
 			paymentTerms: {
 				dueDate: invoice.dueAt,
 			},
-			// TODO: [ERROR: BR-CO-25] If duePayableAmount > 0, must provide payment terms: either payment due date or payment terms description (ram:SpecifiedTradePaymentTerms)
-			// Add specifiedTradePaymentTerms with due date or description if invoice is payable.
 		},
 	};
 }
@@ -192,10 +214,10 @@ function mapInvoiceToProfileBasic(
 						value: sellerData.email,
 						schemeIdentifier: 'EM',
 					},
-					// TODO: [NOTICE: BR-DE-2] Seller contact (BG-6) must be provided (ram:DefinedTradeContact)
-					// Add seller contact details if available
+					// TODO Seller contact (BG-6) would be mapped here if available in the data model
 				},
 				buyer: {
+					identifier: invoice.customer?.customerNumber,
 					name: invoice.customer?.name || 'Unknown',
 					postalAddress: {
 						countryCode: invoice.customer?.countryCode || 'DE',
@@ -207,24 +229,18 @@ function mapInvoiceToProfileBasic(
 						value: invoice.customer?.email,
 						schemeIdentifier: 'EM',
 					},
+					// TODO Buyer reference (BT-10) would be mapped here if available in the data model
 				},
-				// TODO: [NOTICE: BR-DE-15] Buyer reference (BT-10) must be provided (ram:BuyerReference)
-				// Add buyer reference if available
 			},
 
-			// Required: minimal tradeSettlement
 			tradeSettlement,
-			// Required: minimal tradeDelivery (empty object, as allowed by schema)
 			tradeDelivery: {
 				information: {
 					deliveryDate: invoice.invoicedAt || invoice.createdAt || new Date(),
 				},
 			},
 		},
-		// TODO: [NOTICE: PEPPOL-EN16931-R001, BR-DE-21] Business process and specification identifier should be provided in ExchangedDocumentContext (ram:BusinessProcessSpecifiedDocumentContextParameter/ram:ID, ram:GuidelineSpecifiedDocumentContextParameter/ram:ID)
-		// TODO: [NOTICE: BR-DE-1] Payment instructions (BG-16) should be included (ram:SpecifiedTradeSettlementPaymentMeans)
-		// Add payment means (e.g., bank transfer details) if available
-		// Add more top-level fields as needed (e.g., specificationIdentifier, businessProcessType)
+		// TODO Business process context and specification identifier (BT-24) would be mapped here if supported by the ProfileBasic type or node-zugferd library
 	};
 }
 
