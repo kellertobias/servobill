@@ -1,3 +1,19 @@
+## [1.10.0](https://github.com/kellertobias/servobill/compare/v1.9.0...v1.10.0) (2025-07-12)
+
+
+### ✨ Features
+
+* initial implementation for structured e-invoices (ZUGFeRD) ([1dc4d12](https://github.com/kellertobias/servobill/commit/1dc4d122cef64fe5c6f690580cdd40947f0c5334))
+
+
+### 🐛 Bug Fixes
+
+* add basic support for writing (currently not yet valid) XRechnung format ([46b51d1](https://github.com/kellertobias/servobill/commit/46b51d18a53d517b5e98f927c5748c0b02dc96ec))
+* alpha version of XRechnung support (code needs to be cleaned up) ([280779c](https://github.com/kellertobias/servobill/commit/280779ce9e78ab72bc116caee16635233a5335fc))
+* invoice total cents default to NaN ([7c9e5eb](https://github.com/kellertobias/servobill/commit/7c9e5ebde980ac56fffb7551458117d6f932ee32))
+* second iteration of ZUGFeRD invoices ([9b25052](https://github.com/kellertobias/servobill/commit/9b2505255e116f04c02ff9f4919606697b66a8b4))
+* ZUGFeRD invoice generation works now ([1ca4e98](https://github.com/kellertobias/servobill/commit/1ca4e98fd7200b02f2f766ce6a20806db5213375))
+
 ## [1.9.0](https://github.com/kellertobias/servobill/compare/v1.8.0...v1.9.0) (2025-07-06)
 
 
