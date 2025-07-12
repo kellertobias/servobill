@@ -136,7 +136,7 @@ describe('InvoiceGenerator', () => {
 					expect(source).toBeDefined();
 					expect(valid).toBe(true);
 				});
-				it.skip(`should generate an invoice with multiple discounts`, async () => {
+				it(`should generate an invoice with multiple discounts`, async () => {
 					const { source, valid } = await runGenerator(
 						new XRechnungInvoiceGenerator(),
 						{
