@@ -86,7 +86,8 @@ function mapInvoiceLineToUbl(
 
 /**
  * Helper to map InvoiceEntity and settings to a UBL Invoice object for XRechnung.
- * Now includes correct tax subtotals, payment means, buyer reference, and seller contact details.
+ * Now includes correct tax subtotals, payment means, buyer reference, seller contact details, and allowance handling.
+ * Negative net amount items are mapped as AllowanceCharge, not as InvoiceLine, per EN16931/XRechnung.
  */
 function mapInvoiceToUbl(
 	invoice: InvoiceEntity,
@@ -102,27 +103,49 @@ function mapInvoiceToUbl(
 	}
 
 	const items = invoice.items || [];
-	const totalNet = ((invoice.totalCents || 0) - (invoice.totalTax || 0)) / 100;
-	const grandTotal = (invoice.totalCents || 0) / 100;
+	// Split items into regular lines and allowances (discounts/credits)
+	const regularItems: InvoiceItemEntity[] = [];
+	const allowances: InvoiceItemEntity[] = [];
+	for (const item of items) {
+		const netAmount = (item.priceCents * item.quantity) / 100;
+		if (netAmount < 0) {
+			allowances.push(item);
+		} else {
+			regularItems.push(item);
+		}
+	}
 
+	// Group document-level allowances by VAT code/rate
+	const allowanceGroups: Record<
+		string,
+		{ rate: number; code: string; items: InvoiceItemEntity[] }
+	> = {};
+	for (const item of allowances) {
+		const code = getVatCategoryCode(item.taxPercentage, false, vatStatus);
+		const rate = item.taxPercentage || 0;
+		const key = `${code}_${rate}`;
+		if (!allowanceGroups[key]) {
+			allowanceGroups[key] = { rate, code, items: [] };
+		}
+		allowanceGroups[key].items.push(item);
+	}
+
+	// Group regular items by VAT rate and code for tax subtotals
+	let taxGroups;
 	const allExempt =
 		vatStatus === VatStatus.VAT_DISABLED_KLEINUNTERNEHMER ||
 		vatStatus === VatStatus.VAT_DISABLED_OTHER
 			? true
-			: items.length > 0 && items.every((item) => item.taxPercentage === 0);
-
-	// Group items by VAT rate and code for tax subtotals
-	let taxGroups;
+			: regularItems.length > 0 &&
+				regularItems.every((item) => item.taxPercentage === 0);
 	if (allExempt) {
-		// All exempt: one group, code 'E', rate 0
-		taxGroups = [{ rate: 0, code: 'E', items }];
+		taxGroups = [{ rate: 0, code: 'E', items: regularItems }];
 	} else {
-		// Otherwise: group by code/rate, 0% = 'Z', >0 = 'S'
 		const groups: Record<
 			string,
 			{ rate: number; code: string; items: InvoiceItemEntity[] }
 		> = {};
-		for (const item of items) {
+		for (const item of regularItems) {
 			const code = getVatCategoryCode(item.taxPercentage, false, vatStatus);
 			const rate = item.taxPercentage || 0;
 			const key = `${code}_${rate}`;
@@ -134,20 +157,28 @@ function mapInvoiceToUbl(
 		taxGroups = Object.values(groups);
 	}
 
+	// Calculate document-level allowance sums by VAT group
+	const allowanceSumsByKey: Record<string, number> = {};
+	Object.entries(allowanceGroups).forEach(([key, group]) => {
+		allowanceSumsByKey[key] = group.items.reduce(
+			(sum, item) => sum + Math.abs((item.priceCents * item.quantity) / 100),
+			0,
+		);
+	});
+
+	// Calculate tax subtotals, subtracting document-level allowances for each group
 	const taxSubtotals = taxGroups.map((group): VATBREAKDOWN => {
-		const taxableAmount = group.items.reduce(
+		const key = `${group.code}_${group.rate}`;
+		const taxableAmountLines = group.items.reduce(
 			(sum, item) => sum + (item.priceCents * item.quantity) / 100,
 			0,
 		);
+		const allowanceAmount = allowanceSumsByKey[key] || 0;
+		const taxableAmount = taxableAmountLines - allowanceAmount;
 		const percent = group.rate;
-		const taxAmount = +(taxableAmount * (percent / 100)).toFixed(2); // round to two decimals
+		const taxAmount = +(taxableAmount * (percent / 100)).toFixed(2);
 		const vatCode = group.code as VATCategoryCode;
 
-		/**
-		 * XRechnung BR-E-10: If VAT Category code is 'E' (Exempt), a VAT exemption reason text (BT-120) must be provided.
-		 * - For Kleinunternehmerregelung, use 'Kleinunternehmerregelung § 19 UStG'.
-		 * - For other exemptions, use a generic reason.
-		 */
 		let exemptionReason: string | undefined;
 		if (vatCode === 'E') {
 			if (vatStatus === VatStatus.VAT_DISABLED_KLEINUNTERNEHMER) {
@@ -168,7 +199,6 @@ function mapInvoiceToUbl(
 				'cbc:ID': vatCode,
 				'cbc:Percent': percent.toFixed(2),
 				'cac:TaxScheme': { 'cbc:ID': 'VAT' },
-				// Add exemption reason if required by XRechnung
 				...(exemptionReason
 					? { 'cbc:TaxExemptionReason': exemptionReason }
 					: {}),
@@ -180,10 +210,19 @@ function mapInvoiceToUbl(
 		0,
 	);
 
-	/**
-	 * XRechnung/UBL requires IBAN and BIC to be included in the PaymentMeans section for credit transfer (code 31).
-	 * Only include these fields if they are real, non-dummy values.
-	 */
+	// Calculate monetary totals for XRechnung compliance
+	const lineExtensionAmount = regularItems.reduce(
+		(sum, item) => sum + (item.priceCents * item.quantity) / 100,
+		0,
+	);
+	const totalAllowances = Object.values(allowanceSumsByKey).reduce(
+		(sum, v) => sum + v,
+		0,
+	);
+	const taxExclusiveAmount = lineExtensionAmount - totalAllowances;
+	const taxInclusiveAmount = taxExclusiveAmount + totalTaxAmount;
+	const payableAmount = taxInclusiveAmount;
+
 	const hasIban = !!seller.bank?.iban;
 	const hasBic = !!seller.bank?.bic;
 	const paymentMeans = hasIban
@@ -206,13 +245,45 @@ function mapInvoiceToUbl(
 			]
 		: undefined;
 
-	// Buyer reference (BT-10): use customer number, or fallback to invoice number
 	const buyerReference =
 		buyer.customerNumber || invoice.invoiceNumber || invoice.id;
-
-	// Seller contact details (BT-41, BT-42): name, telephone (must have at least 3 digits)
 	const contactName = seller.name;
 	const contactPhone = seller.phone ?? undefined;
+
+	/**
+	 * AllowanceCharge type for UBL XRechnung (DOCUMENTLEVELALLOWANCESANDCHARGES).
+	 * This matches the expected UBL structure for cac:AllowanceCharge.
+	 */
+	type UBLAllowanceCharge = {
+		'cbc:ChargeIndicator': string;
+		'cbc:AllowanceChargeReason': string;
+		'cbc:Amount': string;
+		'cbc:Amount@currencyID': InvoiceCurrencyCode;
+		'cac:TaxCategory': {
+			'cbc:ID': VATCategoryCode;
+			'cbc:Percent': string;
+			'cac:TaxScheme': { 'cbc:ID': 'VAT' };
+		};
+	};
+	const allowanceCharges: UBLAllowanceCharge[] = allowances.map((item) => {
+		const netAmount = (item.priceCents * item.quantity) / 100;
+		const vatCode = getVatCategoryCode(
+			item.taxPercentage,
+			allExempt,
+			vatStatus,
+		);
+		return {
+			'cbc:ChargeIndicator': 'false',
+			'cbc:AllowanceChargeReason': item.name || 'Discount',
+			'cbc:Amount': Math.abs(netAmount).toFixed(2),
+			'cbc:Amount@currencyID': currency as InvoiceCurrencyCode,
+			'cac:TaxCategory': {
+				'cbc:ID': vatCode,
+				'cbc:Percent': item.taxPercentage.toFixed(2),
+				'cac:TaxScheme': { 'cbc:ID': 'VAT' },
+			},
+		};
+	});
 
 	return {
 		'cbc:CustomizationID':
@@ -252,7 +323,6 @@ function mapInvoiceToUbl(
 				'cac:Contact': {
 					'cbc:Name': contactName,
 					'cbc:ElectronicMail': seller.email,
-					// Only include phone if real and not dummy
 					...(contactPhone ? { 'cbc:Telephone': contactPhone } : {}),
 				},
 			},
@@ -274,7 +344,7 @@ function mapInvoiceToUbl(
 				'cac:Contact': { 'cbc:ElectronicMail': buyer.email },
 			},
 		},
-		'cac:InvoiceLine': items.map((item, idx) =>
+		'cac:InvoiceLine': regularItems.map((item, idx) =>
 			mapInvoiceLineToUbl(item, idx, currency, allExempt, vatStatus),
 		) as Invoice['ubl:Invoice']['cac:InvoiceLine'],
 		'cac:TaxTotal': [
@@ -285,18 +355,29 @@ function mapInvoiceToUbl(
 			},
 		],
 		'cac:LegalMonetaryTotal': {
-			'cbc:LineExtensionAmount': totalNet.toFixed(2),
+			'cbc:LineExtensionAmount': lineExtensionAmount.toFixed(2),
 			'cbc:LineExtensionAmount@currencyID': currency as InvoiceCurrencyCode,
-			'cbc:TaxExclusiveAmount': totalNet.toFixed(2),
+			'cbc:TaxExclusiveAmount': taxExclusiveAmount.toFixed(2),
 			'cbc:TaxExclusiveAmount@currencyID': currency as InvoiceCurrencyCode,
-			'cbc:TaxInclusiveAmount': grandTotal.toFixed(2),
+			'cbc:TaxInclusiveAmount': taxInclusiveAmount.toFixed(2),
 			'cbc:TaxInclusiveAmount@currencyID': currency as InvoiceCurrencyCode,
-			'cbc:PayableAmount': grandTotal.toFixed(2),
+			'cbc:PayableAmount': payableAmount.toFixed(2),
 			'cbc:PayableAmount@currencyID': currency as InvoiceCurrencyCode,
+			// Add AllowanceTotalAmount for XRechnung compliance (BR-CO-11, BR-CO-13)
+			...(totalAllowances > 0
+				? {
+						'cbc:AllowanceTotalAmount': totalAllowances.toFixed(2),
+						'cbc:AllowanceTotalAmount@currencyID':
+							currency as InvoiceCurrencyCode,
+					}
+				: {}),
 		},
-
 		// Add payment means if available
 		...(paymentMeans ? { 'cac:PaymentMeans': paymentMeans } : {}),
+		// Add AllowanceCharge if any
+		...(allowanceCharges.length > 0
+			? { 'cac:AllowanceCharge': allowanceCharges }
+			: {}),
 	};
 }
 

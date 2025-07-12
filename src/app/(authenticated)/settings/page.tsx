@@ -651,11 +651,11 @@ export default function SettingsHomePage() {
 								{ value: 'ZUGFERD', label: 'ZUGFeRD' },
 								{
 									value: 'XRECHNUNG_PDF',
-									label: 'XRechnung + PDF (Work in Progress)',
+									label: 'XRechnung + PDF',
 								},
 								{
 									value: 'XRECHNUNG',
-									label: 'XRechnung (XML Only) (Work in Progress)',
+									label: 'XRechnung (XML Only)',
 								},
 							]}
 							className="w-full"
