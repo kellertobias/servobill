@@ -61,6 +61,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Set up Java 17 for tests
+        # Java is required to run certain tests (e.g., for tools or dependencies that require a JVM)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - name: Ensure Docker is available
         run: docker --version
 

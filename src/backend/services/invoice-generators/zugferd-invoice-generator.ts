@@ -13,6 +13,14 @@ import {
 	VatStatus,
 } from '@/backend/entities/settings.entity';
 
+// Add a type alias for a single ProfileBasic allowance object for clarity
+// This matches the expected structure for node-zugferd ProfileBasic allowances
+type ProfileBasicAllowance = NonNullable<
+	NonNullable<
+		ProfileBasic['transaction']['tradeSettlement']['allowances']
+	>[number]
+>;
+
 type CurrencyCode =
 	ProfileBasic['transaction']['tradeSettlement']['currencyCode'];
 
@@ -20,6 +28,130 @@ type Totals = {
 	taxTotals: Record<string, { taxAmount: number; netAmount: number }>;
 	totalTaxAmount: number;
 	totalNetAmount: number;
+};
+
+/**
+ * Local type for ZUGFeRD ProfileBasic document-level allowance/charge (BG-20).
+ * Structure must match node-zugferd/EN16931: chargeIndicator (required, first), actualAmount, reason, reasonCode, categoryTradeTax (categoryCode, vatRate), calculationPercent, basisAmount.
+ * chargeIndicator: false = allowance/discount, true = charge (rare).
+ */
+type AllowanceReasonCode =
+	| '1'
+	| '2'
+	| '3'
+	| '4'
+	| '5'
+	| '6'
+	| '7'
+	| '8'
+	| '9'
+	| '10'
+	| '11'
+	| '12'
+	| '13'
+	| '14'
+	| '15'
+	| '16'
+	| '17'
+	| '18'
+	| '19'
+	| '20'
+	| '21'
+	| '22'
+	| '23'
+	| '24'
+	| '25'
+	| '26'
+	| '27'
+	| '28'
+	| '29'
+	| '30'
+	| '31'
+	| '32'
+	| '33'
+	| '34'
+	| '35'
+	| '36'
+	| '37'
+	| '38'
+	| '39'
+	| '40'
+	| '41'
+	| '42'
+	| '44'
+	| '45'
+	| '46'
+	| '47'
+	| '48'
+	| '49'
+	| '50'
+	| '51'
+	| '52'
+	| '53'
+	| '54'
+	| '55'
+	| '56'
+	| '57'
+	| '58'
+	| '59'
+	| '60'
+	| '61'
+	| '62'
+	| '63'
+	| '64'
+	| '65'
+	| '66'
+	| '67'
+	| '68'
+	| '69'
+	| '70'
+	| '71'
+	| '72'
+	| '73'
+	| '74'
+	| '75'
+	| '76'
+	| '77'
+	| '78'
+	| '79'
+	| '80'
+	| '81'
+	| '82'
+	| '83'
+	| '84'
+	| '85'
+	| '86'
+	| '87'
+	| '88'
+	| '89'
+	| '90'
+	| '91'
+	| '92'
+	| '93'
+	| '94'
+	| '95'
+	| '96'
+	| '97'
+	| '98'
+	| '99'
+	| '100'
+	| '101'
+	| '102'
+	| '103'
+	| '104'
+	| '105'
+	| '106';
+type AllowanceCharge = {
+	chargeIndicator: boolean; // Required by schema: false = allowance, true = charge
+	actualAmount: string;
+	reason?: string;
+	reasonCode?: AllowanceReasonCode;
+	categoryTradeTax?: {
+		categoryCode: 'E' | 'Z' | 'S';
+		vatRate: string;
+	};
+	calculationPercent?: string;
+	basisAmount?: string;
 };
 
 /**
@@ -35,6 +167,7 @@ function mapInvoiceItemsToProfileBasic(
 	vatStatus: VatStatus,
 ): {
 	line: ProfileBasic['transaction']['line'];
+	allowances: AllowanceCharge[];
 	totals: Totals;
 } {
 	const taxTotals: Totals['taxTotals'] = {};
@@ -51,26 +184,38 @@ function mapInvoiceItemsToProfileBasic(
 				? 'VAT Exempt (Other Reason)'
 				: undefined;
 
-	return {
-		line: (invoice.items || []).map((item, idx) => {
-			const itemSinglePrice = item.priceCents ?? 0;
-			const itemQuantity = item.quantity ?? 1;
-			const itemNetAmount = (itemSinglePrice * itemQuantity) / 100;
-			totalNetAmount += itemNetAmount;
+	const lines: ProfileBasic['transaction']['line'] = [];
+	const allowances: AllowanceCharge[] = [];
 
-			const itemTaxAmount = itemNetAmount * (item.taxPercentage / 100);
-			totalTaxAmount += itemTaxAmount;
+	(invoice.items || []).forEach((item, idx) => {
+		const itemSinglePrice = item.priceCents ?? 0;
+		const itemQuantity = item.quantity ?? 1;
+		const itemNetAmount = (itemSinglePrice * itemQuantity) / 100;
+		const itemTaxAmount = itemNetAmount * (item.taxPercentage / 100);
+		const itemTaxCode = item.taxPercentage.toString();
 
-			const itemTaxCode = item.taxPercentage.toString();
-
-			taxTotals[itemTaxCode] = {
-				taxAmount: (taxTotals[itemTaxCode]?.taxAmount ?? 0) + itemTaxAmount,
-				netAmount: (taxTotals[itemTaxCode]?.netAmount ?? 0) + itemNetAmount,
-			};
-
-			return {
+		if (itemNetAmount < 0) {
+			// Treat as document-level allowance (discount/credit)
+			allowances.push({
+				chargeIndicator: false, // Always false for allowances/discounts
+				actualAmount: Math.abs(itemNetAmount).toFixed(2),
+				reason: item.name || 'Discount',
+				// reasonCode: undefined, // Optionally map a reason code if available
+				categoryTradeTax: {
+					categoryCode: isVatDisabled
+						? 'E'
+						: item.taxPercentage.toString() === '0'
+							? 'Z'
+							: 'S',
+					vatRate: item.taxPercentage.toFixed(2),
+				},
+				// calculationPercent: undefined, // Optionally set if available
+				// basisAmount: undefined, // Optionally set if available
+			});
+		} else {
+			lines.push({
 				identifier: `${idx + 1}`,
-				description: item.description,
+				note: item.description,
 				tradeProduct: {
 					name: item.name || `Item ${idx + 1}`,
 				},
@@ -82,7 +227,7 @@ function mapInvoiceItemsToProfileBasic(
 				tradeDelivery: {
 					billedQuantity: {
 						amount: item.quantity || 1,
-						unitMeasureCode: 'C62', // Default to 'C62' (unit)
+						unitMeasureCode: 'C62',
 					},
 				},
 				tradeSettlement: {
@@ -99,15 +244,24 @@ function mapInvoiceItemsToProfileBasic(
 								}
 							: {}),
 						rateApplicablePercent: item.taxPercentage.toFixed(2),
-						calculatedAmount: Number(itemTaxAmount).toFixed(2),
-						basisAmount: Number(itemNetAmount).toFixed(2),
 					},
 					monetarySummation: {
 						lineTotalAmount: Number(itemNetAmount).toFixed(2),
 					},
 				},
+			});
+			totalNetAmount += itemNetAmount;
+			totalTaxAmount += itemTaxAmount;
+			taxTotals[itemTaxCode] = {
+				taxAmount: (taxTotals[itemTaxCode]?.taxAmount ?? 0) + itemTaxAmount,
+				netAmount: (taxTotals[itemTaxCode]?.netAmount ?? 0) + itemNetAmount,
 			};
-		}),
+		}
+	});
+
+	return {
+		line: lines,
+		allowances,
 		totals: {
 			taxTotals,
 			totalNetAmount,
@@ -121,6 +275,7 @@ function mapInvoiceTotalsToProfileBasic(
 	companyData: CompanyDataSetting,
 	totals: Totals,
 	vatStatus: VatStatus,
+	allowances?: AllowanceCharge[], // Pass allowances for header sum
 ): {
 	tradeSettlement: ProfileBasic['transaction']['tradeSettlement'];
 } {
@@ -128,13 +283,20 @@ function mapInvoiceTotalsToProfileBasic(
 	const lineTotalAmount = Number(totals.totalNetAmount).toFixed(2);
 	const taxBasisTotalAmount = Number(totals.totalNetAmount).toFixed(2);
 	const taxTotalAmount = Number(totals.totalTaxAmount).toFixed(2);
-	const grandTotalAmount = Number((invoice.totalCents ?? 0) / 100).toFixed(2);
-	const duePayableAmount = Number(
-		((invoice.totalCents ?? 0) - (invoice.paidCents ?? 0)) / 100,
+	// grandTotalAmount must be taxBasisTotalAmount + taxTotalAmount (BR-CO-15)
+	const grandTotalAmount = (
+		Number(taxBasisTotalAmount) + Number(taxTotalAmount)
 	).toFixed(2);
 	const paidAmount = invoice.paidCents
 		? Number(invoice.paidCents / 100).toFixed(2)
 		: '0.00';
+	const roundingAmount = '0.00'; // Set to 0 unless you have explicit rounding
+	// duePayableAmount must be grandTotalAmount - paidAmount + roundingAmount (BR-CO-16)
+	const duePayableAmount = (
+		Number(grandTotalAmount) -
+		Number(paidAmount) +
+		Number(roundingAmount)
+	).toFixed(2);
 
 	const isVatDisabled =
 		vatStatus === VatStatus.VAT_DISABLED_KLEINUNTERNEHMER ||
@@ -145,6 +307,15 @@ function mapInvoiceTotalsToProfileBasic(
 			: vatStatus === VatStatus.VAT_DISABLED_OTHER
 				? 'VAT Exempt (Other Reason)'
 				: undefined;
+
+	// Calculate allowance total for header if any allowances exist
+	const allowanceTotalAmount =
+		allowances && allowances.length > 0
+			? allowances
+					.map((a) => Number(a.actualAmount))
+					.reduce((sum, v) => sum + v, 0)
+					.toFixed(2)
+			: undefined;
 
 	return {
 		tradeSettlement: {
@@ -160,6 +331,9 @@ function mapInvoiceTotalsToProfileBasic(
 				paidAmount,
 				grandTotalAmount,
 				duePayableAmount,
+				// Add allowanceTotalAmount if allowances exist (BR-CO-11)
+				...(allowanceTotalAmount ? { allowanceTotalAmount } : {}),
+				// roundingAmount, // Do not output if not supported by ProfileBasic
 			},
 			vatBreakdown: Object.entries(totals.taxTotals).map(([key, value]) => {
 				return {
@@ -202,32 +376,28 @@ function mapInvoiceToProfileBasic(
 	invoice: InvoiceEntity,
 	companyData: CompanyDataSetting,
 ): ProfileBasic {
-	// Extract company data from the nested structure
 	const sellerData = companyData.companyData;
 	const vatStatus = companyData.vatStatus;
-	const { line, totals } = mapInvoiceItemsToProfileBasic(invoice, vatStatus);
+	const { line, allowances, totals } = mapInvoiceItemsToProfileBasic(
+		invoice,
+		vatStatus,
+	);
 	const { tradeSettlement } = mapInvoiceTotalsToProfileBasic(
 		invoice,
 		companyData,
 		totals,
 		vatStatus,
+		allowances, // Pass allowances for header sum
 	);
 
 	return {
-		number: invoice.invoiceNumber || invoice.id, // Required: Invoice number
-		typeCode: '380', // Required: '380' = Commercial invoice (default for most B2B invoices)
-		/* 
-		From the docs:
-		380: Commercial Invoice
-		381: Credit note
-		384: Corrected invoice
-		389: Self-billied invoice (created by the buyer on behalf of the supplier)
-		261: Self billed credit note (not accepted by CHORUSPRO)
-		386: Prepayment invoice
-		751: Invoice information for accounting purposes (not accepted by CHORUSPRO)
-		*/
-		issueDate: invoice.invoicedAt || invoice.createdAt || new Date(), // Required: Issue date
-		includedNote: invoice.footerText ? [{ content: invoice.footerText }] : [],
+		number: invoice.invoiceNumber || invoice.id,
+		typeCode: '380',
+		issueDate: invoice.invoicedAt || invoice.createdAt || new Date(),
+		// Only include includedNote if footerText is non-empty
+		...(invoice.footerText
+			? { includedNote: [{ content: invoice.footerText }] }
+			: {}),
 		transaction: {
 			line,
 			tradeAgreement: {
@@ -266,8 +436,40 @@ function mapInvoiceToProfileBasic(
 					},
 				},
 			},
-
-			tradeSettlement,
+			tradeSettlement: {
+				...tradeSettlement,
+				// Map allowances to correct ZUGFeRD structure if present
+				...(allowances.length > 0
+					? {
+							allowances: allowances.map((a): ProfileBasicAllowance => {
+								// ZUGFeRD/EN16931 schema requires ChargeIndicator as the first child element
+								const result: ProfileBasicAllowance = {
+									chargeIndicator: a.chargeIndicator, // must be first
+									actualAmount: a.actualAmount,
+								} as ProfileBasicAllowance;
+								if (a.reason) {
+									result.reason = a.reason;
+								}
+								if (a.reasonCode) {
+									result.reasonCode = a.reasonCode;
+								}
+								if (a.calculationPercent) {
+									result.calculationPercent = a.calculationPercent;
+								}
+								if (a.basisAmount) {
+									result.basisAmount = a.basisAmount;
+								}
+								if (a.categoryTradeTax) {
+									result.categoryTradeTax = {
+										categoryCode: a.categoryTradeTax.categoryCode,
+										vatRate: a.categoryTradeTax.vatRate,
+									};
+								}
+								return result;
+							}),
+						}
+					: {}),
+			},
 			tradeDelivery: {
 				information: {
 					deliveryDate: invoice.invoicedAt || invoice.createdAt || new Date(),

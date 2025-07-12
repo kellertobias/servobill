@@ -8,6 +8,7 @@
 collector.yaml
 # testing
 /coverage
+/.test-temp
 
 # next.js
 /.next/

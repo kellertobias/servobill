@@ -27,6 +27,7 @@ export const POSTGRES_PORT = globalSetup.POSTGRES_PORT;
 export const POSTGRES_USER = globalSetup.POSTGRES_USER;
 export const POSTGRES_PASSWORD = globalSetup.POSTGRES_PASSWORD;
 export const POSTGRES_DB = globalSetup.POSTGRES_DB;
+export const MUSTANG_JAR_PATH = globalSetup.MUSTANG_JAR_PATH;
 
 App.skipDefaultRegistration = true;
 
