@@ -30,7 +30,7 @@ We will update this roadmap as we progress with the development of Servobill.
 - [ ] Add support for incoming invoice emails (either parse digital invoice or use AI to parse)
 
 ## Milestone "Digital outgoing invoices" (planned till end of August 2025):
-- [ ] Add support for sending digital invoices (e.g. X-Rechnung/ ZugFeRD)
+- [X] Add support for sending digital invoices (e.g. X-Rechnung/ ZugFeRD)
 - [ ] Add support for automatically sending invoices at a given date
 
 ## Milestone "Full Standalone" (planned till end of September 2025):
