@@ -112,7 +112,8 @@ We also have added tools that do not have web interfaces, but are set up when ru
 
 For validating the generated invoices, you can use the following tools:
 
-- [eRechnung Validator](https://erechnungs-validator.de)
+- [eRechnung Validator (Good for ZUGFeRD)](https://erechnungs-validator.de)
+- [XRechnung Validator (Good for XRechnung)](https://erechnungsvalidator.service-bw.de)
 
 ### Building your Invoice Template
 
