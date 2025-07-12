@@ -1,10 +1,13 @@
 import { Entity, PrimaryColumn, Column } from 'typeorm';
 
+import { OrmEntity } from '@/common/orm-entity-registry';
+
 /**
  * TypeORM entity for time-based jobs (for Postgres/SQLite).
  * Used for scheduling actions such as sending invoices at a later time.
  */
-@Entity('time_based_job')
+@OrmEntity
+@Entity('timeBasedJob')
 export class TimeBasedJobOrmEntity {
 	/** Unique identifier for the job */
 	@PrimaryColumn('text')

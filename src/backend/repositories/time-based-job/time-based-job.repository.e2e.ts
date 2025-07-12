@@ -39,20 +39,13 @@ describe.each(
 		const repo = app.create<TimeBasedJobRepository>(RepositoryImplementation);
 
 		const jobId = randomUUID();
-		const job = new TimeBasedJobEntity({
-			id: jobId,
+
+		await repo.createWithId(jobId, {
 			runAfter: Date.now() + 10000,
 			eventType: 'send_invoice',
 			eventPayload: { invoiceId: randomUUID() },
 		});
 
-		await repo.createWithId(jobId, {
-			runAfter: job.runAfter,
-			eventType: job.eventType,
-			eventPayload: job.eventPayload,
-		});
-
-		// await repo.save(job);
 		const found = await repo.getById(jobId);
 		expect(found).toBeDefined();
 		expect(found?.eventType).toBe('send_invoice');

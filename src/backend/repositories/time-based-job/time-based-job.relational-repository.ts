@@ -97,9 +97,9 @@ export class TimeBasedJobRelationalRepository
 	 */
 	public async listDueJobs(timestamp: number): Promise<TimeBasedJobEntity[]> {
 		await this.initialized.promise;
-		const qb = this.repository!.createQueryBuilder('time_based_job');
-		qb.where('time_based_job.runAfter <= :timestamp', { timestamp });
-		qb.orderBy('time_based_job.runAfter', 'ASC');
+		const qb = this.repository!.createQueryBuilder('timeBasedJob');
+		qb.where('timeBasedJob.runAfter <= :timestamp', { timestamp });
+		qb.orderBy('timeBasedJob.runAfter', 'ASC');
 
 		const jobs = await qb.getMany();
 
