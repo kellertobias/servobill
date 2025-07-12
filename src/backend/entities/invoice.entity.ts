@@ -53,7 +53,16 @@ export class InvoiceEntity extends DomainEntity {
 	public paidVia?: string;
 	public footerText?: string;
 	public items!: InvoiceItemEntity[];
+	/**
+	 * The total amount in cents for this invoice, including tax.
+	 * Always initialized to 0 if not provided, to prevent NaN errors in the database layer.
+	 * This avoids Postgres errors when inserting undefined/NaN values into integer columns.
+	 */
 	public totalCents!: number;
+	/**
+	 * The total tax amount in cents for this invoice.
+	 * Always initialized to 0 if not provided, to prevent NaN errors in the database layer.
+	 */
 	public totalTax!: number;
 	public activity!: InvoiceActivityEntity[];
 	public contentHash?: string;
@@ -72,11 +81,22 @@ export class InvoiceEntity extends DomainEntity {
 	/** Tracks which event IDs have been processed to prevent duplicate processing */
 	public processedEventIds?: string[];
 
+	/**
+	 * Constructs a new InvoiceEntity. Ensures totalCents and totalTax are always valid numbers (never NaN/undefined).
+	 * This prevents database errors when persisting invoices.
+	 */
 	constructor(props: Partial<Omit<InvoiceEntity, DomainEntityKeys>>) {
 		super();
 		Object.assign(this, props);
 		if (!this.processedEventIds) {
 			this.processedEventIds = [];
+		}
+		// Ensure totalCents and totalTax are always valid numbers (never NaN/undefined/null)
+		if (!Number.isFinite(this.totalCents) || this.totalCents === null) {
+			this.totalCents = 0;
+		}
+		if (!Number.isFinite(this.totalTax) || this.totalTax === null) {
+			this.totalTax = 0;
 		}
 	}
 

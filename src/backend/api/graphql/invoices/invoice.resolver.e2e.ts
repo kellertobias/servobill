@@ -79,6 +79,9 @@ function sampleInvoice(
 		items: [sampleInvoiceItem()],
 		activity: [],
 		submissions: [],
+		// Always default to 0 to avoid NaN/undefined in DB
+		totalCents: 0,
+		totalTax: 0,
 		...overrides,
 	});
 }
