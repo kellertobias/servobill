@@ -1,3 +1,26 @@
+## [1.11.0](https://github.com/kellertobias/servobill/compare/v1.10.0...v1.11.0) (2025-07-13)
+
+
+### ✨ Features
+
+* allow re-generation of digital e-invoices - only PDF will be cached ([7a1bd6c](https://github.com/kellertobias/servobill/commit/7a1bd6cd12d2003c849df3fec7d110546234971d))
+* preparation for "send invoice later" ([fa69672](https://github.com/kellertobias/servobill/commit/fa6967210508764a46250a388f32c48d0a150388))
+
+
+### 🐛 Bug Fixes
+
+* add proper validation to the e-invoices tests ([c382cfa](https://github.com/kellertobias/servobill/commit/c382cfaff12f271d2591acf895ad667a4ff775ce))
+* add testcases for e-invoicing - discounts currently do not work ([b9d0c61](https://github.com/kellertobias/servobill/commit/b9d0c61e1c47d24b991547b11b1dbf7bad514bb9))
+* e-invoices now have proper mapping for VAT examption ([83a3c44](https://github.com/kellertobias/servobill/commit/83a3c440cf695d051a7a327c968b0991b7181757))
+* enable xrecehnung discount tests since here the implementation works ([b388055](https://github.com/kellertobias/servobill/commit/b3880559a3949202de19583ddcadfc7ac7df5450))
+* finalize x-rechnung with discount functionality ([8818905](https://github.com/kellertobias/servobill/commit/8818905e33b50a79c85378e770a5a280c3a82660))
+* tests for timebased job ([7eb2f9e](https://github.com/kellertobias/servobill/commit/7eb2f9e4b40ca8252b506993e7ad1bf15820205d))
+
+
+### ✅ Tests
+
+* prepare for testing e-invoice generation ([b271ff7](https://github.com/kellertobias/servobill/commit/b271ff777e689dc04d3c167833fc0c59e550aee5))
+
 ## [1.10.0](https://github.com/kellertobias/servobill/compare/v1.9.0...v1.10.0) (2025-07-12)
 
 
