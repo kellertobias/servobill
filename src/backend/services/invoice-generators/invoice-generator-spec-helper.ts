@@ -38,6 +38,7 @@ export const runGenerator = async (
 		items: InvoiceItemEntity[];
 		paidCents?: number;
 		footerText?: string;
+		assertCorrectStructure?: boolean;
 	},
 ) => {
 	const customer = new CustomerEntity({
@@ -123,10 +124,13 @@ export const runGenerator = async (
 
 	const xml = getResult(result);
 
-	// TODO Fix this type error based on ambient types. For now we just cast it
-	await (
-		expect(xml) as unknown as { toBeValidEInvoice: () => Promise<void> }
-	).toBeValidEInvoice();
+	// defaults to true
+	if (data.assertCorrectStructure !== false) {
+		// TODO Fix this type error based on ambient types. For now we just cast it
+		await (
+			expect(xml) as unknown as { toBeValidEInvoice: () => Promise<void> }
+		).toBeValidEInvoice();
+	}
 
 	return { invoice, xml };
 };
