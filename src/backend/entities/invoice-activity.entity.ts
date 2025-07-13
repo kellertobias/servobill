@@ -24,6 +24,10 @@ export enum InvoiceActivityType {
 	NOTE = 'NOTE',
 	/** Activity for file attachment (linked to attachmentId) */
 	ATTACHMENT = 'ATTACHMENT',
+	/**
+	 * Activity for scheduling a future invoice send (time-based job).
+	 */
+	SCHEDULED_SEND = 'SCHEDULED_SEND',
 }
 
 export class InvoiceActivityEntity {

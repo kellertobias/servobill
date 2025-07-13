@@ -366,6 +366,7 @@ enum InvoiceActivityType {
   NOTE
   PAID
   PAYMENT
+  SCHEDULED_SEND
   SENT_INVOICE_EMAIL
   SENT_INVOICE_LETTER
   SENT_INVOICE_MANUALLY
@@ -535,6 +536,7 @@ type Mutation {
   addInventoryCheck(id: String!, note: String, state: InventoryCheckState!): Boolean!
   addInventoryNote(id: String!, note: String!): Boolean!
   attachUpload(attachmentId: String!, expenseId: String, inventoryId: String, invoiceId: String): Attachment!
+  cancelScheduledInvoiceSend(id: String!): InvoiceChangedResponse!
   confirmUpload(attachmentId: String!): Attachment!
   copyInvoice(as: InvoiceType!, id: String!): InvoiceChangedResponse!
   createCustomer(data: CustomerInput!): Customer!

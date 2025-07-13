@@ -101,6 +101,11 @@ export const entitySchema = DynamoDBService.getSchema({
 		processedEventIds: {
 			type: 'string',
 		},
+		scheduledSendJobId: {
+			type: 'string',
+			// The ID of the scheduled time-based job for sending this invoice later, if any.
+			// Used to allow cancellation of scheduled sends before the job runs.
+		},
 	},
 	indexes: {
 		byId: {

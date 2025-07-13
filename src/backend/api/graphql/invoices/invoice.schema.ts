@@ -306,8 +306,8 @@ export class InvoiceChangedResponse {
 	@Field(() => String)
 	id!: string;
 
-	@Field(() => String)
-	activityId!: string;
+	@Field(() => String, { nullable: true })
+	activityId?: string;
 
 	@Field(() => Date)
 	updatedAt!: Date;

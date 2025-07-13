@@ -288,7 +288,10 @@ initDb()
 						type: 'cron',
 						source: 'local-cron',
 						resources: [],
-						data: {},
+						data: {
+							id: eventId,
+							scheduledAt: new Date(Date.now()),
+						},
 					});
 					console.log(
 						chalk.bgBlue('[EventBus] CRON'),

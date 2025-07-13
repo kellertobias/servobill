@@ -18,6 +18,7 @@ import {
 } from './invoice-submission.entity';
 import { InvoiceSettingsEntity } from './settings.entity';
 import { DomainEntity, DomainEntityKeys, DomainEvent } from './abstract.entity';
+import { TimeBasedJobEntity } from './time-based-job.entity';
 
 import { centsToPrice } from '@/common/money';
 
@@ -80,6 +81,11 @@ export class InvoiceEntity extends DomainEntity {
 	};
 	/** Tracks which event IDs have been processed to prevent duplicate processing */
 	public processedEventIds?: string[];
+	/**
+	 * The ID of the scheduled time-based job for sending this invoice later, if any.
+	 * Used to allow cancellation of scheduled sends before the job runs.
+	 */
+	public scheduledSendJobId?: string;
 
 	/**
 	 * Constructs a new InvoiceEntity. Ensures totalCents and totalTax are always valid numbers (never NaN/undefined).
@@ -274,24 +280,63 @@ export class InvoiceEntity extends DomainEntity {
 		submission: InvoiceSubmissionEntity,
 		userName: string,
 		getSettings: () => Promise<InvoiceSettingsEntity>,
+		scheduledSendJob?: TimeBasedJobEntity,
 	) {
 		this.submissions.push(submission);
 
-		let justSent = false;
 		const settings = await getSettings();
+
+		/**
+		 * If a scheduledSendJob is provided, this is a send-later operation:
+		 * - Only set scheduledSendJobId and leave status as DRAFT.
+		 * - Do not assign invoice/offer numbers or update invoicedAt/offeredAt.
+		 * - Add a SCHEDULED_SEND activity instead of a SENT activity.
+		 */
+		if (scheduledSendJob) {
+			this.scheduledSendJobId = scheduledSendJob.id;
+			this.updatedAt = new Date();
+			const activity = new InvoiceActivityEntity({
+				user: userName,
+				type: InvoiceActivityType.SCHEDULED_SEND,
+			});
+			const sendScheduledEvent = new DomainEvent(
+				this.id,
+				'invoice.scheduledSend',
+				{
+					scheduledSendJobId: scheduledSendJob.id,
+				},
+			);
+			scheduledSendJob.eventType = sendScheduledEvent.name;
+			scheduledSendJob.eventPayload = sendScheduledEvent.data;
+			scheduledSendJob.updatedAt = new Date();
+
+			this.addEvent(
+				new DomainEvent(this.id, 'invoice.scheduled', {
+					scheduledSendJobId: scheduledSendJob.id,
+				}),
+			);
+			this.activity.push(activity);
+			return activity;
+		}
+
+		// Immediate send: proceed as before
+		let justSent = false;
 		if (this.status === InvoiceStatus.DRAFT) {
 			justSent = true;
 			this.status = InvoiceStatus.SENT;
 
 			if (this.type === InvoiceType.INVOICE) {
-				this.invoiceNumber = await settings.invoiceNumbers.getNextNumber();
+				this.invoiceNumber =
+					this.invoiceNumber ?? (await settings.invoiceNumbers.getNextNumber());
 			} else {
-				this.offerNumber = await settings.offerNumbers.getNextNumber();
+				this.offerNumber =
+					this.offerNumber ?? (await settings.offerNumbers.getNextNumber());
 			}
 		}
 
 		if (this.type === InvoiceType.INVOICE) {
 			this.invoicedAt = this.invoicedAt || new Date();
+
 			this.dueAt =
 				this.dueAt ||
 				dayjs(this.invoicedAt)
@@ -362,6 +407,27 @@ export class InvoiceEntity extends DomainEntity {
 		this.activity.push(activity);
 
 		return activity;
+	}
+
+	public async cancelSubmission(deleteJob: (jobId: string) => Promise<void>) {
+		if (!this.scheduledSendJobId) {
+			throw new Error('No scheduled send job to cancel');
+		}
+
+		// Set submission to cancelled
+		const submission = this.submissions.find(
+			(sub) => sub.scheduledSendJobId === this.scheduledSendJobId,
+		);
+		if (submission) {
+			submission.isCancelled = true;
+		}
+
+		await deleteJob(this.scheduledSendJobId);
+
+		this.scheduledSendJobId = undefined;
+		this.updatedAt = new Date();
+
+		return;
 	}
 
 	public addPayment(

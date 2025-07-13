@@ -64,7 +64,7 @@
     "jsonwebtoken": "^9.0.2",
     "next": "14.0.4",
     "node-fetch": "^3.3.2",
-    "node-zugferd": "^0.0.10-beta.2",
+    "node-zugferd": "^0.0.10-beta.3",
     "nodemailer": "^6.9.7",
     "openai": "^4.104.0",
     "papaparse": "^5.5.3",

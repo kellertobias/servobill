@@ -109,6 +109,7 @@ export class InvoiceDynamodbRepository
 			processedEventIds: entity.processedEventIds
 				? CustomJson.fromJson(entity.processedEventIds)
 				: undefined,
+			scheduledSendJobId: entity.scheduledSendJobId || undefined,
 		});
 	}
 
@@ -151,6 +152,7 @@ export class InvoiceDynamodbRepository
 			pdf: CustomJson.toJson(domainEntity.pdf) || '',
 			processedEventIds:
 				CustomJson.toJson(domainEntity.processedEventIds) || '[]',
+			scheduledSendJobId: domainEntity.scheduledSendJobId || '',
 		};
 	}
 

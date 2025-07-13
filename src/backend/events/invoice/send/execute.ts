@@ -28,6 +28,7 @@ import { XRechnungInvoiceGenerator } from '@/backend/services/invoice-generators
 import { StorageLoaderStrategy } from '@/backend/services/invoice-generators/storage';
 import type { ConfigService } from '@/backend/services/config.service';
 import { CONFIG_SERVICE } from '@/backend/services/di-tokens';
+import { InvoiceType } from '@/backend/entities/invoice.entity';
 
 @Service()
 export class HandlerExecution {
@@ -72,14 +73,16 @@ export class HandlerExecution {
 			await this.settingsRepository.getSetting(PdfTemplateSetting);
 		const companyData =
 			await this.settingsRepository.getSetting(CompanyDataSetting);
+
 		// Load invoice output format setting
 		const invoiceSettings = await this.settingsRepository.getSetting(
 			InvoiceSettingsEntity,
 		);
+
 		const outputFormat =
 			invoiceSettings.invoiceOutputFormat as InvoiceOutputFormat;
 
-		const generator = await this.getGenerator(outputFormat);
+		const generator = await this.getGenerator(outputFormat, invoice.type);
 
 		const baseAttachments = await generator.generate(invoice, {
 			companyData,
@@ -107,10 +110,17 @@ export class HandlerExecution {
 		);
 	}
 
-	private async getGenerator(outputFormat: InvoiceOutputFormat) {
+	private async getGenerator(
+		outputFormat: InvoiceOutputFormat,
+		invoiceType: InvoiceType,
+	) {
 		const pdfGenerator = new PDFInvoiceGenerator(
 			new StorageLoaderStrategy(this.fileStorageService, this.config),
 		);
+
+		if (invoiceType === InvoiceType.OFFER) {
+			return pdfGenerator;
+		}
 
 		switch (outputFormat) {
 			case InvoiceOutputFormat.PDF: {

@@ -113,4 +113,11 @@ export class InvoiceOrmEntity {
 	/** List of processed event IDs */
 	@Column('text', { nullable: true })
 	processedEventIds?: string;
+
+	/**
+	 * The ID of the scheduled time-based job for sending this invoice later, if any.
+	 * Used to allow cancellation of scheduled sends before the job runs.
+	 */
+	@Column('text', { nullable: true })
+	scheduledSendJobId?: string;
 }

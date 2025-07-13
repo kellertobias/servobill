@@ -377,4 +377,92 @@ describe('InvoiceLifecycleResolver (integration)', () => {
 		// At least one of these should be set after PDF request
 		expect(updated?.pdf || updated?.contentHash).toBeTruthy();
 	});
+
+	/**
+	 * Test scheduling a send-later job and cancelling it.
+	 */
+	it('should schedule a send-later job and then cancel it', async () => {
+		const customer = sampleCustomer();
+		await customerRepo.save(customer);
+		await settingsRepo.save(sampleInvoiceSettingsEntity());
+		const invoice = sampleInvoice(customer, {
+			id: 'inv-later',
+			status: InvoiceStatus.DRAFT,
+		});
+		await invoiceRepo.save(invoice);
+
+		const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+		const submission = { sendType: 'EMAIL', when: futureDate };
+		const { data: sendData, errors: sendErrors } = await execute({
+			source: gql`
+				mutation SendLater($id: String!, $submission: InvoiceSubmissionInput!) {
+					invoiceSend(id: $id, submission: $submission) {
+						id
+						activityId
+						change
+					}
+				}
+			`,
+			variableValues: { id: 'inv-later', submission },
+		});
+		expect(sendErrors).toBeUndefined();
+		expect(sendData?.invoiceSend.id).toBe('inv-later');
+		expect(sendData?.invoiceSend.change).toBe('SCHEDULED_SEND');
+
+		// Check invoice in repo
+		const scheduled = await invoiceRepo.getById('inv-later');
+		expect(scheduled?.scheduledSendJobId).toBeTruthy();
+		expect(scheduled?.status).toBe(InvoiceStatus.DRAFT);
+
+		const { data: cancelData, errors: cancelErrors } = await execute({
+			source: gql`
+				mutation CancelScheduled($id: String!) {
+					cancelScheduledInvoiceSend(id: $id) {
+						id
+						activityId
+						change
+					}
+				}
+			`,
+			variableValues: { id: 'inv-later' },
+		});
+		expect(cancelErrors).toBeUndefined();
+		expect(cancelData?.cancelScheduledInvoiceSend.id).toBe('inv-later');
+		expect(cancelData?.cancelScheduledInvoiceSend.change).toBe(
+			'SCHEDULED_SEND',
+		);
+
+		const afterCancel = await invoiceRepo.getById('inv-later');
+		expect(afterCancel?.scheduledSendJobId).toBeFalsy();
+		expect(afterCancel?.status).toBe(InvoiceStatus.DRAFT);
+	});
+
+	it('should not allow cancelling if no scheduled job exists', async () => {
+		const customer = sampleCustomer();
+		await customerRepo.save(customer);
+		await settingsRepo.save(sampleInvoiceSettingsEntity());
+		const invoice = sampleInvoice(customer, {
+			id: 'inv-nosched',
+			status: InvoiceStatus.DRAFT,
+		});
+		await invoiceRepo.save(invoice);
+
+		const cancelMutation = gql`
+			mutation CancelScheduled($id: String!) {
+				cancelScheduledInvoiceSend(id: $id) {
+					id
+					change
+				}
+			}
+		`;
+		const { errors: cancelErrors } = await execute({
+			source: cancelMutation,
+			variableValues: { id: 'inv-nosched' },
+		});
+		expect(cancelErrors).toBeTruthy();
+		const noschedErrorMessages = (cancelErrors || [])
+			.filter((e) => typeof e === 'object' && 'message' in e)
+			.map((e) => (e as { message: string }).message);
+		expect(noschedErrorMessages[0]).toMatch(/No scheduled send job/);
+	});
 });

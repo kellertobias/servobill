@@ -7,7 +7,7 @@ import { OrmEntity } from '@/common/orm-entity-registry';
  * Used for scheduling actions such as sending invoices at a later time.
  */
 @OrmEntity
-@Entity('timeBasedJob')
+@Entity('jobQueue')
 export class TimeBasedJobOrmEntity {
 	/** Unique identifier for the job */
 	@PrimaryColumn('text')

@@ -107,6 +107,7 @@ export class InvoiceRelationalRepository
 			processedEventIds: orm.processedEventIds
 				? CustomJson.fromJson(orm.processedEventIds)
 				: undefined,
+			scheduledSendJobId: orm.scheduledSendJobId || undefined,
 		});
 	}
 
@@ -142,6 +143,8 @@ export class InvoiceRelationalRepository
 			contentHash: domain.contentHash,
 			pdf: CustomJson.toJson(domain.pdf) || '',
 			processedEventIds: CustomJson.toJson(domain.processedEventIds) || '[]',
+			// Ensure undefined is saved if scheduledSendJobId is falsy, to clear the DB column
+			scheduledSendJobId: domain.scheduledSendJobId || '',
 		};
 	}
 

@@ -17,3 +17,4 @@ import './attachment';
 import './inventory-item';
 import './inventory-location';
 import './inventory-type';
+import './time-based-job';

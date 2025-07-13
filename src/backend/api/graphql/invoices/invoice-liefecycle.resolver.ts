@@ -40,6 +40,8 @@ import {
 	InvoiceActivityType,
 } from '@/backend/entities/invoice-activity.entity';
 import { InvoiceSettingsEntity } from '@/backend/entities/settings.entity';
+import { TIME_BASED_JOB_REPOSITORY } from '@/backend/repositories/time-based-job/di-tokens';
+import { type TimeBasedJobRepository } from '@/backend/repositories/time-based-job/interface';
 
 @Service({
 	addToTestSet: [GRAPHQL_TEST_SET],
@@ -55,6 +57,8 @@ export class InvoiceLifecycleResolver {
 		@Inject(PRODUCT_REPOSITORY) private productRepository: ProductRepository,
 		@Inject(FILE_STORAGE_SERVICE)
 		private fileStorageService: FileStorageService,
+		@Inject(TIME_BASED_JOB_REPOSITORY)
+		private timeBasedJobRepository: TimeBasedJobRepository,
 	) {}
 
 	@Authorized()
@@ -179,6 +183,10 @@ export class InvoiceLifecycleResolver {
 		};
 	}
 
+	/**
+	 * Handles sending an invoice. If submission.when is provided, schedules a time-based job to send the invoice later.
+	 * Stores the job ID in the invoice for later cancellation. If not, sends immediately as before.
+	 */
 	@Authorized()
 	@Mutation(() => InvoiceChangedResponse)
 	async invoiceSend(
@@ -192,12 +200,35 @@ export class InvoiceLifecycleResolver {
 			throw new Error('Invoice not found');
 		}
 
-		const { sendType } = submission;
+		const { sendType, when } = submission;
+		const now = dayjs().add(5, 'minutes').unix();
+		const whenTime = when ? dayjs(when).unix() : undefined;
+		const scheduledSendJob =
+			whenTime && whenTime > now
+				? await (async () => {
+						// Remove any previous scheduled job for this invoice
+						if (invoice.scheduledSendJobId) {
+							await this.timeBasedJobRepository.delete(
+								invoice.scheduledSendJobId,
+							);
+						}
+
+						const job = await this.timeBasedJobRepository.create({
+							runAfter: whenTime,
+							eventType: 'empty',
+							eventPayload: { invoiceId: invoice.id },
+						});
+
+						return job;
+					})()
+				: null;
 
 		const activity = await invoice.addSubmission(
 			new InvoiceSubmissionEntity({
 				type: sendType,
 				submittedAt: new Date(),
+				isScheduled: !!scheduledSendJob,
+				scheduledSendJobId: scheduledSendJob?.id,
 			}),
 			context.session?.user?.name || 'unknown',
 			async () => {
@@ -209,11 +240,16 @@ export class InvoiceLifecycleResolver {
 				}
 				return setting;
 			},
+			scheduledSendJob ?? undefined,
 		);
 
 		await this.invoiceRepository.save(invoice);
 		await this.createAndLinkExpensesForInvoice(invoice);
 		await this.invoiceRepository.save(invoice);
+
+		if (scheduledSendJob) {
+			this.timeBasedJobRepository.save(scheduledSendJob);
+		}
 
 		return {
 			id: invoiceId,
@@ -303,6 +339,34 @@ export class InvoiceLifecycleResolver {
 		this.logger.info('Saved Invoice');
 
 		return null;
+	}
+
+	/**
+	 * Cancels a scheduled invoice send by deleting the time-based job and resetting the invoice to DRAFT,
+	 * if the invoice has not been sent yet (no email submission exists).
+	 * Returns InvoiceChangedResponse with change=SCHEDULED_SEND.
+	 */
+	@Authorized()
+	@Mutation(() => InvoiceChangedResponse)
+	async cancelScheduledInvoiceSend(
+		@Arg('id', () => String) invoiceId: string,
+	): Promise<InvoiceChangedResponse> {
+		const invoice = await this.invoiceRepository.getById(invoiceId);
+		if (!invoice) {
+			throw new Error('Invoice not found');
+		}
+
+		await invoice.cancelSubmission(async (jobId) => {
+			await this.timeBasedJobRepository.delete(jobId);
+		});
+
+		await this.invoiceRepository.save(invoice);
+
+		return {
+			id: invoiceId,
+			updatedAt: new Date(),
+			change: InvoiceActivityType.SCHEDULED_SEND,
+		};
 	}
 
 	/**
