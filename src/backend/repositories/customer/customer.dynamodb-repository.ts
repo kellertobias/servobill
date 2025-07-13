@@ -82,7 +82,7 @@ export class CustomerDynamodbRepository
 			zip: entity.zip,
 			city: entity.city,
 			state: entity.state,
-			countryCode: entity.countryCode,
+			countryCode: entity.countryCode as CustomerEntity['countryCode'],
 			notes: entity.notes,
 		});
 	}
