@@ -1,6 +1,10 @@
 import { EventHandlerImport } from '@/common/api-types';
 
 const handlers: Record<string, EventHandlerImport> = {
+	'cron': async () =>
+		await import('@/backend/events/cron/handler').then(
+			(importedModule) => importedModule.handler,
+		),
 	'invoice.pdf': async () =>
 		await import('@/backend/events/invoice/pdf/handler').then(
 			(importedModule) => importedModule.handler,

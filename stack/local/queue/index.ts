@@ -271,6 +271,40 @@ const waitForNextEvent = () => {
 // (async () => { await initDb(); waitForNextEvent(); app.listen(port, ...); })();
 initDb()
 	.then(() => {
+		/**
+		 * Periodically enqueue a 'cron' event every 5 minutes.
+		 *
+		 * This simulates a scheduled cron job in the local event bus, allowing handlers
+		 * to perform periodic tasks (e.g., cleanup, scheduled reports, etc.) as if triggered by AWS EventBridge.
+		 *
+		 * The event will be picked up and processed by the existing event handler system.
+		 */
+		setInterval(
+			async () => {
+				try {
+					const eventId = randomUUID().toString();
+					await enqueueJob({
+						eventId,
+						type: 'cron',
+						source: 'local-cron',
+						resources: [],
+						data: {},
+					});
+					console.log(
+						chalk.bgBlue('[EventBus] CRON'),
+						`Enqueued cron event (${eventId})`,
+					);
+				} catch (error) {
+					console.error(
+						chalk.bgBlue('[EventBus] CRON'),
+						'Failed to enqueue cron event:',
+						error,
+					);
+				}
+			},
+			5 * 60 * 1000,
+		); // 5 minutes in milliseconds
+
 		waitForNextEvent();
 		app.listen(port, () => {
 			console.log(`EventBus Dev Router listening on port ${port}`);

@@ -388,11 +388,42 @@ export default $config({
 			});
 		}
 
-		// @LATER: Create Cron Job (To send emails)
-		// new sst.aws.Cron('ServobillCron', {
-		// 	function: 'src/cron.handler',
-		// 	schedule: 'rate(10 minutes)',
-		// });
+		// ===============================
+		// Create Cron Job (Scheduled Event Handler):
+		// ===============================
+		/**
+		 * Scheduled Cron Job: Triggers the cron event handler every 30 minutes.
+		 *
+		 * This uses the same handler as the eventHandlerEndpoints entry for eventType 'cron',
+		 * and is linked to the same resources/environment as other event handlers.
+		 *
+		 * The cron handler is responsible for polling the time-based jobs repository for jobs
+		 * that are due to be executed, and dispatching the corresponding events on the event bus.
+		 *
+		 * See: src/backend/events/cron/handler.ts
+		 */
+		const cronHandlerEndpoint = eventHandlerEndpoints.find(
+			(e) => e.eventType === 'cron',
+		);
+		if (!cronHandlerEndpoint) {
+			throw new Error(
+				'Could not find event handler endpoint for eventType "cron"',
+			);
+		}
+		// Use the function definition object, not the Function instance, for Cron
+		new sst.aws.Cron('ServobillCron', {
+			function: getFunction(cronHandlerEndpoint, {
+				environment: {
+					...baseEnvironment,
+				},
+				link: [table, bus],
+				logGroup: 'crons',
+				timeout: 300,
+				description: 'Servobill Scheduled Cron Handler',
+				npmInstall: [],
+			}),
+			schedule: 'rate(30 minutes)',
+		});
 
 		// ===============================
 		// Create User Facing Services:
