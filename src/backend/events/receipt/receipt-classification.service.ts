@@ -44,61 +44,57 @@ export class ReceiptClassificationService {
 			name: string;
 		}[],
 	): Promise<ReceiptClassification> {
-		if (attachments.length === 0) {
-			return ReceiptClassification.Extraction;
-		}
-
-		for (const attachment of attachments) {
-			if (attachment.mimeType === 'application/pdf') {
-				const type = await this.classifyPdf(attachment.content);
-				if (type !== ReceiptClassification.PlainPDF) {
-					return type;
-				}
-			}
-		}
-		// If no structured PDF found, check if any are PDFs
-		if (attachments.some((a) => a.mimeType === 'application/pdf')) {
-			return ReceiptClassification.PlainPDF;
-		}
-		// Fallback
 		return ReceiptClassification.Extraction;
+		// if (attachments.length === 0) {
+		// }
+
+		// for (const attachment of attachments) {
+		// 	if (attachment.mimeType === 'application/pdf') {
+		// 		const type = await this.classifyPdf(attachment.content);
+		// 		if (type !== ReceiptClassification.PlainPDF) {
+		// 			return type;
+		// 		}
+		// 	}
+		// }
+
+		// return ReceiptClassification.Extraction;
 	}
 
-	/**
-	 * Classify a PDF as ZUGFeRD, XRechnung, or PlainPDF.
-	 *
-	 * @param pdfBuffer PDF file content
-	 * @returns Classification result
-	 */
-	private static async classifyPdf(
-		pdfBuffer: Buffer,
-	): Promise<ReceiptClassification> {
-		// TODO: For robust extraction, use a PDF library that supports embedded file extraction.
-		// For now, fallback to searching for XML in the raw buffer.
-		try {
-			const xmlMatches = pdfBuffer
-				.toString('utf8')
-				.match(/<\?xml[\S\s]*?<\/\w+>/g);
-			if (xmlMatches) {
-				for (const xml of xmlMatches) {
-					if (xml.includes('urn:ferd:')) {
-						// ZUGFeRD namespace
-						return ReceiptClassification.ZUGFeRD;
-					}
-					if (
-						xml.includes('xrechnung') ||
-						xml.includes('urn:cen.eu:en16931:2017')
-					) {
-						// XRechnung namespace
-						return ReceiptClassification.XRechnung;
-					}
-				}
-			}
-			// If no XML found, treat as plain PDF
-			return ReceiptClassification.Extraction;
-		} catch {
-			// On error, fallback to extraction
-			return ReceiptClassification.Extraction;
-		}
-	}
+	// /**
+	//  * Classify a PDF as ZUGFeRD, XRechnung, or PlainPDF.
+	//  *
+	//  * @param pdfBuffer PDF file content
+	//  * @returns Classification result
+	//  */
+	// private static async classifyPdf(
+	// 	pdfBuffer: Buffer,
+	// ): Promise<ReceiptClassification> {
+	// 	// TODO: For robust extraction, use a PDF library that supports embedded file extraction.
+	// 	// For now, fallback to searching for XML in the raw buffer.
+	// 	try {
+	// 		const xmlMatches = pdfBuffer
+	// 			.toString('utf8')
+	// 			.match(/<\?xml[\S\s]*?<\/\w+>/g);
+	// 		if (xmlMatches) {
+	// 			for (const xml of xmlMatches) {
+	// 				if (xml.includes('urn:ferd:')) {
+	// 					// ZUGFeRD namespace
+	// 					return ReceiptClassification.ZUGFeRD;
+	// 				}
+	// 				if (
+	// 					xml.includes('xrechnung') ||
+	// 					xml.includes('urn:cen.eu:en16931:2017')
+	// 				) {
+	// 					// XRechnung namespace
+	// 					return ReceiptClassification.XRechnung;
+	// 				}
+	// 			}
+	// 		}
+	// 		// If no XML found, treat as plain PDF
+	// 		return ReceiptClassification.Extraction;
+	// 	} catch {
+	// 		// On error, fallback to extraction
+	// 		return ReceiptClassification.Extraction;
+	// 	}
+	// }
 }

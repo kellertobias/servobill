@@ -9,7 +9,7 @@ Servobill is a simple, open-source invoicing app built with Next.js, Tailwind CS
 We feature a simple, easy-to-use interface for creating and managing invoices. You can create an invoice, generate a PDF from it and send it to your client, and get paid all in one place. You can also manage your expenses and build simple reports to see how your business is doing and of course for tax purposes.
 
 - Modern and simple UI (in-place editing, mobile friendly)
-- Create and manage invoices/ offers & send them to clients via PDF
+- Create and manage invoices/ offers & send them to clients via PDF, ZUGFeRD or X-Rechnung
 - Manage expenses with attachments and expense categories & automatically create expenses when e.g. adding travel to an invoice
 - Auto-Import expenses from incoming invoices with AI (with gpt-4.1 one PDF invoice roughly costs 0.005€)
 - Generate reports with all income & expenses in JSON & CSV format for the tax authorities
@@ -30,8 +30,8 @@ These are the high level next steps:
 - [X] Auto-Generate expenses (based on incoming invoices with AI)
 - [X] Inventory Management
 - [X] Digital outgoing invoices (ZUGFeRD & XRechnung)
+- [X] Scheduled invoice sending
 - [ ] Auto-Generate expenses (based on incoming structured invoices, e.g. ZUGFeRD/ X-Rechnung)
-- [ ] Scheduled invoice sending
 - [ ] Forward incoming invoice email to servobill
 - [ ] Full Standalone (Local User Management, Multi-user support, automatic backups, etc.)
 
