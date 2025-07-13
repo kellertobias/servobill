@@ -28,6 +28,7 @@ export enum InvoiceActivityType {
 	 * Activity for scheduling a future invoice send (time-based job).
 	 */
 	SCHEDULED_SEND = 'SCHEDULED_SEND',
+	CANCELLED_SCHEDULED_SEND = 'CANCELLED_SCHEDULED_SEND',
 }
 
 export class InvoiceActivityEntity {
@@ -40,6 +41,8 @@ export class InvoiceActivityEntity {
 	public attachmentId?: string;
 	/** If true, this attachment should be included in outgoing emails */
 	public attachToEmail?: boolean;
+
+	public ref?: string;
 
 	constructor(props: Partial<InvoiceActivityEntity>) {
 		Object.assign(this, props);

@@ -115,7 +115,10 @@ export const useInvoiceActivity = () => {
 			variables: {
 				id: params.invoiceId,
 			},
-		}).then((data) => data.invoice?.activity),
+		}).then((data) => ({
+			activity: data.invoice?.activity,
+			id: params.invoiceId,
+		})),
 	);
 
 	/**
@@ -153,6 +156,26 @@ export const useInvoiceActivity = () => {
 		},
 		[reload],
 	);
+
+	const cancelScheduledSend = React.useCallback(async () => {
+		console.log('cancelScheduledSend', data?.id);
+		await doToast({
+			promise: API.query({
+				query: gql(`
+					mutation AbortScheduledSend($id: String!) {
+						cancelScheduledInvoiceSend(id: $id) {
+							id
+						}
+					}
+				`),
+				variables: { id: data?.id },
+			}),
+			loading: 'Cancelling scheduled send...',
+			success: 'Scheduled send cancelled!',
+			error: 'Failed to cancel scheduled send.',
+		});
+		reload();
+	}, [reload, data?.id]);
 
 	/**
 	 * Deletes an attachment activity (and the linked file).
@@ -198,5 +221,11 @@ export const useInvoiceActivity = () => {
 		[reload],
 	);
 
-	return { data, reload, toggleAttachToEmail, deleteAttachmentActivity };
+	return {
+		data: data?.activity,
+		reload,
+		toggleAttachToEmail,
+		deleteAttachmentActivity,
+		cancelScheduledSend,
+	};
 };

@@ -354,6 +354,7 @@ enum InvoiceActivityType {
   ARCHIVE_INVOICE
   ARCHIVE_OFFER
   ATTACHMENT
+  CANCELLED_SCHEDULED_SEND
   CANCEL_INVOICE
   CANCEL_OFFER
   CONVERT_TO_INVOICE
@@ -377,7 +378,7 @@ enum InvoiceActivityType {
 }
 
 type InvoiceChangedResponse {
-  activityId: String!
+  activityId: String
   change: InvoiceActivityType!
   id: String!
   updatedAt: DateTime!
@@ -497,6 +498,8 @@ enum InvoiceSubmissionType {
 
 type InvoiceSubmissions {
   id: String!
+  isCancelled: Boolean!
+  isScheduled: Boolean!
   submittedAt: DateTime!
   type: InvoiceSubmissionType!
 }

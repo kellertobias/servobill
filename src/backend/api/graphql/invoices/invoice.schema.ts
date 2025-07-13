@@ -105,6 +105,12 @@ export class InvoiceSubmissions
 
 	@Field(() => InvoiceSubmissionType)
 	type!: InvoiceSubmissionType;
+
+	@Field(() => Boolean)
+	isScheduled!: boolean;
+
+	@Field(() => Boolean)
+	isCancelled!: boolean;
 }
 
 @ObjectType('InvoiceActivity')

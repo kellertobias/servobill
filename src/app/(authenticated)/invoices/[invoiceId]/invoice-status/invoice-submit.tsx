@@ -29,43 +29,39 @@ function InvoiceTimeSelector({
 			.toDate();
 		onChange(datetime);
 
-		setIsPast(datetime < new Date());
+		const now = dayjs().add(5, 'minutes').unix();
+		setIsPast(datetime.getTime() / 1000 < now);
 	}, [date, time]);
 	return (
 		<>
-			<div className="opacity-25">
-				<div className="flex flex-row gap-2">
-					<DateInput
-						label="Send Date"
-						value={date}
-						onChange={(value) => {
-							setDate(dayjs(value).toDate());
-						}}
-						placeholder="DD.MM.YYYY"
-					/>
-					<Input
-						label="Time"
-						value={time}
-						onChange={(value) => {
-							setTime(value);
-						}}
-						placeholder="HH:mm"
-					/>
-				</div>
-				{isPast && (
-					<p className="mt-3">
-						<strong>This date is in the past:</strong>
-						<br /> This will send the invoice immediately.
-					</p>
-				)}
+			<div className="flex flex-row gap-2">
+				<DateInput
+					label="Send Date"
+					value={date}
+					onChange={(value) => {
+						setDate(dayjs(value).toDate());
+					}}
+					placeholder="DD.MM.YYYY"
+				/>
+				<Input
+					label="Time"
+					value={time}
+					onChange={(value) => {
+						setTime(value);
+					}}
+					placeholder="HH:mm"
+				/>
 			</div>
-			<p className="mt-3 text-xs flex flex-row">
-				<strong className="text-red-500 text-xl">! </strong>
-				<span className="block italic ml-2">
-					We do not yet support sending invoices on a schedule.
-					<br /> Clicking submit will send the invoice immediately.
-				</span>
-			</p>
+			{isPast && (
+				<p className="mt-3 text-xs">
+					<b>This date is in the past:</b>
+					<br />
+					At the time we will try to send the invoice. This will send the
+					invoice immediately. Choose a time in at least 30 minutes from now.
+					<br />
+					We check every 5-30 minutes for scheduled invoices and send them.
+				</p>
+			)}
 		</>
 	);
 }

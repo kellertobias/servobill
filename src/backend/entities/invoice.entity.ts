@@ -298,6 +298,12 @@ export class InvoiceEntity extends DomainEntity {
 			const activity = new InvoiceActivityEntity({
 				user: userName,
 				type: InvoiceActivityType.SCHEDULED_SEND,
+				notes: scheduledSendJob
+					? `Scheduled to be sent at ${dayjs(scheduledSendJob?.runAfter).format(
+							'DD.MM.YYYY HH:mm',
+						)}`
+					: undefined,
+				ref: scheduledSendJob.id,
 			});
 			const sendScheduledEvent = new DomainEvent(
 				this.id,
@@ -420,6 +426,13 @@ export class InvoiceEntity extends DomainEntity {
 		);
 		if (submission) {
 			submission.isCancelled = true;
+		}
+
+		const activity = this.activity.find(
+			(act) => act.ref === this.scheduledSendJobId,
+		);
+		if (activity) {
+			activity.type = InvoiceActivityType.CANCELLED_SCHEDULED_SEND;
 		}
 
 		await deleteJob(this.scheduledSendJobId);

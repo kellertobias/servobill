@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation';
 
 import {
 	CheckCircleIcon,
+	ClockIcon,
 	EnvelopeIcon,
 	PaperClipIcon,
 	PlusCircleIcon,
@@ -51,6 +52,12 @@ const getActivityIcon = (type: InvoiceActivityType) => {
 			return (
 				<EnvelopeIcon className="h-4 w-4 text-blue-600" aria-hidden="true" />
 			);
+		}
+		case InvoiceActivityType.ScheduledSend: {
+			return <ClockIcon className="h-4 w-4 text-blue-600" aria-hidden="true" />;
+		}
+		case InvoiceActivityType.CancelledScheduledSend: {
+			return <ClockIcon className="h-4 w-4 text-gray-300" aria-hidden="true" />;
 		}
 		case InvoiceActivityType.EmailSent: {
 			return (
@@ -100,6 +107,9 @@ const getActivityText = (
 	attachment: NonNullable<
 		ReturnType<typeof useInvoiceActivity>['data']
 	>[number]['attachment'],
+	actions?: {
+		cancelScheduledSend: () => void;
+	},
 ) => {
 	switch (type) {
 		case InvoiceActivityType.Imported: {
@@ -203,6 +213,29 @@ const getActivityText = (
 			return <>The email bounced and could not be delivered.</>;
 		}
 
+		case InvoiceActivityType.ScheduledSend: {
+			return (
+				<>
+					{notes}
+					<span
+						className="text-blue-500 font-semibold cursor-pointer mx-1"
+						onClick={actions?.cancelScheduledSend}
+					>
+						Cancel Sending
+					</span>
+				</>
+			);
+		}
+
+		case InvoiceActivityType.CancelledScheduledSend: {
+			return (
+				<>
+					<span style={{ textDecoration: 'line-through' }}>{notes}</span> The
+					scheduled send was cancelled.
+				</>
+			);
+		}
+
 		case InvoiceActivityType.CancelInvoice:
 		case InvoiceActivityType.CancelOffer: {
 			return (
@@ -266,8 +299,13 @@ const getActivityText = (
  */
 export function InvoiceActivityFeed() {
 	const params = useParams();
-	const { data, reload, toggleAttachToEmail, deleteAttachmentActivity } =
-		useInvoiceActivity();
+	const {
+		data,
+		reload,
+		toggleAttachToEmail,
+		deleteAttachmentActivity,
+		cancelScheduledSend,
+	} = useInvoiceActivity();
 
 	if (!data) {
 		return null;
@@ -388,6 +426,9 @@ export function InvoiceActivityFeed() {
 												activity.user,
 												activity.notes,
 												activity.attachment,
+												{
+													cancelScheduledSend,
+												},
 											)}
 										</p>
 										<time
