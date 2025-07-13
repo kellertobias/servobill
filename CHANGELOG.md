@@ -1,3 +1,23 @@
+## [1.12.0](https://github.com/kellertobias/servobill/compare/v1.11.0...v1.12.0) (2025-07-13)
+
+
+### ✨ Features
+
+* allow sending an invoice at a later date (api) ([2fd54f9](https://github.com/kellertobias/servobill/commit/2fd54f982027f1acd12f87bf2edccd4efa0d6c13))
+* cron engine ([d4dd9f1](https://github.com/kellertobias/servobill/commit/d4dd9f1ecf38e96f1116b769b2e90edffab60589))
+* send later and abort sending later (ui) ([42b07c4](https://github.com/kellertobias/servobill/commit/42b07c42b8bc599ff54c94785738d617e0e2d358))
+* send later function ([bcf3612](https://github.com/kellertobias/servobill/commit/bcf361282e142f668af8ffe715b3d0f8fe837161))
+
+
+### 🐛 Bug Fixes
+
+* send later job should work now ([8a72281](https://github.com/kellertobias/servobill/commit/8a72281f83e3fbff0f51527bc1ab9461bf1236b0))
+
+
+### 📚 Documentation
+
+* update README to reflect changes in digital outgoing invoices and add new features for scheduled invoice sending and email forwarding ([cb09168](https://github.com/kellertobias/servobill/commit/cb0916833578aacc8bf6b9054a1fa70e7b677e68))
+
 ## [1.11.0](https://github.com/kellertobias/servobill/compare/v1.10.0...v1.11.0) (2025-07-13)
 
 
