@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 
 import { InvoiceGeneratePdfEvent } from '../events/invoice/pdf/event';
 import { InvoiceSendEvent } from '../events/invoice/send/event';
+import { InvoiceSendLaterEvent } from '../events/invoice/later/event';
 
 import { CustomerEntity } from './customer.entity';
 import {
@@ -19,8 +20,10 @@ import {
 import { InvoiceSettingsEntity } from './settings.entity';
 import { DomainEntity, DomainEntityKeys, DomainEvent } from './abstract.entity';
 import { TimeBasedJobEntity } from './time-based-job.entity';
+import { ExpenseEntity } from './expense.entity';
 
 import { centsToPrice } from '@/common/money';
+import { ObjectProperties } from '@/common/ts-helpers';
 
 export enum InvoiceType {
 	INVOICE = 'INVOICE',
@@ -307,10 +310,13 @@ export class InvoiceEntity extends DomainEntity {
 			});
 			const sendScheduledEvent = new DomainEvent(
 				this.id,
-				'invoice.scheduledSend',
-				{
-					scheduledSendJobId: scheduledSendJob.id,
-				},
+				'invoice.later',
+				new InvoiceSendLaterEvent({
+					id: randomUUID().toString(),
+					userName,
+					invoiceId: this.id,
+					submissionId: submission.id,
+				}),
 			);
 			scheduledSendJob.eventType = sendScheduledEvent.name;
 			scheduledSendJob.eventPayload = sendScheduledEvent.data;
@@ -537,5 +543,40 @@ export class InvoiceEntity extends DomainEntity {
 			return this.activity.at(-1) as InvoiceActivityEntity;
 		}
 		throw new Error('This status change needs to use the correct method');
+	}
+
+	public async createAndLinkExpensesForInvoice(
+		createExpense: (
+			data: Omit<
+				ObjectProperties<ExpenseEntity>,
+				'createdAt' | 'updatedAt' | 'id' | DomainEntityKeys
+			>,
+		) => Promise<ExpenseEntity>,
+	) {
+		// Iterate over all items in the invoice
+		for (const item of this.items) {
+			for (const exp of item.linkedExpenses || []) {
+				if (!exp.enabled) {
+					continue;
+				}
+
+				const expendedCents = Math.round(exp.price * (item.quantity || 1));
+
+				const expense = await createExpense({
+					name: `${exp.name} (For ${this.invoiceNumber})`,
+					description: `From invoice ${this.invoiceNumber || this.id}, item: ${
+						item.name
+					}, quantity: ${item.quantity}`,
+					expendedCents,
+					expendedAt: this.invoicedAt || new Date(),
+					notes: `Auto-created from invoice ${this.invoiceNumber || this.id}`,
+					categoryId: exp.categoryId,
+				});
+
+				// update the expenseId of the item
+				exp.expenseId = expense.id;
+				this.updatedAt = new Date();
+			}
+		}
 	}
 }

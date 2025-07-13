@@ -15,7 +15,7 @@ export class TimeBasedJobEntity extends DomainEntity {
 	/** The type of event/job to execute (e.g., 'send_invoice') */
 	public eventType!: string;
 	/** The event payload (e.g., invoiceId, or other data needed for execution) */
-	public eventPayload!: Record<string, unknown>;
+	public eventPayload!: unknown;
 	public createdAt!: Date;
 	public updatedAt!: Date;
 	/**

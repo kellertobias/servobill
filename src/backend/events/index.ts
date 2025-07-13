@@ -5,6 +5,10 @@ const handlers: Record<string, EventHandlerImport> = {
 		await import('@/backend/events/cron/handler').then(
 			(importedModule) => importedModule.handler,
 		),
+	'invoice.later': async () =>
+		await import('@/backend/events/invoice/later/handler').then(
+			(importedModule) => importedModule.handler,
+		),
 	'invoice.pdf': async () =>
 		await import('@/backend/events/invoice/pdf/handler').then(
 			(importedModule) => importedModule.handler,

@@ -381,36 +381,12 @@ export class InvoiceLifecycleResolver {
 	 * @param invoice The invoice entity to process. This method mutates the invoice's items in-place.
 	 */
 	private async createAndLinkExpensesForInvoice(invoice: InvoiceEntity) {
-		// Iterate over all items in the invoice
-		for (const item of invoice.items) {
-			for (const exp of item.linkedExpenses || []) {
-				if (!exp.enabled) {
-					continue;
-				}
-
-				const expendedCents = Math.round(exp.price * (item.quantity || 1));
-
-				const expense = await this.expenseRepository.create();
-
-				expense.update({
-					name: `${exp.name} (For ${invoice.invoiceNumber})`,
-					description: `From invoice ${
-						invoice.invoiceNumber || invoice.id
-					}, item: ${item.name}, quantity: ${item.quantity}`,
-					expendedCents,
-					expendedAt: invoice.invoicedAt || new Date(),
-					notes: `Auto-created from invoice ${
-						invoice.invoiceNumber || invoice.id
-					}`,
-					categoryId: exp.categoryId,
-				});
-				await this.expenseRepository.save(expense);
-
-				// update the expenseId of the item
-				exp.expenseId = expense.id;
-				invoice.updatedAt = new Date();
-			}
-		}
+		await invoice.createAndLinkExpensesForInvoice(async (data) => {
+			const expense = await this.expenseRepository.create();
+			expense.update(data);
+			await this.expenseRepository.save(expense);
+			return expense;
+		});
 	}
 
 	/**
