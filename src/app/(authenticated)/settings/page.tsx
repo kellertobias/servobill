@@ -648,14 +648,31 @@ export default function SettingsHomePage() {
 							}}
 							options={[
 								{ value: 'PDF', label: 'PDF (Standard)' },
-								{ value: 'ZUGFERD', label: 'ZUGFeRD' },
+								{
+									value: 'ZUGFERD',
+									label: 'ZUGFeRD',
+									description: `Combines a structured e-invoice as
+										an attachment to a human readable PDF.
+										The current implementation does not yet
+										support discounts and credits.
+										Only positive amounts are supported.`,
+								},
 								{
 									value: 'XRECHNUNG_PDF',
 									label: 'XRechnung + PDF',
+									description: `Generates both, a structured e-invoice xml file
+										and a human readable PDF.
+										Only the xml file is the legally binding document.
+										Both files are attached to the email.
+										Negative line amounts are implemented as allowances (discounts/credits).
+										`,
 								},
 								{
 									value: 'XRECHNUNG',
 									label: 'XRechnung (XML Only)',
+									description: `Generates a structured e-invoice xml file only.
+										Negative line amounts are implemented as allowances (discounts/credits).
+										`,
 								},
 							]}
 							className="w-full"
