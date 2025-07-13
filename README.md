@@ -29,8 +29,10 @@ These are the high level next steps:
 - [X] Semantic versioning and automated releases
 - [X] Auto-Generate expenses (based on incoming invoices with AI)
 - [X] Inventory Management
-- [X] Digital outgoing invoices (ZUGFeRD Standard)
+- [X] Digital outgoing invoices (ZUGFeRD & XRechnung)
 - [ ] Auto-Generate expenses (based on incoming structured invoices, e.g. ZUGFeRD/ X-Rechnung)
+- [ ] Scheduled invoice sending
+- [ ] Forward incoming invoice email to servobill
 - [ ] Full Standalone (Local User Management, Multi-user support, automatic backups, etc.)
 
 ## Developing & Deploying
