@@ -63,7 +63,7 @@ export const entitySchema = DynamoDBService.getSchema({
 		state: {
 			type: 'string',
 		},
-		country: {
+		countryCode: {
 			type: 'string',
 		},
 		notes: {

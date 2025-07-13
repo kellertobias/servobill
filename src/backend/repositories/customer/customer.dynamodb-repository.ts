@@ -82,7 +82,7 @@ export class CustomerDynamodbRepository
 			zip: entity.zip,
 			city: entity.city,
 			state: entity.state,
-			country: entity.country,
+			countryCode: entity.countryCode,
 			notes: entity.notes,
 		});
 	}
@@ -104,7 +104,7 @@ export class CustomerDynamodbRepository
 			zip: domainEntity.zip || '',
 			city: domainEntity.city || '',
 			state: domainEntity.state || '',
-			country: domainEntity.country || '',
+			countryCode: domainEntity.countryCode || '',
 			notes: domainEntity.notes || '',
 			searchName: domainEntity.name.toLowerCase(),
 			createdAt: domainEntity.createdAt.toISOString(),
