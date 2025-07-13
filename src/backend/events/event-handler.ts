@@ -1,5 +1,5 @@
 import { Context, EventBridgeEvent } from 'aws-lambda';
-import { validateOrReject } from 'class-validator';
+import { validateOrReject, ValidationError } from 'class-validator';
 
 import { Logger } from '../services/logger.service';
 
@@ -37,16 +37,28 @@ export const makeEventHandler = <T extends object>(
 				await validateOrReject(eventData, {
 					forbidUnknownValues: false,
 				});
-			} catch {
-				logger.info(
-					`Event Data Validation failed for ${event['detail-type']}`,
-					{
-						eventName: event['detail-type'],
-						event: event.detail,
-						eventId: event.id,
-					},
-				);
-				throw new Error(`Event validation failed`);
+			} catch (error: unknown) {
+				if (error instanceof ValidationError) {
+					logger.info(
+						`Event Data Validation failed for ${event['detail-type']}`,
+						{
+							eventName: event['detail-type'],
+							event: event.detail,
+							eventId: event.id,
+							errors: error.constraints,
+						},
+					);
+				} else {
+					logger.error(
+						`Event Data Validation failed for ${event['detail-type']}`,
+						{
+							eventName: event['detail-type'],
+							event: event.detail,
+							eventId: event.id,
+							error,
+						},
+					);
+				}
 			}
 
 			try {

@@ -4,9 +4,9 @@ import '@/backend/services/config.service';
 
 import { EventHandler } from '../../types';
 import { makeEventHandler } from '../../event-handler';
-import { HandlerExecution } from '../send/execute';
 
 import { InvoiceSendLaterEvent } from './event';
+import { HandlerExecution } from './execute';
 
 import { DefaultContainer } from '@/common/di';
 

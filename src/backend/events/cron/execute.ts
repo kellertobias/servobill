@@ -7,6 +7,8 @@ import type { TimeBasedJobRepository } from '@/backend/repositories/time-based-j
 import { EVENTBUS_SERVICE } from '@/backend/services/di-tokens';
 import type { EventBusService } from '@/backend/services/eventbus.service';
 
+import '@/backend/repositories';
+
 /**
  * HandlerExecution for the cron event handler.
  * Fetches due time-based jobs and dispatches their events on the event bus.

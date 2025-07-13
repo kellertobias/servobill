@@ -135,7 +135,11 @@ export class InvoiceEntity extends DomainEntity {
 	private updateContentHash(): void {
 		const relevantContent = {
 			customer: this.customer,
-			items: this.items,
+			items: (this.items || []).map((item) => {
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
+				const { linkedExpenses, productId, ...rest } = item;
+				return rest;
+			}),
 			footerText: this.footerText,
 			subject: this.subject,
 			invoicedAt: this.invoicedAt,
@@ -308,6 +312,7 @@ export class InvoiceEntity extends DomainEntity {
 					: undefined,
 				ref: scheduledSendJob.id,
 			});
+
 			const sendScheduledEvent = new DomainEvent(
 				this.id,
 				'invoice.later',
@@ -379,6 +384,8 @@ export class InvoiceEntity extends DomainEntity {
 					: InvoiceActivityType.SENT_OFFER_MANUALLY;
 		}
 
+		this.updatedAt = new Date();
+
 		if (justSent) {
 			this.updateContentHash();
 			this.addEvent(
@@ -411,7 +418,6 @@ export class InvoiceEntity extends DomainEntity {
 			);
 		}
 
-		this.updatedAt = new Date();
 		const activity = new InvoiceActivityEntity({
 			user: userName,
 			type: activityType,

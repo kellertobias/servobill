@@ -263,6 +263,20 @@ const waitForNextEvent = () => {
 	}, 100);
 };
 
+const createCronEvent = async () => {
+	const eventId = randomUUID().toString();
+	await enqueueJob({
+		eventId,
+		type: 'cron',
+		source: 'local-cron',
+		resources: [],
+		data: {
+			id: eventId,
+			scheduledAt: new Date(Date.now()),
+		},
+	});
+};
+
 // Initialize the database and start the event loop
 // NOTE: You must install the 'sqlite' package for this to work:
 // npm install sqlite
@@ -282,21 +296,7 @@ initDb()
 		setInterval(
 			async () => {
 				try {
-					const eventId = randomUUID().toString();
-					await enqueueJob({
-						eventId,
-						type: 'cron',
-						source: 'local-cron',
-						resources: [],
-						data: {
-							id: eventId,
-							scheduledAt: new Date(Date.now()),
-						},
-					});
-					console.log(
-						chalk.bgBlue('[EventBus] CRON'),
-						`Enqueued cron event (${eventId})`,
-					);
+					await createCronEvent();
 				} catch (error) {
 					console.error(
 						chalk.bgBlue('[EventBus] CRON'),
@@ -307,6 +307,9 @@ initDb()
 			},
 			5 * 60 * 1000,
 		); // 5 minutes in milliseconds
+		setTimeout(async () => {
+			await createCronEvent();
+		}, 10000);
 
 		waitForNextEvent();
 		app.listen(port, () => {

@@ -39,21 +39,8 @@ export class HandlerExecution {
 		@Inject(EXPENSE_REPOSITORY) private expenseRepository: ExpenseRepository,
 	) {}
 
-	/**
-	 * Loads the invoice settings entity from the repository.
-	 */
-	private async getSettings(): Promise<InvoiceSettingsEntity> {
-		const setting = await this.settingsRepository.getSetting(
-			InvoiceSettingsEntity,
-		);
-		if (!setting) {
-			throw new Error('Invoice Settings not found');
-		}
-		return setting;
-	}
-
 	async execute(event: InvoiceSendLaterEvent) {
-		this.logger.info('Triggered send-later handler', { event });
+		// this.logger.info('Triggered send-later handler', { event });
 
 		// 1. Load the invoice
 		const invoice = await this.invoiceRepository.getById(event.invoiceId);
@@ -102,6 +89,7 @@ export class HandlerExecution {
 		);
 
 		await this.invoiceRepository.save(invoice);
+
 		await invoice.createAndLinkExpensesForInvoice(async (data) => {
 			const expense = await this.expenseRepository.create();
 			expense.update(data);
@@ -110,8 +98,8 @@ export class HandlerExecution {
 		});
 		await this.invoiceRepository.save(invoice);
 
-		this.logger.info('Invoice sent and schedule cleaned up', {
-			invoiceId: invoice.id,
-		});
+		// this.logger.info('Invoice sent and schedule cleaned up', {
+		// 	invoiceId: invoice.id,
+		// });
 	}
 }
