@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi } from 'vitest';
 import { parseStringPromise } from 'xml2js';
+import dayjs from 'dayjs';
 
 import {
 	InvoiceFormat,
@@ -8,6 +9,7 @@ import {
 } from './receipt-structured-extraction.service';
 import { ZugferdExtractorStrategy } from './receipt-structured-zugferd';
 import { XRechnungExtractorStrategy } from './receipt-structured-xrechnung';
+import { ExtractedInvoiceStructure } from './receipt-structured-strategy-interface';
 
 import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
 import { VatStatus } from '@/backend/entities/settings.entity';
@@ -94,85 +96,110 @@ describe('ReceiptStructuredStrategy extracts correct data', () => {
 	const testCases = [
 		{
 			label: 'single item, no tax',
-			items: [{ quantity: 1, price: 1000, vat: 0 }],
-			expect: (result: any) => {
-				expect(result.lineItems).toHaveLength(1);
-				expect(result.lineItems[0].unitPriceCents).toBe(1000);
-				expect(result.lineItems[0].taxPercent).toBe(0);
-				expect(result.lineItems[0].taxCents).toBe(0);
-				expect(result.lineItems[0].netCents).toBe(1000);
-				expect(result.lineItems[0].totalCents).toBe(1000);
+			items: [{ quantity: 1, price: 1000, vat: 0, name: 'Taxfree Item' }],
+			expect: (result: ExtractedInvoiceStructure, xml: string) => {
+				expect(result.lineItems, xml).toHaveLength(1);
+				expect(result.lineItems[0].name, xml).toBe('Taxfree Item');
+				expect(result.lineItems[0].unitPriceCents, xml).toBe(1000);
+				expect(result.lineItems[0].taxPercent, xml).toBe(0);
+				expect(result.lineItems[0].taxCents, xml).toBe(0);
+				expect(result.lineItems[0].netCents, xml).toBe(1000);
+				expect(result.lineItems[0].totalCents, xml).toBe(1000);
+
+				expect(result.totals?.netCents, xml).toBe(1000);
+				expect(result.totals?.taxCents, xml).toBe(0);
+				expect(result.totals?.grossCents, xml).toBe(1000);
 			},
 		},
 		{
 			label: 'single item, with tax',
-			items: [{ quantity: 1, price: 1000, vat: 19 }],
-			expect: (result: any) => {
-				expect(result.lineItems).toHaveLength(1);
-				expect(result.lineItems[0].unitPriceCents).toBe(1000);
-				expect(result.lineItems[0].taxPercent).toBe(19);
-				expect(result.lineItems[0].taxCents).toBe(190);
-				expect(result.lineItems[0].netCents).toBe(1000);
-				expect(result.lineItems[0].totalCents).toBe(1000 * 1.19);
+			items: [{ quantity: 1, price: 1000, vat: 19, name: 'Crypto Gift Card' }],
+			expect: (result: ExtractedInvoiceStructure, xml: string) => {
+				expect(result.lineItems, xml).toHaveLength(1);
+				expect(result.lineItems[0].name, xml).toBe('Crypto Gift Card');
+				expect(result.lineItems[0].unitPriceCents, xml).toBe(1000);
+				expect(result.lineItems[0].taxPercent, xml).toBe(19);
+				expect(result.lineItems[0].taxCents, xml).toBe(190);
+				expect(result.lineItems[0].totalCents, xml).toBe(1000 * 1.19);
+
+				expect(result.totals?.netCents, xml).toBe(1000);
+				expect(result.totals?.taxCents, xml).toBe(190);
+				expect(result.totals?.grossCents, xml).toBe(1000 * 1.19);
 			},
 		},
 		{
 			label: 'multiple items, with tax',
 			items: [
-				{ quantity: 2, price: 500, vat: 19 },
-				{ quantity: 1, price: 2000, vat: 7 },
+				{ quantity: 2, price: 500, vat: 19, name: 'Water Melon' },
+				{ quantity: 1, price: 2000, vat: 7, name: 'Iced Tea 10L' },
 			],
-			expect: (result: any) => {
-				expect(result.lineItems).toHaveLength(2);
-				expect(result.lineItems[0].netCents).toBe(2 * 500);
-				expect(result.lineItems[0].taxCents).toBe(2 * 500 * 0.19);
-				expect(result.lineItems[0].totalCents).toBe(2 * 500 * 1.19);
-				expect(result.lineItems[1].netCents).toBe(1 * 2000);
-				expect(result.lineItems[1].taxCents).toBe(1 * 2000 * 0.07);
-				expect(result.lineItems[1].totalCents).toBe(1 * 2000 * 1.07);
+			expect: (result: ExtractedInvoiceStructure, xml: string) => {
+				expect(result.lineItems, xml).toHaveLength(2);
+				expect(result.lineItems[0].name, xml).toBe('Water Melon');
+				expect(result.lineItems[0].taxCents, xml).toBe(2 * 500 * 0.19);
+				expect(result.lineItems[0].totalCents, xml).toBe(2 * 500 * 1.19);
+
+				expect(result.lineItems[1].name, xml).toBe('Iced Tea 10L');
+				expect(result.lineItems[1].taxCents, xml).toBe(1 * 2000 * 0.07);
+				expect(result.lineItems[1].totalCents, xml).toBe(1 * 2000 * 1.07);
 				const total = result.lineItems.reduce(
 					(sum: number, li: any) => sum + li.totalCents,
 					0,
 				);
-				expect(total).toBe(2 * 500 * 1.19 + 1 * 2000 * 1.07);
+				expect(total, xml).toBe(2 * 500 * 1.19 + 1 * 2000 * 1.07);
+
+				expect(result.totals?.netCents, xml).toBe(2 * 500 + 1 * 2000);
+				expect(result.totals?.taxCents, xml).toBe(
+					2 * 500 * 0.19 + 1 * 2000 * 0.07,
+				);
+				expect(result.totals?.grossCents, xml).toBe(
+					2 * 500 * 1.19 + 1 * 2000 * 1.07,
+				);
 			},
 		},
 		{
 			label: 'single item, multiple quantities',
-			items: [{ quantity: 5, price: 300, vat: 19 }],
-			expect: (result: any) => {
-				expect(result.lineItems).toHaveLength(1);
-				expect(result.lineItems[0].taxPercent).toBe(19);
-				expect(result.lineItems[0].taxCents).toBe(300 * 5 * 0.19);
-				expect(result.lineItems[0].netCents).toBe(300 * 5);
-				expect(result.lineItems[0].totalCents).toBe(1500 * 1.19);
+			items: [{ quantity: 5, price: 300, vat: 19, name: 'Honeydew Melon' }],
+			expect: (result: ExtractedInvoiceStructure, xml: string) => {
+				expect(result.lineItems, xml).toHaveLength(1);
+				expect(result.lineItems[0].name, xml).toBe('Honeydew Melon');
+				expect(result.lineItems[0].taxPercent, xml).toBe(19);
+				expect(result.lineItems[0].taxCents, xml).toBe(300 * 5 * 0.19);
+				expect(result.lineItems[0].totalCents, xml).toBe(1500 * 1.19);
+
+				expect(result.totals?.netCents, xml).toBe(1500);
+				expect(result.totals?.taxCents, xml).toBe(300 * 5 * 0.19);
+				expect(result.totals?.grossCents, xml).toBe(1500 * 1.19);
 			},
 		},
 		{
 			label: 'multiple items and allowances',
 			items: [
-				{ quantity: 2, price: 500, vat: 19 },
-				{ quantity: 1, price: 2000, vat: 7 },
+				{ quantity: 2, price: 500, vat: 19, name: 'Avocado' },
+				{ quantity: 1, price: 2000, vat: 7, name: 'Roast Beef' },
 				{
 					quantity: 1,
 					price: -300,
 					vat: 19,
-					name: 'Discount',
-					description: 'Test discount',
+					name: 'Discount Coupon',
+					description: 'Test Discount Description',
 				},
 			],
-			expect: (result: any) => {
+			expect: (result: ExtractedInvoiceStructure, xml: string) => {
 				// For this test, the extraction should merge all items and allowances into a single result
 				// (as per user request: combine titles & descriptions, cannot attach price per item)
 				// For now, just check that at least one line item is present and total is correct
-				expect(result.lineItems).toHaveLength(1);
-				expect(result.lineItems[0].netCents).toBe(2 * 500 + 1 * 2000 - 300);
-				expect(result.lineItems[0].taxCents).toBe(
+				expect(result.lineItems, xml).toHaveLength(1);
+				expect(result.lineItems[0].name, xml).toBe(
+					'Avocado, Roast Beef, Discount Coupon',
+				);
+				expect(result.totals?.taxCents, xml).toBe(
 					2 * 500 * 0.19 + 1 * 2000 * 0.07 - 300 * 0.19,
 				);
-				expect(result.lineItems[0].totalCents).toBe(
+				expect(result.totals?.grossCents, xml).toBe(
 					2 * 500 * 1.19 + 1 * 2000 * 1.07 - 300 * 1.19,
 				);
+				expect(result.totals?.netCents, xml).toBe(2 * 500 + 1 * 2000 - 300);
 			},
 		},
 	];
@@ -182,7 +209,7 @@ describe('ReceiptStructuredStrategy extracts correct data', () => {
 			testCases.forEach(({ label, items, expect: expectFn }) => {
 				it(`should extract: ${label}`, async () => {
 					// given
-					const { xml } = await runGenerator(generator(), {
+					const { invoice, xml } = await runGenerator(generator(), {
 						vatStatus: VatStatus.VAT_ENABLED,
 						items: createItems(items),
 						assertCorrectStructure: false,
@@ -196,7 +223,12 @@ describe('ReceiptStructuredStrategy extracts correct data', () => {
 					});
 
 					// then
-					expectFn(result);
+					expectFn(result, xml);
+					expect(result.invoiceNumber).toBe(invoice.invoiceNumber);
+					expect(dayjs(result.invoiceDate).format('DD.MM.YYYY')).toBe(
+						dayjs(invoice.invoicedAt).format('DD.MM.YYYY'),
+					);
+					expect(result.from).toBe('Cool Stuff Inc.');
 				});
 			});
 		});

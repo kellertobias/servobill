@@ -28,7 +28,11 @@ export class XRechnungExtractorStrategy extends ReceiptStructuredStrategy {
 			return {
 				format: 'xrechnung',
 				lineItems: [],
-				totalGrossCents: 0,
+				totals: {
+					netCents: 0,
+					taxCents: 0,
+					grossCents: 0,
+				},
 				from: '',
 				invoiceDate: new Date(0),
 				invoiceNumber: '',
@@ -37,13 +41,13 @@ export class XRechnungExtractorStrategy extends ReceiptStructuredStrategy {
 		}
 
 		const lineItems = this.extractLineItems(invoice);
-		const totalGrossCents = this.extractTotalGrossCents(invoice);
+		const totals = this.calculateTotals(lineItems, invoice);
 		const meta = this.extractMeta(invoice);
 
 		return {
 			format: 'xrechnung',
 			lineItems,
-			totalGrossCents,
+			totals,
 			...meta,
 		};
 	}
@@ -191,6 +195,52 @@ export class XRechnungExtractorStrategy extends ReceiptStructuredStrategy {
 		return payableAmount
 			? Math.round(Number.parseFloat(payableAmount) * 100)
 			: 0;
+	}
+
+	/**
+	 * Calculates totals from line items, with fallback to XML extraction if needed.
+	 * @param lineItems Extracted line items
+	 * @param invoice Invoice root object for fallback extraction
+	 * @returns Object with netCents, taxCents, and grossCents
+	 */
+	private calculateTotals(
+		lineItems: ExtractedExpenseItem[],
+		invoice: Record<string, unknown>,
+	): { netCents: number; taxCents: number; grossCents: number } {
+		// Calculate from line items if available
+		if (lineItems.length > 0) {
+			const netCents = lineItems.reduce((sum, item) => sum + item.netCents, 0);
+			const taxCents = lineItems.reduce((sum, item) => sum + item.taxCents, 0);
+			const grossCents = lineItems.reduce(
+				(sum, item) => sum + item.totalCents,
+				0,
+			);
+
+			return { netCents, taxCents, grossCents };
+		}
+
+		// Fallback to XML extraction if no line items
+		const legalMonetaryTotal = this.getAsObject(
+			invoice['cac:LegalMonetaryTotal'],
+		);
+
+		const netAmountStr = this.getFirstStr(
+			legalMonetaryTotal['cbc:TaxExclusiveAmount'],
+		);
+		const netCents = Math.round(Number.parseFloat(netAmountStr || '0') * 100);
+
+		// Try to extract tax amount from tax totals
+		const taxTotalArray = this.getArray(invoice['cac:TaxTotal']);
+		let taxCents = 0;
+		if (taxTotalArray.length > 0) {
+			const taxTotal = taxTotalArray[0] as Record<string, unknown>;
+			const taxAmountStr = this.getFirstStr(taxTotal['cbc:TaxAmount']);
+			taxCents = Math.round(Number.parseFloat(taxAmountStr || '0') * 100);
+		}
+
+		const grossCents = this.extractTotalGrossCents(invoice);
+
+		return { netCents, taxCents, grossCents };
 	}
 
 	/**

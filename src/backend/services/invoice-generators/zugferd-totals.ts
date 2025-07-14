@@ -103,8 +103,6 @@ function getMonetarySummation(
 		Number(roundingAmount)
 	).toFixed(2);
 
-	console.log({ allowances });
-
 	return {
 		lineTotalAmount: totals.lineNetAmount.toFixed(2),
 		taxBasisTotalAmount,

@@ -1,3 +1,5 @@
+import { extractEmbeddedXmlWithPdfLib } from './extract-pdf-xml';
+
 /**
  * Classification result for receipt processing
  *
@@ -40,16 +42,20 @@ export class ReceiptClassificationService {
 				attachment.mimeType === 'text/xml' ||
 				attachment.name.toLowerCase().endsWith('.xml')
 			) {
+				console.log('Structured XML file', attachment.name);
 				return ReceiptClassification.Structured;
 			}
 			// Check for PDF with embedded XML (ZUGFeRD)
 			if (attachment.mimeType === 'application/pdf') {
+				console.log('PDF file', attachment.name);
 				const isStructured = await this.pdfHasEmbeddedXml(attachment.content);
 				if (isStructured) {
+					console.log('PDF file has embedded XML', attachment.name);
 					return ReceiptClassification.Structured;
 				}
 			}
 		}
+		console.log('Fallback: Extraction');
 		// Fallback: Extraction
 		return ReceiptClassification.Extraction;
 	}
@@ -65,13 +71,24 @@ export class ReceiptClassificationService {
 	 */
 	private static async pdfHasEmbeddedXml(pdfBuffer: Buffer): Promise<boolean> {
 		try {
+			console.log('Checking for embedded XML in PDF');
 			const xmlMatches = pdfBuffer
 				.toString('utf8')
 				.match(/<\?xml[\S\s]*?<\/[\w:]+>/g);
+
+			console.log('XML matches', xmlMatches);
 			if (xmlMatches) {
 				// Heuristic: any XML found in PDF is considered structured
 				return true;
 			}
+
+			console.log('Extracting embedded XML with pdf-lib');
+			const xml = await extractEmbeddedXmlWithPdfLib(pdfBuffer);
+			console.log('Embedded XML', xml);
+			if (xml) {
+				return true;
+			}
+
 			return false;
 		} catch {
 			// On error, assume not structured

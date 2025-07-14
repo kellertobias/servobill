@@ -100,7 +100,7 @@ const getAllowanceItem = (
 
 	// Per EN16931, reasonCode '95' is used for "Discount" (see https://www.unece.org/trade/untdid/d16b/tred/tred4465.htm)
 	const reasonCode = '95';
-	const reason = item.description || 'Discount';
+	const reason = item.name || 'Discount';
 
 	return {
 		actualAmount,

@@ -28,7 +28,11 @@ export class ZugferdExtractorStrategy extends ReceiptStructuredStrategy {
 			return {
 				format: 'zugferd',
 				lineItems: [],
-				totalGrossCents: 0,
+				totals: {
+					netCents: 0,
+					taxCents: 0,
+					grossCents: 0,
+				},
 				from: '',
 				invoiceDate: new Date(0),
 				invoiceNumber: '',
@@ -37,7 +41,7 @@ export class ZugferdExtractorStrategy extends ReceiptStructuredStrategy {
 		}
 
 		const lineItems = this.extractLineItems(invoice);
-		const totalGrossCents = this.extractTotalGrossCents(invoice);
+		const totals = this.calculateTotals(lineItems, invoice);
 		const from = this.extractSellerName(invoice);
 		const invoiceDate = this.extractInvoiceDate(invoice);
 		const invoiceNumber = this.extractInvoiceNumber(invoice);
@@ -46,7 +50,7 @@ export class ZugferdExtractorStrategy extends ReceiptStructuredStrategy {
 		return {
 			format: 'zugferd',
 			lineItems,
-			totalGrossCents,
+			totals,
 			from,
 			invoiceDate,
 			invoiceNumber,
@@ -112,35 +116,51 @@ export class ZugferdExtractorStrategy extends ReceiptStructuredStrategy {
 				'ram:SpecifiedLineTradeAgreement',
 				'SpecifiedLineTradeAgreement',
 			]);
-			const name = this.getString(product, ['ram:Name', 'Name']) || 'Item';
+			const name =
+				this.getFirstStr(product?.['ram:Name']) ||
+				this.getFirstStr(product?.['Name']) ||
+				'Extracted Item';
+
+			const priceObj = this.getFirstObject(agreement, [
+				'ram:NetPriceProductTradePrice',
+				'NetPriceProductTradePrice',
+			]);
 			const priceVal =
-				this.getString(agreement, [
-					'ram:NetPriceProductTradePrice.0.ram:ChargeAmount.0',
-					'NetPriceProductTradePrice.0.ChargeAmount.0',
-				]) || '0';
-			const unitPriceCents = Math.round(Number.parseFloat(priceVal) * 100);
+				this.getFirstStr(priceObj?.['ram:ChargeAmount']) ||
+				this.getFirstStr(priceObj?.['ChargeAmount']) ||
+				'0';
+
 			const delivery = this.getFirstObject(line, [
-				'ram:SpecifiedSupplyChainTradeDelivery',
-				'SpecifiedSupplyChainTradeDelivery',
+				'ram:SpecifiedLineTradeDelivery',
+				'SpecifiedLineTradeDelivery',
 			]);
 			const qtyVal =
-				this.getString(delivery, [
-					'ram:BilledQuantity.0._',
-					'ram:BilledQuantity.0',
-				]) || '1';
+				this.getFirstStr(delivery?.['ram:BilledQuantity']) ||
+				this.getFirstStr(delivery?.['BilledQuantity']) ||
+				'1';
 			const amount = Number.parseFloat(qtyVal || '1');
+
+			// In ZUGFeRD, ChargeAmount is the total line amount (unit price * quantity), not unit price
+			const totalLineCents = Math.round(Number.parseFloat(priceVal) * 100);
+			const unitPriceCents = Math.round(totalLineCents / amount);
+
 			const settlement = this.getFirstObject(line, [
 				'ram:SpecifiedLineTradeSettlement',
 				'SpecifiedLineTradeSettlement',
 			]);
+			const taxObj = this.getFirstObject(settlement, [
+				'ram:ApplicableTradeTax',
+				'ApplicableTradeTax',
+			]);
 			const taxPercentVal =
-				this.getString(settlement, [
-					'ram:ApplicableTradeTax.0.ram:RateApplicablePercent.0',
-				]) || '0';
+				this.getFirstStr(taxObj?.['ram:RateApplicablePercent']) ||
+				this.getFirstStr(taxObj?.['RateApplicablePercent']) ||
+				'0';
 			const taxPercent = Number.parseFloat(taxPercentVal);
-			const netCents = unitPriceCents * amount;
+			const netCents = totalLineCents; // Use the total line amount directly
 			const taxCents = Math.round(netCents * (taxPercent / 100));
 			const totalCents = netCents + taxCents;
+
 			items.push({
 				name,
 				unitPriceCents,
@@ -203,15 +223,13 @@ export class ZugferdExtractorStrategy extends ReceiptStructuredStrategy {
 			if (!amountNum || amountNum === 0) {
 				continue;
 			} // Skip zero-amount allowances
+			const allowanceObj = allowance as Record<string, unknown>;
 			const name =
-				this.getString(allowance, [
-					'ram:Reason.0',
-					'Reason.0',
-					'ram:AllowanceChargeReason.0',
-					'AllowanceChargeReason.0',
-					'ram:Reason',
-					'Reason',
-				]) || 'Discount';
+				this.getFirstStr(allowanceObj?.['ram:Reason']) ||
+				this.getFirstStr(allowanceObj?.['Reason']) ||
+				this.getFirstStr(allowanceObj?.['ram:AllowanceChargeReason']) ||
+				this.getFirstStr(allowanceObj?.['AllowanceChargeReason']) ||
+				'Discount';
 			const unitPriceCents = -Math.round(amountNum * 100); // negative for discount
 			const amount = 1;
 			const taxPercentVal =
@@ -239,20 +257,6 @@ export class ZugferdExtractorStrategy extends ReceiptStructuredStrategy {
 				totalCents,
 			});
 		}
-
-		// TEMP DEBUG: Log raw lineItemsRaw before processing
-		// eslint-disable-next-line no-console
-		console.log(
-			'ZUGFeRD raw lineItemsRaw:',
-			JSON.stringify(lineItemsRaw, null, 2),
-		);
-
-		// TEMP DEBUG: Log full tradeTransaction for allowance location
-		// eslint-disable-next-line no-console
-		console.log(
-			'ZUGFeRD tradeTransaction:',
-			JSON.stringify(tradeTransaction, null, 2),
-		);
 
 		// If any item is an allowance/discount (netCents < 0), merge all items (including allowances) into a single line item
 		if (items.length > 1 && items.some((i) => i.netCents < 0)) {
@@ -285,9 +289,17 @@ export class ZugferdExtractorStrategy extends ReceiptStructuredStrategy {
 	 * Extracts the total gross amount in cents from the invoice.
 	 */
 	private extractTotalGrossCents(invoice: Record<string, unknown>): number {
-		const monetarySummation = this.getFirstObject(invoice, [
-			'ram:ApplicableHeaderMonetarySummation',
-			'ApplicableHeaderMonetarySummation',
+		const tradeTransaction = this.getFirstObject(invoice, [
+			'rsm:SupplyChainTradeTransaction',
+			'SupplyChainTradeTransaction',
+		]);
+		const settlement = this.getFirstObject(tradeTransaction, [
+			'ram:ApplicableHeaderTradeSettlement',
+			'ApplicableHeaderTradeSettlement',
+		]);
+		const monetarySummation = this.getFirstObject(settlement, [
+			'ram:SpecifiedTradeSettlementHeaderMonetarySummation',
+			'SpecifiedTradeSettlementHeaderMonetarySummation',
 		]);
 		const total = this.getString(monetarySummation, [
 			'ram:GrandTotalAmount.0',
@@ -297,10 +309,67 @@ export class ZugferdExtractorStrategy extends ReceiptStructuredStrategy {
 	}
 
 	/**
+	 * Calculates totals from line items, with fallback to XML extraction if needed.
+	 * @param lineItems Extracted line items
+	 * @param invoice Invoice root object for fallback extraction
+	 * @returns Object with netCents, taxCents, and grossCents
+	 */
+	private calculateTotals(
+		lineItems: ExtractedExpenseItem[],
+		invoice: Record<string, unknown>,
+	): { netCents: number; taxCents: number; grossCents: number } {
+		// Calculate from line items if available
+		if (lineItems.length > 0) {
+			const netCents = lineItems.reduce((sum, item) => sum + item.netCents, 0);
+			const taxCents = lineItems.reduce((sum, item) => sum + item.taxCents, 0);
+			const grossCents = lineItems.reduce(
+				(sum, item) => sum + item.totalCents,
+				0,
+			);
+
+			return { netCents, taxCents, grossCents };
+		}
+
+		// Fallback to XML extraction if no line items
+		const grossCents = this.extractTotalGrossCents(invoice);
+		const tradeTransaction = this.getFirstObject(invoice, [
+			'rsm:SupplyChainTradeTransaction',
+			'SupplyChainTradeTransaction',
+		]);
+		const settlement = this.getFirstObject(tradeTransaction, [
+			'ram:ApplicableHeaderTradeSettlement',
+			'ApplicableHeaderTradeSettlement',
+		]);
+		const monetarySummation = this.getFirstObject(settlement, [
+			'ram:SpecifiedTradeSettlementHeaderMonetarySummation',
+			'SpecifiedTradeSettlementHeaderMonetarySummation',
+		]);
+
+		const netTotal = this.getString(monetarySummation, [
+			'ram:TaxBasisTotalAmount.0',
+			'TaxBasisTotalAmount.0',
+		]);
+		const netCents = Math.round(Number.parseFloat(netTotal || '0') * 100);
+
+		const taxTotal = this.getString(monetarySummation, [
+			'ram:TaxTotalAmount.0',
+			'TaxTotalAmount.0',
+		]);
+		const taxCents = Math.round(Number.parseFloat(taxTotal || '0') * 100);
+
+		return { netCents, taxCents, grossCents };
+	}
+
+	/**
 	 * Extracts the seller name ("from") from the invoice.
 	 */
 	private extractSellerName(invoice: Record<string, unknown>): string {
-		const agreement = this.getFirstObject(invoice, [
+		// ZUGFeRD XML structure: rsm:SupplyChainTradeTransaction -> ram:ApplicableHeaderTradeAgreement -> ram:SellerTradeParty -> ram:Name
+		const tradeTransaction = this.getFirstObject(invoice, [
+			'rsm:SupplyChainTradeTransaction',
+			'SupplyChainTradeTransaction',
+		]);
+		const agreement = this.getFirstObject(tradeTransaction, [
 			'ram:ApplicableHeaderTradeAgreement',
 			'ApplicableHeaderTradeAgreement',
 		]);
@@ -308,7 +377,11 @@ export class ZugferdExtractorStrategy extends ReceiptStructuredStrategy {
 			'ram:SellerTradeParty',
 			'SellerTradeParty',
 		]);
-		return this.getString(seller, ['ram:Name.0', 'Name.0']) || '';
+		return (
+			this.getFirstStr(seller?.['ram:Name']) ||
+			this.getFirstStr(seller?.['Name']) ||
+			''
+		);
 	}
 
 	/**
@@ -316,18 +389,40 @@ export class ZugferdExtractorStrategy extends ReceiptStructuredStrategy {
 	 */
 	private extractInvoiceDate(invoice: Record<string, unknown>): Date {
 		const header = this.getFirstObject(invoice, [
-			'ram:ExchangedDocument',
+			'rsm:ExchangedDocument',
 			'ExchangedDocument',
 		]);
-		const dateStr = this.getString(header, [
-			'ram:IssueDateTime.0.udt:DateTimeString.0._',
-			'IssueDateTime.0.DateTimeString.0._',
-			'ram:IssueDateTime.0.ram:DateTimeString.0._',
-			'IssueDateTime.0.ram:DateTimeString.0._',
-			'ram:IssueDateTime.0',
-			'IssueDateTime.0',
+
+		// Try to get date from nested structure
+		const dateTimeObj = this.getFirstObject(header, [
+			'ram:IssueDateTime',
+			'IssueDateTime',
 		]);
+
+		let dateStr: string | undefined;
+		if (dateTimeObj) {
+			const dateTimeStringObj = this.getFirstObject(dateTimeObj, [
+				'udt:DateTimeString',
+				'DateTimeString',
+			]);
+			dateStr =
+				this.getFirstStr(dateTimeStringObj) || this.getFirstStr(dateTimeObj);
+		}
+
 		if (dateStr && typeof dateStr === 'string') {
+			// Handle format "20250714" (YYYYMMDD format)
+			if (/^\d{8}$/.test(dateStr)) {
+				const year = Number.parseInt(dateStr.slice(0, 4), 10);
+				const month = Number.parseInt(dateStr.slice(4, 6), 10) - 1; // months are 0-indexed
+				const day = Number.parseInt(dateStr.slice(6, 8), 10);
+				// Create as ISO string and then parse to ensure UTC
+				const isoString = `${year}-${String(month + 1).padStart(
+					2,
+					'0',
+				)}-${String(day).padStart(2, '0')}T00:00:00.000Z`;
+				return new Date(isoString);
+			}
+			// Try standard date parsing
 			const d = new Date(dateStr);
 			if (!Number.isNaN(d.getTime())) {
 				return d;
@@ -341,10 +436,14 @@ export class ZugferdExtractorStrategy extends ReceiptStructuredStrategy {
 	 */
 	private extractInvoiceNumber(invoice: Record<string, unknown>): string {
 		const header = this.getFirstObject(invoice, [
-			'ram:ExchangedDocument',
+			'rsm:ExchangedDocument',
 			'ExchangedDocument',
 		]);
-		return this.getString(header, ['ram:ID.0', 'ID.0']) || '';
+		const invoiceNumber =
+			this.getFirstStr(header?.['ram:ID']) ||
+			this.getFirstStr(header?.['ID']) ||
+			'';
+		return invoiceNumber;
 	}
 
 	/**
@@ -352,14 +451,17 @@ export class ZugferdExtractorStrategy extends ReceiptStructuredStrategy {
 	 */
 	private extractSubject(invoice: Record<string, unknown>): string {
 		const header = this.getFirstObject(invoice, [
-			'ram:ExchangedDocument',
+			'rsm:ExchangedDocument',
 			'ExchangedDocument',
 		]);
+		const noteObj = this.getFirstObject(header, [
+			'ram:IncludedNote',
+			'IncludedNote',
+		]);
 		return (
-			this.getString(header, [
-				'ram:IncludedNote.0.ram:Content.0',
-				'IncludedNote.0.Content.0',
-			]) || ''
+			this.getFirstStr(noteObj?.['ram:Content']) ||
+			this.getFirstStr(noteObj?.['Content']) ||
+			''
 		);
 	}
 }

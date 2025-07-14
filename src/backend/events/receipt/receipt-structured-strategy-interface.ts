@@ -7,8 +7,8 @@ export interface ExtractedExpenseItem {
 	amount: number;
 	taxPercent: number; // Tax rate as percent (e.g. 19)
 	taxCents: number; // Tax amount in cents
-	netCents: number; // Net amount (unitPriceCents * amount)
-	totalCents: number; // Gross amount (net + tax)
+	netCents: number; // needs to be calculated by subtracting taxCents from totalCents
+	totalCents: number; // Gross amount
 	description?: string;
 	categoryId?: string;
 }
@@ -21,7 +21,11 @@ export type InvoiceXml = Record<string, unknown>;
 export interface ExtractedInvoiceStructure {
 	format: 'zugferd' | 'xrechnung' | 'unknown';
 	lineItems: ExtractedExpenseItem[];
-	totalGrossCents: number;
+	totals: {
+		netCents: number;
+		taxCents: number;
+		grossCents: number;
+	};
 	from: string;
 	invoiceDate: Date;
 	invoiceNumber: string;

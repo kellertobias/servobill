@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { expect } from 'vitest';
+import dayjs from 'dayjs';
 
 import { InvoiceGeneratorStrategy } from './interface';
 
@@ -18,6 +19,7 @@ import {
 	VatStatus,
 } from '@/backend/entities/settings.entity';
 import { CustomerEntity } from '@/backend/entities/customer.entity';
+
 import '@/test/e-invoice-vitest-helper';
 
 const getResult = (result: { content: Buffer; filename: string }[]): string => {
@@ -61,7 +63,11 @@ export const runGenerator = async (
 		customer,
 		createdAt: new Date(),
 		updatedAt: new Date(),
-		invoicedAt: new Date(),
+		invoicedAt: dayjs()
+			.startOf('day')
+			.add(16, 'hours')
+			.add(43, 'minutes')
+			.toDate(),
 		dueAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
 		items: data.items,
 		totalCents: data.items.reduce((acc, item) => acc + item.priceCents, 0),

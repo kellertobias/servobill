@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { parseStringPromise } from 'xml2js';
-import { PDFDocument, PDFDict, PDFName, PDFRawStream } from 'pdf-lib';
 
 import { ReceiptExtractorService, ReceiptResult } from './receipt-interface';
 import {
@@ -10,6 +9,7 @@ import {
 } from './receipt-structured-strategy-interface';
 import { ZugferdExtractorStrategy } from './receipt-structured-zugferd';
 import { XRechnungExtractorStrategy } from './receipt-structured-xrechnung';
+import { extractEmbeddedXmlWithPdfLib } from './extract-pdf-xml';
 
 import {
 	EXPENSE_REPOSITORY,
@@ -68,7 +68,7 @@ export class ReceiptStructuredExtractionService
 		const structure = await this.extractData(source);
 
 		// 5. Pass structured data to LLM for categorization (stubbed)
-		const expenses = await this.categorizeWithLLM(structure);
+		const expenses = await this.categorizeWithLLM(structure, source.currency);
 		for (const expense of expenses) {
 			await this.expenseRepository.createWithId(expense.id);
 			await this.expenseRepository.save(expense);
@@ -137,7 +137,7 @@ export class ReceiptStructuredExtractionService
 				attachment.mimeType === 'application/pdf' ||
 				attachment.name.endsWith('.pdf')
 			) {
-				const xml = await this.extractEmbeddedXmlWithPdfLib(attachment.content);
+				const xml = await extractEmbeddedXmlWithPdfLib(attachment.content);
 				if (xml) {
 					return xml;
 				}
@@ -209,16 +209,31 @@ export class ReceiptStructuredExtractionService
 	 */
 	private async categorizeWithLLM(
 		structure: ExtractedInvoiceStructure,
+		currency: string,
 	): Promise<ExpenseEntity[]> {
 		const expenses: ExpenseEntity[] = [];
 
+		console.log(
+			' ================================ Categorizing with LLM ================================',
+			structure,
+		);
+
 		const expense = new ExpenseEntity({
-			name:
-				structure.subject ||
-				structure.lineItems.map((item) => item.name).join(', '),
-			expendedCents: structure.totalGrossCents,
+			name: structure.lineItems.map((item) => item.name).join(', '),
+			expendedCents: structure.lineItems.reduce(
+				(acc, item) => acc + item.totalCents,
+				0,
+			),
 			expendedAt: structure.invoiceDate,
-			description: `E-Invoice ${structure.invoiceNumber} from ${structure.from}`,
+			description: `E-Invoice: ${structure.invoiceNumber} from ${structure.from}`,
+			notes: `Items: ${structure.lineItems
+				.map(
+					(item) =>
+						` - ${item.name} (${item.amount} units, total ${
+							item.totalCents / 100
+						}${currency})`,
+				)
+				.join('\n')}\nSource Format: ${structure.format}`,
 			taxCents: structure.lineItems.reduce(
 				(acc, item) => acc + item.taxCents,
 				0,
@@ -228,59 +243,5 @@ export class ReceiptStructuredExtractionService
 		expenses.push(expense);
 
 		return expenses;
-	}
-
-	/**
-	 * Extracts the first embedded XML file from a PDF using pdf-lib's low-level API.
-	 *
-	 * @param pdfBuffer PDF file content
-	 * @returns XML string or undefined
-	 */
-	private async extractEmbeddedXmlWithPdfLib(
-		pdfBuffer: Buffer,
-	): Promise<string | undefined> {
-		try {
-			const pdfDoc = await PDFDocument.load(new Uint8Array(pdfBuffer));
-			const catalog = pdfDoc.catalog as PDFDict;
-			const names = catalog.lookupMaybe(PDFName.of('Names'), PDFDict) as
-				| PDFDict
-				| undefined;
-			if (!names) {
-				return undefined;
-			}
-			const embeddedFiles = names.lookupMaybe(
-				PDFName.of('EmbeddedFiles'),
-				PDFDict,
-			) as PDFDict | undefined;
-			if (!embeddedFiles) {
-				return undefined;
-			}
-			const namesArray = embeddedFiles.lookup(PDFName.of('Names'));
-			if (!Array.isArray(namesArray)) {
-				return undefined;
-			}
-			for (let i = 0; i < namesArray.length; i += 2) {
-				const fileSpec = namesArray[i + 1] as PDFDict;
-				const ef = fileSpec.lookupMaybe(PDFName.of('EF'), PDFDict) as
-					| PDFDict
-					| undefined;
-				if (ef) {
-					const fileStreamObj = ef.lookup(PDFName.of('F'));
-					if (fileStreamObj instanceof PDFRawStream) {
-						const xmlBuffer = fileStreamObj.getContents();
-						const xmlString = Buffer.from(xmlBuffer).toString('utf8');
-						if (xmlString.trim().startsWith('<?xml')) {
-							return xmlString;
-						}
-					}
-				}
-			}
-			return undefined;
-		} catch (error) {
-			this.logger.error('Failed to extract embedded XML with pdf-lib', {
-				error: error,
-			});
-			return undefined;
-		}
 	}
 }
