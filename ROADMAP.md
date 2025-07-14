@@ -31,11 +31,11 @@ We will update this roadmap as we progress with the development of Servobill.
 ## Milestone "Digital outgoing invoices" (planned till end of July 2025):
 - [X] Add basic support for sending e-invoices (e.g. X-Rechnung)
 - [X] Add basic support for sending e-invoices (e.g. ZugFeRD)
-- [ ] Support VAT types (e.g. VAT_DISABLED_KLEINUNTERNEHMER)
-- [ ] Support discounts on e-invoices
+- [X] Support VAT types (e.g. VAT_DISABLED_KLEINUNTERNEHMER)
+- [X] Support discounts on e-invoices (currently a bug in ZUGFeRD)
 
 ## Milestone "Incoming e-invoices" (planned till end of July 2025):
-- [ ] Add support for incoming digital invoices (e.g. X-Rechnung/ ZugFeRD)
+- [X] Add support for incoming digital invoices (e.g. X-Rechnung/ ZugFeRD)
 
 
 ## Milestone "Full Standalone" (planned till end of September 2025):
