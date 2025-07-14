@@ -1,3 +1,24 @@
+## [1.13.0](https://github.com/kellertobias/servobill/compare/v1.12.0...v1.13.0) (2025-07-14)
+
+
+### ✨ Features
+
+* basic e-invoice extraction ([a98b340](https://github.com/kellertobias/servobill/commit/a98b3403d318f1486eaf7ae9f20a8ace85b981e9))
+* implement PDF XML extraction functionality ([f1bb845](https://github.com/kellertobias/servobill/commit/f1bb845a09abed1e656a78e2d68e164dedc62cd8))
+
+
+### 🐛 Bug Fixes
+
+* cast countryCode to CustomerEntity type in CustomerDynamodbRepository ([7b6fe61](https://github.com/kellertobias/servobill/commit/7b6fe61769768971a6a070bc89391f2e59c3fef6))
+* customer dynamodb ([d8facc9](https://github.com/kellertobias/servobill/commit/d8facc9109c2d8d9129c59dcda8bb83c491538af))
+* remove unnecessary/ old debug console logs ([bf371e0](https://github.com/kellertobias/servobill/commit/bf371e0ec4d62c2bac117d2197350f19342fbaca))
+
+
+### 🔧 Chores
+
+* update docs & readme ([56d3400](https://github.com/kellertobias/servobill/commit/56d3400911501bf9f4429abe0200cd69dc58e437))
+* update readme ([86faad2](https://github.com/kellertobias/servobill/commit/86faad2df46a944446bcb9488f948efef443e939))
+
 ## [1.12.0](https://github.com/kellertobias/servobill/compare/v1.11.0...v1.12.0) (2025-07-13)
 
 
