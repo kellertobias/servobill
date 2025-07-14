@@ -183,8 +183,6 @@ export class LLMService {
 				max_tokens: request.maxTokens || 4000,
 			});
 
-			console.log(response);
-
 			return {
 				content: response.choices[0].message.content || '',
 				usage: response.usage

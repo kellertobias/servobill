@@ -158,7 +158,6 @@ export const useInvoiceActivity = () => {
 	);
 
 	const cancelScheduledSend = React.useCallback(async () => {
-		console.log('cancelScheduledSend', data?.id);
 		await doToast({
 			promise: API.query({
 				query: gql(`

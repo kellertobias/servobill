@@ -61,11 +61,6 @@ export const InventoryActivityForm: React.FC<InventoryActivityFormProps> = ({
 			// Prevent submitting whitespace-only notes
 			const trimmedNote = note.trim();
 			if (checkState) {
-				console.log('Submitting inventory check', {
-					itemId,
-					checkState,
-					note: trimmedNote,
-				});
 				await API.query({
 					query: gql(`
 						mutation AddInventoryCheck($id: String!, $state: InventoryCheckState!, $note: String) {
@@ -79,7 +74,6 @@ export const InventoryActivityForm: React.FC<InventoryActivityFormProps> = ({
 					},
 				});
 			} else if (trimmedNote) {
-				console.log('Submitting inventory note', { itemId, note: trimmedNote });
 				await API.query({
 					query: gql(`
             mutation AddInventoryNote($id: String!, $note: String!) {
@@ -99,7 +93,6 @@ export const InventoryActivityForm: React.FC<InventoryActivityFormProps> = ({
 			setNote('');
 			setCheckState('');
 			doToast({ message: 'History entry added!', type: 'success' });
-			console.log('Reloading parent data after submit');
 			reload();
 		} catch (error) {
 			// Log error for debugging

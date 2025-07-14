@@ -203,7 +203,6 @@ export default function InventoryScanPage() {
 							}}
 							constraints={{ facingMode: 'environment' }}
 							onScan={(codes) => {
-								console.log('codes', codes);
 								const code = codes[0]?.rawValue;
 								if (code && code !== scannedCode) {
 									handleScan(code);

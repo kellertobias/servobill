@@ -62,18 +62,8 @@ export class InvoiceEmailSender {
 
 		// Check if this event has already been processed
 		if (invoiceEntity.hasProcessedEvent(eventId)) {
-			console.log('Event already processed, skipping', {
-				invoiceId: invoice.id,
-				eventId,
-			});
 			return;
 		}
-
-		// Mark the event as processed after successful email send
-		console.log('Processing event - not yet sent.', {
-			invoiceId: invoice.id,
-			eventId,
-		});
 
 		// mark the original invoice as processed and save it.
 		// we do this to the original invoice since otherwise

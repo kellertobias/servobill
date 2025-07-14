@@ -213,11 +213,6 @@ export class ReceiptStructuredExtractionService
 	): Promise<ExpenseEntity[]> {
 		const expenses: ExpenseEntity[] = [];
 
-		console.log(
-			' ================================ Categorizing with LLM ================================',
-			structure,
-		);
-
 		const expense = new ExpenseEntity({
 			name: structure.lineItems.map((item) => item.name).join(', '),
 			expendedCents: structure.lineItems.reduce(
