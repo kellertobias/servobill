@@ -93,14 +93,30 @@ export class HandlerExecution {
 		const extraAttachments =
 			await this.invoiceEmailSender.getAttachments(invoice);
 
+		this.logger.info('Updating Invoice', {
+			invoiceId: invoice.id,
+		});
+
+		try {
+			await this.invoiceRepository.save(invoice);
+		} catch (error) {
+			this.logger.error('Error updating invoice', {
+				invoiceId: invoice.id,
+				error,
+			});
+			throw error;
+		}
+
 		this.logger.info('Generating email', {
 			invoiceId: invoice.id,
 		});
 
-		await this.invoiceRepository.save(invoice);
-
 		// Compose attachments array based on output format
 		const attachments = [...baseAttachments, ...extraAttachments];
+
+		this.logger.info('Sending email', {
+			invoiceId: invoice.id,
+		});
 
 		this.invoiceEmailSender.sendEmail(
 			event.id,
