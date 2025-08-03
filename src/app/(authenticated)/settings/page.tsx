@@ -201,6 +201,7 @@ export default function SettingsHomePage() {
 									companyName,
 								}));
 							}}
+							className="w-full"
 						/>
 						<Input
 							label="Street"
@@ -212,6 +213,7 @@ export default function SettingsHomePage() {
 									companyStreet,
 								}));
 							}}
+							className="w-full"
 						/>
 						<Input
 							label="ZIP"
@@ -223,6 +225,7 @@ export default function SettingsHomePage() {
 									companyZip,
 								}));
 							}}
+							className="w-full"
 						/>
 						<Input
 							label="City"
@@ -234,6 +237,7 @@ export default function SettingsHomePage() {
 									companyCity,
 								}));
 							}}
+							className="w-full"
 						/>
 						<Input
 							label="E-Mail"
@@ -245,6 +249,7 @@ export default function SettingsHomePage() {
 									companyEmail,
 								}));
 							}}
+							className="w-full"
 						/>
 						<Input
 							label="Phone"
@@ -256,6 +261,7 @@ export default function SettingsHomePage() {
 									companyPhone,
 								}));
 							}}
+							className="w-full"
 						/>
 						<Input
 							label="Web"
@@ -267,6 +273,7 @@ export default function SettingsHomePage() {
 									companyWeb,
 								}));
 							}}
+							className="w-full"
 						/>
 						<SelectInput
 							label="Currency"
@@ -293,7 +300,7 @@ export default function SettingsHomePage() {
 							onChange={(code) =>
 								setData((prev) => ({ ...prev, countryCode: code }))
 							}
-							className="col-span-3"
+							className="w-full"
 						/>
 					</SettingsBlock>
 					<SettingsBlock
