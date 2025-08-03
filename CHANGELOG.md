@@ -1,3 +1,16 @@
+## [1.13.2](https://github.com/kellertobias/servobill/compare/v1.13.1...v1.13.2) (2025-08-03)
+
+
+### 🐛 Bug Fixes
+
+* missing await in sendEmail ([a63053a](https://github.com/kellertobias/servobill/commit/a63053af77138a2c424f9be9a61a5dabba24ce92))
+
+
+### ♻️ Code Refactoring
+
+* enhance error handling and logging in invoice processing ([7c55f92](https://github.com/kellertobias/servobill/commit/7c55f92a7a154ca5cc3fa824d758821a8e6e188e))
+* improve logging clarity in InvoiceEmailSender ([272b663](https://github.com/kellertobias/servobill/commit/272b6631e613185d8b919bc8d68f14efcc638729))
+
 ## [1.13.1](https://github.com/kellertobias/servobill/compare/v1.13.0...v1.13.1) (2025-08-03)
 
 
