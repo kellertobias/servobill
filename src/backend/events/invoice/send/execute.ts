@@ -124,6 +124,10 @@ export class HandlerExecution {
 			companyData,
 			attachments,
 		);
+
+		this.logger.info('Email sent - All Done.', {
+			invoiceId: invoice.id,
+		});
 	}
 
 	private async getGenerator(
