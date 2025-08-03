@@ -306,9 +306,9 @@ export class InvoiceEntity extends DomainEntity {
 				user: userName,
 				type: InvoiceActivityType.SCHEDULED_SEND,
 				notes: scheduledSendJob
-					? `Scheduled to be sent at ${dayjs
-							.utc(scheduledSendJob?.runAfter * 1000)
-							.format('DD.MM.YYYY HH:mm')} (UTC)`
+					? `Scheduled to be sent at ${dayjs(
+							scheduledSendJob?.runAfter * 1000,
+						).format('DD.MM.YYYY HH:mm')} (UTC)`
 					: undefined,
 				ref: scheduledSendJob.id,
 			});

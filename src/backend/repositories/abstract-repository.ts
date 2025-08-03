@@ -85,7 +85,7 @@ export abstract class AbstractRepository<
 
 	protected async purgeOutbox(entity: DomainEntity): Promise<void> {
 		this.logger.debug('Purging Outbox');
-		entity.purgeEvents(async (event) => {
+		await entity.purgeEvents(async (event) => {
 			this.logger.debug('Purging Outbox Event', { event });
 
 			await this.eventBus.send(event.name, {
