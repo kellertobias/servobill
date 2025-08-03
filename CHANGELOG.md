@@ -1,3 +1,10 @@
+## [1.13.1](https://github.com/kellertobias/servobill/compare/v1.13.0...v1.13.1) (2025-08-03)
+
+
+### 🐛 Bug Fixes
+
+* layout ([4775ce9](https://github.com/kellertobias/servobill/commit/4775ce94fb83ad20c772e0f66ae0fe65e7029324))
+
 ## [1.13.0](https://github.com/kellertobias/servobill/compare/v1.12.0...v1.13.0) (2025-07-14)
 
 
