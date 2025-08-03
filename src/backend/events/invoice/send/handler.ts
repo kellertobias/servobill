@@ -16,7 +16,7 @@ export const layers = ['layers/chromium'];
 export const handler: EventHandler = makeEventHandler(
 	InvoiceSendEvent,
 	async (event) => {
-		const logger = new Logger('InvoiceSendHandler');
+		const logger = new Logger('InvoiceSendHandlerWrapper');
 		try {
 			const handler = DefaultContainer.get(HandlerExecution);
 			await handler.execute(event);

@@ -45,7 +45,10 @@ export class SESService {
 			this.transporter = nodemailer.createTransport({
 				SES: { ses: this.client, aws: ses },
 			});
-			this.logger.info('SES client initialized');
+			this.logger.info('SES client initialized', {
+				region: this.configuration.region,
+				endpoint: this.configuration.endpoints.ses,
+			});
 		} else {
 			// SMTP configuration
 			this.transporter = nodemailer.createTransport({

@@ -54,6 +54,13 @@ export class InvoiceEmailSender {
 		companyData: CompanyDataSetting,
 		attachments: { filename: string; content: Buffer }[],
 	) {
+		this.logger.info('Sending email', {
+			eventId,
+			invoiceId: invoice.id,
+			subject: companyData.emailSubjectInvoices,
+			to: invoice.customer.email!,
+		});
+
 		if (!eventId) {
 			this.logger.error('Event ID is required', {
 				invoiceId: invoice.id,
@@ -108,6 +115,12 @@ export class InvoiceEmailSender {
 			subject,
 			html: emailHtml,
 			attachments: [...attachments],
+		});
+
+		this.logger.info('Email sent', {
+			invoiceId: invoice.id,
+			to: redactedTo,
+			msgId: msg.response,
 		});
 
 		const emailStatus = await this.emailRepository.createWithId(msg.response);
