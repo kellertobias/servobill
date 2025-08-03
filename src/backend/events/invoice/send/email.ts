@@ -28,7 +28,7 @@ export const INVOICE_EMAIL_SENDER = Symbol('InvoiceEmailSender');
 
 @Service(INVOICE_EMAIL_SENDER)
 export class InvoiceEmailSender {
-	private readonly logger = new Logger('InvoiceSendHandler');
+	private readonly logger = new Logger('InvoiceEmailSender');
 	private readonly cqrsBus: CqrsBus;
 	constructor(
 		@Inject(INVOICE_REPOSITORY)
@@ -85,13 +85,18 @@ export class InvoiceEmailSender {
 			return;
 		}
 
+		this.logger.info('Invoice available and unprocessed. Continuing...', {
+			eventId,
+			invoiceId: invoice.id,
+		});
+
 		// mark the original invoice as processed and save it.
 		// we do this to the original invoice since otherwise
 		// saving the invoice later will override it.
 		invoice.markEventAsProcessed(eventId);
 		await this.invoiceRepository.save(invoice);
 
-		this.logger.info('Invoice marked as processed', {
+		this.logger.info('Invoice marked as processed. Saved.', {
 			invoiceId: invoice.id,
 		});
 
@@ -101,7 +106,7 @@ export class InvoiceEmailSender {
 			?.split('@')
 			.at(-1)}`;
 
-		this.logger.info('Sending email', {
+		this.logger.info('Sending email to customer', {
 			invoiceId: invoice.id,
 			subject,
 			to: redactedTo,
@@ -117,7 +122,7 @@ export class InvoiceEmailSender {
 			attachments: [...attachments],
 		});
 
-		this.logger.info('Email sent', {
+		this.logger.info('Email sent to customer', {
 			invoiceId: invoice.id,
 			to: redactedTo,
 			msgId: msg.response,
@@ -132,7 +137,12 @@ export class InvoiceEmailSender {
 		});
 		await this.emailRepository.save(emailStatus);
 
-		this.logger.info('Email sent', { invoiceId: invoice.id, to: redactedTo });
+		this.logger.info('Email status created', {
+			invoiceId: invoice.id,
+			msgId: msg.response,
+			statusId: emailStatus.id,
+			to: redactedTo,
+		});
 
 		invoice.addActivity(
 			new InvoiceActivityEntity({
@@ -141,6 +151,12 @@ export class InvoiceEmailSender {
 		);
 		await this.invoiceRepository.save(invoice);
 
+		this.logger.info('Invoice activity added', {
+			invoiceId: invoice.id,
+			activityId: invoice.activity.at(-1)?.id,
+			activityType: InvoiceActivityType.EMAIL_SENT,
+		});
+
 		await this.sesService.sendEmail({
 			from: companyData.sendFrom,
 			to: companyData.replyTo,
@@ -148,6 +164,10 @@ export class InvoiceEmailSender {
 			subject: `Invoice ${invoice.invoiceNumber} sent to Customer ${invoice.customer.name}`,
 			html: emailHtml,
 			attachments: [...attachments],
+		});
+
+		this.logger.info('Email sent to user', {
+			invoiceId: invoice.id,
 		});
 	}
 
