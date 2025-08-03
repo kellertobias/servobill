@@ -302,7 +302,6 @@ export class InvoiceEntity extends DomainEntity {
 		if (scheduledSendJob) {
 			this.scheduledSendJobId = scheduledSendJob.id;
 			this.updatedAt = new Date();
-			console.log('scheduledSendJob', scheduledSendJob);
 			const activity = new InvoiceActivityEntity({
 				user: userName,
 				type: InvoiceActivityType.SCHEDULED_SEND,
