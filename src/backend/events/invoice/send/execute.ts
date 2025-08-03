@@ -118,7 +118,7 @@ export class HandlerExecution {
 			invoiceId: invoice.id,
 		});
 
-		this.invoiceEmailSender.sendEmail(
+		await this.invoiceEmailSender.sendEmail(
 			event.id,
 			invoice,
 			companyData,
