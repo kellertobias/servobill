@@ -1,3 +1,11 @@
+## [1.13.4](https://github.com/kellertobias/servobill/compare/v1.13.3...v1.13.4) (2025-08-03)
+
+
+### 🐛 Bug Fixes
+
+* add "UTC" info ([92b76be](https://github.com/kellertobias/servobill/commit/92b76be6efb66239626631f604ab5111935c04bc))
+* add another missing await ([a78ef6a](https://github.com/kellertobias/servobill/commit/a78ef6a9993768e4f8e0668f1b91278269f9300b))
+
 ## [1.13.3](https://github.com/kellertobias/servobill/compare/v1.13.2...v1.13.3) (2025-08-03)
 
 
