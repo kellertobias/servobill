@@ -54,14 +54,27 @@ export class InvoiceEmailSender {
 		companyData: CompanyDataSetting,
 		attachments: { filename: string; content: Buffer }[],
 	) {
+		if (!eventId) {
+			this.logger.error('Event ID is required', {
+				invoiceId: invoice.id,
+			});
+			throw new Error('Event ID is required');
+		}
+
 		// Get invoice entity again to make sure it isn't already sent.
 		const invoiceEntity = await this.invoiceRepository.getById(invoice.id);
 		if (!invoiceEntity || invoiceEntity.id !== invoice.id) {
+			this.logger.error('Invoice not found in sendEmail', {
+				invoiceId: invoice.id,
+			});
 			throw new Error('Invoice not found');
 		}
 
 		// Check if this event has already been processed
 		if (invoiceEntity.hasProcessedEvent(eventId)) {
+			this.logger.info('Invoice already processed', {
+				invoiceId: invoice.id,
+			});
 			return;
 		}
 
@@ -70,6 +83,10 @@ export class InvoiceEmailSender {
 		// saving the invoice later will override it.
 		invoice.markEventAsProcessed(eventId);
 		await this.invoiceRepository.save(invoice);
+
+		this.logger.info('Invoice marked as processed', {
+			invoiceId: invoice.id,
+		});
 
 		const subject = await this.getSubject(invoice, companyData);
 		const emailHtml = await this.getEmail(invoice, companyData);

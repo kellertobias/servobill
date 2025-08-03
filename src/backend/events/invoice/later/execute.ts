@@ -98,8 +98,8 @@ export class HandlerExecution {
 		});
 		await this.invoiceRepository.save(invoice);
 
-		// this.logger.info('Invoice sent and schedule cleaned up', {
-		// 	invoiceId: invoice.id,
-		// });
+		this.logger.info('Invoice sent and schedule cleaned up', {
+			invoiceId: invoice.id,
+		});
 	}
 }
