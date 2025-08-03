@@ -302,13 +302,14 @@ export class InvoiceEntity extends DomainEntity {
 		if (scheduledSendJob) {
 			this.scheduledSendJobId = scheduledSendJob.id;
 			this.updatedAt = new Date();
+			console.log('scheduledSendJob', scheduledSendJob);
 			const activity = new InvoiceActivityEntity({
 				user: userName,
 				type: InvoiceActivityType.SCHEDULED_SEND,
 				notes: scheduledSendJob
-					? `Scheduled to be sent at ${dayjs(scheduledSendJob?.runAfter).format(
-							'DD.MM.YYYY HH:mm',
-						)}`
+					? `Scheduled to be sent at ${dayjs(
+							scheduledSendJob?.runAfter * 1000,
+						).format('DD.MM.YYYY HH:mm')}`
 					: undefined,
 				ref: scheduledSendJob.id,
 			});
