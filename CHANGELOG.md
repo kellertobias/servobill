@@ -1,3 +1,11 @@
+## [1.13.3](https://github.com/kellertobias/servobill/compare/v1.13.2...v1.13.3) (2025-08-03)
+
+
+### 🐛 Bug Fixes
+
+* correct "scheduled at" data in activity text ([7ba2ab3](https://github.com/kellertobias/servobill/commit/7ba2ab335a45f6123187c9746e7842b7176d2c63))
+* remove log ([e0c672f](https://github.com/kellertobias/servobill/commit/e0c672f85b9d9cb3658839f1b1a3faf73e8d2981))
+
 ## [1.13.2](https://github.com/kellertobias/servobill/compare/v1.13.1...v1.13.2) (2025-08-03)
 
 
