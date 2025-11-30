@@ -147,26 +147,42 @@ export class LLMService {
 
 		if (request.files?.length) {
 			for (const attachment of request.files) {
-				const file = new File([attachment.content], attachment.name, {
-					type: attachment.mimeType,
-				});
-
-				const fileID = await openai.files.create({
-					file,
-					purpose: 'user_data',
-				});
-
-				messages.push({
-					role: 'user',
-					content: [
-						{
-							type: 'file',
-							file: {
-								file_id: fileID.id,
+				if (attachment.mimeType.startsWith('image/')) {
+					messages.push({
+						role: 'user',
+						content: [
+							{
+								type: 'image_url',
+								image_url: {
+									url: `data:${attachment.mimeType};base64,${attachment.content.toString(
+										'base64',
+									)}`,
+								},
 							},
-						},
-					],
-				});
+						],
+					});
+				} else {
+					const file = new File([attachment.content], attachment.name, {
+						type: attachment.mimeType,
+					});
+
+					const fileID = await openai.files.create({
+						file,
+						purpose: 'user_data',
+					});
+
+					messages.push({
+						role: 'user',
+						content: [
+							{
+								type: 'file',
+								file: {
+									file_id: fileID.id,
+								},
+							},
+						],
+					});
+				}
 			}
 		}
 
