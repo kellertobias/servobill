@@ -314,6 +314,122 @@ export default $config({
 		baseEnvironment.EVENT_BUS_NAME = bus.name;
 
 		// ===============================
+		// Create Inbound Email Handler
+		// ===============================
+
+		const inboundEmailHandler = new sst.aws.Function('ServobillInboundEmail', {
+			handler: 'src/backend/events/inbound-email/handler.handler',
+			description: 'Servobill Inbound Email Handler',
+			permissions: defaultPermissions,
+			runtime,
+			environment: {
+				...baseEnvironment, // Now includes EVENT_BUS_NAME and EMAIL_SENDER
+				NODE_OPTIONS: '--enable-source-maps --require reflect-metadata',
+			},
+			timeout: '120 seconds',
+			memory: '1024 MB',
+			link: [dataBucket, table, bus], // 'bus' is now defined
+			logGroup: 'events',
+			nodejs: {
+				format: 'cjs',
+				sourcemap: true,
+				esbuild: {
+					plugins: [
+						esbuildPluginTsc({
+							tsconfigPath: path.resolve('tsconfig.json'),
+						}),
+					],
+				},
+				install: ['reflect-metadata', 'mailparser'],
+			},
+		});
+
+		// Create SES Receipt Rule Set and Rule for Incoming Emails
+		// Since sst.aws.Email doesn't support inbound rules directly yet (as of 3.17.2),
+		// we use the low-level aws provider resources.
+		const ruleSet = new aws.ses.ReceiptRuleSet('ServobillReceiptRuleSet', {
+			ruleSetName: `servobill-receipt-rules-${input.stage}`,
+		});
+
+		// Activate the rule set
+		new aws.ses.ActiveReceiptRuleSet('ServobillActiveReceiptRuleSet', {
+			ruleSetName: ruleSet.ruleSetName,
+		});
+
+		new aws.ses.ReceiptRule('ServobillReceiptRule', {
+			ruleSetName: ruleSet.ruleSetName,
+			recipients: [requiredEnv.EMAIL_SENDER], // Listen on the sender address (or any other configured)
+			enabled: true,
+			scanEnabled: true,
+			s3Action: {
+				bucketName: dataBucket.name,
+				objectKeyPrefix: 'emails/',
+				position: 1,
+			},
+			lambdaActions: [
+				{
+					functionArn: inboundEmailHandler.arn,
+					invocationType: 'Event', // Async invocation
+					position: 2,
+				},
+			],
+		}, { dependsOn: [inboundEmailHandler] });
+
+		// Add permission for SES to invoke the Lambda
+		new aws.lambda.Permission('ServobillAllowSesInvoke', {
+			action: 'lambda:InvokeFunction',
+			function: inboundEmailHandler.arn,
+			principal: 'ses.amazonaws.com',
+			sourceAccount: aws.getCallerIdentityOutput().accountId,
+		});
+
+		// Add bucket policy for SES to write to the bucket
+		const currentAccountId = aws.getCallerIdentityOutput().accountId;
+
+		// We need to attach a policy to the bucket to allow SES to PutObject
+		// AND re-enforce HTTPS (since sst.aws.Bucket's enforceHttps might be overwritten by this policy resource)
+		const sesBucketPolicy = aws.iam.getPolicyDocumentOutput({
+			statements: [
+				// Allow SES
+				{
+					effect: "Allow",
+					principals: [{
+						type: "Service",
+						identifiers: ["ses.amazonaws.com"],
+					}],
+					actions: ["s3:PutObject"],
+					resources: [pulumi.interpolate`${dataBucket.arn}/*`],
+					conditions: [{
+						test: "StringEquals",
+						variable: "aws:Referer",
+						values: [currentAccountId],
+					}],
+				},
+				// Enforce HTTPS
+				{
+					effect: "Deny",
+					principals: [{
+						type: "*",
+						identifiers: ["*"],
+					}],
+					actions: ["s3:*"],
+					resources: [pulumi.interpolate`${dataBucket.arn}/*`],
+					conditions: [{
+						test: "Bool",
+						variable: "aws:SecureTransport",
+						values: ["false"],
+					}],
+				}
+			],
+		});
+
+		// Attach policy to bucket.
+		new aws.s3.BucketPolicy("ServobillSesBucketPolicy", {
+			bucket: dataBucket.name,
+			policy: sesBucketPolicy.json,
+		});
+
+		// ===============================
 		// Create Event Handlers:
 		// ===============================
 		deliveryTopic.subscribe(
