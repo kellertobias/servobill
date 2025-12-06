@@ -39,6 +39,7 @@ vi.mock('nodemailer', () => {
 vi.mock('@aws-sdk/client-sesv2', () => {
 	return {
 		SESv2Client: vi.fn(),
+		SendEmailCommand: vi.fn(),
 	};
 });
 
@@ -229,9 +230,13 @@ describe('SESService', () => {
 				},
 			}),
 		);
-		// Should call nodemailer.createTransport with SES
 		expect(createTransportMock).toHaveBeenCalledWith(
-			expect.objectContaining({ SES: expect.any(Object) }),
+			expect.objectContaining({
+				SES: expect.objectContaining({
+					sesClient: expect.any(Object),
+					SendEmailCommand: expect.any(Function),
+				}),
+			}),
 		);
 		expect(sendMailMock).toHaveBeenCalledWith(
 			expect.objectContaining({

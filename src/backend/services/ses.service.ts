@@ -40,7 +40,10 @@ export class SESService {
 			};
 			this.client = new ses.SESv2Client(sesOptions);
 			this.transporter = nodemailer.createTransport({
-				SES: { ses: this.client, aws: ses },
+				SES: {
+					sesClient: this.client,
+					SendEmailCommand: ses.SendEmailCommand,
+				},
 			} as any);
 			this.logger.info('SES client initialized', {
 				region: this.configuration.region,
