@@ -1,4 +1,4 @@
-import OpenAI from 'openai';
+import OpenAI, { toFile } from 'openai';
 import { Inject, Service } from '@/common/di';
 import type { ConfigService } from './config.service';
 import { CONFIG_SERVICE, LLM_SERVICE } from './di-tokens';
@@ -160,7 +160,7 @@ export class LLMService {
 						],
 					});
 				} else {
-					const file = new File([attachment.content], attachment.name, {
+					const file = await toFile(attachment.content, attachment.name, {
 						type: attachment.mimeType,
 					});
 
