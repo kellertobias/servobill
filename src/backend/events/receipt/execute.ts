@@ -2,13 +2,16 @@ import type { AttachmentEntity } from '@/backend/entities/attachment.entity';
 import type { ExpenseEntity } from '@/backend/entities/expense.entity';
 import { CompanyDataSetting } from '@/backend/entities/settings.entity';
 import {
-  ATTACHMENT_REPOSITORY,
-  type AttachmentRepository,
+	ATTACHMENT_REPOSITORY,
+	type AttachmentRepository,
 } from '@/backend/repositories/attachment';
-import { SETTINGS_REPOSITORY, type SettingsRepository } from '@/backend/repositories/settings';
 import {
-  FILE_STORAGE_SERVICE,
-  type FileStorageService,
+	SETTINGS_REPOSITORY,
+	type SettingsRepository,
+} from '@/backend/repositories/settings';
+import {
+	FILE_STORAGE_SERVICE,
+	type FileStorageService,
 } from '@/backend/services/file-storage.service';
 import { Logger } from '@/backend/services/logger.service';
 import { SESService } from '@/backend/services/ses.service';
@@ -16,8 +19,8 @@ import { Inject, Service } from '@/common/di';
 import { generateExpensesSummaryHtml } from './email-template';
 import type { ReceiptEvent } from './event';
 import {
-  ReceiptClassification,
-  ReceiptClassificationService,
+	ReceiptClassification,
+	ReceiptClassificationService,
 } from './receipt-classification.service';
 import { ReceiptLLMExtractionService } from './receipt-llm-extraction.service';
 import { ReceiptStructuredExtractionService } from './receipt-structured-extraction.service';
@@ -28,190 +31,213 @@ import { ReceiptStructuredExtractionService } from './receipt-structured-extract
  */
 @Service()
 export class HandlerExecution {
-  private readonly logger = new Logger('ReceiptHandler');
+	private readonly logger = new Logger('ReceiptHandler');
 
-  constructor(
-    @Inject(ReceiptLLMExtractionService)
-    private readonly llmExtractionService: ReceiptLLMExtractionService,
-    @Inject(ReceiptStructuredExtractionService)
-    private readonly structuredExtractionService: ReceiptStructuredExtractionService,
-    @Inject(ATTACHMENT_REPOSITORY)
-    private readonly attachmentRepository: AttachmentRepository,
-    @Inject(FILE_STORAGE_SERVICE)
-    private readonly fileStorageService: FileStorageService,
-    @Inject(SESService)
-    private readonly sesService: SESService,
-    @Inject(SETTINGS_REPOSITORY)
-    private readonly settingsRepository: SettingsRepository
-  ) {}
+	constructor(
+		@Inject(ReceiptLLMExtractionService)
+		private readonly llmExtractionService: ReceiptLLMExtractionService,
+		@Inject(ReceiptStructuredExtractionService)
+		private readonly structuredExtractionService: ReceiptStructuredExtractionService,
+		@Inject(ATTACHMENT_REPOSITORY)
+		private readonly attachmentRepository: AttachmentRepository,
+		@Inject(FILE_STORAGE_SERVICE)
+		private readonly fileStorageService: FileStorageService,
+		@Inject(SESService)
+		private readonly sesService: SESService,
+		@Inject(SETTINGS_REPOSITORY)
+		private readonly settingsRepository: SettingsRepository,
+	) {}
 
-  /**
-   * Execute the receipt processing workflow
-   *
-   * Logic:
-   * - If there's no email text and multiple attachments: Create separate events for each attachment
-   * - If there's email text: Process all attachments together as they belong to the same email
-   * - If there's no email text and single attachment: Process normally
-   */
-  async execute(event: ReceiptEvent): Promise<void> {
-    this.logger.info('Processing receipt event', {
-      eventId: event.id,
-      hasAttachments: !!event.attachmentIds?.length,
-      attachmentCount: event.attachmentIds?.length || 0,
-      hasEmailText: !!event.emailText,
-    });
+	/**
+	 * Execute the receipt processing workflow
+	 *
+	 * Logic:
+	 * - If there's no email text and multiple attachments: Create separate events for each attachment
+	 * - If there's email text: Process all attachments together as they belong to the same email
+	 * - If there's no email text and single attachment: Process normally
+	 */
+	async execute(event: ReceiptEvent): Promise<void> {
+		this.logger.info('Processing receipt event', {
+			eventId: event.id,
+			hasAttachments: !!event.attachmentIds?.length,
+			attachmentCount: event.attachmentIds?.length || 0,
+			hasEmailText: !!event.emailText,
+		});
 
-    // Process the event normally (single attachment or multiple attachments with email text)
-    try {
-      const attachments = await this.downloadAttachments(event.attachmentIds || []);
+		// Process the event normally (single attachment or multiple attachments with email text)
+		try {
+			const attachments = await this.downloadAttachments(
+				event.attachmentIds || [],
+			);
 
-      const classification = await ReceiptClassificationService.classifyReceipt(attachments);
+			const classification =
+				await ReceiptClassificationService.classifyReceipt(attachments);
 
-      const strategy =
-        classification === ReceiptClassification.Extraction
-          ? this.llmExtractionService
-          : this.structuredExtractionService;
+			const strategy =
+				classification === ReceiptClassification.Extraction
+					? this.llmExtractionService
+					: this.structuredExtractionService;
 
-      // Load company currency if not present in event
-      let currency = event.currency;
-      if (!currency) {
-        const companyData = await this.settingsRepository.getSetting(CompanyDataSetting);
-        currency = companyData.currency || 'EUR';
-      }
+			// Load company currency if not present in event
+			let currency = event.currency;
+			if (!currency) {
+				const companyData =
+					await this.settingsRepository.getSetting(CompanyDataSetting);
+				currency = companyData.currency || 'EUR';
+			}
 
-      const result = await strategy.extract({
-        text: event.emailText || '',
-        attachments,
-        currency, // Pass currency to extraction
-      });
+			const result = await strategy.extract({
+				text: event.emailText || '',
+				attachments,
+				currency, // Pass currency to extraction
+			});
 
-      for (const { attachmentEntity } of attachments) {
-        for (const expense of result.expenses) {
-          attachmentEntity.addExpenseId(expense.id);
-        }
-        await this.attachmentRepository.save(attachmentEntity);
-      }
+			for (const { attachmentEntity } of attachments) {
+				for (const expense of result.expenses) {
+					attachmentEntity.addExpenseId(expense.id);
+				}
+				await this.attachmentRepository.save(attachmentEntity);
+			}
 
-      this.logger.info('Receipt processing completed successfully', {
-        eventId: event.id,
-        classification: classification,
-        expenseIds: result.expenses.map((expense) => expense.id),
-        attachmentCount: attachments.length,
-      });
+			this.logger.info('Receipt processing completed successfully', {
+				eventId: event.id,
+				classification: classification,
+				expenseIds: result.expenses.map((expense) => expense.id),
+				attachmentCount: attachments.length,
+			});
 
-      // Send email notification with extracted expenses summary, passing currency
-      await this.sendExtractionSummaryEmail(event, result.expenses, attachments, currency);
-    } catch (error) {
-      this.logger.error('Receipt processing failed', {
-        eventId: event.id,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }
+			// Send email notification with extracted expenses summary, passing currency
+			await this.sendExtractionSummaryEmail(
+				event,
+				result.expenses,
+				attachments,
+				currency,
+			);
+		} catch (error) {
+			this.logger.error('Receipt processing failed', {
+				eventId: event.id,
+				error: error instanceof Error ? error.message : String(error),
+			});
+			throw error;
+		}
+	}
 
-  /**
-   * Send email notification with summary of extracted expenses
-   */
-  private async sendExtractionSummaryEmail(
-    event: ReceiptEvent,
-    expenses: ExpenseEntity[],
-    attachments: { content: Buffer; mimeType: string; name: string }[],
-    currency: string // Add currency param
-  ): Promise<void> {
-    try {
-      // Get company settings for email configuration
-      const companyData = await this.settingsRepository.getSetting(CompanyDataSetting);
+	/**
+	 * Send email notification with summary of extracted expenses
+	 */
+	private async sendExtractionSummaryEmail(
+		event: ReceiptEvent,
+		expenses: ExpenseEntity[],
+		attachments: { content: Buffer; mimeType: string; name: string }[],
+		currency: string, // Add currency param
+	): Promise<void> {
+		try {
+			// Get company settings for email configuration
+			const companyData =
+				await this.settingsRepository.getSetting(CompanyDataSetting);
 
-      if (!companyData.replyTo) {
-        this.logger.warn('No reply-to email configured, skipping notification email');
-        return;
-      }
+			if (!companyData.replyTo) {
+				this.logger.warn(
+					'No reply-to email configured, skipping notification email',
+				);
+				return;
+			}
 
-      if (!companyData.sendFrom) {
-        this.logger.warn('No send-from email configured, skipping notification email');
-        return;
-      }
+			if (!companyData.sendFrom) {
+				this.logger.warn(
+					'No send-from email configured, skipping notification email',
+				);
+				return;
+			}
 
-      const subject = `Receipt Processing Complete - ${expenses.length} Expenses Extracted`;
-      const html = generateExpensesSummaryHtml(expenses, attachments, event, currency); // Pass currency
+			const subject = `Receipt Processing Complete - ${expenses.length} Expenses Extracted`;
+			const html = generateExpensesSummaryHtml(
+				expenses,
+				attachments,
+				event,
+				currency,
+			); // Pass currency
 
-      await this.sesService.sendEmail({
-        from: companyData.sendFrom,
-        to: companyData.replyTo,
-        replyTo: companyData.replyTo,
-        subject,
-        html,
-      });
+			await this.sesService.sendEmail({
+				from: companyData.sendFrom,
+				to: companyData.replyTo,
+				replyTo: companyData.replyTo,
+				subject,
+				html,
+			});
 
-      this.logger.info('Extraction summary email sent successfully', {
-        eventId: event.id,
-        to: companyData.replyTo,
-        expenseCount: expenses.length,
-      });
-    } catch (error) {
-      this.logger.error('Failed to send extraction summary email', {
-        eventId: event.id,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      // Don't throw here - email failure shouldn't break the main process
-    }
-  }
+			this.logger.info('Extraction summary email sent successfully', {
+				eventId: event.id,
+				to: companyData.replyTo,
+				expenseCount: expenses.length,
+			});
+		} catch (error) {
+			this.logger.error('Failed to send extraction summary email', {
+				eventId: event.id,
+				error: error instanceof Error ? error.message : String(error),
+			});
+			// Don't throw here - email failure shouldn't break the main process
+		}
+	}
 
-  /**
-   * Download attachments for processing
-   */
-  private async downloadAttachments(attachmentIds: string[]): Promise<
-    {
-      content: Buffer;
-      mimeType: string;
-      name: string;
-      id: string;
-      attachmentEntity: AttachmentEntity;
-    }[]
-  > {
-    const attachments: {
-      content: Buffer;
-      mimeType: string;
-      name: string;
-      id: string;
-      attachmentEntity: AttachmentEntity;
-    }[] = [];
+	/**
+	 * Download attachments for processing
+	 */
+	private async downloadAttachments(attachmentIds: string[]): Promise<
+		{
+			content: Buffer;
+			mimeType: string;
+			name: string;
+			id: string;
+			attachmentEntity: AttachmentEntity;
+		}[]
+	> {
+		const attachments: {
+			content: Buffer;
+			mimeType: string;
+			name: string;
+			id: string;
+			attachmentEntity: AttachmentEntity;
+		}[] = [];
 
-    for (const attachmentId of attachmentIds) {
-      try {
-        const attachment = await this.attachmentRepository.getById(attachmentId);
+		for (const attachmentId of attachmentIds) {
+			try {
+				const attachment =
+					await this.attachmentRepository.getById(attachmentId);
 
-        if (!attachment) {
-          this.logger.warn('Attachment not found', { attachmentId });
-          continue;
-        }
+				if (!attachment) {
+					this.logger.warn('Attachment not found', { attachmentId });
+					continue;
+				}
 
-        const content = await this.fileStorageService.getFile(attachment.s3Key, {
-          bucket: attachment.s3Bucket,
-        });
+				const content = await this.fileStorageService.getFile(
+					attachment.s3Key,
+					{
+						bucket: attachment.s3Bucket,
+					},
+				);
 
-        attachments.push({
-          content,
-          mimeType: attachment.mimeType,
-          name: attachment.fileName,
-          id: attachment.id,
-          attachmentEntity: attachment,
-        });
+				attachments.push({
+					content,
+					mimeType: attachment.mimeType,
+					name: attachment.fileName,
+					id: attachment.id,
+					attachmentEntity: attachment,
+				});
 
-        this.logger.info('Downloaded attachment for processing', {
-          attachmentId,
-          fileName: attachment.fileName,
-          size: content.length,
-        });
-      } catch (error) {
-        this.logger.error('Failed to download attachment for processing', {
-          attachmentId,
-          error: error instanceof Error ? error.message : String(error),
-        });
-      }
-    }
+				this.logger.info('Downloaded attachment for processing', {
+					attachmentId,
+					fileName: attachment.fileName,
+					size: content.length,
+				});
+			} catch (error) {
+				this.logger.error('Failed to download attachment for processing', {
+					attachmentId,
+					error: error instanceof Error ? error.message : String(error),
+				});
+			}
+		}
 
-    return attachments;
-  }
+		return attachments;
+	}
 }

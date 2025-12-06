@@ -354,24 +354,28 @@ export default $config({
 			ruleSetName: ruleSet.ruleSetName,
 		});
 
-		new aws.ses.ReceiptRule('ServobillReceiptRule', {
-			ruleSetName: ruleSet.ruleSetName,
-			recipients: [requiredEnv.EMAIL_SENDER], // Listen on the sender address (or any other configured)
-			enabled: true,
-			scanEnabled: true,
-			s3Action: {
-				bucketName: dataBucket.name,
-				objectKeyPrefix: 'emails/',
-				position: 1,
-			},
-			lambdaActions: [
-				{
-					functionArn: inboundEmailHandler.arn,
-					invocationType: 'Event', // Async invocation
-					position: 2,
+		new aws.ses.ReceiptRule(
+			'ServobillReceiptRule',
+			{
+				ruleSetName: ruleSet.ruleSetName,
+				recipients: [requiredEnv.EMAIL_SENDER], // Listen on the sender address (or any other configured)
+				enabled: true,
+				scanEnabled: true,
+				s3Action: {
+					bucketName: dataBucket.name,
+					objectKeyPrefix: 'emails/',
+					position: 1,
 				},
-			],
-		}, { dependsOn: [inboundEmailHandler] });
+				lambdaActions: [
+					{
+						functionArn: inboundEmailHandler.arn,
+						invocationType: 'Event', // Async invocation
+						position: 2,
+					},
+				],
+			},
+			{ dependsOn: [inboundEmailHandler] },
+		);
 
 		// Add permission for SES to invoke the Lambda
 		new aws.lambda.Permission('ServobillAllowSesInvoke', {
@@ -390,39 +394,47 @@ export default $config({
 			statements: [
 				// Allow SES
 				{
-					effect: "Allow",
-					principals: [{
-						type: "Service",
-						identifiers: ["ses.amazonaws.com"],
-					}],
-					actions: ["s3:PutObject"],
+					effect: 'Allow',
+					principals: [
+						{
+							type: 'Service',
+							identifiers: ['ses.amazonaws.com'],
+						},
+					],
+					actions: ['s3:PutObject'],
 					resources: [pulumi.interpolate`${dataBucket.arn}/*`],
-					conditions: [{
-						test: "StringEquals",
-						variable: "aws:Referer",
-						values: [currentAccountId],
-					}],
+					conditions: [
+						{
+							test: 'StringEquals',
+							variable: 'aws:Referer',
+							values: [currentAccountId],
+						},
+					],
 				},
 				// Enforce HTTPS
 				{
-					effect: "Deny",
-					principals: [{
-						type: "*",
-						identifiers: ["*"],
-					}],
-					actions: ["s3:*"],
+					effect: 'Deny',
+					principals: [
+						{
+							type: '*',
+							identifiers: ['*'],
+						},
+					],
+					actions: ['s3:*'],
 					resources: [pulumi.interpolate`${dataBucket.arn}/*`],
-					conditions: [{
-						test: "Bool",
-						variable: "aws:SecureTransport",
-						values: ["false"],
-					}],
-				}
+					conditions: [
+						{
+							test: 'Bool',
+							variable: 'aws:SecureTransport',
+							values: ['false'],
+						},
+					],
+				},
 			],
 		});
 
 		// Attach policy to bucket.
-		new aws.s3.BucketPolicy("ServobillSesBucketPolicy", {
+		new aws.s3.BucketPolicy('ServobillSesBucketPolicy', {
 			bucket: dataBucket.name,
 			policy: sesBucketPolicy.json,
 		});

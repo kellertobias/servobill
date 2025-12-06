@@ -23,84 +23,85 @@ import { ExtractReceiptResult } from './receipt.schema';
  * which uses LLM services to extract structured expense data from receipts.
  */
 @Service({
-  addToTestSet: [GRAPHQL_TEST_SET],
+	addToTestSet: [GRAPHQL_TEST_SET],
 })
 @Resolver()
 export class ReceiptResolver {
-  private readonly logger = new Logger('ReceiptResolver');
+	private readonly logger = new Logger('ReceiptResolver');
 
-  constructor(
-    @Inject(ATTACHMENT_REPOSITORY)
-    private attachmentRepository: AttachmentRepository,
-    @Inject(EVENTBUS_SERVICE) private eventBus: EventBusService
-  ) {}
+	constructor(
+		@Inject(ATTACHMENT_REPOSITORY)
+		private attachmentRepository: AttachmentRepository,
+		@Inject(EVENTBUS_SERVICE) private eventBus: EventBusService,
+	) {}
 
-  /**
-   * Extract receipt data from text content or uploaded attachments.
-   *
-   * This mutation triggers a receipt processing event that will:
-   * - Classify the receipt type (digital invoice vs regular receipt)
-   * - Extract expense information using LLM services
-   * - Create expense records in the database
-   *
-   * @param input - Contains either text content or attachment IDs for processing
-   * @returns Event ID and confirmation message
-   */
-  @Span('ReceiptResolver.extractReceipt')
-  @Authorized()
-  @Mutation(() => ExtractReceiptResult)
-  async extractReceipt(
-    @Arg('input', () => ExtractReceiptInput)
-    { attachmentIds = [], text = '' }: ExtractReceiptInput
-  ): Promise<ExtractReceiptResult> {
-    this.logger.info('Processing receipt extraction request', {
-      hasText: !!text,
-      hasAttachmentIds: !!attachmentIds?.length,
-      attachmentCount: attachmentIds?.length || 0,
-    });
+	/**
+	 * Extract receipt data from text content or uploaded attachments.
+	 *
+	 * This mutation triggers a receipt processing event that will:
+	 * - Classify the receipt type (digital invoice vs regular receipt)
+	 * - Extract expense information using LLM services
+	 * - Create expense records in the database
+	 *
+	 * @param input - Contains either text content or attachment IDs for processing
+	 * @returns Event ID and confirmation message
+	 */
+	@Span('ReceiptResolver.extractReceipt')
+	@Authorized()
+	@Mutation(() => ExtractReceiptResult)
+	async extractReceipt(
+		@Arg('input', () => ExtractReceiptInput)
+		{ attachmentIds = [], text = '' }: ExtractReceiptInput,
+	): Promise<ExtractReceiptResult> {
+		this.logger.info('Processing receipt extraction request', {
+			hasText: !!text,
+			hasAttachmentIds: !!attachmentIds?.length,
+			attachmentCount: attachmentIds?.length || 0,
+		});
 
-    // Validate input - must have either text or attachments
-    if (!text && (!attachmentIds || attachmentIds.length === 0)) {
-      throw new Error('Either text or attachmentIds must be provided');
-    }
+		// Validate input - must have either text or attachments
+		if (!text && (!attachmentIds || attachmentIds.length === 0)) {
+			throw new Error('Either text or attachmentIds must be provided');
+		}
 
-    // Validate all attachment IDs exist
-    if (attachmentIds && attachmentIds.length > 0) {
-      for (const attachmentId of attachmentIds) {
-        const attachment = await this.attachmentRepository.getById(attachmentId);
-        if (!attachment) {
-          throw new Error(`Attachment not found: ${attachmentId}`);
-        }
-      }
-    }
+		// Validate all attachment IDs exist
+		if (attachmentIds && attachmentIds.length > 0) {
+			for (const attachmentId of attachmentIds) {
+				const attachment =
+					await this.attachmentRepository.getById(attachmentId);
+				if (!attachment) {
+					throw new Error(`Attachment not found: ${attachmentId}`);
+				}
+			}
+		}
 
-    const eventIds: string[] = [];
+		const eventIds: string[] = [];
 
-    for (const attachmentId of attachmentIds || []) {
-      // Create receipt event payload
-      const receiptEvent = {
-        id: randomUUID(),
-        attachmentIds: [attachmentId],
-        emailText: text,
-      };
+		for (const attachmentId of attachmentIds || []) {
+			// Create receipt event payload
+			const receiptEvent = {
+				id: randomUUID(),
+				attachmentIds: [attachmentId],
+				emailText: text,
+			};
 
-      eventIds.push(receiptEvent.id);
+			eventIds.push(receiptEvent.id);
 
-      // Publish receipt event to event bus
-      await this.eventBus.send('receipt', receiptEvent);
+			// Publish receipt event to event bus
+			await this.eventBus.send('receipt', receiptEvent);
 
-      // delay for .3 seconds to avoid rate limiting
-      await new Promise((resolve) => setTimeout(resolve, 300));
-    }
+			// delay for .3 seconds to avoid rate limiting
+			await new Promise((resolve) => setTimeout(resolve, 300));
+		}
 
-    this.logger.info('Receipt event published successfully', {
-      eventIds,
-    });
+		this.logger.info('Receipt event published successfully', {
+			eventIds,
+		});
 
-    return {
-      eventIds,
-      message:
-        'Receipt processing started successfully. The extraction will be processed asynchronously.',
-    };
-  }
+		return {
+			eventIds,
+			message:
+				'Receipt processing started successfully. The extraction will be processed asynchronously.',
+		};
+	}
 }

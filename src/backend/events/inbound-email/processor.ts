@@ -1,25 +1,24 @@
-import { simpleParser } from 'mailparser';
-import { SESEvent } from 'aws-lambda';
+import type { SESEvent } from 'aws-lambda';
 import { randomUUID } from 'crypto';
-
-import { Service, Inject } from '@/common/di';
-import { Logger } from '@/backend/services/logger.service';
-import {
-	FILE_STORAGE_SERVICE,
-	type FileStorageService,
-} from '@/backend/services/file-storage.service';
+import { simpleParser } from 'mailparser';
+import { AttachmentEntity } from '@/backend/entities/attachment.entity';
+import { ReceiptEvent } from '@/backend/events/receipt/event';
 import {
 	ATTACHMENT_REPOSITORY,
 	type AttachmentRepository,
 } from '@/backend/repositories/attachment';
-import { AttachmentEntity } from '@/backend/entities/attachment.entity';
-import { EVENTBUS_SERVICE } from '@/backend/services/di-tokens';
-import type { EventBusService } from '@/backend/services/eventbus.service';
-import { ReceiptEvent } from '@/backend/events/receipt/event';
 import {
 	SETTINGS_REPOSITORY,
 	type SettingsRepository,
 } from '@/backend/repositories/settings';
+import { EVENTBUS_SERVICE } from '@/backend/services/di-tokens';
+import type { EventBusService } from '@/backend/services/eventbus.service';
+import {
+	FILE_STORAGE_SERVICE,
+	type FileStorageService,
+} from '@/backend/services/file-storage.service';
+import { Logger } from '@/backend/services/logger.service';
+import { Inject, Service } from '@/common/di';
 
 @Service()
 export class InboundEmailProcessor {
@@ -46,9 +45,7 @@ export class InboundEmailProcessor {
 		}
 	}
 
-	private async processRecord(
-		record: SESEvent['Records'][0],
-	): Promise<void> {
+	private async processRecord(record: SESEvent['Records'][0]): Promise<void> {
 		const messageId = record.ses.mail.messageId;
 		this.logger.info('Processing email record', { messageId });
 
@@ -105,10 +102,9 @@ export class InboundEmailProcessor {
 					});
 
 					// Upload attachment to S3
-					await this.fileStorageService.uploadFile(
+					await this.fileStorageService.saveFile(
 						s3AttachmentKey,
 						attachment.content,
-						mimeType,
 						{ bucket: bucketName },
 					);
 
@@ -132,7 +128,9 @@ export class InboundEmailProcessor {
 			const emailText = parsedEmail.text || parsedEmail.html || '';
 
 			if (attachmentIds.length === 0 && !emailText) {
-				this.logger.warn('No attachments or text found in email', { messageId });
+				this.logger.warn('No attachments or text found in email', {
+					messageId,
+				});
 				return;
 			}
 
@@ -155,7 +153,6 @@ export class InboundEmailProcessor {
 			// 6. Cleanup raw email?
 			// Optional: Delete the raw email from S3 to save space, or keep it for debugging.
 			// Keeping it for now as it might be useful.
-
 		} catch (error) {
 			this.logger.error('Failed to process inbound email', {
 				messageId,
