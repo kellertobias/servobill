@@ -1,5 +1,5 @@
-import { InvoiceEntity } from '@/backend/entities/invoice.entity';
-import {
+import type { InvoiceEntity } from '@/backend/entities/invoice.entity';
+import type {
 	CompanyDataSetting,
 	InvoiceSettingsEntity,
 	PdfTemplateSetting,

@@ -1,6 +1,3 @@
-import clsx from 'clsx';
-import React, { useState } from 'react';
-
 import {
 	CheckIcon,
 	NewspaperIcon,
@@ -8,10 +5,12 @@ import {
 	PlusIcon,
 	TrashIcon,
 } from '@heroicons/react/24/outline';
+import clsx from 'clsx';
 import dayjs from 'dayjs';
-
-import { useAutoSizeTextArea } from '@/hooks/use-auto-textarea';
+import type React from 'react';
+import { useState } from 'react';
 import { DateInput } from '@/components/date';
+import { useAutoSizeTextArea } from '@/hooks/use-auto-textarea';
 
 export function InvoiceLookupStartButton({
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -184,6 +183,7 @@ export function InlineEditableText({
 					{editing ? (
 						<textarea
 							ref={ref}
+							// biome-ignore lint/a11y/noAutofocus: needed
 							autoFocus
 							placeholder={placeholder}
 							className={clsx(
@@ -232,13 +232,11 @@ export function InlineEditableDate({
 	return (
 		<div className={clsx('relative w-full group')}>
 			{locked ? (
-				<>
-					{value ? (
-						dayjs(value).format('DD.MM.YYYY')
-					) : (
-						<span className="opacity-30">{empty || placeholder}</span>
-					)}
-				</>
+				value ? (
+					dayjs(value).format('DD.MM.YYYY')
+				) : (
+					<span className="opacity-30">{empty || placeholder}</span>
+				)
 			) : (
 				<DateInput
 					value={value || undefined}
@@ -282,6 +280,7 @@ export function InlineEditableArea({
 		>
 			{!locked && (
 				<button
+					type="button"
 					onClick={() => setEditing(false)}
 					className={clsx(
 						'inline-flex items-center justify-center absolute z-10 h-6 w-6 p-1 rounded-full',

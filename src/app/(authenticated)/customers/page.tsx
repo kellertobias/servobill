@@ -1,18 +1,16 @@
 'use client';
 
-import React from 'react';
-
 import { PlusIcon } from '@heroicons/react/20/solid';
-
-import { Button } from '@/components/button';
-import { PageContent } from '@/components/page';
-import { Table } from '@/components/table';
-import { useLoadData } from '@/hooks/load-data';
-import { API, gql } from '@/api/index';
+import React from 'react';
 import {
 	exportCustomers,
 	importCustomers,
 } from '@/api/import-export/customers';
+import { API, gql } from '@/api/index';
+import { Button } from '@/components/button';
+import { PageContent } from '@/components/page';
+import { Table } from '@/components/table';
+import { useLoadData } from '@/hooks/load-data';
 
 import CustomerOverlay from './customer-overlay';
 

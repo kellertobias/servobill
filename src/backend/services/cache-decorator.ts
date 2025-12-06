@@ -20,7 +20,7 @@ export function Cached({
 	// Structure: Map<cacheKey, { value: any, expires: number }>
 	const cache = new Map<string, { value: any; expires: number }>();
 
-	return function (target: any, propertyKey: string, descriptor: any) {
+	return (_target: any, _propertyKey: string, descriptor: any) => {
 		const originalMethod = descriptor.value!;
 
 		descriptor.value = async function (this: any, ...args: unknown[]) {

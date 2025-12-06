@@ -1,25 +1,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { randomUUID } from 'crypto';
-import path from 'path';
-import fs from 'fs/promises';
-
-import { describe, it, expect, beforeEach } from 'vitest';
+import { randomUUID } from 'node:crypto';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import { gql } from 'graphql-request';
-
-import { ExecuteTestFunction, prepareGraphqlTest } from '@/test/graphql-test';
-import { EXPENSE_REPOSITORY } from '@/backend/repositories/expense/di-tokens';
-import { ATTACHMENT_REPOSITORY } from '@/backend/repositories/attachment/di-tokens';
-import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
-import type { ExpenseRepository } from '@/backend/repositories/expense/interface';
-import type { AttachmentRepository } from '@/backend/repositories/attachment/interface';
-import type { SettingsRepository } from '@/backend/repositories/settings/interface';
+import { beforeEach, describe, expect, it } from 'vitest';
+import type { AttachmentEntity } from '@/backend/entities/attachment.entity';
+import type { ExpenseEntity } from '@/backend/entities/expense.entity';
 import { SettingsEntity } from '@/backend/entities/settings.entity';
-import { ExpenseEntity } from '@/backend/entities/expense.entity';
-import { AttachmentEntity } from '@/backend/entities/attachment.entity';
-import { App } from '@/common/di';
-import { CONFIG_SERVICE } from '@/backend/services/di-tokens';
+import { ATTACHMENT_REPOSITORY } from '@/backend/repositories/attachment/di-tokens';
+import type { AttachmentRepository } from '@/backend/repositories/attachment/interface';
+import { EXPENSE_REPOSITORY } from '@/backend/repositories/expense/di-tokens';
+import type { ExpenseRepository } from '@/backend/repositories/expense/interface';
+import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
+import type { SettingsRepository } from '@/backend/repositories/settings/interface';
 import type { ConfigService } from '@/backend/services/config.service';
 import { FileStorageType } from '@/backend/services/constants';
+import { CONFIG_SERVICE } from '@/backend/services/di-tokens';
+import type { App } from '@/common/di';
+import {
+	type ExecuteTestFunction,
+	prepareGraphqlTest,
+} from '@/test/graphql-test';
 
 /**
  * Integration tests for ExpenseResolver.

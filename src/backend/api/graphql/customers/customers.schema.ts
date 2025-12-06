@@ -1,10 +1,8 @@
-import { Field, ObjectType, InputType } from 'type-graphql';
 import { IsString } from 'class-validator';
-
-import { FilteredObjectProperties } from '../types';
-
-import { CustomerEntity } from '@/backend/entities/customer.entity';
-import { CompanyDataSetting } from '@/backend/entities/settings.entity';
+import { Field, InputType, ObjectType } from 'type-graphql';
+import type { CustomerEntity } from '@/backend/entities/customer.entity';
+import type { CompanyDataSetting } from '@/backend/entities/settings.entity';
+import type { FilteredObjectProperties } from '../types';
 
 @ObjectType('Customer')
 export class Customer implements FilteredObjectProperties<CustomerEntity> {
@@ -58,8 +56,7 @@ export class Customer implements FilteredObjectProperties<CustomerEntity> {
 
 @InputType('CustomerInput')
 export class CustomerInput
-	implements
-		Omit<Customer, 'id' | 'createdAt' | 'updatedAt' | 'customerNumber'>
+	implements Omit<Customer, 'id' | 'createdAt' | 'updatedAt' | 'customerNumber'>
 {
 	@IsString()
 	@Field(() => String)

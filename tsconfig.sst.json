@@ -13,13 +13,9 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "types": [
-      "reflect-metadata",
-      "node"
-    ],
+    "types": ["reflect-metadata", "node"],
     "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    
+    "experimentalDecorators": true
   },
-  "include": ["stack/production/**/*"],
+  "include": ["stack/production/**/*"]
 }

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import clsx from 'clsx';
+import type React from 'react';
 import toast from 'react-hot-toast';
-import React from 'react';
 
 function CustomToast({
 	icon: Icon,
@@ -94,7 +94,7 @@ export const doToast = (
 		});
 	}
 	return toast.custom(
-		(t) => (
+		(t: any) => (
 			<CustomToast
 				{...t}
 				type={props.type || 'info'}

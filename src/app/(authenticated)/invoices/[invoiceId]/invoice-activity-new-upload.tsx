@@ -1,12 +1,11 @@
-import React from 'react';
-
 import { PaperClipIcon } from '@heroicons/react/20/solid';
 import { TrashIcon } from '@heroicons/react/24/outline';
+import React from 'react';
 
-import { AttachmentFilePartial } from '@/api/download-attachment';
-import { doToast } from '@/components/toast';
+import type { AttachmentFilePartial } from '@/api/download-attachment';
 import { API, gql } from '@/api/index';
 import { Button } from '@/components/button';
+import { doToast } from '@/components/toast';
 
 // Helper to format file size
 function formatFileSize(size: number): string {

@@ -1,14 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { doToast } from '@/components/toast';
-
-import { API, gql } from '../index';
-
-import { downloadFile, requestFile } from './helper';
-import { Exporters } from './exporters/exporters';
-
-import { Customer } from '@/common/gql/graphql';
 import { DeferredPromise } from '@/common/deferred';
+import type { Customer } from '@/common/gql/graphql';
+import { doToast } from '@/components/toast';
+import { API, gql } from '../index';
+import { Exporters } from './exporters/exporters';
+import { downloadFile, requestFile } from './helper';
 
 export const importSingleCustomer = async (customer: Partial<Customer>) => {
 	const customerData = { ...customer };

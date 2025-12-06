@@ -1,13 +1,11 @@
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 
-import { describe, it, beforeAll, afterAll, expect } from 'vitest';
-
-import { InventoryLocation } from './inventory-location.schema';
-
-import { prepareGraphqlTest } from '@/test/graphql-test';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { InventoryLocationEntity } from '@/backend/entities/inventory-location.entity';
 import { INVENTORY_LOCATION_REPOSITORY } from '@/backend/repositories/inventory-location/di-tokens';
 import type { InventoryLocationRepository } from '@/backend/repositories/inventory-location/interface';
-import { InventoryLocationEntity } from '@/backend/entities/inventory-location.entity';
+import { prepareGraphqlTest } from '@/test/graphql-test';
+import type { InventoryLocation } from './inventory-location.schema';
 
 function hasClose(obj: unknown): obj is { close: () => Promise<void> } {
 	return (

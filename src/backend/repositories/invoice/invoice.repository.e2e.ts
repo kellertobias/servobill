@@ -2,21 +2,19 @@
 // @vitest-execute serial
 
 import 'reflect-metadata';
-import { describe, it, expect, beforeEach } from 'vitest';
-
-import { InvoiceDynamodbRepository } from './invoice.dynamodb-repository';
-import { InvoiceRelationalRepository } from './invoice.relational-repository';
-import { InvoiceOrmEntity } from './relational-orm-entity';
-import { InvoiceRepository } from './interface';
-
-import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { CustomerEntity } from '@/backend/entities/customer.entity';
 import {
 	InvoiceEntity,
-	InvoiceType,
 	InvoiceStatus,
+	InvoiceType,
 } from '@/backend/entities/invoice.entity';
+import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
 import { prepareRepoTest } from '@/test/repo-test';
+import type { InvoiceRepository } from './interface';
+import { InvoiceDynamodbRepository } from './invoice.dynamodb-repository';
+import { InvoiceRelationalRepository } from './invoice.relational-repository';
+import { InvoiceOrmEntity } from './relational-orm-entity';
 
 /**
  * Parameterized test suite for both repository implementations.

@@ -1,19 +1,17 @@
-import { OAuth2Client, TokenPayload } from 'google-auth-library';
-
-import { OAUTH_CLIENT_ID } from '../config';
-import { getBody, getSiteUrl } from '../../helpers';
-import { AuthenticationService } from '../authentication';
-import { APIHandler } from '../../types';
-
-import { SESSION_REPOSITORY } from '@/backend/repositories/session/di-tokens';
-import { type SessionRepository } from '@/backend/repositories/session/interface';
-import { DefaultContainer } from '@/common/di';
-import { Logger } from '@/backend/services/logger.service';
+import { OAuth2Client, type TokenPayload } from 'google-auth-library';
 import { withSpan } from '@/backend/instrumentation';
+import { SESSION_REPOSITORY } from '@/backend/repositories/session/di-tokens';
+import type { SessionRepository } from '@/backend/repositories/session/interface';
 import {
 	FILE_STORAGE_SERVICE,
-	FileStorageService,
+	type FileStorageService,
 } from '@/backend/services/file-storage.service';
+import { Logger } from '@/backend/services/logger.service';
+import { DefaultContainer } from '@/common/di';
+import { getBody, getSiteUrl } from '../../helpers';
+import type { APIHandler } from '../../types';
+import { AuthenticationService } from '../authentication';
+import { OAUTH_CLIENT_ID } from '../config';
 
 const logger = new Logger('GoogleAuth');
 

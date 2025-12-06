@@ -24,7 +24,8 @@ export const requestFile = async () => {
 				reader.addEventListener('load', (readerEvent): void => {
 					const content = readerEvent.target?.result; // this is the content!
 					if (typeof content !== 'string') {
-						return reject('Failed to read file');
+						reject('Failed to read file');
+						return;
 					}
 					// eslint-disable-next-line no-console
 					console.log('file read, resolving...', { length: content.length });

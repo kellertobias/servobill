@@ -1,9 +1,9 @@
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 
-import { Entity, Schema } from 'electrodb';
+import type { Entity, Schema } from 'electrodb';
 import { injectable } from 'inversify';
 
-import { DomainEntity as DomainBaseEntity } from '../entities/abstract.entity';
+import type { DomainEntity as DomainBaseEntity } from '../entities/abstract.entity';
 import { Span } from '../instrumentation';
 
 import { AbstractRepository } from './abstract-repository';

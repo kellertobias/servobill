@@ -1,12 +1,12 @@
-import { Field, InputType, Int, ObjectType } from 'type-graphql';
 import { IsBoolean, IsString } from 'class-validator';
+import { Field, InputType, Int, ObjectType } from 'type-graphql';
 
 import {
 	InvoiceOutputFormat,
-	PdfTemplateSetting,
+	type PdfTemplateSetting,
 	VatStatus,
 } from '@/backend/entities/settings.entity';
-import { ObjectProperties } from '@/common/ts-helpers';
+import type { ObjectProperties } from '@/common/ts-helpers';
 
 @ObjectType('SettingsResultCompany')
 export class SettingsResultCompany {

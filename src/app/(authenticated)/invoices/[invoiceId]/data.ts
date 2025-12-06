@@ -1,9 +1,9 @@
 import React from 'react';
 
 import { API, gql } from '@/api/index';
+import { confirmDialog } from '@/components/dialog';
 import { doToast } from '@/components/toast';
 import { useLoadData } from '@/hooks/load-data';
-import { confirmDialog } from '@/components/dialog';
 
 export const useInvoiceData = () =>
 	useLoadData(async (params) =>

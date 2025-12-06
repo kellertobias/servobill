@@ -1,4 +1,4 @@
-import { ExpenseEntity } from '@/backend/entities/expense.entity';
+import type { ExpenseEntity } from '@/backend/entities/expense.entity';
 
 export interface ReceiptResult {
 	expenses: ExpenseEntity[];

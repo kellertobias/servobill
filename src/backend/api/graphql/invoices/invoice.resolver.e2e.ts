@@ -7,35 +7,36 @@
  * Why: Ensures resolver logic, DB integration, and GraphQL schema are all working as expected.
  * How: Uses prepareGraphqlTest to get an app and execute GraphQL operations, and verifies repository state after mutations.
  */
-import { randomUUID } from 'crypto';
-import * as fs from 'fs';
-import path from 'path';
+import { randomUUID } from 'node:crypto';
+import * as fs from 'node:fs';
+import path from 'node:path';
 
-import { describe, it, beforeEach, expect } from 'vitest';
-
-import { prepareGraphqlTest } from '@/test/graphql-test';
-import { INVOICE_REPOSITORY } from '@/backend/repositories/invoice/di-tokens';
-import { CUSTOMER_REPOSITORY } from '@/backend/repositories/customer/di-tokens';
-import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
-import { ATTACHMENT_REPOSITORY } from '@/backend/repositories/attachment/di-tokens';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { AttachmentEntity } from '@/backend/entities/attachment.entity';
+import { CustomerEntity } from '@/backend/entities/customer.entity';
 import {
 	InvoiceEntity,
-	InvoiceType,
 	InvoiceStatus,
+	InvoiceType,
 } from '@/backend/entities/invoice.entity';
-import { CustomerEntity } from '@/backend/entities/customer.entity';
-import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
-import { InvoiceSettingsEntity } from '@/backend/entities/settings.entity';
 import { InvoiceActivityType } from '@/backend/entities/invoice-activity.entity';
-import { AttachmentEntity } from '@/backend/entities/attachment.entity';
-import type { InvoiceRepository } from '@/backend/repositories/invoice/interface';
-import type { CustomerRepository } from '@/backend/repositories/customer/interface';
-import type { SettingsRepository } from '@/backend/repositories/settings/interface';
+import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
+import {
+	InvoiceSettingsEntity,
+	SettingsEntity,
+} from '@/backend/entities/settings.entity';
+import { ATTACHMENT_REPOSITORY } from '@/backend/repositories/attachment/di-tokens';
 import type { AttachmentRepository } from '@/backend/repositories/attachment/interface';
-import { SettingsEntity } from '@/backend/entities/settings.entity';
-import { CONFIG_SERVICE } from '@/backend/services/di-tokens';
+import { CUSTOMER_REPOSITORY } from '@/backend/repositories/customer/di-tokens';
+import type { CustomerRepository } from '@/backend/repositories/customer/interface';
+import { INVOICE_REPOSITORY } from '@/backend/repositories/invoice/di-tokens';
+import type { InvoiceRepository } from '@/backend/repositories/invoice/interface';
+import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
+import type { SettingsRepository } from '@/backend/repositories/settings/interface';
 import type { ConfigService } from '@/backend/services/config.service';
 import { FileStorageType } from '@/backend/services/constants';
+import { CONFIG_SERVICE } from '@/backend/services/di-tokens';
+import { prepareGraphqlTest } from '@/test/graphql-test';
 
 // Helper: create a minimal customer with a valid UUID
 function sampleCustomer(overrides: Partial<CustomerEntity> = {}) {

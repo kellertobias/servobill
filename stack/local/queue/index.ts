@@ -1,16 +1,17 @@
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { randomUUID } from 'crypto';
 
+import { randomUUID } from 'node:crypto';
 import chalk from 'chalk';
+import { config as dotenvConfig } from 'dotenv';
 import express from 'express';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import sqlite3 from 'sqlite3';
-import { config as dotenvConfig } from 'dotenv';
 
 import handlers from '@/backend/events';
 import { CustomJson } from '@/common/json';
+
 const port = process.env.PORT || 9326;
 
 // Load environment variables from .env file for local development
@@ -36,7 +37,7 @@ let db: sqlite3.Database;
  */
 function runAsync(sql: string, params: any[] = []): Promise<void> {
 	return new Promise((resolve, reject) => {
-		db.run(sql, params, function (err) {
+		db.run(sql, params, (err) => {
 			if (err) {
 				reject(err);
 			} else {
@@ -57,7 +58,7 @@ function getAsync<T = any>(
 	params: any[] = [],
 ): Promise<T | undefined> {
 	return new Promise((resolve, reject) => {
-		db.get(sql, params, function (err, row) {
+		db.get(sql, params, (err, row) => {
 			if (err) {
 				reject(err);
 			} else {
@@ -226,14 +227,14 @@ const handleNextEvent = async () => {
 				}:function:${type}:0`,
 				memoryLimitInMB: '1024',
 				awsRequestId: randomUUID().toString(),
-				logGroupName: '/aws/lambda/' + type,
+				logGroupName: `/aws/lambda/${type}`,
 				logStreamName: `0000/00/00/[$LATEST]${randomUUID().toString()}`,
 				getRemainingTimeInMillis: () => {
 					return 1000;
 				},
-				done: (error?: Error, result?: any) => null,
-				fail: (error: Error | string) => null,
-				succeed: (messageOrObject: any) => null,
+				done: (_error?: Error, _result?: any) => null,
+				fail: (_error: Error | string) => null,
+				succeed: (_messageOrObject: any) => null,
 			},
 			() => null,
 		);

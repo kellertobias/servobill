@@ -1,14 +1,14 @@
+import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 
-import dayjs from 'dayjs';
-
 import { API, gql } from '@/api/index';
-import { confirmDialog } from '@/components/dialog';
-import { doToast } from '@/components/toast';
-import { Input } from '@/components/input';
 import { DateInput } from '@/components/date';
+import { confirmDialog } from '@/components/dialog';
+import { Input } from '@/components/input';
+import { doToast } from '@/components/toast';
 
-import { InvoiceData } from '../data';
+import type { InvoiceData } from '../data';
+
 type InvoicePayment = {
 	cents: number;
 	via: string;

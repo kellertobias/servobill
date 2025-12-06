@@ -1,8 +1,7 @@
+import { SparklesIcon } from '@heroicons/react/20/solid';
 import React from 'react';
 
-import { SparklesIcon } from '@heroicons/react/20/solid';
-
-import { AttachmentFilePartial } from '@/api/download-attachment';
+import type { AttachmentFilePartial } from '@/api/download-attachment';
 import { API, gql } from '@/api/index';
 import { doToast } from '@/components/toast';
 

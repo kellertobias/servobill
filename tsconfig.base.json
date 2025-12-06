@@ -1,9 +1,7 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "lib": [
-      "esnext"
-    ],
+    "lib": ["esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -16,10 +14,7 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "types": [
-      "reflect-metadata",
-      "node"
-    ],
+    "types": ["reflect-metadata", "node"],
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "paths": {
@@ -28,5 +23,5 @@
       "@/components/*": ["./src/app/_components/*"],
       "@/*": ["./src/*"]
     }
-  },
+  }
 }

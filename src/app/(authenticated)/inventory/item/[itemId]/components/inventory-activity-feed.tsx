@@ -1,23 +1,21 @@
-import React from 'react';
+import {
+	ArrowPathIcon,
+	ChatBubbleLeftRightIcon,
+	CheckCircleIcon,
+	ClockIcon,
+	ExclamationCircleIcon,
+	PencilIcon,
+} from '@heroicons/react/20/solid';
 import clsx from 'clsx';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import type React from 'react';
 import {
-	ClockIcon,
-	ChatBubbleLeftRightIcon,
-	CheckCircleIcon,
-	ExclamationCircleIcon,
-	ArrowPathIcon,
-	PencilIcon,
-} from '@heroicons/react/20/solid';
-
-import { InventoryActivityForm } from './inventory-activity-form';
-
-import {
-	InventoryHistoryType,
 	InventoryCheckState,
+	InventoryHistoryType,
 } from '@/common/gql/graphql';
+import { InventoryActivityForm } from './inventory-activity-form';
 
 dayjs.extend(relativeTime);
 
@@ -110,7 +108,7 @@ export const InventoryActivityFeed: React.FC<InventoryActivityFeedProps> = ({
 				Activity & History
 			</h2>
 			{history && history.length > 0 ? (
-				<ul role="list" className="mt-6 space-y-6">
+				<ul className="mt-6 space-y-6">
 					{history?.map(
 						(activity, index) =>
 							activity && (
@@ -123,27 +121,26 @@ export const InventoryActivityFeed: React.FC<InventoryActivityFeedProps> = ({
 									>
 										<div className="w-px bg-gray-200" />
 									</div>
-									<>
-										<div className="relative flex h-6 w-6 flex-none items-center justify-center bg-white">
-											{getHistoryIcon(activity.type, activity.state)}
-										</div>
-										<div className="flex flex-col w-full">
-											<div className="flex flex-row justify-between gap-x-4 w-full">
-												<p className="flex-auto py-0.5 text-xs leading-5 text-gray-500 font-semibold">
-													{getHistoryText(activity)}
-												</p>
-												<time
-													dateTime={activity.date}
-													className="flex-none py-0.5 text-xs leading-5 text-gray-500"
-												>
-													{dayjs(activity.date).fromNow()}
-												</time>
-											</div>
-											<p className="flex-auto py-0.5 text-xs leading-5 text-gray-500">
-												{activity.note}
+
+									<div className="relative flex h-6 w-6 flex-none items-center justify-center bg-white">
+										{getHistoryIcon(activity.type, activity.state)}
+									</div>
+									<div className="flex flex-col w-full">
+										<div className="flex flex-row justify-between gap-x-4 w-full">
+											<p className="flex-auto py-0.5 text-xs leading-5 text-gray-500 font-semibold">
+												{getHistoryText(activity)}
 											</p>
+											<time
+												dateTime={activity.date}
+												className="flex-none py-0.5 text-xs leading-5 text-gray-500"
+											>
+												{dayjs(activity.date).fromNow()}
+											</time>
 										</div>
-									</>
+										<p className="flex-auto py-0.5 text-xs leading-5 text-gray-500">
+											{activity.note}
+										</p>
+									</div>
 								</li>
 							),
 					)}

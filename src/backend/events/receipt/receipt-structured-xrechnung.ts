@@ -1,6 +1,6 @@
 import {
-	ExtractedInvoiceStructure,
-	ExtractedExpenseItem,
+	type ExtractedExpenseItem,
+	type ExtractedInvoiceStructure,
 	ReceiptStructuredStrategy,
 } from './receipt-structured-strategy-interface';
 
@@ -61,12 +61,12 @@ export class XRechnungExtractorStrategy extends ReceiptStructuredStrategy {
 			return undefined;
 		}
 		const obj = xml as Record<string, unknown>;
-		if ('Invoice' in obj && typeof obj['Invoice'] === 'object') {
-			const invoiceArr = obj['Invoice'];
+		if ('Invoice' in obj && typeof obj.Invoice === 'object') {
+			const invoiceArr = obj.Invoice;
 			if (Array.isArray(invoiceArr)) {
 				return invoiceArr[0] as Record<string, unknown>;
 			}
-			return obj['Invoice'] as Record<string, unknown>;
+			return obj.Invoice as Record<string, unknown>;
 		}
 		// Try to find a key that ends with ':Invoice' (namespaced)
 		const invoiceKey = Object.keys(obj).find((k) => k.endsWith(':Invoice'));

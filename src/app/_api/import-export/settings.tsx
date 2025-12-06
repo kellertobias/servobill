@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { doToast } from '@/components/toast';
-
-import { API, gql } from '../index';
-
-import { downloadFile, requestFile } from './helper';
-import { Exporters } from './exporters/exporters';
 
 import { DeferredPromise } from '@/common/deferred';
-import { InvoiceTemplateResult, SettingsResult } from '@/common/gql/graphql';
+import type {
+	InvoiceTemplateResult,
+	SettingsResult,
+} from '@/common/gql/graphql';
+import { doToast } from '@/components/toast';
+import { API, gql } from '../index';
+import { Exporters } from './exporters/exporters';
+import { downloadFile, requestFile } from './helper';
 
 export const importSettings = async () => {
 	const raw = await requestFile();

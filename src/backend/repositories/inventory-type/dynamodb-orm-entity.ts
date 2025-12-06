@@ -1,4 +1,4 @@
-import { ResponseItem } from 'electrodb';
+import type { ResponseItem } from 'electrodb';
 
 import { DynamoDBService } from '@/backend/services/dynamodb.service';
 

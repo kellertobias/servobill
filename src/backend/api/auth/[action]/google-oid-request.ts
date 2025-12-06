@@ -2,12 +2,10 @@ import querystring from 'node:querystring';
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import * as cookies from 'cookie';
-
-import { OAUTH_CLIENT_ID, OAUTH_ENDPOINT } from '../config';
-import { getSiteUrl } from '../../helpers';
-import { APIHandler } from '../../types';
-
 import { withSpan } from '@/backend/instrumentation';
+import { getSiteUrl } from '../../helpers';
+import type { APIHandler } from '../../types';
+import { OAUTH_CLIENT_ID, OAUTH_ENDPOINT } from '../config';
 
 export const googleOidRequestHandler: APIHandler = withSpan(
 	{
@@ -39,7 +37,7 @@ export const googleOidRequestHandler: APIHandler = withSpan(
 					httpOnly: true,
 					maxAge: 6000,
 					sameSite: 'lax',
-					secure: url.includes('localhost') ? false : true,
+					secure: !url.includes('localhost'),
 				}),
 			],
 		};

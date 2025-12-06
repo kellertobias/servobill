@@ -1,8 +1,8 @@
 /* eslint-disable import/no-extraneous-dependencies, no-console, unicorn/no-process-exit */
-import fs from 'fs';
-import { execSync } from 'child_process';
-import * as readline from 'readline';
 
+import { execSync } from 'node:child_process';
+import fs from 'node:fs';
+import * as readline from 'node:readline';
 import boxen from 'boxen';
 
 import { apiEndpoints, eventHandlerEndpoints } from './build-index';

@@ -1,13 +1,12 @@
-import { revalidatePath } from 'next/cache';
-
 import { isServer } from './graphql-connection';
 
 export const revalidateOnError = async () => {
 	if (isServer) {
+		const { revalidatePath } = await import('next/cache');
 		// Reset Cache to avoid caching errors
 		const { headers } = await import('next/headers');
 
-		const headersList = headers();
+		const headersList = await headers();
 
 		const path = headersList.get('next-url') || '/';
 

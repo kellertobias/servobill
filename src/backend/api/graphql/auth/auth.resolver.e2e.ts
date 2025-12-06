@@ -1,8 +1,7 @@
-import { describe, it, expect } from 'vitest';
 import type { GraphQLError } from 'graphql';
-
-import { prepareGraphqlTest } from '@/test/graphql-test';
+import { describe, expect, it } from 'vitest';
 import { Session } from '@/backend/api/session';
+import { prepareGraphqlTest } from '@/test/graphql-test';
 
 /**
  * Integration tests for AuthResolver.
@@ -98,7 +97,7 @@ describe('AuthResolver (integration)', () => {
 		});
 		expect(result.errors).toBeDefined();
 		// Should be an authorization error
-		const firstError = result.errors && result.errors[0];
+		const firstError = result.errors?.[0];
 		const message =
 			firstError && typeof firstError === 'object' && 'message' in firstError
 				? (firstError as GraphQLError).message

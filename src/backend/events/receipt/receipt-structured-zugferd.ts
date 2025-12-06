@@ -1,6 +1,6 @@
 import {
-	ExtractedInvoiceStructure,
-	ExtractedExpenseItem,
+	type ExtractedExpenseItem,
+	type ExtractedInvoiceStructure,
 	ReceiptStructuredStrategy,
 } from './receipt-structured-strategy-interface';
 
@@ -118,7 +118,7 @@ export class ZugferdExtractorStrategy extends ReceiptStructuredStrategy {
 			]);
 			const name =
 				this.getFirstStr(product?.['ram:Name']) ||
-				this.getFirstStr(product?.['Name']) ||
+				this.getFirstStr(product?.Name) ||
 				'Extracted Item';
 
 			const priceObj = this.getFirstObject(agreement, [
@@ -127,7 +127,7 @@ export class ZugferdExtractorStrategy extends ReceiptStructuredStrategy {
 			]);
 			const priceVal =
 				this.getFirstStr(priceObj?.['ram:ChargeAmount']) ||
-				this.getFirstStr(priceObj?.['ChargeAmount']) ||
+				this.getFirstStr(priceObj?.ChargeAmount) ||
 				'0';
 
 			const delivery = this.getFirstObject(line, [
@@ -136,7 +136,7 @@ export class ZugferdExtractorStrategy extends ReceiptStructuredStrategy {
 			]);
 			const qtyVal =
 				this.getFirstStr(delivery?.['ram:BilledQuantity']) ||
-				this.getFirstStr(delivery?.['BilledQuantity']) ||
+				this.getFirstStr(delivery?.BilledQuantity) ||
 				'1';
 			const amount = Number.parseFloat(qtyVal || '1');
 
@@ -154,7 +154,7 @@ export class ZugferdExtractorStrategy extends ReceiptStructuredStrategy {
 			]);
 			const taxPercentVal =
 				this.getFirstStr(taxObj?.['ram:RateApplicablePercent']) ||
-				this.getFirstStr(taxObj?.['RateApplicablePercent']) ||
+				this.getFirstStr(taxObj?.RateApplicablePercent) ||
 				'0';
 			const taxPercent = Number.parseFloat(taxPercentVal);
 			const netCents = totalLineCents; // Use the total line amount directly
@@ -226,9 +226,9 @@ export class ZugferdExtractorStrategy extends ReceiptStructuredStrategy {
 			const allowanceObj = allowance as Record<string, unknown>;
 			const name =
 				this.getFirstStr(allowanceObj?.['ram:Reason']) ||
-				this.getFirstStr(allowanceObj?.['Reason']) ||
+				this.getFirstStr(allowanceObj?.Reason) ||
 				this.getFirstStr(allowanceObj?.['ram:AllowanceChargeReason']) ||
-				this.getFirstStr(allowanceObj?.['AllowanceChargeReason']) ||
+				this.getFirstStr(allowanceObj?.AllowanceChargeReason) ||
 				'Discount';
 			const unitPriceCents = -Math.round(amountNum * 100); // negative for discount
 			const amount = 1;
@@ -379,7 +379,7 @@ export class ZugferdExtractorStrategy extends ReceiptStructuredStrategy {
 		]);
 		return (
 			this.getFirstStr(seller?.['ram:Name']) ||
-			this.getFirstStr(seller?.['Name']) ||
+			this.getFirstStr(seller?.Name) ||
 			''
 		);
 	}
@@ -441,7 +441,7 @@ export class ZugferdExtractorStrategy extends ReceiptStructuredStrategy {
 		]);
 		const invoiceNumber =
 			this.getFirstStr(header?.['ram:ID']) ||
-			this.getFirstStr(header?.['ID']) ||
+			this.getFirstStr(header?.ID) ||
 			'';
 		return invoiceNumber;
 	}
@@ -460,7 +460,7 @@ export class ZugferdExtractorStrategy extends ReceiptStructuredStrategy {
 		]);
 		return (
 			this.getFirstStr(noteObj?.['ram:Content']) ||
-			this.getFirstStr(noteObj?.['Content']) ||
+			this.getFirstStr(noteObj?.Content) ||
 			''
 		);
 	}

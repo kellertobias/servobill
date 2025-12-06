@@ -21,8 +21,6 @@ export enum ReceiptClassification {
  * - Extraction: Fallback for other types.
  */
 export class ReceiptClassificationService {
-	constructor() {}
-
 	/**
 	 * Classify a receipt to determine processing strategy.
 	 * @param attachments Array of attachments (PDFs/images/XML)
@@ -46,7 +44,10 @@ export class ReceiptClassificationService {
 			}
 			// Check for PDF with embedded XML (ZUGFeRD)
 			if (attachment.mimeType === 'application/pdf') {
-				const isStructured = await this.pdfHasEmbeddedXml(attachment.content);
+				const isStructured =
+					await ReceiptClassificationService.pdfHasEmbeddedXml(
+						attachment.content,
+					);
 				if (isStructured) {
 					return ReceiptClassification.Structured;
 				}

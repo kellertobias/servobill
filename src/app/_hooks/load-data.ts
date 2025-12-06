@@ -1,10 +1,8 @@
-import React from 'react';
-import { Params } from 'next/dist/shared/lib/router/utils/route-matcher';
-import { useParams } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
-
-import useDebouncedMemo from '@sevenoutman/use-debounced-memo';
 import { XCircleIcon } from '@heroicons/react/20/solid';
+import useDebouncedMemo from '@sevenoutman/use-debounced-memo';
+import { useParams } from 'next/navigation';
+import type React from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { API, gql } from '@/api/index';
 import { doToast } from '@/components/toast';
@@ -17,6 +15,8 @@ export type UseLoadData<T> = {
 	setData: React.Dispatch<React.SetStateAction<Partial<T> | null>>;
 	reload: () => void;
 };
+
+type Params = ReturnType<typeof useParams>;
 
 export const useLoadData = <
 	T,

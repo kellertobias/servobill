@@ -1,15 +1,11 @@
 import { useState } from 'react';
-
-import { useLoadData } from '@/hooks/load-data';
 import { API, gql } from '@/api/index';
-
-import { InventoryView } from '../types';
-import type { InventoryType, InventoryLocation } from '../types';
-
-import {
+import type {
 	InventoryLocationWhereInput,
 	InventoryTypeWhereInput,
 } from '@/common/gql/graphql';
+import { useLoadData } from '@/hooks/load-data';
+import type { InventoryLocation, InventoryType, InventoryView } from '../types';
 
 /**
  * Query for searching all inventory types (not restricted to root/parent).
@@ -149,9 +145,7 @@ export const useInventoryListData = ({
 							(entry) =>
 								({
 									id: entry.id,
-									name: `${entry.parentName ? `${entry.parentName} / ` : ''}${
-										entry.name
-									}`,
+									name: `${entry.parentName ? `${entry.parentName} / ` : ''}${entry.name}`,
 									itemCount: entry.itemCount,
 									barcode: entry.barcode,
 								}) as unknown as InventoryType,
@@ -177,9 +171,7 @@ export const useInventoryListData = ({
 							(entry) =>
 								({
 									id: entry.id,
-									name: `${entry.parentName ? `${entry.parentName} / ` : ''}${
-										entry.name
-									}`,
+									name: `${entry.parentName ? `${entry.parentName} / ` : ''}${entry.name}`,
 									itemCount: entry.itemCount,
 									barcode: entry.barcode,
 								}) as unknown as InventoryLocation,

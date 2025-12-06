@@ -1,4 +1,4 @@
-import { type NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { extractToken, type JwtToken } from '@/backend/api/session';
 

@@ -1,13 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { gql } from 'graphql-tag';
-import { describe, it, beforeAll, afterAll, expect } from 'vitest';
-
-import {
-	prepareGraphqlTest,
-	type ExecuteTestFunction,
-} from '@/test/graphql-test';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { ATTACHMENT_REPOSITORY } from '@/backend/repositories/attachment/di-tokens';
 import type { AttachmentRepository } from '@/backend/repositories/attachment/interface';
+import {
+	type ExecuteTestFunction,
+	prepareGraphqlTest,
+} from '@/test/graphql-test';
 
 /**
  * Integration tests for AttachmentResolver.
@@ -33,7 +32,7 @@ describe('AttachmentResolver (integration)', () => {
 
 	afterAll(async () => {
 		// Clean up if needed (e.g., close DB connections)
-		if (app && app.close) {
+		if (app?.close) {
 			await app.close();
 		}
 	});

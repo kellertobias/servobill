@@ -1,9 +1,8 @@
-import { getSiteUrl } from '../../helpers';
-import { AuthenticationService } from '../authentication';
-import { APIHandler } from '../../types';
-
-import { DefaultContainer } from '@/common/di';
 import { withSpan } from '@/backend/instrumentation';
+import { DefaultContainer } from '@/common/di';
+import { getSiteUrl } from '../../helpers';
+import type { APIHandler } from '../../types';
+import { AuthenticationService } from '../authentication';
 
 export const logoutHandler: APIHandler = withSpan(
 	{

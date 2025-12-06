@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { doToast } from '@/components/toast';
-
-import { downloadFile } from './helper';
 import { Exporters } from './exporters/exporters';
+import { downloadFile } from './helper';
 
 export const exportInventory = async () => {
 	doToast({

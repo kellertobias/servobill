@@ -1,14 +1,16 @@
-import { describe, it, beforeEach, expect } from 'vitest';
-
-import { ExecuteTestFunction, prepareGraphqlTest } from '@/test/graphql-test';
-import { CUSTOMER_REPOSITORY } from '@/backend/repositories/customer/di-tokens';
-import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
 	InvoiceSettingsEntity,
 	SettingsEntity,
 } from '@/backend/entities/settings.entity';
+import { CUSTOMER_REPOSITORY } from '@/backend/repositories/customer/di-tokens';
 import type { CustomerRepository } from '@/backend/repositories/customer/interface';
+import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
 import type { SettingsRepository } from '@/backend/repositories/settings/interface';
+import {
+	type ExecuteTestFunction,
+	prepareGraphqlTest,
+} from '@/test/graphql-test';
 
 /**
  * Helper to create a minimal InvoiceSettingsEntity for predictable customer number generation.

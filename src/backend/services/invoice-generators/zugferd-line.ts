@@ -1,9 +1,8 @@
-import { Allowance, InvoiceLine, Totals } from './zugferd-types';
+import type { InvoiceEntity } from '@/backend/entities/invoice.entity';
+import type { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
+import type { VatStatus } from '@/backend/entities/settings.entity';
 import { getVatInfo } from './zugferd-helpers';
-
-import { InvoiceEntity } from '@/backend/entities/invoice.entity';
-import { VatStatus } from '@/backend/entities/settings.entity';
-import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
+import type { Allowance, InvoiceLine, Totals } from './zugferd-types';
 
 const getLine = (
 	idx: number,

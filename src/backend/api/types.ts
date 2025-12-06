@@ -6,5 +6,5 @@ import type {
 
 export type APIHandler = Handler<
 	APIGatewayProxyEventV2,
-	APIGatewayProxyStructuredResultV2 | void
+	APIGatewayProxyStructuredResultV2 | undefined
 >;

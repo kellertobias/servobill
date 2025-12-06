@@ -1,7 +1,7 @@
 import {
 	CreateTableCommand,
-	DynamoDBClient,
 	DescribeTableCommand,
+	DynamoDBClient,
 } from '@aws-sdk/client-dynamodb';
 
 import { DYNAMODB_PORT } from './vitest.setup-e2e';

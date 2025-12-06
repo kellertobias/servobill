@@ -1,12 +1,11 @@
 import React from 'react';
-
-import { useLoadData, useSaveCallback } from '@/hooks/load-data';
 import { API, gql } from '@/api/index';
+import { CountryCodeSelection } from '@/components/country-code-selection';
 import { Drawer } from '@/components/drawer';
 import { Input } from '@/components/input';
 import { LoadingSkeleton } from '@/components/loading';
 import { Toggle } from '@/components/toggle';
-import { CountryCodeSelection } from '@/components/country-code-selection';
+import { useLoadData, useSaveCallback } from '@/hooks/load-data';
 
 export default function CustomerOverlay({
 	customerId,

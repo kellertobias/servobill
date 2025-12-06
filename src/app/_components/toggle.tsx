@@ -1,7 +1,6 @@
-import React from 'react';
-import clsx from 'clsx';
-
 import { Switch } from '@headlessui/react';
+import clsx from 'clsx';
+import type React from 'react';
 
 export const Toggle: React.FC<{
 	value: boolean;

@@ -1,16 +1,13 @@
-import { useModal } from 'react-modal-hook';
-
 import dayjs from 'dayjs';
-
-import { InvoiceData } from './data';
+import { useModal } from 'react-modal-hook';
+import { InvoiceType } from '@/common/gql/graphql';
+import { SelectCustomerModal } from './customer-modal';
+import type { InvoiceData } from './data';
 import {
 	InlineEditableArea,
 	InlineEditableDate,
 	InlineEditableText,
 } from './helpers';
-import { SelectCustomerModal } from './customer-modal';
-
-import { InvoiceType } from '@/common/gql/graphql';
 
 export function InvoiceHeader({
 	data,

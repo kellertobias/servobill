@@ -5,12 +5,10 @@
 import '@/backend/services/config.service';
 import '@/backend/repositories';
 
-import { withSession } from '../session';
-
-import { getGraphQLServer } from './server';
-import { contextBuilder } from './context-builder';
-
 import { withInstrumentation } from '@/backend/instrumentation';
+import { withSession } from '../session';
+import { contextBuilder } from './context-builder';
+import { getGraphQLServer } from './server';
 
 export const method = 'ANY';
 export const handlerName = 'handler';

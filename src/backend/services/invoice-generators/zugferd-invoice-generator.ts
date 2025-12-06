@@ -1,17 +1,15 @@
 // ZugferdInvoiceGenerator: Strategy for generating ZUGFeRD (PDF + XML) invoices.
 import { zugferd } from 'node-zugferd';
-import { BASIC, ProfileBasic } from 'node-zugferd/profile/basic';
-
-import { InvoiceGeneratorStrategy } from './interface';
-import { PDFInvoiceGenerator } from './pdf-invoice-generator';
-import { mapInvoiceToProfileBasic } from './zugferd-root';
-
-import { InvoiceEntity } from '@/backend/entities/invoice.entity';
-import {
+import { BASIC, type ProfileBasic } from 'node-zugferd/profile/basic';
+import type { InvoiceEntity } from '@/backend/entities/invoice.entity';
+import type {
 	CompanyDataSetting,
 	InvoiceSettingsEntity,
 	PdfTemplateSetting,
 } from '@/backend/entities/settings.entity';
+import { InvoiceGeneratorStrategy } from './interface';
+import type { PDFInvoiceGenerator } from './pdf-invoice-generator';
+import { mapInvoiceToProfileBasic } from './zugferd-root';
 
 /**
  * ZugferdInvoiceGenerator generates a ZUGFeRD invoice (PDF + XML attachment).

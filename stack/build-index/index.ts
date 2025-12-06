@@ -1,11 +1,10 @@
-import path from 'path';
-import fs from 'fs';
-
+import fs from 'node:fs';
+import path from 'node:path';
 import chalk from 'chalk';
 
 import { getApiEndpoints } from './api';
-import { printChanges } from './helpers';
 import { getEventHandlerEndpoints } from './events';
+import { printChanges } from './helpers';
 
 const execute = () => {
 	const { endpoints: apiEndpoints, watchPath: apiEndpointsPath } =

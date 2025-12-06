@@ -1,7 +1,6 @@
-import React, { Fragment, useRef } from 'react';
-
 import { Dialog, Transition } from '@headlessui/react';
 import { ExclamationCircleIcon, XMarkIcon } from '@heroicons/react/20/solid';
+import React, { Fragment, useRef } from 'react';
 
 import { Button } from './button';
 import { confirmDialog } from './dialog';
@@ -43,7 +42,7 @@ export function Drawer(props: {
 		if (open) {
 			wasOpen.current = true;
 		}
-	}, [open]);
+	}, [open, onClose]);
 
 	return (
 		<Transition.Root show={open} as={Fragment}>

@@ -1,17 +1,15 @@
 'use client';
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
 import clsx from 'clsx';
+import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import QRCode from 'react-qr-code';
 
 import { API, gql } from '@/api/index';
+import type { FindInventoryItemQuery } from '@/common/gql/graphql';
 import { doToast } from '@/components/toast';
-
 import { InventoryActivityForm } from '../item/[itemId]/components/inventory-activity-form';
-
-import { FindInventoryItemQuery } from '@/common/gql/graphql';
 
 /**
  * Dynamically import the Scanner to avoid SSR issues (camera access is browser-only).
@@ -19,7 +17,9 @@ import { FindInventoryItemQuery } from '@/common/gql/graphql';
  */
 const Scanner = dynamic(
 	() => import('@yudiel/react-qr-scanner').then((mod) => mod.Scanner),
-	{ ssr: false },
+	{
+		ssr: false,
+	},
 );
 
 /**
@@ -233,6 +233,7 @@ export default function InventoryScanPage() {
 									className="border rounded px-3 py-2 w-full text-center text-lg font-mono focus:outline-none focus:ring-2 focus:ring-blue-400"
 									disabled={loading}
 									defaultValue={scannedCode || ''}
+									// biome-ignore lint/a11y/noAutofocus: explicitly expected here
 									autoFocus
 								/>
 								<button
@@ -317,6 +318,7 @@ export default function InventoryScanPage() {
 				>
 					{/* Add more action buttons as needed */}
 					<button
+						type="button"
 						className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
 						onClick={() => {
 							setItem(null);
@@ -332,6 +334,7 @@ export default function InventoryScanPage() {
 						Clear
 					</button>
 					<button
+						type="button"
 						className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300"
 						disabled={!item}
 						onClick={() => item && router.push(`/inventory/item/${item.id}`)}

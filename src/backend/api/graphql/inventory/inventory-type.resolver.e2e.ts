@@ -1,18 +1,20 @@
-import { describe, it, beforeAll, afterAll, expect } from 'vitest';
-
-import { prepareGraphqlTest, ExecuteTestFunction } from '@/test/graphql-test';
-import { INVENTORY_TYPE_REPOSITORY } from '@/backend/repositories/inventory-type/di-tokens';
-import { INVENTORY_ITEM_REPOSITORY } from '@/backend/repositories/inventory-item/di-tokens';
-import { INVENTORY_LOCATION_REPOSITORY } from '@/backend/repositories/inventory-location/di-tokens';
-import type { InventoryTypeRepository } from '@/backend/repositories/inventory-type/interface';
-import type { InventoryItemRepository } from '@/backend/repositories/inventory-item/interface';
-import type { InventoryLocationRepository } from '@/backend/repositories/inventory-location/interface';
-import { InventoryTypeEntity } from '@/backend/entities/inventory-type.entity';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
 	InventoryItemEntity,
 	InventoryItemState,
 } from '@/backend/entities/inventory-item.entity';
 import { InventoryLocationEntity } from '@/backend/entities/inventory-location.entity';
+import { InventoryTypeEntity } from '@/backend/entities/inventory-type.entity';
+import { INVENTORY_ITEM_REPOSITORY } from '@/backend/repositories/inventory-item/di-tokens';
+import type { InventoryItemRepository } from '@/backend/repositories/inventory-item/interface';
+import { INVENTORY_LOCATION_REPOSITORY } from '@/backend/repositories/inventory-location/di-tokens';
+import type { InventoryLocationRepository } from '@/backend/repositories/inventory-location/interface';
+import { INVENTORY_TYPE_REPOSITORY } from '@/backend/repositories/inventory-type/di-tokens';
+import type { InventoryTypeRepository } from '@/backend/repositories/inventory-type/interface';
+import {
+	type ExecuteTestFunction,
+	prepareGraphqlTest,
+} from '@/test/graphql-test';
 
 /**
  * Integration tests for InventoryTypeResolver.

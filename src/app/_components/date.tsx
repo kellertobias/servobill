@@ -1,13 +1,12 @@
 'use client';
 
-import clsx from 'clsx';
-import React, { useState } from 'react';
-import { usePopper } from 'react-popper';
-
 import { Popover } from '@headlessui/react';
 import { ArrowLeftIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
+import clsx from 'clsx';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
+import React, { useState } from 'react';
+import { usePopper } from 'react-popper';
 import Datepicker from 'tailwind-datepicker-react';
 
 import { Input } from './input';
@@ -78,7 +77,7 @@ export const DateInput: React.FC<{
 			: defaultValue) ||
 		new Date();
 
-	const dateRef = React.useRef<Date | null>();
+	const dateRef = React.useRef<Date | null>(null);
 
 	const [selectedDate, setSelectedDate] = React.useState<Date | null>(
 		currentDate || null,
@@ -93,7 +92,7 @@ export const DateInput: React.FC<{
 		if (nextDate && nextDate !== selectedDate) {
 			setSelectedDate(dayjs(nextDate).toDate());
 		}
-	}, [value]);
+	}, [value, format, selectedDate]);
 
 	const handleChange = (selectedDate: Date) => {
 		setSelectedDate(selectedDate);
@@ -115,7 +114,7 @@ export const DateInput: React.FC<{
 			dateRef.current = newValueDecoupled;
 			handleChange(dayjs(newValue).toDate());
 		};
-	}, [dayjs(dateRef.current).format('DD.MM.YYYY')]);
+	}, [handleChange]);
 
 	return (
 		<Popover className="relative" aria-disabled={readonly}>
@@ -127,7 +126,6 @@ export const DateInput: React.FC<{
 					>
 						{reduced ? (
 							<input
-								autoFocus
 								placeholder={
 									placeholder
 										? typeof placeholder === 'string'

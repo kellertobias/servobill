@@ -1,24 +1,21 @@
 import { randomUUID } from 'node:crypto';
-
+import dayjs from 'dayjs';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { expect } from 'vitest';
-import dayjs from 'dayjs';
-
-import { InvoiceGeneratorStrategy } from './interface';
-
-import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
+import { CustomerEntity } from '@/backend/entities/customer.entity';
 import {
 	InvoiceEntity,
 	InvoiceStatus,
 	InvoiceType,
 } from '@/backend/entities/invoice.entity';
-import {
+import type { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
+import type {
 	CompanyDataSetting,
 	InvoiceSettingsEntity,
 	PdfTemplateSetting,
 	VatStatus,
 } from '@/backend/entities/settings.entity';
-import { CustomerEntity } from '@/backend/entities/customer.entity';
+import type { InvoiceGeneratorStrategy } from './interface';
 
 import '@/test/e-invoice-vitest-helper';
 

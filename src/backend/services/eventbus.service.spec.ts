@@ -1,10 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-import { EventBusService } from './eventbus.service';
-import type { ConfigService } from './config.service';
-import { EVENTBUS_SERVICE, CONFIG_SERVICE } from './di-tokens';
-
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '@/common/di';
+import type { ConfigService } from './config.service';
+import { CONFIG_SERVICE, EVENTBUS_SERVICE } from './di-tokens';
+import { EventBusService } from './eventbus.service';
 
 // Local type for fake span context
 interface FakeSpan {
@@ -142,7 +140,7 @@ describe('EventBusService', () => {
 		};
 		// Mock startActiveSpan to call the callback with fakeSpan
 		mockStartActiveSpan.mockImplementation(
-			(name: string, cb: (span: FakeSpan) => unknown) => cb(fakeSpan),
+			(_name: string, cb: (span: FakeSpan) => unknown) => cb(fakeSpan),
 		);
 
 		// Act
@@ -185,7 +183,7 @@ describe('EventBusService', () => {
 		mockSend.mockResolvedValueOnce({ Entries: [{}] });
 		const emptySpan: FakeSpan = { spanContext: () => ({}) };
 		mockStartActiveSpan.mockImplementation(
-			(name: string, cb: (span: FakeSpan) => unknown) => cb(emptySpan),
+			(_name: string, cb: (span: FakeSpan) => unknown) => cb(emptySpan),
 		);
 		const result = await service.send('Type', {});
 		expect(result).toBeUndefined();

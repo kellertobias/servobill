@@ -1,16 +1,16 @@
 import querystring from 'node:querystring';
 
-import { APIGatewayProxyHandlerV2 } from 'aws-lambda';
+import type { APIGatewayProxyHandlerV2 } from 'aws-lambda';
 import * as multipart from 'parse-multipart-data';
 
 export const getSiteUrl = (evt: Parameters<APIGatewayProxyHandlerV2>[0]) => {
-	const host = evt.headers['Host'] || evt.headers['host'];
+	const host = evt.headers.Host || evt.headers.host;
 	const protocol = host?.includes('localhost') ? 'http' : 'https';
 
 	const siteHost = host?.replace('api.', '');
 	const apiHost = host?.includes('localhost')
 		? 'localhost:3000'
-		: 'api.' + siteHost;
+		: `api.${siteHost}`;
 
 	return {
 		host,

@@ -1,4 +1,4 @@
-import { DomainEntity, DomainEntityKeys } from './abstract.entity';
+import { DomainEntity, type DomainEntityKeys } from './abstract.entity';
 
 /**
  * Represents the state of an inventory item

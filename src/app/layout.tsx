@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import React from 'react';
+import type React from 'react';
 import './globals.css';
 
 import type { Metadata, Viewport } from 'next';
@@ -30,5 +30,9 @@ export default function RootLayout({
 }: {
 	children: React.ReactNode;
 }) {
-	return <html className="h-full bg-gray-100">{children}</html>;
+	return (
+		<html className="h-full bg-gray-100" lang="en">
+			{children}
+		</html>
+	);
 }

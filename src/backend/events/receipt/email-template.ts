@@ -1,6 +1,5 @@
-import { ReceiptEvent } from './event';
-
 import type { ExpenseEntity } from '@/backend/entities/expense.entity';
+import type { ReceiptEvent } from './event';
 
 /**
  * Helper function to format currency from cents to display format

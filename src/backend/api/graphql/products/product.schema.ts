@@ -1,9 +1,7 @@
 import { IsOptional, IsString } from 'class-validator';
-import { Field, ObjectType, InputType, Int } from 'type-graphql';
-
-import type { FilteredObjectProperties } from '../types';
-
+import { Field, InputType, Int, ObjectType } from 'type-graphql';
 import type { ProductEntity } from '@/backend/entities/product.entity';
+import type { FilteredObjectProperties } from '../types';
 
 /**
  * Represents an expense associated with a product (for output).

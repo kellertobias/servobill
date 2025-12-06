@@ -1,5 +1,5 @@
+import { context, trace } from '@opentelemetry/api';
 import pino from 'pino';
-import { trace, context } from '@opentelemetry/api';
 
 const logLevels = [
 	'unspecified',

@@ -2,22 +2,23 @@ import 'reflect-metadata';
 
 import '@/backend/services/config.service';
 
-import { EventHandler } from '../types';
-import { makeEventHandler } from '../event-handler';
-
-import { GenerateTemplatePreviewEvent } from './event';
-
-import { CqrsBus } from '@/backend/services/cqrs.service';
-import { DefaultContainer } from '@/common/di';
 import { GenerateInvoiceHtmlCommand } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.command';
-import { InvoiceEntity, InvoiceType } from '@/backend/entities/invoice.entity';
 import { GenerateInvoiceHtmlHandler } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.handler';
 import { CreateInvoicePdfCommand } from '@/backend/cqrs/generate-pdf/create-invoice-pdf.command';
 import { CreateInvoicePdfHandler } from '@/backend/cqrs/generate-pdf/create-invoice-pdf.handler';
 import {
+	type InvoiceEntity,
+	InvoiceType,
+} from '@/backend/entities/invoice.entity';
+import { CqrsBus } from '@/backend/services/cqrs.service';
+import {
 	FILE_STORAGE_SERVICE,
 	type FileStorageService,
 } from '@/backend/services/file-storage.service';
+import { DefaultContainer } from '@/common/di';
+import { makeEventHandler } from '../event-handler';
+import type { EventHandler } from '../types';
+import { GenerateTemplatePreviewEvent } from './event';
 
 export const handlerName = 'handler';
 export const layers = ['layers/chromium'];

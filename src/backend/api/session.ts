@@ -1,6 +1,5 @@
-import { randomUUID } from 'crypto';
-
-import {
+import { randomUUID } from 'node:crypto';
+import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyHandlerV2,
 	APIGatewayProxyStructuredResultV2,
@@ -113,7 +112,7 @@ const getRawTokenFromEvent = (
 	type: 'SESSION' | 'REFRESH',
 ): string | undefined => {
 	const authHeader =
-		evt.headers['Authorization'] || evt.headers['authorization'] || '';
+		evt.headers.Authorization || evt.headers.authorization || '';
 	const headerToken = authHeader.split(' ')[1];
 	const cookies = cookie.parse(
 		evt.cookies?.join?.(';') || evt.headers.cookie || '',
@@ -199,7 +198,7 @@ export const withSession = (
 	handler: (
 		evt: APIGatewayProxyEventV2,
 		ctx: SessionLambdaContext,
-	) => Promise<APIGatewayProxyStructuredResultV2 | void>,
+	) => Promise<APIGatewayProxyStructuredResultV2 | undefined>,
 	options?: {
 		requireActiveSession?: boolean;
 	},
@@ -243,8 +242,7 @@ export const withSession = (
 			...ctx,
 			identity: {
 				user: token && !token.invalid && token.dat ? token.dat : null,
-				refreshable:
-					renewToken && !renewToken.invalid && !!renewToken.dat ? true : false,
+				refreshable: !!(renewToken && !renewToken.invalid && !!renewToken.dat),
 			},
 		});
 	};

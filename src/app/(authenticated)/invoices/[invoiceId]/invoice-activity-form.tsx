@@ -1,11 +1,9 @@
-import React from 'react';
-
 import { UserCircleIcon } from '@heroicons/react/20/solid';
-
-import { Button } from '@/components/button';
-import { useAutoSizeTextArea } from '@/hooks/use-auto-textarea';
-import { doToast } from '@/components/toast';
+import React from 'react';
 import { API, gql } from '@/api/index';
+import { Button } from '@/components/button';
+import { doToast } from '@/components/toast';
+import { useAutoSizeTextArea } from '@/hooks/use-auto-textarea';
 
 import { useFormAttachment } from './invoice-activity-new-upload';
 

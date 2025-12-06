@@ -1,23 +1,21 @@
-import { Field, ObjectType, InputType } from 'type-graphql';
 import {
+	IsArray,
+	IsBoolean,
+	IsDate,
+	IsEnum,
 	IsOptional,
 	IsString,
 	IsUUID,
-	IsDate,
-	IsArray,
-	IsEnum,
-	IsBoolean,
 	MaxLength,
 } from 'class-validator';
-
-import { InventoryType } from './inventory-type.schema';
-import { InventoryLocation } from './inventory-location.schema';
-
+import { Field, InputType, ObjectType } from 'type-graphql';
 import {
-	InventoryItemState,
 	InventoryCheckState,
 	InventoryHistoryType,
+	InventoryItemState,
 } from '@/backend/entities/inventory-item.entity';
+import { InventoryLocation } from './inventory-location.schema';
+import { InventoryType } from './inventory-type.schema';
 
 /**
  * GraphQL type for inventory item properties

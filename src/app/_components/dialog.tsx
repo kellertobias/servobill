@@ -1,9 +1,9 @@
-import React, { Fragment } from 'react';
-import clsx from 'clsx';
-import { confirmable, createConfirmation } from 'react-confirm';
-
 import { Dialog as HeadlessDialog, Transition } from '@headlessui/react';
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
+import clsx from 'clsx';
+import type React from 'react';
+import { Fragment } from 'react';
+import { confirmable, createConfirmation } from 'react-confirm';
 
 import { Button } from './button';
 

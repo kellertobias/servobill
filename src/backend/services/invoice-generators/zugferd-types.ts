@@ -1,6 +1,6 @@
 // Add a type alias for a single ProfileBasic allowance object for clarity
 
-import { ProfileBasic } from 'node-zugferd/profile/basic';
+import type { ProfileBasic } from 'node-zugferd/profile/basic';
 
 // This matches the expected structure for node-zugferd ProfileBasic allowances
 export type ProfileBasicAllowance = NonNullable<

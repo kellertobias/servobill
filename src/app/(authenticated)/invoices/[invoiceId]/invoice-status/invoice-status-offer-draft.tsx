@@ -1,21 +1,17 @@
-import { useRouter } from 'next/navigation';
-
 import { CalendarDaysIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 import dayjs from 'dayjs';
+import { useRouter } from 'next/navigation';
 
 import { API } from '@/api/index';
+import { InvoiceSubmissionType } from '@/common/gql/graphql';
+import { getInvoiceTotal } from '@/common/invoice';
 import { InvoiceStatusBadgeDraft } from '@/components/status-badges';
-
-import { InvoiceData } from '../data';
-
+import type { InvoiceData } from '../data';
 import { InvoiceActions } from './actions';
+import { onClickInvoiceCopy } from './invoice-copy';
+import { onClickDeleteDraft } from './invoice-delete-draft';
 import { onClickDownloadInvoice } from './invoice-download';
 import { onClickSendInvoice } from './invoice-submit';
-import { onClickDeleteDraft } from './invoice-delete-draft';
-import { onClickInvoiceCopy } from './invoice-copy';
-
-import { getInvoiceTotal } from '@/common/invoice';
-import { InvoiceSubmissionType } from '@/common/gql/graphql';
 
 export function InvoiceStatusOfferDraft({
 	data,

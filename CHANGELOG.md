@@ -1,3 +1,20 @@
+## [1.14.0](https://github.com/kellertobias/servobill/compare/v1.13.4...v1.14.0) (2025-12-06)
+
+
+### ✨ Features
+
+* migrate to Next.js 16, React 19, and BiomeJS ([e16fc96](https://github.com/kellertobias/servobill/commit/e16fc96b28a9dc5ce71f8f48be39aa11c69d47d4))
+
+
+### 🐛 Bug Fixes
+
+* add npm overrides for react 19 compatibility ([544af95](https://github.com/kellertobias/servobill/commit/544af95c953da392efbe7fac3ba7af0245cfc2bd))
+* linter issues ([ad8c92b](https://github.com/kellertobias/servobill/commit/ad8c92b7583e29616963d9c88d161d1907e31b65))
+* package lock ([27cf7f6](https://github.com/kellertobias/servobill/commit/27cf7f63ac75977fce54f6763aa4bca2e92197ec))
+* remaining isues ([882ad61](https://github.com/kellertobias/servobill/commit/882ad618fe4026dc4ea0935998df7d389add7902))
+* type error ([cd8757f](https://github.com/kellertobias/servobill/commit/cd8757f2e28dec4a689f2e7532bc116c7a8fae5f))
+* type error ([94ce9f1](https://github.com/kellertobias/servobill/commit/94ce9f16bba451428c13f1e4c0935e42ffcf7724))
+
 ## [1.13.4](https://github.com/kellertobias/servobill/compare/v1.13.3...v1.13.4) (2025-08-03)
 
 

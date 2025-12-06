@@ -2,15 +2,13 @@
 // @vitest-execute serial
 
 import 'reflect-metadata';
-import { describe, it, expect, beforeEach } from 'vitest';
-
+import { beforeEach, describe, expect, it } from 'vitest';
+import { ProductEntity } from '@/backend/entities/product.entity';
+import { prepareRepoTest } from '@/test/repo-test';
+import type { ProductRepository } from './interface';
 import { ProductDynamodbRepository } from './product.dynamodb-repository';
 import { ProductRelationalRepository } from './product.relational-repository';
 import { ProductOrmEntity } from './relational-orm-entity';
-import { ProductRepository } from './interface';
-
-import { prepareRepoTest } from '@/test/repo-test';
-import { ProductEntity } from '@/backend/entities/product.entity';
 
 /**
  * Helper to clear all items from the DynamoDB test table.

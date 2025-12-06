@@ -2,20 +2,20 @@ import 'reflect-metadata';
 
 import '@/backend/services/config.service';
 
-import { SNSEventHandler } from '../../types';
-
-import { withInstrumentation, withSpan } from '@/backend/instrumentation';
-import { DefaultContainer } from '@/common/di';
-import { EMAIL_REPOSITORY, INVOICE_REPOSITORY } from '@/backend/repositories';
-import type {
-	EmailRepository,
-	InvoiceRepository,
-} from '@/backend/repositories';
 import {
 	InvoiceActivityEntity,
 	InvoiceActivityType,
 } from '@/backend/entities/invoice-activity.entity';
+
+import { withInstrumentation, withSpan } from '@/backend/instrumentation';
+import type {
+	EmailRepository,
+	InvoiceRepository,
+} from '@/backend/repositories';
+import { EMAIL_REPOSITORY, INVOICE_REPOSITORY } from '@/backend/repositories';
 import { Logger } from '@/backend/services/logger.service';
+import { DefaultContainer } from '@/common/di';
+import type { SNSEventHandler } from '../../types';
 
 const logger = new Logger('sns.delivery-status');
 

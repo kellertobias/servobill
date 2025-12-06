@@ -1,8 +1,6 @@
 import dayjs from 'dayjs';
-
-import { InvoiceData } from '../(authenticated)/invoices/[invoiceId]/data';
-
 import { InvoiceStatus, InvoiceType } from '@/common/gql/graphql';
+import type { InvoiceData } from '../(authenticated)/invoices/[invoiceId]/data';
 
 export const InvoiceStatusBadgePaid = () => (
 	<span className="rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-600 ring-1 ring-inset ring-green-600/20">

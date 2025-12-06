@@ -1,16 +1,12 @@
-import { useEffect, useState } from 'react';
-
 import dayjs from 'dayjs';
-
+import { useEffect, useState } from 'react';
+import { API, gql } from '@/api/index';
+import { InvoiceSubmissionType } from '@/common/gql/graphql';
 import { DateInput } from '@/components/date';
 import { confirmDialog } from '@/components/dialog';
-import { doToast } from '@/components/toast';
-import { API, gql } from '@/api/index';
 import { Input } from '@/components/input';
-
-import { InvoiceData } from '../data';
-
-import { InvoiceSubmissionType } from '@/common/gql/graphql';
+import { doToast } from '@/components/toast';
+import type { InvoiceData } from '../data';
 
 function InvoiceTimeSelector({
 	onChange,

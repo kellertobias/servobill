@@ -1,13 +1,12 @@
-import React from 'react';
 import clsx from 'clsx';
+import React from 'react';
 
 import { API, gql } from '@/api/index';
+import type { InventoryCheckState } from '@/common/gql/graphql';
 import { Button } from '@/components/button';
-import { doToast } from '@/components/toast';
 import SelectInput from '@/components/select-input';
+import { doToast } from '@/components/toast';
 import { useAutoSizeTextArea } from '@/hooks/use-auto-textarea';
-
-import { InventoryCheckState } from '@/common/gql/graphql';
 
 const CHECK_STATES = [
 	{ value: '', label: 'Add Check' },

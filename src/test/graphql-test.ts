@@ -1,34 +1,33 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { randomUUID } from 'node:crypto';
-
-import { vi } from 'vitest';
 import { ApolloServer } from 'apollo-server-lambda';
-import { buildSchema, NonEmptyArray } from 'type-graphql';
 import type {
 	APIGatewayEventRequestContextV2,
 	APIGatewayProxyEventV2,
 	Context,
 } from 'aws-lambda';
-import { ExecutionResult } from 'graphql';
+import type { ExecutionResult } from 'graphql';
+import { buildSchema, type NonEmptyArray } from 'type-graphql';
+import { vi } from 'vitest';
 
 import { getConfigForRelationalDb } from './create-config';
 
 import '@/backend/repositories';
 
-import * as resolvers from '@/backend/api/graphql/index';
-import { App, DEFAULT_TEST_SET, DefaultContainer } from '@/common/di';
+import { authChecker } from '@/backend/api/graphql/authorizer';
+import { contextBuilder } from '@/backend/api/graphql/context-builder';
 import { GRAPHQL_TEST_SET } from '@/backend/api/graphql/di-tokens';
+import * as resolvers from '@/backend/api/graphql/index';
+import { Session, type SessionLambdaContext } from '@/backend/api/session';
+import { RELATIONAL_REPOSITORY_TEST_SET } from '@/backend/repositories/di-tokens';
 import {
 	CONFIG_SERVICE,
-	RELATIONALDB_SERVICE,
 	EVENTBUS_SERVICE,
+	RELATIONALDB_SERVICE,
 } from '@/backend/services/di-tokens';
-import { RelationalDbService } from '@/backend/services/relationaldb.service';
-import { RELATIONAL_REPOSITORY_TEST_SET } from '@/backend/repositories/di-tokens';
 import { FILE_STORAGE_LOCAL_TEST_SET } from '@/backend/services/file-storage.service/di-tokens';
-import { Session, SessionLambdaContext } from '@/backend/api/session';
-import { contextBuilder } from '@/backend/api/graphql/context-builder';
-import { authChecker } from '@/backend/api/graphql/authorizer';
+import type { RelationalDbService } from '@/backend/services/relationaldb.service';
+import { App, DEFAULT_TEST_SET, DefaultContainer } from '@/common/di';
 
 export type ExecuteTestFunction = (options: {
 	source: string;

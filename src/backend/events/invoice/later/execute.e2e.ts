@@ -1,15 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { describe, it, expect, beforeEach } from 'vitest';
-
-import { HandlerExecution } from './execute';
-import { InvoiceSendLaterEvent } from './event';
-
+import { beforeEach, describe, expect, it } from 'vitest';
 import { InvoiceSubmissionType } from '@/backend/entities/invoice-submission.entity';
-import { InvoiceSettingsEntity } from '@/backend/entities/settings.entity';
+import type { InvoiceSettingsEntity } from '@/backend/entities/settings.entity';
+import type { ExpenseRepository } from '@/backend/repositories/expense/interface';
 import type { InvoiceRepository } from '@/backend/repositories/invoice/interface';
 import type { SettingsRepository } from '@/backend/repositories/settings/interface';
-import type { ExpenseRepository } from '@/backend/repositories/expense/interface';
+import { InvoiceSendLaterEvent } from './event';
+import { HandlerExecution } from './execute';
 
 /**
  * Mocks and helpers for the test
@@ -153,9 +151,9 @@ function createMockInvoice({
 		addSubmission: async function (submission: unknown) {
 			this.submissions.push(submission as Record<string, unknown>);
 		},
-		createAndLinkExpensesForInvoice: async function (
+		createAndLinkExpensesForInvoice: async (
 			cb: (data: unknown) => Promise<unknown>,
-		) {
+		) => {
 			await cb({});
 		},
 	};
@@ -166,10 +164,10 @@ function createMockInvoice({
  */
 function makeEventFields(invoiceId: string, userName: string) {
 	return {
-		id: 'event-' + Math.random().toString(36).slice(2),
+		id: `event-${Math.random().toString(36).slice(2)}`,
 		invoiceId,
 		userName,
-		submissionId: 'sub-' + Math.random().toString(36).slice(2),
+		submissionId: `sub-${Math.random().toString(36).slice(2)}`,
 	};
 }
 

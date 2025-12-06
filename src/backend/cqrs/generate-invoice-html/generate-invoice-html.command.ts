@@ -1,7 +1,7 @@
-import { InvoiceEntity } from '@/backend/entities/invoice.entity';
-import { CompanyDataSetting } from '@/backend/entities/settings.entity';
+import type { InvoiceEntity } from '@/backend/entities/invoice.entity';
+import type { CompanyDataSetting } from '@/backend/entities/settings.entity';
 import { CqrsCommandType, ICqrsCommand } from '@/backend/services/cqrs.service';
-import { ObjectProperties } from '@/common/ts-helpers';
+import type { ObjectProperties } from '@/common/ts-helpers';
 
 export class GenerateInvoiceHtmlCommand extends ICqrsCommand<
 	{

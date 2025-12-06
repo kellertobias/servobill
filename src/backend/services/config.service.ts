@@ -1,13 +1,12 @@
-import { CONFIG_SERVICE, DEFAULT_CONFIG_TEST_SET } from './di-tokens';
+import { Service } from '@/common/di';
 import {
 	DatabaseType,
-	FileStorageType,
+	type EmailConfig,
 	EmailType,
+	FileStorageType,
 	LLMProvider,
-	EmailConfig,
 } from './constants';
-
-import { Service } from '@/common/di';
+import { CONFIG_SERVICE, DEFAULT_CONFIG_TEST_SET } from './di-tokens';
 
 @Service({ name: CONFIG_SERVICE, addToTestSet: [DEFAULT_CONFIG_TEST_SET] })
 export class ConfigService {

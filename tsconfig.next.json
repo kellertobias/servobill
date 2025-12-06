@@ -1,18 +1,14 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "plugins": [
       {
         "name": "next"
       }
-    ],
+    ]
   },
   "include": [
     "next-env.d.ts",
@@ -22,5 +18,5 @@
     "src/common/**/*.tsx",
     ".next/types/**/*.ts"
   ],
-  "exclude": ["node_modules","sst.config.ts", "stack/parts/**/*", "**/*.e2e.ts", "**.*.spec.ts"]
+  "exclude": ["node_modules", "sst.config.ts", "stack/parts/**/*", "**/*.e2e.ts", "**.*.spec.ts"]
 }

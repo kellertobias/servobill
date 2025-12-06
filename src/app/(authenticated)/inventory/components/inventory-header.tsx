@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import clsx from 'clsx';
 
 import { Input } from '@/components/input';
@@ -49,6 +48,7 @@ export function InventoryHeader(props: InventoryHeaderProps) {
 				<div className="flex items-center justify-between gap-4 p-3 px-5">
 					<div className="text-lg font-semibold">{props.name}</div>
 					<button
+						type="button"
 						className="px-3 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors"
 						onClick={props.onEdit}
 					>
@@ -80,7 +80,8 @@ export function InventoryHeader(props: InventoryHeaderProps) {
 				{/* Tabs */}
 				<div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
 					<button
-						onClick={() => onTabChange && onTabChange('types')}
+						type="button"
+						onClick={() => onTabChange?.('types')}
 						className={clsx(
 							'px-3 py-2 text-sm font-medium rounded-md transition-colors',
 							activeTab === 'types'
@@ -91,7 +92,8 @@ export function InventoryHeader(props: InventoryHeaderProps) {
 						Types
 					</button>
 					<button
-						onClick={() => onTabChange && onTabChange('locations')}
+						type="button"
+						onClick={() => onTabChange?.('locations')}
 						className={clsx(
 							'px-3 py-2 text-sm font-medium rounded-md transition-colors',
 							activeTab === 'locations'

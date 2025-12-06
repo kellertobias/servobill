@@ -1,22 +1,21 @@
 import {
-	describe,
-	it,
-	expect,
-	beforeEach,
-	vi,
-	afterEach,
-	type MockInstance,
-} from 'vitest';
-import {
-	S3Client,
+	DeleteObjectCommand,
 	GetObjectCommand,
 	PutObjectCommand,
-	DeleteObjectCommand,
+	S3Client,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-
-import { S3Service } from './s3.service';
+import {
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	type MockInstance,
+	vi,
+} from 'vitest';
 import type { ConfigService } from './config.service';
+import { S3Service } from './s3.service';
 
 // Mock AWS SDK S3 client and presigner
 vi.mock('@aws-sdk/client-s3', async () => {

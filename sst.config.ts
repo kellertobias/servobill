@@ -2,12 +2,12 @@
 
 import type { Output } from '@pulumi/pulumi';
 import type { Input } from './.sst/platform/src/components/input';
-import type { ApiEndpoint } from './stack/build-index/api';
-import type { EventEndpoint } from './stack/build-index/events';
 import type {
 	AtLeastOneFromEach,
 	UnionToIntersection,
 } from './src/common/type-helpers';
+import type { ApiEndpoint } from './stack/build-index/api';
+import type { EventEndpoint } from './stack/build-index/events';
 
 const requiredEnvVars = [
 	['SITE_DOMAIN'],
@@ -49,9 +49,7 @@ const validateEnvironmentVariables = (): RequiredEnvVars => {
 
 	if (missingVars.length > 0) {
 		throw new Error(
-			`Missing or empty required environment variables: ${missingVars.join(
-				', ',
-			)}`,
+			`Missing or empty required environment variables: ${missingVars.join(', ')}`,
 		);
 	}
 

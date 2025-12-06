@@ -1,6 +1,5 @@
-import { AbstractRepositoryInterface } from '../abstract-repository';
-
-import { TimeBasedJobEntity } from '@/backend/entities/time-based-job.entity';
+import type { TimeBasedJobEntity } from '@/backend/entities/time-based-job.entity';
+import type { AbstractRepositoryInterface } from '../abstract-repository';
 
 export type TimeBasedJobCreateData = {
 	runAfter: number;

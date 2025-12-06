@@ -17,7 +17,7 @@ module.exports = {
           if (node && node.type === 'ArrowFunctionExpression') {
             return true;
           }
-          
+
           // Handle call expressions that contain arrow functions like: (() => Type)
           if (node && node.type === 'CallExpression') {
             const callee = node.callee;
@@ -73,7 +73,12 @@ module.exports = {
          * @returns {boolean} - True if the argument is a valid string literal
          */
         function isValidNameArgument(node) {
-          return node && node.type === 'Literal' && typeof node.value === 'string' && node.value.trim() !== '';
+          return (
+            node &&
+            node.type === 'Literal' &&
+            typeof node.value === 'string' &&
+            node.value.trim() !== ''
+          );
         }
 
         /**
@@ -82,7 +87,7 @@ module.exports = {
          * @returns {string|null} - The class name or null if not found
          */
         function getClassName(classNode) {
-          return classNode && classNode.id && classNode.id.name;
+          return classNode?.id?.name;
         }
 
         /**
@@ -98,7 +103,7 @@ module.exports = {
           let hasObjectType = false;
           let hasInputType = false;
 
-          decorators.forEach(decorator => {
+          decorators.forEach((decorator) => {
             if (decorator.expression.type === 'CallExpression') {
               const name = decorator.expression.callee.name;
               if (name === 'ObjectType') hasObjectType = true;
@@ -122,7 +127,7 @@ module.exports = {
 
             const hasBothDecorators = hasBothTypeDecorators(node.decorators);
 
-            node.decorators.forEach(decorator => {
+            node.decorators.forEach((decorator) => {
               if (decorator.expression.type === 'CallExpression') {
                 const decoratorName = decorator.expression.callee.name;
                 const args = decorator.expression.arguments;
@@ -144,17 +149,14 @@ module.exports = {
                           // Find the opening parenthesis and insert after it
                           const sourceCode = context.getSourceCode();
                           const callExpression = decorator.expression;
-                          const openingParen = sourceCode.getFirstToken(callExpression, token => token.value === '(');
-                          return fixer.insertTextAfter(
-                            openingParen,
-                            `'${suggestedName}'`
+                          const openingParen = sourceCode.getFirstToken(
+                            callExpression,
+                            (token) => token.value === '('
                           );
+                          return fixer.insertTextAfter(openingParen, `'${suggestedName}'`);
                         }
                         // If first argument exists but is invalid, replace it
-                        return fixer.replaceText(
-                          args[0],
-                          `'${suggestedName}'`
-                        );
+                        return fixer.replaceText(args[0], `'${suggestedName}'`);
                       },
                     });
                   }
@@ -195,7 +197,7 @@ module.exports = {
             return false;
           }
 
-          return node.decorators.some(decorator => {
+          return node.decorators.some((decorator) => {
             // Check for @Authorized() - both with and without arguments
             if (decorator.expression.type === 'CallExpression') {
               const name = decorator.expression.callee.name;
@@ -245,7 +247,7 @@ module.exports = {
           }
 
           // Exclude methods that start with underscore (convention for private methods)
-          if (node.key && node.key.name && node.key.name.startsWith('_')) {
+          if (node.key?.name?.startsWith('_')) {
             return true;
           }
 
@@ -268,4 +270,4 @@ module.exports = {
       },
     },
   },
-}; 
+};

@@ -1,6 +1,5 @@
-import { AbstractRepositoryInterface } from '../abstract-repository';
-
-import { ExpenseEntity } from '@/backend/entities/expense.entity';
+import type { ExpenseEntity } from '@/backend/entities/expense.entity';
+import type { AbstractRepositoryInterface } from '../abstract-repository';
 
 /**
  * Interface for all Expense repositories (DynamoDB, Postgres, SQLite).

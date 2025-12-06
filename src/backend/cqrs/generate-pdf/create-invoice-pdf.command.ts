@@ -1,4 +1,4 @@
-import { InvoiceEntity } from '@/backend/entities/invoice.entity';
+import type { InvoiceEntity } from '@/backend/entities/invoice.entity';
 import { CqrsCommandType, ICqrsCommand } from '@/backend/services/cqrs.service';
 
 export class CreateInvoicePdfCommand extends ICqrsCommand<

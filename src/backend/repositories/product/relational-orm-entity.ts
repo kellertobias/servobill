@@ -1,7 +1,6 @@
-import { Entity, PrimaryColumn, Column } from 'typeorm';
-
-import { OrmEntity } from '@/common/orm-entity-registry';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
 import type { ProductEntity } from '@/backend/entities/product.entity';
+import { OrmEntity } from '@/common/orm-entity-registry';
 
 /**
  * TypeORM entity for Product, used by Postgres and SQLite repositories.

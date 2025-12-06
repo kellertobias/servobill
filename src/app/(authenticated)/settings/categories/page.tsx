@@ -1,17 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
-
-import { PageContent } from '@/components/page';
-import { useLoadData } from '@/hooks/load-data';
 import { API, gql } from '@/api/index';
-import { Input } from '@/components/input';
-import SelectInput from '@/components/select-input';
+import type { ExpenseCategoryType } from '@/common/gql/graphql';
 import { Button } from '@/components/button';
+import { Input } from '@/components/input';
+import { PageContent } from '@/components/page';
+import SelectInput from '@/components/select-input';
 import { SettingsBlock } from '@/components/settings-block';
 import { doToast } from '@/components/toast';
-
-import { ExpenseCategoryType } from '@/common/gql/graphql';
+import { useLoadData } from '@/hooks/load-data';
 
 /**
  * Generates a random color in hex format.

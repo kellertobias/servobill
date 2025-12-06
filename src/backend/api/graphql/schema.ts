@@ -1,13 +1,11 @@
 import 'reflect-metadata';
-import { buildSchema, NonEmptyArray } from 'type-graphql';
+import { buildSchema, type NonEmptyArray } from 'type-graphql';
 
 import './enums';
 
-import { authChecker } from './authorizer';
-
-import * as resolvers from './index';
-
 import { DefaultContainer } from '@/common/di';
+import { authChecker } from './authorizer';
+import * as resolvers from './index';
 
 // import { CqrsBus } from '@/backend/services/cqrs.service';
 

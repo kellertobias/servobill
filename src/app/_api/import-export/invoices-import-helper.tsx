@@ -1,14 +1,12 @@
-import { API, gql } from '../index';
-
-import { importSingleCustomer } from './customers';
-
 import {
-	Customer,
-	Invoice,
-	InvoiceImportInput,
+	type Customer,
+	type Invoice,
+	type InvoiceImportInput,
 	InvoiceStatus,
 	InvoiceType,
 } from '@/common/gql/graphql';
+import { API, gql } from '../index';
+import { importSingleCustomer } from './customers';
 
 const loadCustomers = async () => {
 	const { customers } = await API.query({

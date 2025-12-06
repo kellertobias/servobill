@@ -6,17 +6,16 @@
  */
 
 import {
-	describe,
-	it,
-	expect,
-	vi,
-	beforeEach,
 	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	it,
 	type Mock,
+	vi,
 } from 'vitest';
-
-import { LLMService, LLMConfig, LLMRequest } from './llm.service';
 import type { ConfigService } from './config.service';
+import { type LLMConfig, type LLMRequest, LLMService } from './llm.service';
 
 // Mock Logger to avoid real logging
 vi.mock('./logger.service', () => ({
@@ -114,6 +113,102 @@ describe('LLMService', () => {
 			);
 			await expect(service.sendRequest(baseRequest)).rejects.toThrow(
 				'OpenAI API key not configured',
+			);
+		});
+
+		it('should handle image attachments correctly using image_url', async () => {
+			mockCreate.mockResolvedValueOnce({
+				choices: [{ message: { content: 'Image analysis' } }],
+				usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
+			});
+			const config: LLMConfig = {
+				provider: 'openai',
+				apiKey: 'test-key',
+				model: 'gpt-4-vision',
+			};
+			const service = new LLMService(
+				new MockConfigService(config) as unknown as ConfigService,
+			);
+
+			const request: LLMRequest = {
+				prompt: 'Analyze this image',
+				files: [
+					{
+						name: 'test.png',
+						content: Buffer.from('fake-image-data'),
+						mimeType: 'image/png',
+					},
+				],
+			};
+
+			await service.sendRequest(request);
+
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					messages: expect.arrayContaining([
+						expect.objectContaining({
+							role: 'user',
+							content: [
+								{
+									type: 'image_url',
+									image_url: {
+										url: `data:image/png;base64,${Buffer.from('fake-image-data').toString('base64')}`,
+									},
+								},
+							],
+						}),
+					]),
+				}),
+			);
+			expect(mockFilesCreate).not.toHaveBeenCalled();
+		});
+
+		it('should handle PDF attachments correctly using file upload', async () => {
+			mockCreate.mockResolvedValueOnce({
+				choices: [{ message: { content: 'PDF analysis' } }],
+				usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
+			});
+			mockFilesCreate.mockResolvedValueOnce({ id: 'file-123' });
+
+			const config: LLMConfig = {
+				provider: 'openai',
+				apiKey: 'test-key',
+				model: 'gpt-4',
+			};
+			const service = new LLMService(
+				new MockConfigService(config) as unknown as ConfigService,
+			);
+
+			const request: LLMRequest = {
+				prompt: 'Analyze this PDF',
+				files: [
+					{
+						name: 'test.pdf',
+						content: Buffer.from('fake-pdf-data'),
+						mimeType: 'application/pdf',
+					},
+				],
+			};
+
+			await service.sendRequest(request);
+
+			expect(mockFilesCreate).toHaveBeenCalled();
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					messages: expect.arrayContaining([
+						expect.objectContaining({
+							role: 'user',
+							content: [
+								{
+									type: 'file',
+									file: {
+										file_id: 'file-123',
+									},
+								},
+							],
+						}),
+					]),
+				}),
 			);
 		});
 	});

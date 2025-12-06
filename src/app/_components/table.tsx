@@ -1,5 +1,6 @@
 import clsx from 'clsx';
-import React, { Fragment } from 'react';
+import type React from 'react';
+import { Fragment } from 'react';
 
 import { LoadingSkeleton } from './loading';
 import { NotFound } from './not-found';

@@ -1,13 +1,12 @@
 import { registerEnumType } from 'type-graphql';
-
-import { InvoiceActivityType } from '@/backend/entities/invoice-activity.entity';
-import { InvoiceSubmissionType } from '@/backend/entities/invoice-submission.entity';
-import { InvoiceStatus, InvoiceType } from '@/backend/entities/invoice.entity';
 import {
-	InventoryItemState,
 	InventoryCheckState,
 	InventoryHistoryType,
+	InventoryItemState,
 } from '@/backend/entities/inventory-item.entity';
+import { InvoiceStatus, InvoiceType } from '@/backend/entities/invoice.entity';
+import { InvoiceActivityType } from '@/backend/entities/invoice-activity.entity';
+import { InvoiceSubmissionType } from '@/backend/entities/invoice-submission.entity';
 import {
 	InvoiceOutputFormat,
 	VatStatus,

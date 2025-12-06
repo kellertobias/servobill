@@ -1,18 +1,17 @@
 import 'reflect-metadata';
 
-/* eslint-disable unicorn/no-for-loop */
-import { randomUUID } from 'crypto';
-import { type NextRequest } from 'next/server';
-
-import {
+import type {
 	APIGatewayProxyEventV2,
 	APIGatewayProxyStructuredResultV2,
 	Context,
 } from 'aws-lambda';
 import chalk from 'chalk';
+/* eslint-disable unicorn/no-for-loop */
+import { randomUUID } from 'crypto';
+import type { NextRequest } from 'next/server';
 
 import apiEndpoints from '@/backend/api';
-import { Handler, HttpVerb } from '@/common/api-types';
+import type { Handler, HttpVerb } from '@/common/api-types';
 
 export const dynamic = 'force-dynamic'; // defaults to auto
 
@@ -38,7 +37,6 @@ function findApiPath(
 				const paramName = apiPathPart.slice(1, -1);
 				resolvedPath.push(apiPathPart);
 				pathParameters[paramName] = pathPart;
-				continue;
 			} else if (apiPathPart === pathPart) {
 				resolvedPath.push(apiPathPart);
 			} else {
@@ -124,7 +122,7 @@ const nextToLambdaRequest = async (
 				method: request.method,
 				path: request.nextUrl.pathname,
 				protocol: 'HTTP/1.1',
-				sourceIp: request.ip || '127.0.0.42',
+				sourceIp: request.headers.get('x-forwarded-for') || '127.0.0.42',
 				userAgent: request.headers.get('user-agent') || '',
 			},
 		},
@@ -205,9 +203,7 @@ function getGraphQlQueryName(
 
 	const match2 = query?.match(/(query|mutation)/);
 	if (match2) {
-		return `${match2[1]} ${
-			match2[1] === 'query' ? 'UnnamedQuery' : 'UnnamedMutation'
-		}`;
+		return `${match2[1]} ${match2[1] === 'query' ? 'UnnamedQuery' : 'UnnamedMutation'}`;
 	}
 	if (
 		json.operationName !== undefined &&
@@ -221,16 +217,20 @@ function getGraphQlQueryName(
 
 async function ALL(
 	request: NextRequest,
-	params: {
-		params: { slug: string[] };
+	{
+		params,
+		method,
+	}: {
+		params: Promise<{ slug?: string[] }>;
 		method: HttpVerb;
 	},
 ) {
-	const path = ['api', ...params.params.slug];
-	const handler = getHandler(path, params.method);
+	const resolvedParams = await params;
+	const path = ['api', ...(resolvedParams.slug || [])];
+	const handler = getHandler(path, method);
 	if (!handler) {
 		// eslint-disable-next-line no-console
-		console.error('Not found', path, params.method, apiEndpoints);
+		console.error('Not found', path, method, apiEndpoints);
 		return new Response('Not found', { status: 404 });
 	}
 
@@ -240,9 +240,7 @@ async function ALL(
 		// eslint-disable-next-line no-console
 		console.log(
 			chalk.green.bold(' ►'),
-			`[${params.method}] /${path.join('/')} ${
-				getGraphQlQueryName(json) || ''
-			}`,
+			`[${method}] /${path.join('/')} ${getGraphQlQueryName(json) || ''}`,
 		);
 	}
 
@@ -306,7 +304,7 @@ export async function GET(
 	{
 		params,
 	}: {
-		params: { slug: string[] };
+		params: Promise<{ slug?: string[] }>;
 	},
 ) {
 	return ALL(request, { params, method: 'GET' });
@@ -314,35 +312,35 @@ export async function GET(
 
 export async function HEAD(
 	request: NextRequest,
-	{ params }: { params: { slug: string[] } },
+	{ params }: { params: Promise<{ slug?: string[] }> },
 ) {
 	return ALL(request, { params, method: 'HEAD' });
 }
 
 export async function POST(
 	request: NextRequest,
-	{ params }: { params: { slug: string[] } },
+	{ params }: { params: Promise<{ slug?: string[] }> },
 ) {
 	return ALL(request, { params, method: 'POST' });
 }
 
 export async function PUT(
 	request: NextRequest,
-	{ params }: { params: { slug: string[] } },
+	{ params }: { params: Promise<{ slug?: string[] }> },
 ) {
 	return ALL(request, { params, method: 'PUT' });
 }
 
 export async function DELETE(
 	request: NextRequest,
-	{ params }: { params: { slug: string[] } },
+	{ params }: { params: Promise<{ slug?: string[] }> },
 ) {
 	return ALL(request, { params, method: 'DELETE' });
 }
 
 export async function PATCH(
 	request: NextRequest,
-	{ params }: { params: { slug: string[] } },
+	{ params }: { params: Promise<{ slug?: string[] }> },
 ) {
 	return ALL(request, { params, method: 'PATCH' });
 }
@@ -350,7 +348,7 @@ export async function PATCH(
 // If `OPTIONS` is not defined, Next.js will automatically implement `OPTIONS` and  set the appropriate Response `Allow` header depending on the other methods defined in the route handler.
 export async function OPTIONS(
 	request: NextRequest,
-	{ params }: { params: { slug: string[] } },
+	{ params }: { params: Promise<{ slug?: string[] }> },
 ) {
 	return ALL(request, { params, method: 'OPTIONS' });
 }

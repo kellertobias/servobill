@@ -1,10 +1,8 @@
-import OpenAI from 'openai';
-
-import type { ConfigService } from './config.service';
-import { Logger } from './logger.service';
-import { CONFIG_SERVICE, LLM_SERVICE } from './di-tokens';
-
+import OpenAI, { toFile } from 'openai';
 import { Inject, Service } from '@/common/di';
+import type { ConfigService } from './config.service';
+import { CONFIG_SERVICE, LLM_SERVICE } from './di-tokens';
+import { Logger } from './logger.service';
 
 /**
  * Configuration for LLM providers
@@ -147,26 +145,42 @@ export class LLMService {
 
 		if (request.files?.length) {
 			for (const attachment of request.files) {
-				const file = new File([attachment.content], attachment.name, {
-					type: attachment.mimeType,
-				});
-
-				const fileID = await openai.files.create({
-					file,
-					purpose: 'user_data',
-				});
-
-				messages.push({
-					role: 'user',
-					content: [
-						{
-							type: 'file',
-							file: {
-								file_id: fileID.id,
+				if (attachment.mimeType.startsWith('image/')) {
+					messages.push({
+						role: 'user',
+						content: [
+							{
+								type: 'image_url',
+								image_url: {
+									url: `data:${attachment.mimeType};base64,${attachment.content.toString(
+										'base64',
+									)}`,
+								},
 							},
-						},
-					],
-				});
+						],
+					});
+				} else {
+					const file = await toFile(attachment.content, attachment.name, {
+						type: attachment.mimeType,
+					});
+
+					const fileID = await openai.files.create({
+						file,
+						purpose: 'user_data',
+					});
+
+					messages.push({
+						role: 'user',
+						content: [
+							{
+								type: 'file',
+								file: {
+									file_id: fileID.id,
+								},
+							},
+						],
+					});
+				}
 			}
 		}
 
@@ -298,9 +312,7 @@ export class LLMService {
 					...(request.files?.map((file) => ({
 						type: 'image_url' as const,
 						image_url: {
-							url: `data:${file.mimeType};base64,${file.content.toString(
-								'base64',
-							)}`,
+							url: `data:${file.mimeType};base64,${file.content.toString('base64')}`,
 						},
 					})) || []),
 				],
@@ -312,7 +324,7 @@ export class LLMService {
 		};
 
 		if (this.config.apiKey) {
-			headers['Authorization'] = `Bearer ${this.config.apiKey}`;
+			headers.Authorization = `Bearer ${this.config.apiKey}`;
 		}
 
 		const response = await fetch(url, {

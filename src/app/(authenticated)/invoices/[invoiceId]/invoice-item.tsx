@@ -2,8 +2,8 @@ import clsx from 'clsx';
 import { useModal } from 'react-modal-hook';
 
 import { API } from '@/api/index';
-
-import { InvoiceData } from './data';
+import { VatStatus } from '@/common/gql/graphql';
+import type { InvoiceData } from './data';
 import {
 	InlineEditableText,
 	InvoiceItemDivider,
@@ -11,8 +11,6 @@ import {
 	InvoiceRowDeleteButton,
 } from './helpers';
 import { ProductCatalogModal } from './product-catalog-modal';
-
-import { VatStatus } from '@/common/gql/graphql';
 
 /**
  * InvoiceItem renders a single invoice item row.

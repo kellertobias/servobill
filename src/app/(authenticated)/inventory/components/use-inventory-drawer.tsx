@@ -1,4 +1,5 @@
-import React, { useEffect, useImperativeHandle, useRef, useState } from 'react';
+import type React from 'react';
+import { useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 export const useInventoryDrawer = ({
 	ref,
@@ -10,7 +11,7 @@ export const useInventoryDrawer = ({
 	const [drawerId, setDrawerId] = useState<string | null>(null);
 
 	// Use a ref to store the pending parentId for new type creation
-	const parentIdRef = useRef<string | undefined>();
+	const parentIdRef = useRef<string | undefined>(undefined);
 
 	// Expose openDrawer(id) to parent via ref
 	useImperativeHandle(ref, () => ({

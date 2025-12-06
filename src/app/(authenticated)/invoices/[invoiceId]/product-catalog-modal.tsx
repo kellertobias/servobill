@@ -1,11 +1,10 @@
 import { useState } from 'react';
-
-import CommandPallette from '@/components/command-pallette';
-import { useLoadData } from '@/hooks/load-data';
 import { API, gql } from '@/api/index';
 import { Button } from '@/components/button';
+import CommandPallette from '@/components/command-pallette';
+import { useLoadData } from '@/hooks/load-data';
 
-import { InvoiceData } from './data';
+import type { InvoiceData } from './data';
 
 export function ProductCatalogModal({
 	onClose,

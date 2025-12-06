@@ -1,12 +1,11 @@
-import React, { forwardRef, useCallback } from 'react';
-
+import type React from 'react';
+import { forwardRef, useCallback } from 'react';
+import { API, gql } from '@/api/index';
 import { Drawer } from '@/components/drawer';
 import { Input } from '@/components/input';
-import { API, gql } from '@/api/index';
 import { useLoadData, useSaveCallback } from '@/hooks/load-data';
-
-import { useInventoryDrawer } from './use-inventory-drawer';
 import { InventoryLocationSelect } from './inventory-location-select';
+import { useInventoryDrawer } from './use-inventory-drawer';
 
 const useInventoryLocationDrawer = ({
 	ref,

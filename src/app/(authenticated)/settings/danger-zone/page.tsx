@@ -1,16 +1,14 @@
 'use client';
 
-import React from 'react';
-
 import { ExclamationTriangleIcon } from '@heroicons/react/20/solid';
-
-import { PageContent } from '@/components/page';
-import { Button } from '@/components/button';
-import { Input } from '@/components/input';
-import { SettingsBlock } from '@/components/settings-block';
-import { confirmDialog } from '@/components/dialog';
-import { doToast } from '@/components/toast';
+import React from 'react';
 import { API, gql } from '@/api/index';
+import { Button } from '@/components/button';
+import { confirmDialog } from '@/components/dialog';
+import { Input } from '@/components/input';
+import { PageContent } from '@/components/page';
+import { SettingsBlock } from '@/components/settings-block';
+import { doToast } from '@/components/toast';
 
 function DangerousAction({
 	onClick,

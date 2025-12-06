@@ -1,9 +1,8 @@
-import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import { gql } from 'graphql-request';
-
-import { prepareGraphqlTest } from '@/test/graphql-test';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { ATTACHMENT_REPOSITORY } from '@/backend/repositories/attachment/di-tokens';
 import type { AttachmentRepository } from '@/backend/repositories/attachment/interface';
+import { prepareGraphqlTest } from '@/test/graphql-test';
 
 /**
  * Integration tests for ReceiptResolver's extractReceipt mutation.

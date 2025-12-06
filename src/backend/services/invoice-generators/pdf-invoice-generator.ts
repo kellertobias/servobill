@@ -1,19 +1,19 @@
 // PDFInvoiceGenerator: Strategy for generating PDF invoices only.
-import { InvoiceGeneratorStrategy } from './interface';
-import { StorageLoaderStrategy } from './storage';
 
-import { InvoiceEntity } from '@/backend/entities/invoice.entity';
-import {
+import { GenerateInvoiceHtmlCommand } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.command';
+import { GenerateInvoiceHtmlHandler } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.handler';
+import { CreateInvoicePdfCommand } from '@/backend/cqrs/generate-pdf/create-invoice-pdf.command';
+import { CreateInvoicePdfHandler } from '@/backend/cqrs/generate-pdf/create-invoice-pdf.handler';
+import type { InvoiceEntity } from '@/backend/entities/invoice.entity';
+import type {
 	CompanyDataSetting,
 	InvoiceSettingsEntity,
 	PdfTemplateSetting,
 } from '@/backend/entities/settings.entity';
 import { CqrsBus } from '@/backend/services/cqrs.service';
-import { CreateInvoicePdfHandler } from '@/backend/cqrs/generate-pdf/create-invoice-pdf.handler';
-import { GenerateInvoiceHtmlHandler } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.handler';
-import { GenerateInvoiceHtmlCommand } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.command';
-import { CreateInvoicePdfCommand } from '@/backend/cqrs/generate-pdf/create-invoice-pdf.command';
 import { DefaultContainer } from '@/common/di';
+import { InvoiceGeneratorStrategy } from './interface';
+import type { StorageLoaderStrategy } from './storage';
 
 /**
  * PDFInvoiceGenerator generates a PDF invoice using CQRS handlers.

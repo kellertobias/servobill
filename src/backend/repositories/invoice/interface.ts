@@ -1,11 +1,11 @@
-import { AbstractRepositoryInterface } from '../abstract-repository';
+import type { CustomerEntity } from '@/backend/entities/customer.entity';
 
-import {
+import type {
 	InvoiceEntity,
-	InvoiceType,
 	InvoiceStatus,
+	InvoiceType,
 } from '@/backend/entities/invoice.entity';
-import { CustomerEntity } from '@/backend/entities/customer.entity';
+import type { AbstractRepositoryInterface } from '../abstract-repository';
 
 /**
  * Interface for all Invoice repositories (DynamoDB, Postgres, SQLite).
