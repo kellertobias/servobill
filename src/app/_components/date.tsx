@@ -77,7 +77,7 @@ export const DateInput: React.FC<{
 			: defaultValue) ||
 		new Date();
 
-	const dateRef = React.useRef<Date | null>();
+	const dateRef = React.useRef<Date | null>(null);
 
 	const [selectedDate, setSelectedDate] = React.useState<Date | null>(
 		currentDate || null,
