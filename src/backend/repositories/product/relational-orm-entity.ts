@@ -1,7 +1,6 @@
-import { Entity, PrimaryColumn, Column } from 'typeorm';
-
-import { OrmEntity } from '@/common/orm-entity-registry';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
 import type { ProductEntity } from '@/backend/entities/product.entity';
+import { OrmEntity } from '@/common/orm-entity-registry';
 
 /**
  * TypeORM entity for Product, used by Postgres and SQLite repositories.
@@ -10,42 +9,42 @@ import type { ProductEntity } from '@/backend/entities/product.entity';
 @OrmEntity
 @Entity('products')
 export class ProductOrmEntity {
-	@PrimaryColumn('text')
-	id!: string;
+  @PrimaryColumn('text')
+  id!: string;
 
-	@Column('text')
-	category!: string;
+  @Column('text')
+  category!: string;
 
-	@Column('text')
-	name!: string;
+  @Column('text')
+  name!: string;
 
-	@Column('text', { nullable: true })
-	description?: string;
+  @Column('text', { nullable: true })
+  description?: string;
 
-	@Column('text', { nullable: true })
-	notes?: string;
+  @Column('text', { nullable: true })
+  notes?: string;
 
-	@Column('text', { nullable: true })
-	unit?: string;
+  @Column('text', { nullable: true })
+  unit?: string;
 
-	@Column('integer')
-	priceCents!: number;
+  @Column('integer')
+  priceCents!: number;
 
-	@Column('integer')
-	taxPercentage!: number;
+  @Column('integer')
+  taxPercentage!: number;
 
-	@Column('json', { nullable: true })
-	expenses?: ProductEntity['expenses'];
+  @Column('json', { nullable: true })
+  expenses?: ProductEntity['expenses'];
 
-	/**
-	 * Date and time when the product was created.
-	 */
-	@Column('timestamp')
-	createdAt!: Date;
+  /**
+   * Date and time when the product was created.
+   */
+  @Column('timestamp')
+  createdAt!: Date;
 
-	/**
-	 * Date and time when the product was last updated.
-	 */
-	@Column('timestamp')
-	updatedAt!: Date;
+  /**
+   * Date and time when the product was last updated.
+   */
+  @Column('timestamp')
+  updatedAt!: Date;
 }

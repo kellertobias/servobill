@@ -1,6 +1,7 @@
 import '@/backend/services/config.service';
-// Customer repository exports: interface, DI tokens, and implementations
-export * from './interface';
-export * from './di-tokens';
+
 export * from './customer.dynamodb-repository';
 export * from './customer.relational-repository';
+export * from './di-tokens';
+// Customer repository exports: interface, DI tokens, and implementations
+export * from './interface';

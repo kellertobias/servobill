@@ -1,11 +1,7 @@
-import { ExpenseCategory } from '@/backend/entities/settings.entity';
+import type { ExpenseCategory } from '@/backend/entities/settings.entity';
 
-export default (
-	rawEmailText: string,
-	categories: ExpenseCategory[],
-	currency: string,
-) => {
-	return `
+export default (_rawEmailText: string, categories: ExpenseCategory[], currency: string) => {
+  return `
     <context>
 	You are a bookkeeper. You are given an incoming invoice and need
     to extract the expenses we need to book.
@@ -54,13 +50,13 @@ export default (
 
     <categories>
     ${JSON.stringify(
-			categories.map((c) => ({
-				id: c.id,
-				name: c.name,
-				description: c.description,
-				reference: c.reference,
-			})),
-		)}
+      categories.map((c) => ({
+        id: c.id,
+        name: c.name,
+        description: c.description,
+        reference: c.reference,
+      }))
+    )}
     </categories>
     `;
 };

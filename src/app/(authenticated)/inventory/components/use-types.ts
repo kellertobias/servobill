@@ -10,34 +10,34 @@ import { API, gql } from '@/api/index';
  * @returns { types } - Array of { id, name } for all types except the current one.
  */
 export const useTypes = (drawerId: string | null) => {
-	const [types, setTypes] = useState<{ id: string; name: string }[]>([]);
+  const [types, setTypes] = useState<{ id: string; name: string }[]>([]);
 
-	React.useEffect(() => {
-		if (!drawerId) {
-			return;
-		}
-		API.query({
-			query: gql(`
+  React.useEffect(() => {
+    if (!drawerId) {
+      return;
+    }
+    API.query({
+      query: gql(`
                 query AllInventoryTypesForParent {
                     inventoryTypes { id name }
                 }
             `),
-		})
-			.then((res) => {
-				let nextTypes = (res.inventoryTypes || []) as Array<{
-					id: string;
-					name: string;
-				}>;
-				if (drawerId !== 'new') {
-					nextTypes = nextTypes.filter((type) => type.id !== drawerId);
-				}
-				setTypes(nextTypes);
-				return;
-			})
-			.catch(() => {});
-	}, [drawerId]);
+    })
+      .then((res) => {
+        let nextTypes = (res.inventoryTypes || []) as Array<{
+          id: string;
+          name: string;
+        }>;
+        if (drawerId !== 'new') {
+          nextTypes = nextTypes.filter((type) => type.id !== drawerId);
+        }
+        setTypes(nextTypes);
+        return;
+      })
+      .catch(() => {});
+  }, [drawerId]);
 
-	return {
-		types,
-	};
+  return {
+    types,
+  };
 };

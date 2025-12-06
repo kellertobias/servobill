@@ -2,13 +2,11 @@ import 'reflect-metadata';
 
 import '@/backend/services/config.service';
 
-import { EventHandler } from '../../types';
+import { DefaultContainer } from '@/common/di';
 import { makeEventHandler } from '../../event-handler';
-
+import type { EventHandler } from '../../types';
 import { InvoiceSendLaterEvent } from './event';
 import { HandlerExecution } from './execute';
-
-import { DefaultContainer } from '@/common/di';
 
 /**
  * Lambda handler for the InvoiceSendLaterEvent.
@@ -19,10 +17,7 @@ import { DefaultContainer } from '@/common/di';
  */
 export const handlerName = 'handler';
 export const layers = ['layers/chromium'];
-export const handler: EventHandler = makeEventHandler(
-	InvoiceSendLaterEvent,
-	async (event) => {
-		const handler = DefaultContainer.get(HandlerExecution);
-		await handler.execute(event);
-	},
-);
+export const handler: EventHandler = makeEventHandler(InvoiceSendLaterEvent, async (event) => {
+  const handler = DefaultContainer.get(HandlerExecution);
+  await handler.execute(event);
+});

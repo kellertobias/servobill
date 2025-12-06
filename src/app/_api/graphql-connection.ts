@@ -1,5 +1,6 @@
-import { GraphQLClient } from 'graphql-request';
 import axios from 'axios';
+import { GraphQLClient } from 'graphql-request';
+
 export { gql } from '@/common/gql';
 
 // export type DocumentNode = ReturnType<typeof gql>;
@@ -9,14 +10,14 @@ const host = process.env.NEXT_PUBLIC_API_URL || '';
 const endpoint = `${host}/api/graphql`;
 
 export const connection = new GraphQLClient(endpoint, {
-	mode: 'cors',
-	credentials: 'include',
-	headers: {
-		'Apollo-Require-Preflight': 'true',
-	},
+  mode: 'cors',
+  credentials: 'include',
+  headers: {
+    'Apollo-Require-Preflight': 'true',
+  },
 });
 
 export const restConnection = axios.create({
-	baseURL: host,
-	withCredentials: true,
+  baseURL: host,
+  withCredentials: true,
 });

@@ -8,30 +8,30 @@ import { IsString } from 'class-validator';
  * triggers the same logic as an immediate send when the scheduled time arrives.
  */
 export class InvoiceSendLaterEvent {
-	/**
-	 * Unique event ID for idempotency and tracking.
-	 */
-	@IsString()
-	id!: string;
+  /**
+   * Unique event ID for idempotency and tracking.
+   */
+  @IsString()
+  id!: string;
 
-	/**
-	 * The ID of the invoice to send.
-	 */
-	@IsString()
-	invoiceId!: string;
+  /**
+   * The ID of the invoice to send.
+   */
+  @IsString()
+  invoiceId!: string;
 
-	@IsString()
-	userName!: string;
+  @IsString()
+  userName!: string;
 
-	/**
-	 * The submission ID associated with this send request.
-	 */
-	@IsString()
-	submissionId!: string;
+  /**
+   * The submission ID associated with this send request.
+   */
+  @IsString()
+  submissionId!: string;
 
-	constructor(props?: InvoiceSendLaterEvent) {
-		if (props) {
-			Object.assign(this, props);
-		}
-	}
+  constructor(props?: InvoiceSendLaterEvent) {
+    if (props) {
+      Object.assign(this, props);
+    }
+  }
 }

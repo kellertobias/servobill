@@ -9,30 +9,30 @@ import { OrmEntity } from '@/common/orm-entity-registry';
 @OrmEntity
 @Entity('inventory_types')
 export class InventoryTypeOrmEntity {
-	@PrimaryColumn('text')
-	id!: string;
+  @PrimaryColumn('text')
+  id!: string;
 
-	@Column('varchar')
-	name!: string;
+  @Column('varchar')
+  name!: string;
 
-	@Column('varchar')
-	searchName!: string;
+  @Column('varchar')
+  searchName!: string;
 
-	@Column('int', { nullable: true })
-	checkInterval?: number;
+  @Column('int', { nullable: true })
+  checkInterval?: number;
 
-	@Column('varchar', { nullable: true })
-	checkType?: string;
+  @Column('varchar', { nullable: true })
+  checkType?: string;
 
-	@Column('json')
-	properties!: string;
+  @Column('json')
+  properties!: string;
 
-	@Column('text', { nullable: true })
-	parent?: string;
+  @Column('text', { nullable: true })
+  parent?: string;
 
-	@Column('timestamp')
-	createdAt!: Date;
+  @Column('timestamp')
+  createdAt!: Date;
 
-	@Column('timestamp')
-	updatedAt!: Date;
+  @Column('timestamp')
+  updatedAt!: Date;
 }

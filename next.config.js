@@ -17,15 +17,12 @@ const nextConfig = {
   typescript: {
     tsconfigPath: './tsconfig.next.json',
   },
-  experimental: {
-    serverComponentsExternalPackages: ["graphql", "typeorm"],
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  serverExternalPackages: ["graphql", "typeorm"],
   webpack: {
     devtool: "source-map",
-  }
+  },
+  // We use webpack config for source maps, so we disable turbopack for now to match previous behavior or explicitly opt-in to webpack.
+  // Next 16 defaults to turbopack for `next build`.
 };
 
 module.exports = nextConfig;

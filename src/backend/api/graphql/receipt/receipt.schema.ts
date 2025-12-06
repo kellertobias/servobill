@@ -6,11 +6,11 @@ import { Field, ObjectType } from 'type-graphql';
  */
 @ObjectType('ExtractReceiptResult')
 export class ExtractReceiptResult {
-	@Field(() => [String])
-	@IsArray()
-	eventIds!: string[];
+  @Field(() => [String])
+  @IsArray()
+  eventIds!: string[];
 
-	@Field(() => String)
-	@IsString()
-	message!: string;
+  @Field(() => String)
+  @IsString()
+  message!: string;
 }

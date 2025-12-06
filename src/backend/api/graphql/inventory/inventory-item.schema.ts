@@ -1,34 +1,32 @@
-import { Field, ObjectType, InputType } from 'type-graphql';
 import {
-	IsOptional,
-	IsString,
-	IsUUID,
-	IsDate,
-	IsArray,
-	IsEnum,
-	IsBoolean,
-	MaxLength,
+  IsArray,
+  IsBoolean,
+  IsDate,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
 } from 'class-validator';
-
-import { InventoryType } from './inventory-type.schema';
-import { InventoryLocation } from './inventory-location.schema';
-
+import { Field, InputType, ObjectType } from 'type-graphql';
 import {
-	InventoryItemState,
-	InventoryCheckState,
-	InventoryHistoryType,
+  InventoryCheckState,
+  InventoryHistoryType,
+  InventoryItemState,
 } from '@/backend/entities/inventory-item.entity';
+import { InventoryLocation } from './inventory-location.schema';
+import { InventoryType } from './inventory-type.schema';
 
 /**
  * GraphQL type for inventory item properties
  */
 @ObjectType('InventoryItemProperty')
 export class InventoryItemProperty {
-	@Field(() => String)
-	key!: string;
+  @Field(() => String)
+  key!: string;
 
-	@Field(() => String)
-	value!: string;
+  @Field(() => String)
+  value!: string;
 }
 
 /**
@@ -36,17 +34,17 @@ export class InventoryItemProperty {
  */
 @ObjectType('InventoryItemHistory')
 export class InventoryItemHistory {
-	@Field(() => InventoryHistoryType)
-	type!: InventoryHistoryType;
+  @Field(() => InventoryHistoryType)
+  type!: InventoryHistoryType;
 
-	@Field(() => InventoryCheckState, { nullable: true })
-	state?: InventoryCheckState;
+  @Field(() => InventoryCheckState, { nullable: true })
+  state?: InventoryCheckState;
 
-	@Field(() => Date)
-	date!: Date;
+  @Field(() => Date)
+  date!: Date;
 
-	@Field(() => String, { nullable: true })
-	note?: string;
+  @Field(() => String, { nullable: true })
+  note?: string;
 }
 
 /**
@@ -54,53 +52,53 @@ export class InventoryItemHistory {
  */
 @ObjectType('InventoryItem')
 export class InventoryItem {
-	@Field(() => String)
-	id!: string;
+  @Field(() => String)
+  id!: string;
 
-	/**
-	 * The type/category of this inventory item. Resolved via a field resolver.
-	 */
-	@Field(() => InventoryType, { nullable: true })
-	type?: InventoryType;
+  /**
+   * The type/category of this inventory item. Resolved via a field resolver.
+   */
+  @Field(() => InventoryType, { nullable: true })
+  type?: InventoryType;
 
-	@Field(() => String, { nullable: true })
-	typeId?: string;
+  @Field(() => String, { nullable: true })
+  typeId?: string;
 
-	/**
-	 * The location where this inventory item is stored. Resolved via a field resolver.
-	 */
-	@Field(() => InventoryLocation, { nullable: true })
-	location?: InventoryLocation;
+  /**
+   * The location where this inventory item is stored. Resolved via a field resolver.
+   */
+  @Field(() => InventoryLocation, { nullable: true })
+  location?: InventoryLocation;
 
-	@Field(() => String, { nullable: true })
-	locationId?: string;
+  @Field(() => String, { nullable: true })
+  locationId?: string;
 
-	@Field(() => String, { nullable: true })
-	name?: string;
+  @Field(() => String, { nullable: true })
+  name?: string;
 
-	@Field(() => String, { nullable: true })
-	barcode?: string;
+  @Field(() => String, { nullable: true })
+  barcode?: string;
 
-	@Field(() => InventoryItemState)
-	state!: InventoryItemState;
+  @Field(() => InventoryItemState)
+  state!: InventoryItemState;
 
-	@Field(() => [InventoryItemProperty])
-	properties!: InventoryItemProperty[];
+  @Field(() => [InventoryItemProperty])
+  properties!: InventoryItemProperty[];
 
-	@Field(() => Date)
-	nextCheck!: Date;
+  @Field(() => Date)
+  nextCheck!: Date;
 
-	@Field(() => Date)
-	lastScanned!: Date;
+  @Field(() => Date)
+  lastScanned!: Date;
 
-	@Field(() => [InventoryItemHistory])
-	history!: InventoryItemHistory[];
+  @Field(() => [InventoryItemHistory])
+  history!: InventoryItemHistory[];
 
-	@Field(() => Date)
-	createdAt!: Date;
+  @Field(() => Date)
+  createdAt!: Date;
 
-	@Field(() => Date)
-	updatedAt!: Date;
+  @Field(() => Date)
+  updatedAt!: Date;
 }
 
 /**
@@ -108,15 +106,15 @@ export class InventoryItem {
  */
 @InputType('InventoryItemPropertyInput')
 export class InventoryItemPropertyInput {
-	@IsString()
-	@MaxLength(255)
-	@Field(() => String)
-	key!: string;
+  @IsString()
+  @MaxLength(255)
+  @Field(() => String)
+  key!: string;
 
-	@IsString()
-	@MaxLength(1000)
-	@Field(() => String)
-	value!: string;
+  @IsString()
+  @MaxLength(1000)
+  @Field(() => String)
+  value!: string;
 }
 
 /**
@@ -124,42 +122,42 @@ export class InventoryItemPropertyInput {
  */
 @InputType('InventoryItemInput')
 export class InventoryItemInput {
-	@IsOptional()
-	@IsUUID()
-	@Field(() => String, { nullable: true })
-	typeId?: string;
+  @IsOptional()
+  @IsUUID()
+  @Field(() => String, { nullable: true })
+  typeId?: string;
 
-	@IsOptional()
-	@IsString()
-	@MaxLength(255)
-	@Field(() => String, { nullable: true })
-	name?: string;
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  @Field(() => String, { nullable: true })
+  name?: string;
 
-	@IsOptional()
-	@IsString()
-	@MaxLength(255)
-	@Field(() => String, { nullable: true })
-	barcode?: string;
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  @Field(() => String, { nullable: true })
+  barcode?: string;
 
-	@IsOptional()
-	@IsUUID()
-	@Field(() => String, { nullable: true })
-	locationId?: string;
+  @IsOptional()
+  @IsUUID()
+  @Field(() => String, { nullable: true })
+  locationId?: string;
 
-	@IsOptional()
-	@IsEnum(InventoryItemState)
-	@Field(() => InventoryItemState, { nullable: true })
-	state?: InventoryItemState;
+  @IsOptional()
+  @IsEnum(InventoryItemState)
+  @Field(() => InventoryItemState, { nullable: true })
+  state?: InventoryItemState;
 
-	@IsOptional()
-	@IsArray()
-	@Field(() => [InventoryItemPropertyInput], { nullable: true })
-	properties?: InventoryItemPropertyInput[];
+  @IsOptional()
+  @IsArray()
+  @Field(() => [InventoryItemPropertyInput], { nullable: true })
+  properties?: InventoryItemPropertyInput[];
 
-	@IsOptional()
-	@IsDate()
-	@Field(() => Date, { nullable: true })
-	nextCheck?: Date;
+  @IsOptional()
+  @IsDate()
+  @Field(() => Date, { nullable: true })
+  nextCheck?: Date;
 }
 
 /**
@@ -167,35 +165,35 @@ export class InventoryItemInput {
  */
 @InputType('InventoryItemWhereInput')
 export class InventoryItemWhereInput {
-	@IsOptional()
-	@IsUUID()
-	@Field(() => String, { nullable: true })
-	typeId?: string;
+  @IsOptional()
+  @IsUUID()
+  @Field(() => String, { nullable: true })
+  typeId?: string;
 
-	@IsOptional()
-	@IsUUID()
-	@Field(() => String, { nullable: true })
-	locationId?: string;
+  @IsOptional()
+  @IsUUID()
+  @Field(() => String, { nullable: true })
+  locationId?: string;
 
-	@IsOptional()
-	@IsEnum(InventoryItemState)
-	@Field(() => InventoryItemState, { nullable: true })
-	state?: InventoryItemState;
+  @IsOptional()
+  @IsEnum(InventoryItemState)
+  @Field(() => InventoryItemState, { nullable: true })
+  state?: InventoryItemState;
 
-	@IsOptional()
-	@IsBoolean()
-	@Field(() => Boolean, { nullable: true })
-	overdue?: boolean;
+  @IsOptional()
+  @IsBoolean()
+  @Field(() => Boolean, { nullable: true })
+  overdue?: boolean;
 
-	@IsOptional()
-	@IsString()
-	@MaxLength(255)
-	@Field(() => String, { nullable: true })
-	search?: string;
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  @Field(() => String, { nullable: true })
+  search?: string;
 
-	@IsOptional()
-	@IsString()
-	@MaxLength(255)
-	@Field(() => String, { nullable: true })
-	barcode?: string;
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  @Field(() => String, { nullable: true })
+  barcode?: string;
 }

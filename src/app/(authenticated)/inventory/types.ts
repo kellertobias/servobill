@@ -7,46 +7,46 @@
  */
 
 export interface InventoryItem {
-	id: string;
-	name?: string;
-	barcode?: string;
-	state: string;
-	location?: {
-		id: string;
-		name: string;
-	};
-	type?: {
-		id: string;
-		name: string;
-	};
-	nextCheck: string;
-	lastScanned: string;
-	[key: string]: unknown;
+  id: string;
+  name?: string;
+  barcode?: string;
+  state: string;
+  location?: {
+    id: string;
+    name: string;
+  };
+  type?: {
+    id: string;
+    name: string;
+  };
+  nextCheck: string;
+  lastScanned: string;
+  [key: string]: unknown;
 }
 
 export interface InventoryType {
-	id: string;
-	name: string;
-	checkInterval?: number;
-	checkType?: string;
-	properties: string[];
-	parent?: string;
-	itemCount: number;
-	items: InventoryItem[];
-	createdAt: string;
-	updatedAt: string;
-	[key: string]: unknown;
+  id: string;
+  name: string;
+  checkInterval?: number;
+  checkType?: string;
+  properties: string[];
+  parent?: string;
+  itemCount: number;
+  items: InventoryItem[];
+  createdAt: string;
+  updatedAt: string;
+  [key: string]: unknown;
 }
 
 export interface InventoryLocation {
-	id: string;
-	name: string;
-	barcode?: string;
-	itemCount?: number;
-	items: InventoryItem[];
-	createdAt: string;
-	updatedAt: string;
-	[key: string]: unknown;
+  id: string;
+  name: string;
+  barcode?: string;
+  itemCount?: number;
+  items: InventoryItem[];
+  createdAt: string;
+  updatedAt: string;
+  [key: string]: unknown;
 }
 
 /**
@@ -59,8 +59,8 @@ export type InventoryView = 'type' | 'location';
  * Used for rendering the inventory type detail view with its children and items.
  */
 export interface InventoryTypeDetail extends InventoryType {
-	children: InventoryType[];
-	items: InventoryItem[];
+  children: InventoryType[];
+  items: InventoryItem[];
 }
 
 /**
@@ -68,6 +68,6 @@ export interface InventoryTypeDetail extends InventoryType {
  * Used for rendering the inventory location detail view with its children and items.
  */
 export interface InventoryLocationDetail extends InventoryLocation {
-	children: InventoryLocation[];
-	items: InventoryItem[];
+  children: InventoryLocation[];
+  items: InventoryItem[];
 }

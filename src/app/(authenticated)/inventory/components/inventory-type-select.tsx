@@ -1,9 +1,8 @@
 import React from 'react';
-
-import SelectInput from '@/components/select-input';
 import { API, gql } from '@/api/index';
+import SelectInput from '@/components/select-input';
 
-import { InventoryTypeDetail } from '../types';
+import type { InventoryTypeDetail } from '../types';
 
 /**
  * Flattens a tree of inventory types into a flat array with depth for indentation.
@@ -13,28 +12,24 @@ import { InventoryTypeDetail } from '../types';
  * @returns Array of { value, label, depth }
  */
 function flattenTypeTree(
-	nodes: InventoryTypeDetail[],
-	depth = 0,
-	excludeId?: string,
+  nodes: InventoryTypeDetail[],
+  depth = 0,
+  excludeId?: string
 ): Array<{ value: string; label: string; depth: number }> {
-	let result: Array<{ value: string; label: string; depth: number }> = [];
-	nodes.forEach((node) => {
-		if (excludeId && node.id === excludeId) {
-			return;
-		}
-		result.push({ value: node.id, label: node.name, depth });
-		if (node.children && node.children.length > 0) {
-			result = [
-				...result,
-				...flattenTypeTree(
-					node.children as InventoryTypeDetail[],
-					depth + 1,
-					excludeId,
-				),
-			];
-		}
-	});
-	return result;
+  let result: Array<{ value: string; label: string; depth: number }> = [];
+  nodes.forEach((node) => {
+    if (excludeId && node.id === excludeId) {
+      return;
+    }
+    result.push({ value: node.id, label: node.name, depth });
+    if (node.children && node.children.length > 0) {
+      result = [
+        ...result,
+        ...flattenTypeTree(node.children as InventoryTypeDetail[], depth + 1, excludeId),
+      ];
+    }
+  });
+  return result;
 }
 
 /**
@@ -48,25 +43,25 @@ function flattenTypeTree(
  * @param placeholder - Optional placeholder
  */
 export function InventoryTypeSelect({
-	value,
-	onChange,
-	excludeId,
-	label = 'Parent Type',
-	placeholder = 'Select parent type (optional)',
+  value,
+  onChange,
+  excludeId,
+  label = 'Parent Type',
+  placeholder = 'Select parent type (optional)',
 }: {
-	value: string | null | undefined;
-	onChange: (value: string | null, name: string | null) => void;
-	excludeId?: string;
-	label?: string;
-	placeholder?: string;
+  value: string | null | undefined;
+  onChange: (value: string | null, name: string | null) => void;
+  excludeId?: string;
+  label?: string;
+  placeholder?: string;
 }) {
-	const [options, setOptions] = React.useState<
-		Array<{ value: string; label: string; depth: number }>
-	>([]);
+  const [options, setOptions] = React.useState<
+    Array<{ value: string; label: string; depth: number }>
+  >([]);
 
-	React.useEffect(() => {
-		API.query({
-			query: gql(`
+  React.useEffect(() => {
+    API.query({
+      query: gql(`
 				query InventoryTypesTree {
 					inventoryTypes(where: { rootOnly: true }) {
 						id
@@ -82,34 +77,31 @@ export function InventoryTypeSelect({
 					}
 				}
 			`),
-		})
-			.then((res) => {
-				// The API returns a partial tree, but we only need id, name, children for the dropdown
-				const tree = (res.inventoryTypes ||
-					[]) as unknown as InventoryTypeDetail[];
-				const flat = flattenTypeTree(tree, 0, excludeId);
-				setOptions(flat);
-				return null;
-			})
-			.catch(() => null);
-	}, [excludeId]);
+    })
+      .then((res) => {
+        // The API returns a partial tree, but we only need id, name, children for the dropdown
+        const tree = (res.inventoryTypes || []) as unknown as InventoryTypeDetail[];
+        const flat = flattenTypeTree(tree, 0, excludeId);
+        setOptions(flat);
+        return null;
+      })
+      .catch(() => null);
+  }, [excludeId]);
 
-	return (
-		<SelectInput
-			label={label}
-			value={value || ''}
-			onChange={(v) =>
-				onChange(v || null, options.find((o) => o.value === v)?.label || null)
-			}
-			options={[
-				{ value: '', label: 'No parent (root)' },
-				...options.map((opt) => ({
-					value: opt.value,
-					label: `${'\u00A0'.repeat(opt.depth * 4)}${opt.label}`,
-				})),
-			]}
-			placeholder={placeholder}
-			className="mb-2"
-		/>
-	);
+  return (
+    <SelectInput
+      label={label}
+      value={value || ''}
+      onChange={(v) => onChange(v || null, options.find((o) => o.value === v)?.label || null)}
+      options={[
+        { value: '', label: 'No parent (root)' },
+        ...options.map((opt) => ({
+          value: opt.value,
+          label: `${'\u00A0'.repeat(opt.depth * 4)}${opt.label}`,
+        })),
+      ]}
+      placeholder={placeholder}
+      className="mb-2"
+    />
+  );
 }

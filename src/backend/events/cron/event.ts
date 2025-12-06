@@ -5,17 +5,17 @@ import { IsString } from 'class-validator';
  * Typically triggered on a schedule (e.g., via cron or scheduled Lambda).
  */
 export class CronEvent {
-	/** Unique event ID */
-	@IsString()
-	id!: string;
+  /** Unique event ID */
+  @IsString()
+  id!: string;
 
-	/** ISO timestamp when the cron was triggered */
-	@IsString()
-	triggeredAt!: string;
+  /** ISO timestamp when the cron was triggered */
+  @IsString()
+  triggeredAt!: string;
 
-	constructor(props?: Partial<CronEvent>) {
-		if (props) {
-			Object.assign(this, props);
-		}
-	}
+  constructor(props?: Partial<CronEvent>) {
+    if (props) {
+      Object.assign(this, props);
+    }
+  }
 }

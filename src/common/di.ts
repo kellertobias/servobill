@@ -166,11 +166,13 @@ export function Service<T extends new (...args: any[]) => unknown>(
 			return target;
 		}
 
-		App.defaultLogger.debug(
-			`Registering Service *${name ? String(name) : target.name}* ${
-				target.name
-			}`,
-		);
+		if (App.defaultLogger && App.defaultLogger.debug) {
+			App.defaultLogger.debug(
+				`Registering Service *${name ? String(name) : target.name}* ${
+					target.name
+				}`,
+			);
+		}
 		const bound = App.defaultContainer.bind(name || target).to(target);
 		if (singleton === false) {
 			bound.inTransientScope();

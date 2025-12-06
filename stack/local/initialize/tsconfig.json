@@ -19,7 +19,7 @@
       {
         "name": "next"
       }
-    ],
+    ]
   },
   "include": ["**/*.ts"],
   "exclude": ["node_modules"]

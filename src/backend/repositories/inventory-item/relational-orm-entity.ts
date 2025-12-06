@@ -9,39 +9,39 @@ import { OrmEntity } from '@/common/orm-entity-registry';
 @OrmEntity
 @Entity('inventory_items')
 export class InventoryItemOrmEntity {
-	@PrimaryColumn('text')
-	id!: string;
+  @PrimaryColumn('text')
+  id!: string;
 
-	@Column('text', { nullable: true })
-	typeId?: string;
+  @Column('text', { nullable: true })
+  typeId?: string;
 
-	@Column('varchar', { nullable: true })
-	name?: string;
+  @Column('varchar', { nullable: true })
+  name?: string;
 
-	@Column('varchar', { nullable: true })
-	barcode?: string;
+  @Column('varchar', { nullable: true })
+  barcode?: string;
 
-	@Column('text')
-	locationId!: string;
+  @Column('text')
+  locationId!: string;
 
-	@Column('varchar')
-	state!: string;
+  @Column('varchar')
+  state!: string;
 
-	@Column('json')
-	properties!: string;
+  @Column('json')
+  properties!: string;
 
-	@Column('timestamp')
-	nextCheck!: Date;
+  @Column('timestamp')
+  nextCheck!: Date;
 
-	@Column('timestamp')
-	lastScanned!: Date;
+  @Column('timestamp')
+  lastScanned!: Date;
 
-	@Column('json')
-	history!: string;
+  @Column('json')
+  history!: string;
 
-	@Column('timestamp')
-	createdAt!: Date;
+  @Column('timestamp')
+  createdAt!: Date;
 
-	@Column('timestamp')
-	updatedAt!: Date;
+  @Column('timestamp')
+  updatedAt!: Date;
 }

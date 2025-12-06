@@ -18,119 +18,117 @@
  */
 
 import { describe, it } from 'vitest';
-
-import { ZugferdInvoiceGenerator } from './zugferd-invoice-generator';
-import { XRechnungInvoiceGenerator } from './xrechnung-invoice-generator';
-import { runGenerator } from './invoice-generator-spec-helper';
-
 import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
 import { VatStatus } from '@/backend/entities/settings.entity';
+import { runGenerator } from './invoice-generator-spec-helper';
+import { XRechnungInvoiceGenerator } from './xrechnung-invoice-generator';
+import { ZugferdInvoiceGenerator } from './zugferd-invoice-generator';
 
 // Helper to create invoice items for test cases
 function createItems(
-	config: { count: number; price: number; vat: number }[],
-	vatEnabled: boolean,
+  config: { count: number; price: number; vat: number }[],
+  vatEnabled: boolean
 ): InvoiceItemEntity[] {
-	const items: InvoiceItemEntity[] = [];
-	for (const item of config) {
-		items.push(
-			new InvoiceItemEntity({
-				name: `Item ${item.count}`,
-				description: `Description for item ${item.count}`,
-				quantity: item.count,
-				priceCents: item.price,
-				taxPercentage: vatEnabled ? item.vat : 0,
-			}),
-		);
-	}
-	return items;
+  const items: InvoiceItemEntity[] = [];
+  for (const item of config) {
+    items.push(
+      new InvoiceItemEntity({
+        name: `Item ${item.count}`,
+        description: `Description for item ${item.count}`,
+        quantity: item.count,
+        priceCents: item.price,
+        taxPercentage: vatEnabled ? item.vat : 0,
+      })
+    );
+  }
+  return items;
 }
 
 const itemsTestCases = {
-	oneItem: [{ count: 1, price: 100, vat: 19 }],
-	multipleItems: [
-		{ count: 3, price: 100, vat: 19 },
-		{ count: 5, price: 999, vat: 19 },
-		{ count: 1, price: 2000, vat: 7 },
-	],
-	oneItemAndOneDiscount: [
-		{ count: 1, price: 100, vat: 19 },
-		{ count: 1, price: -50, vat: 19 },
-	],
-	multipleItemsAndMultipleDiscounts: [
-		{ count: 3, price: 100, vat: 19 },
-		{ count: 5, price: 999, vat: 19 },
-		{ count: 1, price: 2000, vat: 7 },
-		{ count: 1, price: -50, vat: 19 },
-		{ count: 1, price: -100, vat: 7 },
-	],
+  oneItem: [{ count: 1, price: 100, vat: 19 }],
+  multipleItems: [
+    { count: 3, price: 100, vat: 19 },
+    { count: 5, price: 999, vat: 19 },
+    { count: 1, price: 2000, vat: 7 },
+  ],
+  oneItemAndOneDiscount: [
+    { count: 1, price: 100, vat: 19 },
+    { count: 1, price: -50, vat: 19 },
+  ],
+  multipleItemsAndMultipleDiscounts: [
+    { count: 3, price: 100, vat: 19 },
+    { count: 5, price: 999, vat: 19 },
+    { count: 1, price: 2000, vat: 7 },
+    { count: 1, price: -50, vat: 19 },
+    { count: 1, price: -100, vat: 7 },
+  ],
 };
 
 const testCategories = [
-	{
-		name: 'VAT enabled',
-		vatStatus: VatStatus.VAT_ENABLED,
-		items: { ...itemsTestCases },
-	},
-	// {
-	// 	name: 'VAT kleinunternehmer',
-	// 	vatStatus: VatStatus.VAT_DISABLED_KLEINUNTERNEHMER,
-	// 	items: { ...itemsTestCases },
-	// },
-	// {
-	// 	name: 'VAT disabled',
-	// 	vatStatus: VatStatus.VAT_DISABLED_OTHER,
-	// 	items: { ...itemsTestCases },
-	// },
+  {
+    name: 'VAT enabled',
+    vatStatus: VatStatus.VAT_ENABLED,
+    items: { ...itemsTestCases },
+  },
+  // {
+  // 	name: 'VAT kleinunternehmer',
+  // 	vatStatus: VatStatus.VAT_DISABLED_KLEINUNTERNEHMER,
+  // 	items: { ...itemsTestCases },
+  // },
+  // {
+  // 	name: 'VAT disabled',
+  // 	vatStatus: VatStatus.VAT_DISABLED_OTHER,
+  // 	items: { ...itemsTestCases },
+  // },
 ];
 
 describe('InvoiceGenerator', () => {
-	describe('ZUGFeRD', () => {
-		testCategories.forEach((testCase) => {
-			describe(testCase.name, () => {
-				it(`should generate a regular invoice`, async () => {
-					await runGenerator(new ZugferdInvoiceGenerator(), {
-						items: createItems(
-							testCase.items.multipleItems,
-							testCase.vatStatus === VatStatus.VAT_ENABLED,
-						),
-						vatStatus: testCase.vatStatus,
-					});
-				});
-				it.skip(`should generate an invoice with multiple discounts`, async () => {
-					await runGenerator(new ZugferdInvoiceGenerator(), {
-						items: createItems(
-							testCase.items.multipleItemsAndMultipleDiscounts,
-							testCase.vatStatus === VatStatus.VAT_ENABLED,
-						),
-						vatStatus: testCase.vatStatus,
-					});
-				});
-			});
-		});
-	});
-	describe('XRechnung', () => {
-		testCategories.forEach((testCase) => {
-			describe(testCase.name, () => {
-				it(`should generate a regular invoice`, async () => {
-					await runGenerator(new XRechnungInvoiceGenerator(), {
-						items: createItems(
-							testCase.items.multipleItems,
-							testCase.vatStatus === VatStatus.VAT_ENABLED,
-						),
-						vatStatus: testCase.vatStatus,
-					});
-				});
-				it(`should generate an invoice with multiple discounts`, async () => {
-					await runGenerator(new XRechnungInvoiceGenerator(), {
-						items: createItems(
-							testCase.items.multipleItemsAndMultipleDiscounts,
-							testCase.vatStatus === VatStatus.VAT_ENABLED,
-						),
-						vatStatus: testCase.vatStatus,
-					});
-				});
-			});
-		});
-	});
+  describe('ZUGFeRD', () => {
+    testCategories.forEach((testCase) => {
+      describe(testCase.name, () => {
+        it(`should generate a regular invoice`, async () => {
+          await runGenerator(new ZugferdInvoiceGenerator(), {
+            items: createItems(
+              testCase.items.multipleItems,
+              testCase.vatStatus === VatStatus.VAT_ENABLED
+            ),
+            vatStatus: testCase.vatStatus,
+          });
+        });
+        it.skip(`should generate an invoice with multiple discounts`, async () => {
+          await runGenerator(new ZugferdInvoiceGenerator(), {
+            items: createItems(
+              testCase.items.multipleItemsAndMultipleDiscounts,
+              testCase.vatStatus === VatStatus.VAT_ENABLED
+            ),
+            vatStatus: testCase.vatStatus,
+          });
+        });
+      });
+    });
+  });
+  describe('XRechnung', () => {
+    testCategories.forEach((testCase) => {
+      describe(testCase.name, () => {
+        it(`should generate a regular invoice`, async () => {
+          await runGenerator(new XRechnungInvoiceGenerator(), {
+            items: createItems(
+              testCase.items.multipleItems,
+              testCase.vatStatus === VatStatus.VAT_ENABLED
+            ),
+            vatStatus: testCase.vatStatus,
+          });
+        });
+        it(`should generate an invoice with multiple discounts`, async () => {
+          await runGenerator(new XRechnungInvoiceGenerator(), {
+            items: createItems(
+              testCase.items.multipleItemsAndMultipleDiscounts,
+              testCase.vatStatus === VatStatus.VAT_ENABLED
+            ),
+            vatStatus: testCase.vatStatus,
+          });
+        });
+      });
+    });
+  });
 });

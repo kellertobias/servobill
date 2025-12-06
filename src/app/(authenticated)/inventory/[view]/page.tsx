@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-import { InventoryView } from '../types';
+import type { InventoryView } from '../types';
 
 import InventoryNodePage from './inventory-node-page';
 
@@ -11,9 +11,10 @@ import InventoryNodePage from './inventory-node-page';
  * Handles switching between types and locations based on the view param.
  */
 export default function InventoryListPage({
-	params,
+  params,
 }: {
-	params: { view: InventoryView };
+  params: Promise<{ view: InventoryView }>;
 }) {
-	return <InventoryNodePage params={params} />;
+  const resolvedParams = React.use(params);
+  return <InventoryNodePage params={resolvedParams} />;
 }
