@@ -17,11 +17,7 @@ const nextConfig = {
   typescript: {
     tsconfigPath: './tsconfig.next.json',
   },
-  serverExternalPackages: ['graphql', 'typeorm'],
-  webpack: {
-    devtool: 'source-map',
-  },
-  // We use webpack config for source maps, so we disable turbopack for now to match previous behavior or explicitly opt-in to webpack.
+  serverExternalPackages: ['graphql', 'typeorm', 'apollo-server-lambda', 'apollo-server-core'],
   // Next 16 defaults to turbopack for `next build`.
 };
 

@@ -68,14 +68,10 @@ scalar DateTime
 type Expense {
   attachments: [Attachment!]
 
-  """
-  The full category object assigned to this expense.
-  """
+  """The full category object assigned to this expense."""
   category: ExpenseCategoryType
 
-  """
-  The ID of the expense category assigned to this expense.
-  """
+  """The ID of the expense category assigned to this expense."""
   categoryId: String
   createdAt: DateTime!
   description: String
@@ -111,9 +107,7 @@ type ExpenseCategoryType {
 input ExpenseInput {
   attachmentIds: [String!]
 
-  """
-  The ID of the expense category assigned to this expense.
-  """
+  """The ID of the expense category assigned to this expense."""
   categoryId: String
   description: String
   expendedAt: DateTime!
@@ -129,14 +123,10 @@ input ExpenseWhereInput {
 }
 
 input ExtractReceiptInput {
-  """
-  An array of attachment IDs to process.
-  """
+  """An array of attachment IDs to process."""
   attachmentIds: [String!]
 
-  """
-  Text content to process (e.g., from an email).
-  """
+  """Text content to process (e.g., from an email)."""
   text: String
 }
 
@@ -180,18 +170,14 @@ input IncomeSurplusReportWhereInput {
   startDate: DateTime!
 }
 
-"""
-The state of a check for an inventory item
-"""
+"""The state of a check for an inventory item"""
 enum InventoryCheckState {
   FAIL
   PASS
   RECHECK
 }
 
-"""
-The type of history entry for an inventory item
-"""
+"""The type of history entry for an inventory item"""
 enum InventoryHistoryType {
   CHECK
   NOTE
@@ -243,9 +229,7 @@ input InventoryItemPropertyInput {
   value: String!
 }
 
-"""
-The state of an inventory item
-"""
+"""The state of an inventory item"""
 enum InventoryItemState {
   BROKEN
   DEFAULT
@@ -347,9 +331,7 @@ type InvoiceActivity {
   activityAt: DateTime!
   attachToEmail: Boolean
 
-  """
-  The linked attachment details, if any
-  """
+  """The linked attachment details, if any"""
   attachment: Attachment
   id: String!
   notes: String
@@ -367,9 +349,7 @@ input InvoiceActivityInput {
   user: String
 }
 
-"""
-Type of Activity Log entry
-"""
+"""Type of Activity Log entry"""
 enum InvoiceActivityType {
   ARCHIVE_INVOICE
   ARCHIVE_OFFER
@@ -481,9 +461,7 @@ type InvoiceLinks {
   offerId: String
 }
 
-"""
-Supported output formats for digital invoices
-"""
+"""Supported output formats for digital invoices"""
 enum InvoiceOutputFormat {
   PDF
   XRECHNUNG
@@ -497,9 +475,7 @@ input InvoicePaymentInput {
   when: DateTime
 }
 
-"""
-Invoice status
-"""
+"""Invoice status"""
 enum InvoiceStatus {
   CANCELLED
   DRAFT
@@ -513,9 +489,7 @@ input InvoiceSubmissionInput {
   when: DateTime
 }
 
-"""
-The way(s) the invoice was submitted
-"""
+"""The way(s) the invoice was submitted"""
 enum InvoiceSubmissionType {
   EMAIL
   LETTER
@@ -540,9 +514,7 @@ type InvoiceTemplateResult {
   pdfTemplate: String!
 }
 
-"""
-Invoice or Offer
-"""
+"""Invoice or Offer"""
 enum InvoiceType {
   INVOICE
   OFFER
@@ -566,12 +538,7 @@ input ListAttachmentsInput {
 type Mutation {
   addInventoryCheck(id: String!, note: String, state: InventoryCheckState!): Boolean!
   addInventoryNote(id: String!, note: String!): Boolean!
-  attachUpload(
-    attachmentId: String!
-    expenseId: String
-    inventoryId: String
-    invoiceId: String
-  ): Attachment!
+  attachUpload(attachmentId: String!, expenseId: String, inventoryId: String, invoiceId: String): Attachment!
   cancelScheduledInvoiceSend(id: String!): InvoiceChangedResponse!
   confirmUpload(attachmentId: String!): Attachment!
   copyInvoice(as: InvoiceType!, id: String!): InvoiceChangedResponse!
@@ -593,12 +560,7 @@ type Mutation {
   deleteProduct(id: String!): Product!
   extractReceipt(input: ExtractReceiptInput!): ExtractReceiptResult!
   importInvoices(data: [InvoiceImportInput!]!): [Invoice!]!
-  invoiceAddComment(
-    attachToEmail: Boolean
-    attachmentId: String
-    comment: String
-    invoiceId: String!
-  ): InvoiceChangedResponse!
+  invoiceAddComment(attachToEmail: Boolean, attachmentId: String, comment: String, invoiceId: String!): InvoiceChangedResponse!
   invoiceAddPayment(id: String!, payment: InvoicePaymentInput!): InvoiceChangedResponse!
   invoiceCancelUnpaid(deleteExpenses: Boolean, id: String!): InvoiceChangedResponse!
   invoiceDeleteDraft(id: String!): InvoiceChangedResponse!
@@ -608,18 +570,11 @@ type Mutation {
   purgeInvoices(confirm: String!): Boolean!
   requestUpload(fileName: String!, mimeType: String!, size: Int!): RequestAttachmentUploadUrlResult!
   sendTestEvent(data: String!, name: String!): String!
-  setInvoiceActivityAttachmentEmailFlag(
-    activityId: String!
-    attachToEmail: Boolean!
-    invoiceId: String!
-  ): InvoiceChangedResponse!
+  setInvoiceActivityAttachmentEmailFlag(activityId: String!, attachToEmail: Boolean!, invoiceId: String!): InvoiceChangedResponse!
   testRenderTemplate(pdf: Boolean, styles: String!, template: String!): String!
   updateCustomer(data: CustomerInput!, id: String!): Customer!
   updateExpense(data: ExpenseInput!, id: String!): Expense!
-  updateExpenseSettings(
-    categories: [ExpenseCategoryInputType!]!
-    fixExpensesForImport: Boolean
-  ): [ExpenseCategoryType!]!
+  updateExpenseSettings(categories: [ExpenseCategoryInputType!]!, fixExpensesForImport: Boolean): [ExpenseCategoryType!]!
   updateInventoryItem(data: InventoryItemInput!, id: String!): InventoryItem!
   updateInventoryLocation(data: InventoryLocationInput!, id: String!): InventoryLocation!
   updateInventoryType(data: InventoryTypeInput!, id: String!): InventoryType!
@@ -683,11 +638,7 @@ type Query {
   inventoryItems(limit: Int, skip: Int, where: InventoryItemWhereInput): [InventoryItem!]!
   inventoryLocation(id: String): InventoryLocation
   inventoryLocationByBarcode(barcode: String!): InventoryLocation
-  inventoryLocations(
-    limit: Int
-    skip: Int
-    where: InventoryLocationWhereInput
-  ): [InventoryLocation!]!
+  inventoryLocations(limit: Int, skip: Int, where: InventoryLocationWhereInput): [InventoryLocation!]!
   inventoryType(id: String): InventoryType
   inventoryTypes(limit: Int, skip: Int, where: InventoryTypeWhereInput): [InventoryType!]!
   invoice(id: String!): Invoice!
