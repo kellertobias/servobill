@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import type React from 'react';
+import { useState } from 'react';
 
-import { AttachmentFilePartial } from '@/api/download-attachment';
+import type { AttachmentFilePartial } from '@/api/download-attachment';
 
 import { AttachmentDropzoneUpload } from './attachment-dropzone-upload';
 import { AttachmentFileList } from './attachment-file-list';

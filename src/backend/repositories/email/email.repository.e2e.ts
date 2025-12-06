@@ -2,15 +2,13 @@
 // @vitest-execute serial
 
 import 'reflect-metadata';
-import { describe, it, expect, beforeEach } from 'vitest';
-
-import { EmailDynamodbRepository } from './email.dynamodb-repository';
-import { EmailRelationalRepository } from './email.relational-repository';
-import { EmailOrmEntity } from './relational-orm-entity';
-import { EmailRepository } from './interface';
-
+import { beforeEach, describe, expect, it } from 'vitest';
 import { EmailEntity } from '@/backend/entities/email.entity';
 import { prepareRepoTest } from '@/test/repo-test';
+import { EmailDynamodbRepository } from './email.dynamodb-repository';
+import { EmailRelationalRepository } from './email.relational-repository';
+import type { EmailRepository } from './interface';
+import { EmailOrmEntity } from './relational-orm-entity';
 
 /**
  * Parameterized test suite for both repository implementations.

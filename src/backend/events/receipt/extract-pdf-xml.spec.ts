@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
 import { PDFDocument } from 'pdf-lib';
+import { describe, expect, it } from 'vitest';
 
 import { extractEmbeddedXmlWithPdfLib } from './extract-pdf-xml';
 

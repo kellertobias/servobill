@@ -4,13 +4,13 @@
  * All dependencies (process.env) are mocked. Tests cover all major config branches.
  * Uses Vitest (all functions imported explicitly).
  */
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { ConfigService } from './config.service';
 import {
 	DatabaseType,
-	FileStorageType,
 	EmailType,
+	FileStorageType,
 	LLMProvider,
 } from './constants';
 

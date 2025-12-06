@@ -1,12 +1,13 @@
-import * as handlebars from 'handlebars';
 import dayjs from 'dayjs';
-
-import { GenerateInvoiceHtmlCommand } from './generate-invoice-html.command';
-
-import { CqrsHandler, ICqrsHandler } from '@/backend/services/cqrs.service';
-import { centsToPrice } from '@/common/money';
+import * as handlebars from 'handlebars';
 import { InvoiceType } from '@/backend/entities/invoice.entity';
 import { Span } from '@/backend/instrumentation';
+import {
+	CqrsHandler,
+	type ICqrsHandler,
+} from '@/backend/services/cqrs.service';
+import { centsToPrice } from '@/common/money';
+import { GenerateInvoiceHtmlCommand } from './generate-invoice-html.command';
 
 const makeTemplate = (template: string, styles: string) => {
 	return `
@@ -42,8 +43,6 @@ handlebars.registerHelper('foldmarks', () => {
 export class GenerateInvoiceHtmlHandler
 	implements ICqrsHandler<GenerateInvoiceHtmlCommand>
 {
-	constructor() {}
-
 	private buildData(command: GenerateInvoiceHtmlCommand['request']) {
 		return {
 			name:
@@ -106,15 +105,13 @@ export class GenerateInvoiceHtmlHandler
 				quantity: item.quantity,
 				price: `${centsToPrice(item.priceCents)}€`,
 				tax: `${item.taxPercentage}%`,
-				total: `${centsToPrice(
-					item.priceCents * item.quantity * (1 + item.taxPercentage / 100),
-				)}€`,
+				total: `${centsToPrice(item.priceCents * item.quantity * (1 + item.taxPercentage / 100))}€`,
 			})),
 		};
 	}
 
 	private registerHelpers(command: GenerateInvoiceHtmlCommand['request']) {
-		handlebars.registerHelper('date', function (date, format) {
+		handlebars.registerHelper('date', (date, format) => {
 			if (!date || !(typeof date === 'string' || date instanceof Date)) {
 				date =
 					command.invoice.type === InvoiceType.INVOICE
@@ -128,11 +125,11 @@ export class GenerateInvoiceHtmlHandler
 				typeof format === 'string' && format ? format : 'DD.MM.YYYY',
 			);
 		});
-		handlebars.registerHelper('nl2br', function (text: string) {
-			return new handlebars.SafeString(
-				`${text || ''}`.replaceAll('\n', '<br />'),
-			);
-		});
+		handlebars.registerHelper(
+			'nl2br',
+			(text: string) =>
+				new handlebars.SafeString(`${text || ''}`.replaceAll('\n', '<br />')),
+		);
 		handlebars.registerHelper('withTax', function (options) {
 			const hasTax = command.invoice.items.some(
 				(item) => item?.taxPercentage && item?.taxPercentage > 0,

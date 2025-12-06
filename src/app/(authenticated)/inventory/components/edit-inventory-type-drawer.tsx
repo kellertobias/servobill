@@ -1,10 +1,10 @@
-import React, { forwardRef, useCallback } from 'react';
-
+import type React from 'react';
+import { forwardRef, useCallback } from 'react';
+import { API, gql } from '@/api/index';
+import { Button } from '@/components/button';
 import { Drawer } from '@/components/drawer';
 import { Input } from '@/components/input';
-import { API, gql } from '@/api/index';
 import { useLoadData, useSaveCallback } from '@/hooks/load-data';
-import { Button } from '@/components/button';
 
 import { InventoryTypeSelect } from './inventory-type-select';
 import { useInventoryDrawer } from './use-inventory-drawer';

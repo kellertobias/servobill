@@ -10,21 +10,18 @@
  * - Cleans up spies only if they exist.
  */
 
-import * as fsPromisesMock from 'node:fs/promises';
 import * as fsMock from 'node:fs';
-
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import * as fsPromisesMock from 'node:fs/promises';
 import type { MockInstance } from 'vitest';
-
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { AttachmentEntity } from '@/backend/entities/attachment.entity';
+import type { ConfigService } from '@/backend/services/config.service';
+import { FileStorageType } from '@/backend/services/constants';
+import { CONFIG_SERVICE, S3_SERVICE } from '@/backend/services/di-tokens';
+import type { S3Service } from '@/backend/services/s3.service';
+import { App } from '@/common/di';
 import { FileStorageServiceLocal } from './file-storage-local.service';
 import { FileStorageServiceS3 } from './file-storage-s3.service';
-
-import { AttachmentEntity } from '@/backend/entities/attachment.entity';
-import { App } from '@/common/di';
-import { CONFIG_SERVICE, S3_SERVICE } from '@/backend/services/di-tokens';
-import { S3Service } from '@/backend/services/s3.service';
-import { FileStorageType } from '@/backend/services/constants';
-import type { ConfigService } from '@/backend/services/config.service';
 
 // --- Mock fs/promises and fs globally to avoid spy issues with Node.js built-ins ---
 vi.mock('node:fs/promises', () => ({
@@ -109,9 +106,10 @@ describe('FileStorageServiceLocal', () => {
 
 	beforeEach(() => {
 		// Setup DI context
+		const config = makeConfig(FileStorageType.LOCAL);
 		app = App.forRoot({
 			modules: [
-				{ token: CONFIG_SERVICE, value: makeConfig(FileStorageType.LOCAL) },
+				{ token: CONFIG_SERVICE, value: config },
 				FileStorageServiceLocal,
 			],
 		});

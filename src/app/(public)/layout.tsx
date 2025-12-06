@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
 import clsx from 'clsx';
 import { Inter } from 'next/font/google';
+import type React from 'react';
 
 import { useRequireGuest } from '@/hooks/require-login';
 

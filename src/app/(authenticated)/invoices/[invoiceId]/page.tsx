@@ -1,28 +1,25 @@
 'use client';
 
-import React from 'react';
 import { useRouter } from 'next/navigation';
-
-import { PageContent } from '@/components/page';
-import { LoadingSkeleton } from '@/components/loading';
-import { useHasChanges } from '@/hooks/load-data';
-import { Button } from '@/components/button';
+import React from 'react';
 import { API, gql } from '@/api/index';
-import { doToast } from '@/components/toast';
+import { InvoiceStatus, InvoiceType, VatStatus } from '@/common/gql/graphql';
+import { Button } from '@/components/button';
 import { confirmDialog } from '@/components/dialog';
-
+import { LoadingSkeleton } from '@/components/loading';
+import { PageContent } from '@/components/page';
+import { doToast } from '@/components/toast';
+import { useHasChanges } from '@/hooks/load-data';
 import { useInvoiceData, useInvoiceSettingsData } from './data';
+import { InvoiceActivityFeed } from './invoice-activity';
+import { InvoiceHeader } from './invoice-header';
+import { InvoicePositions } from './invoice-positions';
+import { InvoiceStatusCancelled } from './invoice-status/invoice-status-cancelled';
+import { InvoiceStatusDraft } from './invoice-status/invoice-status-draft';
+import { InvoiceStatusOfferDraft } from './invoice-status/invoice-status-offer-draft';
+import { InvoiceStatusOfferSent } from './invoice-status/invoice-status-offer-sent';
 import { InvoiceStatusPaid } from './invoice-status/invoice-status-paid';
 import { InvoiceStatusSent } from './invoice-status/invoice-status-sent';
-import { InvoiceStatusDraft } from './invoice-status/invoice-status-draft';
-import { InvoiceStatusOfferSent } from './invoice-status/invoice-status-offer-sent';
-import { InvoiceStatusOfferDraft } from './invoice-status/invoice-status-offer-draft';
-import { InvoiceActivityFeed } from './invoice-activity';
-import { InvoicePositions } from './invoice-positions';
-import { InvoiceHeader } from './invoice-header';
-import { InvoiceStatusCancelled } from './invoice-status/invoice-status-cancelled';
-
-import { InvoiceStatus, InvoiceType, VatStatus } from '@/common/gql/graphql';
 
 export default function InvoiceDetailPage() {
 	const router = useRouter();

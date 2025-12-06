@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { DomainEntity } from './abstract.entity';
 
 import { CustomJson } from '@/common/json';
 import { Numbering } from '@/common/numbers';
-import { ObjectProperties } from '@/common/ts-helpers';
+import type { ObjectProperties } from '@/common/ts-helpers';
+import { DomainEntity } from './abstract.entity';
 
 /**
  * Enum for supported invoice output formats.
@@ -36,7 +36,7 @@ export abstract class AbstractSettingsEntity {
 	constructor(
 		params: any,
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		saveInner: (data: string) => Promise<void>,
+		_saveInner: (data: string) => Promise<void>,
 	) {
 		Object.assign(this, params);
 	}

@@ -1,10 +1,8 @@
-import { ProfileBasic } from 'node-zugferd/profile/basic';
-
+import type { ProfileBasic } from 'node-zugferd/profile/basic';
+import type { InvoiceEntity } from '@/backend/entities/invoice.entity';
+import type { CompanyDataSetting } from '@/backend/entities/settings.entity';
 import { mapInvoiceItemsToProfileBasic } from './zugferd-line';
 import { mapInvoiceTotalsToProfileBasic } from './zugferd-totals';
-
-import { CompanyDataSetting } from '@/backend/entities/settings.entity';
-import { InvoiceEntity } from '@/backend/entities/invoice.entity';
 
 /**
  * Helper to map InvoiceEntity and settings to ProfileBasic for ZUGFeRD.

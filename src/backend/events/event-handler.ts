@@ -1,11 +1,8 @@
-import { Context, EventBridgeEvent } from 'aws-lambda';
-import { validateOrReject, ValidationError } from 'class-validator';
-
-import { Logger } from '../services/logger.service';
-
-import { EventHandler as EventHandlerFunction } from './types';
-
+import type { Context, EventBridgeEvent } from 'aws-lambda';
+import { ValidationError, validateOrReject } from 'class-validator';
 import { withInstrumentation } from '@/backend/instrumentation';
+import { Logger } from '../services/logger.service';
+import type { EventHandler as EventHandlerFunction } from './types';
 
 export const makeEventHandler = <T extends object>(
 	EventValidatorClass: new () => T,

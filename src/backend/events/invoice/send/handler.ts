@@ -2,14 +2,12 @@ import 'reflect-metadata';
 
 import '@/backend/services/config.service';
 
-import { EventHandler } from '../../types';
-import { makeEventHandler } from '../../event-handler';
-
-import { InvoiceSendEvent } from './event';
-import { HandlerExecution } from './execute';
-
 import { Logger } from '@/backend/services/logger.service';
 import { DefaultContainer } from '@/common/di';
+import { makeEventHandler } from '../../event-handler';
+import type { EventHandler } from '../../types';
+import { InvoiceSendEvent } from './event';
+import { HandlerExecution } from './execute';
 
 export const handlerName = 'handler';
 export const layers = ['layers/chromium'];

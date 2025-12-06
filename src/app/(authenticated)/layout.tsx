@@ -1,13 +1,12 @@
 'use client';
 
-import React from 'react';
 import clsx from 'clsx';
 import { Inter } from 'next/font/google';
-import { ModalProvider } from 'react-modal-hook';
+import type React from 'react';
 import { Toaster } from 'react-hot-toast';
-
-import { UserContext, useRequireLogin } from '@/hooks/require-login';
+import { ModalProvider } from 'react-modal-hook';
 import { Navbar } from '@/components/navbar';
+import { UserContext, useRequireLogin } from '@/hooks/require-login';
 
 const inter = Inter({ subsets: ['latin'] });
 

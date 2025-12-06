@@ -1,11 +1,10 @@
-import { CronEvent } from './event';
-
-import { Inject, Service } from '@/common/di';
-import { Logger } from '@/backend/services/logger.service';
 import { TIME_BASED_JOB_REPOSITORY } from '@/backend/repositories/time-based-job/di-tokens';
 import type { TimeBasedJobRepository } from '@/backend/repositories/time-based-job/interface';
 import { EVENTBUS_SERVICE } from '@/backend/services/di-tokens';
 import type { EventBusService } from '@/backend/services/eventbus.service';
+import { Logger } from '@/backend/services/logger.service';
+import { Inject, Service } from '@/common/di';
+import type { CronEvent } from './event';
 
 import '@/backend/repositories';
 
@@ -38,7 +37,7 @@ export class HandlerExecution {
 			triggeredAt: event.triggeredAt,
 		});
 		const now = Date.now();
-		let jobs;
+		let jobs: any;
 		try {
 			jobs = await this.jobRepository.listDueJobs(now);
 			this.logger.info(`Found ${jobs.length} due jobs`, { count: jobs.length });

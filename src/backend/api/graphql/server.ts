@@ -1,9 +1,8 @@
-import { ApolloServer } from 'apollo-server-lambda';
 import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
-import { APIGatewayProxyStructuredResultV2 } from 'aws-lambda';
-
-import { globalSchema } from './schema';
+import { ApolloServer } from 'apollo-server-lambda';
+import type { APIGatewayProxyStructuredResultV2 } from 'aws-lambda';
 import { formatError } from './format-error';
+import { globalSchema } from './schema';
 
 export async function getGraphQLServer<E, C, Ctx>(
 	contextBuilder: ({

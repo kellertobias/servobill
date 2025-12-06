@@ -1,6 +1,5 @@
-import { AbstractRepositoryInterface } from '../abstract-repository';
-
-import { AttachmentEntity } from '@/backend/entities/attachment.entity';
+import type { AttachmentEntity } from '@/backend/entities/attachment.entity';
+import type { AbstractRepositoryInterface } from '../abstract-repository';
 
 export type AttachmentCreateInput = {
 	fileName: string;

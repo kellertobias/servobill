@@ -8,22 +8,22 @@
  * Why: To verify that SESService correctly configures and uses nodemailer for both
  * SES and SMTP, and that attachments are handled as expected.
  */
-import nodemailer from 'nodemailer';
-import { SESClient } from '@aws-sdk/client-ses';
-import {
-	describe,
-	it,
-	expect,
-	beforeEach,
-	vi,
-	afterEach,
-	MockInstance,
-} from 'vitest';
-import type { SendMailOptions } from 'nodemailer';
 
-import { SESService } from './ses.service';
-import { EmailType, DatabaseType, FileStorageType } from './constants';
+import { SESClient } from '@aws-sdk/client-ses';
+import type { SendMailOptions } from 'nodemailer';
+import nodemailer from 'nodemailer';
+import {
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	type MockInstance,
+	vi,
+} from 'vitest';
 import { ConfigService } from './config.service';
+import { DatabaseType, EmailType, FileStorageType } from './constants';
+import { SESService } from './ses.service';
 
 // Mock nodemailer and its createTransport function
 vi.mock('nodemailer', () => {
@@ -272,7 +272,7 @@ describe('SESService', () => {
 		// Use vi.fn().mockImplementationOnce to simulate error
 		sendMailMock.mockImplementationOnce(
 			(
-				opts: SendMailOptions,
+				_opts: SendMailOptions,
 				cb: (err: Error | null, info?: unknown) => void,
 			) => cb(new Error('fail')),
 		);

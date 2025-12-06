@@ -1,16 +1,13 @@
 import 'reflect-metadata';
 
-import { NextRequest } from 'next/server';
-
+import type { NextRequest } from 'next/server';
+import { DefaultContainer } from '@/common/di';
 import { checkAuth } from '../check-auth';
-
 import {
 	DownloadHelper,
-	NotFoundError,
 	NotConfiguredError,
+	NotFoundError,
 } from './download-service';
-
-import { DefaultContainer } from '@/common/di';
 
 /**
  * GET /api/download?attachmentId=...

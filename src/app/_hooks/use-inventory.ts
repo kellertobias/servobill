@@ -1,7 +1,6 @@
 import React from 'react';
-
-import { useLoadData } from '@/hooks/load-data';
 import { API, gql } from '@/api/index';
+import { useLoadData } from '@/hooks/load-data';
 
 /**
  * @file Custom hook for fetching inventory data (types and locations).

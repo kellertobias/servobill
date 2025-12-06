@@ -9,15 +9,15 @@
  * NOTE: Uses a static JWT secret for reproducibility.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import type {
-	APIGatewayProxyEventV2,
-	Context,
-	APIGatewayProxyStructuredResultV2,
 	APIGatewayEventRequestContextV2,
+	APIGatewayProxyEventV2,
+	APIGatewayProxyStructuredResultV2,
+	Context,
 } from 'aws-lambda';
 import * as cookie from 'cookie';
 import jwt from 'jsonwebtoken';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 // Set up environment variables (other than JWT_SECRET)
 const OLD_ENV = { ...process.env };
@@ -34,10 +34,10 @@ afterEach(() => {
  * preventing invalid signature errors in tests.
  */
 import {
-	Session,
-	makeTokenCookie,
 	extractToken,
+	makeTokenCookie,
 	returnUnauthorized,
+	Session,
 	withSession,
 } from './session';
 

@@ -1,17 +1,17 @@
-import React, { useState } from 'react';
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 import {
 	DocumentTextIcon,
 	PhotoIcon,
 	XMarkIcon,
 } from '@heroicons/react/24/outline';
-import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
-
-import { gql, query } from '@/api/graphql';
+import type React from 'react';
+import { useState } from 'react';
 import {
-	AttachmentFilePartial,
+	type AttachmentFilePartial,
 	downloadAttachment,
 } from '@/api/download-attachment';
+import { gql, query } from '@/api/graphql';
 
 /**
  * Props for AttachmentFileList component.

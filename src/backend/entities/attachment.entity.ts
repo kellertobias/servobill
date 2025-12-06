@@ -1,6 +1,6 @@
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 
-import { DomainEntity, DomainEntityKeys } from './abstract.entity';
+import { DomainEntity, type DomainEntityKeys } from './abstract.entity';
 
 /**
  * Entity representing a file attachment that can be linked to an invoice, expense, or inventory item.

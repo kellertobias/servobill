@@ -1,7 +1,3 @@
-import clsx from 'clsx';
-import React from 'react';
-import { useParams } from 'next/navigation';
-
 import {
 	CheckCircleIcon,
 	ClockIcon,
@@ -11,15 +7,17 @@ import {
 	UserCircleIcon,
 } from '@heroicons/react/20/solid';
 import { TrashIcon } from '@heroicons/react/24/outline';
-import relativeTime from 'dayjs/plugin/relativeTime';
+import clsx from 'clsx';
 import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import { useParams } from 'next/navigation';
+import React from 'react';
 
 import { downloadAttachment } from '@/api/download-attachment';
-
-import { InvoiceActivityForm } from './invoice-activity-form';
-import { useInvoiceActivity } from './data';
-
 import { InvoiceActivityType } from '@/common/gql/graphql';
+import { useInvoiceActivity } from './data';
+import { InvoiceActivityForm } from './invoice-activity-form';
+
 dayjs.extend(relativeTime);
 
 const getActivityIcon = (type: InvoiceActivityType) => {
@@ -315,7 +313,7 @@ export function InvoiceActivityFeed() {
 			<h2 className="text-sm font-semibold leading-6 text-gray-900">
 				Activity
 			</h2>
-			<ul role="list" className="mt-6 space-y-6">
+			<ul className="mt-6 space-y-6">
 				{data?.map(
 					(activity, index) =>
 						activity && (
@@ -408,7 +406,6 @@ export function InvoiceActivityFeed() {
 														activityId: activity.id,
 													});
 												}}
-												aria-label="Delete attachment"
 											>
 												<TrashIcon className="h-3 w-3 text-red-600" />
 												<span>Remove</span>

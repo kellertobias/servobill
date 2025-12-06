@@ -1,29 +1,29 @@
-import crypto from 'crypto';
-import { randomUUID } from 'crypto';
+import crypto, { randomUUID } from 'node:crypto';
 
 import dayjs from 'dayjs';
-
+import { centsToPrice } from '@/common/money';
+import type { ObjectProperties } from '@/common/ts-helpers';
+import { InvoiceSendLaterEvent } from '../events/invoice/later/event';
 import { InvoiceGeneratePdfEvent } from '../events/invoice/pdf/event';
 import { InvoiceSendEvent } from '../events/invoice/send/event';
-import { InvoiceSendLaterEvent } from '../events/invoice/later/event';
-
-import { CustomerEntity } from './customer.entity';
+import {
+	DomainEntity,
+	type DomainEntityKeys,
+	DomainEvent,
+} from './abstract.entity';
+import type { CustomerEntity } from './customer.entity';
+import type { ExpenseEntity } from './expense.entity';
 import {
 	InvoiceActivityEntity,
 	InvoiceActivityType,
 } from './invoice-activity.entity';
-import { InvoiceItemEntity } from './invoice-item.entity';
+import type { InvoiceItemEntity } from './invoice-item.entity';
 import {
-	InvoiceSubmissionEntity,
+	type InvoiceSubmissionEntity,
 	InvoiceSubmissionType,
 } from './invoice-submission.entity';
-import { InvoiceSettingsEntity } from './settings.entity';
-import { DomainEntity, DomainEntityKeys, DomainEvent } from './abstract.entity';
-import { TimeBasedJobEntity } from './time-based-job.entity';
-import { ExpenseEntity } from './expense.entity';
-
-import { centsToPrice } from '@/common/money';
-import { ObjectProperties } from '@/common/ts-helpers';
+import type { InvoiceSettingsEntity } from './settings.entity';
+import type { TimeBasedJobEntity } from './time-based-job.entity';
 
 export enum InvoiceType {
 	INVOICE = 'INVOICE',
@@ -521,7 +521,7 @@ export class InvoiceEntity extends DomainEntity {
 		user: string,
 	): InvoiceActivityEntity {
 		if (newStatus === InvoiceStatus.CANCELLED) {
-			if (this.status != InvoiceStatus.SENT) {
+			if (this.status !== InvoiceStatus.SENT) {
 				throw new Error('Invoice cannot be cancelled');
 			}
 			this.status = newStatus;

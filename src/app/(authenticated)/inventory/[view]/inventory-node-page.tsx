@@ -2,31 +2,28 @@
 
 import '@/components/dev-utils';
 
+import { QrCodeIcon } from '@heroicons/react/20/solid';
+import { PencilIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { notFound, useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
-
-import { PencilIcon, PlusIcon } from '@heroicons/react/24/outline';
-import { QrCodeIcon } from '@heroicons/react/20/solid';
-
-import { PageCard, PageContent } from '@/components/page';
-import { Button } from '@/components/button';
-import { API, gql } from '@/api/index';
 import { exportInventory } from '@/api/import-export/inventory-export';
 import { importInventoryItemsFromCSV } from '@/api/import-export/inventory-import-csv';
 import { importInventoryLocationsAndTypesFromJSON } from '@/api/import-export/inventory-import-json';
-
-import { InventoryHeader } from '../components/inventory-header';
-import { InventoryTypesTable } from '../components/inventory-types-table';
-import { InventoryLocationsTable } from '../components/inventory-locations-table';
-import {
-	InventoryView,
-	InventoryType,
-	InventoryLocation,
-	InventoryItem,
-} from '../types';
-import { EditInventoryTypeDrawer } from '../components/edit-inventory-type-drawer';
-import { EditInventoryLocationDrawer } from '../components/edit-inventory-location-drawer';
+import { API, gql } from '@/api/index';
+import { Button } from '@/components/button';
+import { PageCard, PageContent } from '@/components/page';
 import { EditInventoryItemDrawer } from '../components/edit-inventory-item-drawer';
+import { EditInventoryLocationDrawer } from '../components/edit-inventory-location-drawer';
+import { EditInventoryTypeDrawer } from '../components/edit-inventory-type-drawer';
+import { InventoryHeader } from '../components/inventory-header';
+import { InventoryLocationsTable } from '../components/inventory-locations-table';
+import { InventoryTypesTable } from '../components/inventory-types-table';
+import type {
+	InventoryItem,
+	InventoryLocation,
+	InventoryType,
+	InventoryView,
+} from '../types';
 
 import { useInventoryListData } from './use-inventory-list-data';
 
@@ -237,9 +234,9 @@ export default function InventoryNodePage({
 	 */
 	const openNewItemDrawer = () => {
 		// If viewing a type or location node, preselect as parent
-		const parentTypeId = view === 'type' ? node?.id ?? undefined : undefined;
+		const parentTypeId = view === 'type' ? (node?.id ?? undefined) : undefined;
 		const parentLocationId =
-			view === 'location' ? node?.id ?? undefined : undefined;
+			view === 'location' ? (node?.id ?? undefined) : undefined;
 		itemDrawerRef.current?.openDrawer('new', parentTypeId || parentLocationId);
 	};
 

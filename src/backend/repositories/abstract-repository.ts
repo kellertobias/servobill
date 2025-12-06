@@ -1,9 +1,7 @@
 import { injectable } from 'inversify';
-
-import { DomainEntity as DomainBaseEntity } from '../entities/abstract.entity';
+import type { Logger } from '@/backend/services/logger.service';
+import type { DomainEntity as DomainBaseEntity } from '../entities/abstract.entity';
 import type { EventBusService } from '../services/eventbus.service';
-
-import { Logger } from '@/backend/services/logger.service';
 
 export type AbstractRepositoryInterface<
 	DomainEntity extends DomainBaseEntity,
@@ -70,10 +68,7 @@ export abstract class AbstractRepository<
 		};
 		const ormEntityUnwrapped = ormEntity as Omit<OrmEntity, 'storeId'>;
 
-		const entity = Object.prototype.hasOwnProperty.call(
-			ormEntityWrapped,
-			'data',
-		)
+		const entity = Object.hasOwn(ormEntityWrapped, 'data')
 			? ormEntityWrapped.data
 			: (ormEntityUnwrapped as Omit<OrmEntity, 'storeId'> | null);
 

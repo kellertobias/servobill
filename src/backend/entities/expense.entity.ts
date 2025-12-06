@@ -1,8 +1,6 @@
-import { randomUUID } from 'crypto';
-
-import { DomainEntity, DomainEntityKeys } from './abstract.entity';
-
-import { ObjectProperties } from '@/common/ts-helpers';
+import { randomUUID } from 'node:crypto';
+import type { ObjectProperties } from '@/common/ts-helpers';
+import { DomainEntity, type DomainEntityKeys } from './abstract.entity';
 
 export class ExpenseEntity extends DomainEntity {
 	public id!: string;

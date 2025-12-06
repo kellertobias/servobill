@@ -7,15 +7,14 @@
  * Why: Ensures resolver logic, DB integration, and GraphQL schema are all working as expected.
  * How: Uses prepareGraphqlTest to get an app and execute GraphQL operations, and verifies repository state after mutations.
  */
-import { describe, it, beforeEach, expect } from 'vitest';
-
-import { ProductInput } from './product.schema';
-
-import { prepareGraphqlTest } from '@/test/graphql-test';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
 	PRODUCT_REPOSITORY,
 	type ProductRepository,
 } from '@/backend/repositories/product';
+
+import { prepareGraphqlTest } from '@/test/graphql-test';
+import type { ProductInput } from './product.schema';
 
 // Type for the awaited prepareGraphqlTest result
 // This ensures correct typing for execute and app

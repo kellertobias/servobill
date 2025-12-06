@@ -1,6 +1,5 @@
-import { DomainEntity, DomainEntityKeys } from './abstract.entity';
-
-import { ObjectProperties } from '@/common/ts-helpers';
+import type { ObjectProperties } from '@/common/ts-helpers';
+import { DomainEntity, type DomainEntityKeys } from './abstract.entity';
 
 export class EmailEntity extends DomainEntity {
 	public id!: string;

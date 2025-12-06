@@ -1,22 +1,21 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { describe, it, expect, vi } from 'vitest';
-import { parseStringPromise } from 'xml2js';
-import dayjs from 'dayjs';
 
+import dayjs from 'dayjs';
+import { describe, expect, it, vi } from 'vitest';
+import { parseStringPromise } from 'xml2js';
+import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
+import { VatStatus } from '@/backend/entities/settings.entity';
+import type { ExpenseRepository } from '@/backend/repositories';
+import { runGenerator } from '@/backend/services/invoice-generators/invoice-generator-spec-helper';
+import { XRechnungInvoiceGenerator } from '@/backend/services/invoice-generators/xrechnung-invoice-generator';
+import { ZugferdInvoiceGenerator } from '@/backend/services/invoice-generators/zugferd-invoice-generator';
 import {
 	InvoiceFormat,
 	ReceiptStructuredExtractionService,
 } from './receipt-structured-extraction.service';
-import { ZugferdExtractorStrategy } from './receipt-structured-zugferd';
+import type { ExtractedInvoiceStructure } from './receipt-structured-strategy-interface';
 import { XRechnungExtractorStrategy } from './receipt-structured-xrechnung';
-import { ExtractedInvoiceStructure } from './receipt-structured-strategy-interface';
-
-import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
-import { VatStatus } from '@/backend/entities/settings.entity';
-import { ZugferdInvoiceGenerator } from '@/backend/services/invoice-generators/zugferd-invoice-generator';
-import { XRechnungInvoiceGenerator } from '@/backend/services/invoice-generators/xrechnung-invoice-generator';
-import { runGenerator } from '@/backend/services/invoice-generators/invoice-generator-spec-helper';
-import type { ExpenseRepository } from '@/backend/repositories';
+import { ZugferdExtractorStrategy } from './receipt-structured-zugferd';
 
 const generators = [
 	{
@@ -71,7 +70,7 @@ describe('ReceiptStructuredExtractionService extracts correct xml', () => {
 			} as unknown as ExpenseRepository);
 
 			// when
-			const format = service['detectInvoiceFormat'](parsed);
+			const format = service.detectInvoiceFormat(parsed);
 
 			// then
 			switch (name) {

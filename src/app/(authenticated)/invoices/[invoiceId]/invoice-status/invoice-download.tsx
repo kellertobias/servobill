@@ -1,10 +1,8 @@
-import { doToast } from '@/components/toast';
 import { API, gql } from '@/api/index';
-
-import { InvoiceData } from '../data';
-
-import { InvoiceType } from '@/common/gql/graphql';
 import { backoff } from '@/common/exponential-backoff';
+import { InvoiceType } from '@/common/gql/graphql';
+import { doToast } from '@/components/toast';
+import type { InvoiceData } from '../data';
 
 const requestLink = async (id: string): Promise<string | null> => {
 	return API.query({

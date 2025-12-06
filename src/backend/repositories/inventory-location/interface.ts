@@ -1,6 +1,5 @@
-import { AbstractRepositoryInterface } from '../abstract-repository';
-
-import { InventoryLocationEntity } from '@/backend/entities/inventory-location.entity';
+import type { InventoryLocationEntity } from '@/backend/entities/inventory-location.entity';
+import type { AbstractRepositoryInterface } from '../abstract-repository';
 
 /**
  * Interface for all InventoryLocation repositories (DynamoDB, Postgres, SQLite).

@@ -1,14 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Fragment } from 'react';
-
 import { Dialog as HeadlessDialog, Transition } from '@headlessui/react';
 import { SparklesIcon } from '@heroicons/react/24/outline';
-
-import { Button } from '@/components/button';
+import React, { Fragment, useState } from 'react';
+import type { AttachmentFilePartial } from '@/api/download-attachment';
 import { AttachmentDropzone } from '@/components/attachment-dropzone';
-import { AttachmentFilePartial } from '@/api/download-attachment';
+import { Button } from '@/components/button';
 
 import { useHandleExtractExpenses } from './handle-expenses';
 

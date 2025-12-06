@@ -1,22 +1,24 @@
-import { describe, it, expect, beforeEach } from 'vitest';
 import dayjs from 'dayjs';
-
-import { ExecuteTestFunction, prepareGraphqlTest } from '@/test/graphql-test';
-import { INVOICE_REPOSITORY } from '@/backend/repositories/invoice/di-tokens';
-import { EXPENSE_REPOSITORY } from '@/backend/repositories/expense/di-tokens';
-import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { CustomerEntity } from '@/backend/entities/customer.entity';
+import { ExpenseEntity } from '@/backend/entities/expense.entity';
 import {
+	InvoiceEntity,
 	InvoiceStatus,
 	InvoiceType,
-	InvoiceEntity,
 } from '@/backend/entities/invoice.entity';
-import { SettingsEntity } from '@/backend/entities/settings.entity';
-import type { InvoiceRepository } from '@/backend/repositories/invoice/interface';
-import type { ExpenseRepository } from '@/backend/repositories/expense/interface';
-import type { SettingsRepository } from '@/backend/repositories/settings/interface';
-import { CustomerEntity } from '@/backend/entities/customer.entity';
 import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
-import { ExpenseEntity } from '@/backend/entities/expense.entity';
+import { SettingsEntity } from '@/backend/entities/settings.entity';
+import { EXPENSE_REPOSITORY } from '@/backend/repositories/expense/di-tokens';
+import type { ExpenseRepository } from '@/backend/repositories/expense/interface';
+import { INVOICE_REPOSITORY } from '@/backend/repositories/invoice/di-tokens';
+import type { InvoiceRepository } from '@/backend/repositories/invoice/interface';
+import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
+import type { SettingsRepository } from '@/backend/repositories/settings/interface';
+import {
+	type ExecuteTestFunction,
+	prepareGraphqlTest,
+} from '@/test/graphql-test';
 
 /**
  * Integration tests for the ReportsResolver.

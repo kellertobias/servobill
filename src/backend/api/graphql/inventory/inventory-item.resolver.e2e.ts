@@ -1,24 +1,23 @@
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 
-import { describe, it, beforeAll, afterAll, expect } from 'vitest';
-
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
-	prepareGraphqlTest,
-	type ExecuteTestFunction,
-} from '@/test/graphql-test';
-import { INVENTORY_ITEM_REPOSITORY } from '@/backend/repositories/inventory-item/di-tokens';
-import { INVENTORY_TYPE_REPOSITORY } from '@/backend/repositories/inventory-type/di-tokens';
-import { INVENTORY_LOCATION_REPOSITORY } from '@/backend/repositories/inventory-location/di-tokens';
-import {
-	InventoryItemState,
 	InventoryItemEntity,
+	InventoryItemState,
 } from '@/backend/entities/inventory-item.entity';
-import { InventoryTypeEntity } from '@/backend/entities/inventory-type.entity';
 import { InventoryLocationEntity } from '@/backend/entities/inventory-location.entity';
+import { InventoryTypeEntity } from '@/backend/entities/inventory-type.entity';
+import { INVENTORY_ITEM_REPOSITORY } from '@/backend/repositories/inventory-item/di-tokens';
 import type { InventoryItemRepository } from '@/backend/repositories/inventory-item/interface';
-import type { InventoryTypeRepository } from '@/backend/repositories/inventory-type/interface';
+import { INVENTORY_LOCATION_REPOSITORY } from '@/backend/repositories/inventory-location/di-tokens';
 import type { InventoryLocationRepository } from '@/backend/repositories/inventory-location/interface';
-import { App } from '@/common/di';
+import { INVENTORY_TYPE_REPOSITORY } from '@/backend/repositories/inventory-type/di-tokens';
+import type { InventoryTypeRepository } from '@/backend/repositories/inventory-type/interface';
+import type { App } from '@/common/di';
+import {
+	type ExecuteTestFunction,
+	prepareGraphqlTest,
+} from '@/test/graphql-test';
 
 /**
  * Integration tests for InventoryResolver.

@@ -1,5 +1,5 @@
 /* eslint-disable unicorn/no-useless-undefined */
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { centsToPrice, priceToCents } from './money';
 

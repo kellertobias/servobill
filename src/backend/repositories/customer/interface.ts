@@ -1,6 +1,5 @@
-import { AbstractRepositoryInterface } from '../abstract-repository';
-
-import { CustomerEntity } from '@/backend/entities/customer.entity';
+import type { CustomerEntity } from '@/backend/entities/customer.entity';
+import type { AbstractRepositoryInterface } from '../abstract-repository';
 
 /**
  * Interface for all Customer repositories (DynamoDB, Postgres, SQLite).

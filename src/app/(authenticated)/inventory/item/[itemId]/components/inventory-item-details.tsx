@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
-
 import { PencilIcon } from '@heroicons/react/24/outline';
+import type React from 'react';
+import { useState } from 'react';
 
 import { Button } from '@/components/button';
-
-import { InventoryTypeSelect } from '../../../components/inventory-type-select';
 // Import inline editing and divider utilities from invoice helpers
 import { InlineEditableText } from '../../../../invoices/[invoiceId]/helpers';
+import { InventoryTypeSelect } from '../../../components/inventory-type-select';
 
 import { InventoryItemProperties } from './inventory-item-properties';
 

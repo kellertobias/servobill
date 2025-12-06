@@ -1,18 +1,21 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { describe, it, expect, beforeAll } from 'vitest';
-import { gql } from 'graphql-request';
 
-import { App } from '@/common/di';
-import { ExecuteTestFunction, prepareGraphqlTest } from '@/test/graphql-test';
+import { gql } from 'graphql-request';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { ExpenseEntity } from '@/backend/entities/expense.entity';
 import {
 	CompanyDataSetting,
 	InvoiceSettingsEntity,
 } from '@/backend/entities/settings.entity';
-import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
-import type { SettingsRepository } from '@/backend/repositories/settings';
 import { EXPENSE_REPOSITORY } from '@/backend/repositories/expense/di-tokens';
 import type { ExpenseRepository } from '@/backend/repositories/expense/interface';
-import { ExpenseEntity } from '@/backend/entities/expense.entity';
+import type { SettingsRepository } from '@/backend/repositories/settings';
+import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
+import type { App } from '@/common/di';
+import {
+	type ExecuteTestFunction,
+	prepareGraphqlTest,
+} from '@/test/graphql-test';
 
 /**
  * Additional tests for SystemResolver mutations.

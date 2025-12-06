@@ -3,18 +3,17 @@
 import React from 'react';
 
 import { API, gql } from '@/api/index';
-import { useLoadData } from '@/hooks/load-data';
-import { PageContent } from '@/components/page';
 import { LoadingSkeleton } from '@/components/loading';
+import { PageContent } from '@/components/page';
 import { doToast } from '@/components/toast';
-
+import { useLoadData } from '@/hooks/load-data';
+import { InventoryActivityFeed } from './components/inventory-activity-feed';
 import {
 	InventoryItemDetails,
-	InventoryItemDetailsState,
+	type InventoryItemDetailsState,
 } from './components/inventory-item-details';
-import { InventoryItemStatusCard } from './components/inventory-item-status-card';
 import { InventoryItemLocationEditor } from './components/inventory-item-location-editor';
-import { InventoryActivityFeed } from './components/inventory-activity-feed';
+import { InventoryItemStatusCard } from './components/inventory-item-status-card';
 
 /**
  * Inventory item detail page for /inventory/item/[itemId].
@@ -31,9 +30,9 @@ import { InventoryActivityFeed } from './components/inventory-activity-feed';
 export default function InventoryItemDetailPage({
 	params,
 }: {
-	params: { itemId: string };
+	params: Promise<{ itemId: string }>;
 }) {
-	const { itemId } = params;
+	const { itemId } = React.use(params);
 
 	// Fetch the inventory item data by ID
 	const { data, /* setData, */ loading, reload } = useLoadData(async () => {

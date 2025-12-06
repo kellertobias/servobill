@@ -1,19 +1,16 @@
-import React from 'react';
-import clsx from 'clsx';
-
-import dayjs from 'dayjs';
 import {
 	DocumentTextIcon,
 	ReceiptPercentIcon,
 } from '@heroicons/react/24/outline';
+import clsx from 'clsx';
 
-import { InvoiceListData } from '@/hooks/use-invoice-list';
+import dayjs from 'dayjs';
+import type React from 'react';
 import { API } from '@/api/index';
-
-import { Table } from './table';
-import { getInvoiceStatusBadge } from './status-badges';
-
 import { InvoiceStatus, InvoiceType } from '@/common/gql/graphql';
+import type { InvoiceListData } from '@/hooks/use-invoice-list';
+import { getInvoiceStatusBadge } from './status-badges';
+import { Table } from './table';
 
 export function InvoicesTable({
 	data,

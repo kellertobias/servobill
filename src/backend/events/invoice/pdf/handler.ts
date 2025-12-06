@@ -2,29 +2,27 @@ import 'reflect-metadata';
 
 import '@/backend/services/config.service';
 
-import { EventHandler } from '../../types';
-import { makeEventHandler } from '../../event-handler';
-
-import { InvoiceGeneratePdfEvent } from './event';
-
+import { GenerateInvoiceHtmlCommand } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.command';
+import { GenerateInvoiceHtmlHandler } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.handler';
+import { CreateInvoicePdfCommand } from '@/backend/cqrs/generate-pdf/create-invoice-pdf.command';
+import { CreateInvoicePdfHandler } from '@/backend/cqrs/generate-pdf/create-invoice-pdf.handler';
 import {
-	INVOICE_REPOSITORY,
-	SETTINGS_REPOSITORY,
-} from '@/backend/repositories';
+	CompanyDataSetting,
+	PdfTemplateSetting,
+} from '@/backend/entities/settings.entity';
 import type {
 	InvoiceRepository,
 	SettingsRepository,
 } from '@/backend/repositories';
 import {
-	CompanyDataSetting,
-	PdfTemplateSetting,
-} from '@/backend/entities/settings.entity';
+	INVOICE_REPOSITORY,
+	SETTINGS_REPOSITORY,
+} from '@/backend/repositories';
 import { CqrsBus } from '@/backend/services/cqrs.service';
-import { CreateInvoicePdfCommand } from '@/backend/cqrs/generate-pdf/create-invoice-pdf.command';
-import { CreateInvoicePdfHandler } from '@/backend/cqrs/generate-pdf/create-invoice-pdf.handler';
 import { DefaultContainer } from '@/common/di';
-import { GenerateInvoiceHtmlHandler } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.handler';
-import { GenerateInvoiceHtmlCommand } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.command';
+import { makeEventHandler } from '../../event-handler';
+import type { EventHandler } from '../../types';
+import { InvoiceGeneratePdfEvent } from './event';
 
 export const handlerName = 'handler';
 export const layers = ['layers/chromium'];

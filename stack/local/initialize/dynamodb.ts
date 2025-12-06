@@ -1,8 +1,8 @@
 import {
 	CreateTableCommand,
 	DynamoDBClient,
-	ProjectionType,
-	ScalarAttributeType,
+	type ProjectionType,
+	type ScalarAttributeType,
 } from '@aws-sdk/client-dynamodb';
 
 import { tableDefinitions } from './definitions/tables';

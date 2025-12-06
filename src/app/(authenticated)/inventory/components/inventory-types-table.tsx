@@ -1,11 +1,9 @@
 'use client';
 
-import React from 'react';
-
-import { Table } from '@/components/table';
+import type React from 'react';
+import type { InventoryTypesListQuery } from '@/common/gql/graphql';
 import { Button } from '@/components/button';
-
-import { InventoryTypesListQuery } from '@/common/gql/graphql';
+import { Table } from '@/components/table';
 
 /**
  * @file Component for rendering a table of inventory types.

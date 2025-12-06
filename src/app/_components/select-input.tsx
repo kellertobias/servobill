@@ -1,11 +1,11 @@
-import React, { Fragment } from 'react';
-
 import { Listbox, Transition } from '@headlessui/react';
 import {
 	CheckIcon,
 	ChevronDownIcon,
 	XCircleIcon,
 } from '@heroicons/react/20/solid';
+import type React from 'react';
+import { Fragment } from 'react';
 
 /**
  * SelectInput component for dropdown selects, styled to match the Input component using Tailwind and Headless UI.
@@ -77,18 +77,17 @@ const SelectInput: React.FC<{
 					{/* Button that shows the selected value */}
 					<Listbox.Button className="relative w-full cursor-pointer rounded-md bg-white border border-gray-300 py-2 pl-3 pr-10 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 sm:text-sm flex items-center">
 						{/* Show colored dot if selected option has color */}
-						{selectedOption && selectedOption.color && (
+						{selectedOption?.color && (
 							<span
 								className="inline-block w-3 h-3 rounded-full align-middle mr-2"
 								style={{ backgroundColor: selectedOption.color }}
-								aria-label="Color dot"
 							/>
 						)}
 						{/* Show placeholder with placeholder style if no option is selected */}
 						<span
 							className={`block truncate flex-1 ${
 								selectedOption ? '' : 'text-gray-400'
-							} ${selectedOption && selectedOption.color ? '' : ''}`}
+							} ${selectedOption?.color ? '' : ''}`}
 						>
 							{selectedOption
 								? selectedOption.label
@@ -140,7 +139,6 @@ const SelectInput: React.FC<{
 														<span
 															className="inline-block w-3 h-3 rounded-full align-middle mr-2"
 															style={{ backgroundColor: opt.color }}
-															aria-label="Color dot"
 														/>
 													)}
 													<span

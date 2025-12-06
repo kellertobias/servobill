@@ -1,7 +1,7 @@
 import {
+	DeleteItemCommand,
 	DynamoDBClient,
 	ScanCommand,
-	DeleteItemCommand,
 } from '@aws-sdk/client-dynamodb';
 
 /**

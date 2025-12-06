@@ -2,17 +2,15 @@
 // @vitest-execute serial
 
 import 'reflect-metadata';
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 
-import { describe, it, expect, beforeEach } from 'vitest';
-
+import { beforeEach, describe, expect, it } from 'vitest';
+import { InventoryLocationEntity } from '@/backend/entities/inventory-location.entity';
+import { prepareRepoTest } from '@/test/repo-test';
+import type { InventoryLocationRepository } from './interface';
 import { InventoryLocationDynamoDBRepository } from './inventory-location.dynamodb-repository';
 import { InventoryLocationRelationalRepository } from './inventory-location.relational-repository';
 import { InventoryLocationOrmEntity } from './relational-orm-entity';
-import { InventoryLocationRepository } from './interface';
-
-import { InventoryLocationEntity } from '@/backend/entities/inventory-location.entity';
-import { prepareRepoTest } from '@/test/repo-test';
 
 /**
  * Parameterized test suite for both repository implementations.

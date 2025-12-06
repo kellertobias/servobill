@@ -1,20 +1,16 @@
-import React, { forwardRef, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-
 import { CheckCircleIcon } from '@heroicons/react/20/solid';
-
+import { useParams, useRouter } from 'next/navigation';
+import React, { forwardRef, useCallback } from 'react';
+import { API, gql } from '@/api/index';
+import type { InventoryItemState } from '@/backend/entities/inventory-item.entity';
+import { Button } from '@/components/button';
 import { Drawer } from '@/components/drawer';
 import { Input } from '@/components/input';
-import { useSaveCallback } from '@/hooks/load-data';
-import { API, gql } from '@/api/index';
 import { doToast } from '@/components/toast';
-import { Button } from '@/components/button';
-
-import { useInventoryDrawer } from './use-inventory-drawer';
-import { InventoryTypeSelect } from './inventory-type-select';
+import { useSaveCallback } from '@/hooks/load-data';
 import { InventoryLocationSelect } from './inventory-location-select';
-
-import type { InventoryItemState } from '@/backend/entities/inventory-item.entity';
+import { InventoryTypeSelect } from './inventory-type-select';
+import { useInventoryDrawer } from './use-inventory-drawer';
 
 type InventoryItem = {
 	id: string;

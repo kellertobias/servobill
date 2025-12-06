@@ -2,15 +2,13 @@
 // @vitest-execute serial
 
 import 'reflect-metadata';
-import { describe, it, expect, beforeEach } from 'vitest';
-
-import { ExpenseDynamodbRepository } from './expense.dynamodb-repository';
-import { ExpenseRelationalRepository } from './expense.relational-repository';
-import { ExpenseOrmEntity } from './relational-orm-entity';
-import { ExpenseRepository } from './interface';
-
+import { beforeEach, describe, expect, it } from 'vitest';
 import { ExpenseEntity } from '@/backend/entities/expense.entity';
 import { prepareRepoTest } from '@/test/repo-test';
+import { ExpenseDynamodbRepository } from './expense.dynamodb-repository';
+import { ExpenseRelationalRepository } from './expense.relational-repository';
+import type { ExpenseRepository } from './interface';
+import { ExpenseOrmEntity } from './relational-orm-entity';
 
 /**
  * Parameterized test suite for both repository implementations.

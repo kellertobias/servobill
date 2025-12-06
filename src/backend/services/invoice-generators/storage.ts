@@ -1,16 +1,15 @@
 // PDFInvoiceGenerator: Strategy for generating PDF invoices only.
-import { ConfigService } from '../config.service';
-import { FileStorageService } from '../file-storage.service';
-import { Logger } from '../logger.service';
 
-import { InvoiceGeneratorStrategy } from './interface';
-
-import { InvoiceEntity } from '@/backend/entities/invoice.entity';
-import {
+import type { InvoiceEntity } from '@/backend/entities/invoice.entity';
+import type {
 	CompanyDataSetting,
 	InvoiceSettingsEntity,
 	PdfTemplateSetting,
 } from '@/backend/entities/settings.entity';
+import type { ConfigService } from '../config.service';
+import type { FileStorageService } from '../file-storage.service';
+import { Logger } from '../logger.service';
+import { InvoiceGeneratorStrategy } from './interface';
 
 /**
  * PDFInvoiceGenerator generates a PDF invoice using CQRS handlers.

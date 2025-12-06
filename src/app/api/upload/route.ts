@@ -1,14 +1,11 @@
 import 'reflect-metadata';
 
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import * as multipart from 'parse-multipart-data';
-
-import { checkAuth } from '../check-auth';
-
-import { UploadHelper, NotConfiguredError } from './upload-service';
-
 import { DefaultContainer } from '@/common/di';
+import { checkAuth } from '../check-auth';
+import { NotConfiguredError, UploadHelper } from './upload-service';
 
 /**
  * GET /api/download?attachmentId=...
@@ -54,7 +51,9 @@ export async function PUT(request: NextRequest) {
 			if (!boundary) {
 				return new Response(
 					JSON.stringify({ error: 'No boundary in Content-Type' }),
-					{ status: 400 },
+					{
+						status: 400,
+					},
 				);
 			}
 
@@ -65,7 +64,9 @@ export async function PUT(request: NextRequest) {
 			if (parts.length !== 1 || !parts[0].filename) {
 				return new Response(
 					JSON.stringify({ error: 'Only one file per upload is allowed.' }),
-					{ status: 400 },
+					{
+						status: 400,
+					},
 				);
 			}
 
@@ -73,7 +74,9 @@ export async function PUT(request: NextRequest) {
 			if (!part.data) {
 				return new Response(
 					JSON.stringify({ error: 'No file data found in upload.' }),
-					{ status: 400 },
+					{
+						status: 400,
+					},
 				);
 			}
 
@@ -87,7 +90,9 @@ export async function PUT(request: NextRequest) {
 			if (fileData.length === 0) {
 				return new Response(
 					JSON.stringify({ error: 'No file data found in upload.' }),
-					{ status: 400 },
+					{
+						status: 400,
+					},
 				);
 			}
 		}

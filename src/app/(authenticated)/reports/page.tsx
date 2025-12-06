@@ -1,19 +1,17 @@
 'use client';
 
-import React from 'react';
-
 import { stringify } from 'csv-stringify/sync';
 import dayjs from 'dayjs';
-
-import { PageCard, PageContent } from '@/components/page';
-import { DateInput } from '@/components/date';
-import { SettingsBlock } from '@/components/settings-block';
-import { API, gql } from '@/api/index';
-import { StatsDisplay, StatsDisplayStat } from '@/components/stats';
-import { useLoadData } from '@/hooks/load-data';
-import { Table } from '@/components/table';
-import { Button } from '@/components/button';
+import React from 'react';
 import { downloadFile } from '@/api/import-export/helper';
+import { API, gql } from '@/api/index';
+import { Button } from '@/components/button';
+import { DateInput } from '@/components/date';
+import { PageCard, PageContent } from '@/components/page';
+import { SettingsBlock } from '@/components/settings-block';
+import { StatsDisplay, type StatsDisplayStat } from '@/components/stats';
+import { Table } from '@/components/table';
+import { useLoadData } from '@/hooks/load-data';
 
 function ReportPreview({ start, end }: { start?: string; end?: string }) {
 	const { data, loading } = useLoadData(async () =>
@@ -87,7 +85,8 @@ function ReportPreview({ start, end }: { start?: string; end?: string }) {
 				data?.reference?.surplusCents,
 			),
 		},
-		data?.reference?.invoiceTaxCents != 0 || data?.report?.invoiceTaxCents != 0
+		data?.reference?.invoiceTaxCents !== 0 ||
+		data?.report?.invoiceTaxCents !== 0
 			? {
 					name: 'Invoiced Tax',
 					value: `${API.centsToPrice(data?.report?.invoiceTaxCents)} €`,
@@ -257,161 +256,155 @@ export default function ReportHomePage() {
 	const [startDate, setStartDate] = React.useState<string>();
 	const [endDate, setEndDate] = React.useState<string>();
 	return (
-		<>
-			<PageContent title="Report Builder" noCard contentClassName="pt-6">
+		<PageContent title="Report Builder" noCard contentClassName="pt-6">
+			<PageCard>
+				<SettingsBlock
+					title="Date Range"
+					subtitle={
+						<div className="prose prose-sm leading-4 text-xs text-gray-500/80">
+							Select the start and end dates for the report you want to
+							generate.
+							<br />
+							Quick Range select:{' '}
+							<a
+								onClick={() => {
+									// eslint-disable-next-line unicorn/no-useless-undefined
+									setStartDate(undefined);
+									// eslint-disable-next-line unicorn/no-useless-undefined
+									setEndDate(undefined);
+									setTimeout(() => {
+										setStartDate(dayjs().startOf('year').format('YYYY-MM-DD'));
+										setEndDate(dayjs().endOf('year').format('YYYY-MM-DD'));
+									}, 100);
+								}}
+								className="text-blue-600 hover:text-blue-500 no-underline cursor-pointer"
+							>
+								This Year
+							</a>{' '}
+							&bull;{' '}
+							<a
+								onClick={() => {
+									// eslint-disable-next-line unicorn/no-useless-undefined
+									setStartDate(undefined);
+									// eslint-disable-next-line unicorn/no-useless-undefined
+									setEndDate(undefined);
+									setTimeout(() => {
+										setStartDate(
+											dayjs()
+												.startOf('year')
+												.subtract(1, 'year')
+												.format('YYYY-MM-DD'),
+										);
+										setEndDate(dayjs().startOf('year').format('YYYY-MM-DD'));
+									}, 100);
+								}}
+								className="text-blue-600 hover:text-blue-500 no-underline cursor-pointer"
+							>
+								Last Year
+							</a>{' '}
+							&bull;{' '}
+							<a
+								onClick={() => {
+									// eslint-disable-next-line unicorn/no-useless-undefined
+									setStartDate(undefined);
+									// eslint-disable-next-line unicorn/no-useless-undefined
+									setEndDate(undefined);
+									setTimeout(() => {
+										setStartDate(
+											dayjs().subtract(365, 'days').format('YYYY-MM-DD'),
+										);
+										setEndDate(dayjs().format('YYYY-MM-DD'));
+									}, 100);
+								}}
+								className="text-blue-600 hover:text-blue-500 no-underline cursor-pointer"
+							>
+								Last 365 days
+							</a>{' '}
+							&bull;{' '}
+							<a
+								onClick={() => {
+									// eslint-disable-next-line unicorn/no-useless-undefined
+									setStartDate(undefined);
+									// eslint-disable-next-line unicorn/no-useless-undefined
+									setEndDate(undefined);
+									setTimeout(() => {
+										setStartDate(
+											dayjs()
+												.startOf('month')
+												.subtract(1, 'month')
+												.format('YYYY-MM-DD'),
+										);
+										setEndDate(dayjs().startOf('month').format('YYYY-MM-DD'));
+									}, 100);
+								}}
+								className="text-blue-600 hover:text-blue-500 no-underline cursor-pointer"
+							>
+								Last Month
+							</a>{' '}
+							&bull;{' '}
+							<a
+								onClick={() => {
+									// eslint-disable-next-line unicorn/no-useless-undefined
+									setStartDate(undefined);
+									// eslint-disable-next-line unicorn/no-useless-undefined
+									setEndDate(undefined);
+									setTimeout(() => {
+										setStartDate(dayjs().startOf('month').format('YYYY-MM-DD'));
+										setEndDate(dayjs().format('YYYY-MM-DD'));
+									}, 100);
+								}}
+								className="text-blue-600 hover:text-blue-500 no-underline cursor-pointer"
+							>
+								This Month
+							</a>
+						</div>
+					}
+				>
+					<div className="block sm:grid grid-cols-3 gap-4">
+						<DateInput
+							label="Start Date"
+							value={startDate}
+							onChange={setStartDate}
+							placeholder="Select Start Date"
+						/>
+						<DateInput
+							label="End Date"
+							value={endDate}
+							onChange={setEndDate}
+							placeholder="Select End Date"
+						/>
+						<div className="pt-8 flex flex-row gap-2">
+							<div>
+								<Button
+									onClick={() => {
+										// eslint-disable-next-line unicorn/no-useless-undefined
+										setStartDate(undefined);
+										// eslint-disable-next-line unicorn/no-useless-undefined
+										setEndDate(undefined);
+										setTimeout(() => {
+											setStartDate(startDate);
+											setEndDate(endDate);
+										}, 50);
+									}}
+									secondary
+								>
+									Load
+								</Button>
+							</div>
+						</div>
+					</div>
+				</SettingsBlock>
+			</PageCard>
+			{startDate?.trim() && endDate?.trim() ? (
+				<ReportPreview start={startDate} end={endDate} />
+			) : (
 				<PageCard>
-					<SettingsBlock
-						title="Date Range"
-						subtitle={
-							<div className="prose prose-sm leading-4 text-xs text-gray-500/80">
-								Select the start and end dates for the report you want to
-								generate.
-								<br />
-								Quick Range select:{' '}
-								<a
-									onClick={() => {
-										// eslint-disable-next-line unicorn/no-useless-undefined
-										setStartDate(undefined);
-										// eslint-disable-next-line unicorn/no-useless-undefined
-										setEndDate(undefined);
-										setTimeout(() => {
-											setStartDate(
-												dayjs().startOf('year').format('YYYY-MM-DD'),
-											);
-											setEndDate(dayjs().endOf('year').format('YYYY-MM-DD'));
-										}, 100);
-									}}
-									className="text-blue-600 hover:text-blue-500 no-underline cursor-pointer"
-								>
-									This Year
-								</a>{' '}
-								&bull;{' '}
-								<a
-									onClick={() => {
-										// eslint-disable-next-line unicorn/no-useless-undefined
-										setStartDate(undefined);
-										// eslint-disable-next-line unicorn/no-useless-undefined
-										setEndDate(undefined);
-										setTimeout(() => {
-											setStartDate(
-												dayjs()
-													.startOf('year')
-													.subtract(1, 'year')
-													.format('YYYY-MM-DD'),
-											);
-											setEndDate(dayjs().startOf('year').format('YYYY-MM-DD'));
-										}, 100);
-									}}
-									className="text-blue-600 hover:text-blue-500 no-underline cursor-pointer"
-								>
-									Last Year
-								</a>{' '}
-								&bull;{' '}
-								<a
-									onClick={() => {
-										// eslint-disable-next-line unicorn/no-useless-undefined
-										setStartDate(undefined);
-										// eslint-disable-next-line unicorn/no-useless-undefined
-										setEndDate(undefined);
-										setTimeout(() => {
-											setStartDate(
-												dayjs().subtract(365, 'days').format('YYYY-MM-DD'),
-											);
-											setEndDate(dayjs().format('YYYY-MM-DD'));
-										}, 100);
-									}}
-									className="text-blue-600 hover:text-blue-500 no-underline cursor-pointer"
-								>
-									Last 365 days
-								</a>{' '}
-								&bull;{' '}
-								<a
-									onClick={() => {
-										// eslint-disable-next-line unicorn/no-useless-undefined
-										setStartDate(undefined);
-										// eslint-disable-next-line unicorn/no-useless-undefined
-										setEndDate(undefined);
-										setTimeout(() => {
-											setStartDate(
-												dayjs()
-													.startOf('month')
-													.subtract(1, 'month')
-													.format('YYYY-MM-DD'),
-											);
-											setEndDate(dayjs().startOf('month').format('YYYY-MM-DD'));
-										}, 100);
-									}}
-									className="text-blue-600 hover:text-blue-500 no-underline cursor-pointer"
-								>
-									Last Month
-								</a>{' '}
-								&bull;{' '}
-								<a
-									onClick={() => {
-										// eslint-disable-next-line unicorn/no-useless-undefined
-										setStartDate(undefined);
-										// eslint-disable-next-line unicorn/no-useless-undefined
-										setEndDate(undefined);
-										setTimeout(() => {
-											setStartDate(
-												dayjs().startOf('month').format('YYYY-MM-DD'),
-											);
-											setEndDate(dayjs().format('YYYY-MM-DD'));
-										}, 100);
-									}}
-									className="text-blue-600 hover:text-blue-500 no-underline cursor-pointer"
-								>
-									This Month
-								</a>
-							</div>
-						}
-					>
-						<div className="block sm:grid grid-cols-3 gap-4">
-							<DateInput
-								label="Start Date"
-								value={startDate}
-								onChange={setStartDate}
-								placeholder="Select Start Date"
-							/>
-							<DateInput
-								label="End Date"
-								value={endDate}
-								onChange={setEndDate}
-								placeholder="Select End Date"
-							/>
-							<div className="pt-8 flex flex-row gap-2">
-								<div>
-									<Button
-										onClick={() => {
-											// eslint-disable-next-line unicorn/no-useless-undefined
-											setStartDate(undefined);
-											// eslint-disable-next-line unicorn/no-useless-undefined
-											setEndDate(undefined);
-											setTimeout(() => {
-												setStartDate(startDate);
-												setEndDate(endDate);
-											}, 50);
-										}}
-										secondary
-									>
-										Load
-									</Button>
-								</div>
-							</div>
-						</div>
-					</SettingsBlock>
+					<div className="text-center text-sm text-gray-400">
+						Once you have selected the date range, you see a preview of the
+						report here.
+					</div>
 				</PageCard>
-				{startDate?.trim() && endDate?.trim() ? (
-					<ReportPreview start={startDate} end={endDate} />
-				) : (
-					<PageCard>
-						<div className="text-center text-sm text-gray-400">
-							Once you have selected the date range, you see a preview of the
-							report here.
-						</div>
-					</PageCard>
-				)}
-			</PageContent>
-		</>
+			)}
+		</PageContent>
 	);
 }

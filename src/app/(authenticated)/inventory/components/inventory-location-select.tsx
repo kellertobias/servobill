@@ -1,9 +1,8 @@
 import React from 'react';
-
-import SelectInput from '@/components/select-input';
 import { API, gql } from '@/api/index';
+import SelectInput from '@/components/select-input';
 
-import { InventoryLocationDetail } from '../types';
+import type { InventoryLocationDetail } from '../types';
 
 /**
  * Flattens a tree of inventory locations into a flat array with depth for indentation.

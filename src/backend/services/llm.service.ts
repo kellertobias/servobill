@@ -1,10 +1,8 @@
 import OpenAI from 'openai';
-
-import type { ConfigService } from './config.service';
-import { Logger } from './logger.service';
-import { CONFIG_SERVICE, LLM_SERVICE } from './di-tokens';
-
 import { Inject, Service } from '@/common/di';
+import type { ConfigService } from './config.service';
+import { CONFIG_SERVICE, LLM_SERVICE } from './di-tokens';
+import { Logger } from './logger.service';
 
 /**
  * Configuration for LLM providers
@@ -314,9 +312,7 @@ export class LLMService {
 					...(request.files?.map((file) => ({
 						type: 'image_url' as const,
 						image_url: {
-							url: `data:${file.mimeType};base64,${file.content.toString(
-								'base64',
-							)}`,
+							url: `data:${file.mimeType};base64,${file.content.toString('base64')}`,
 						},
 					})) || []),
 				],
@@ -328,7 +324,7 @@ export class LLMService {
 		};
 
 		if (this.config.apiKey) {
-			headers['Authorization'] = `Bearer ${this.config.apiKey}`;
+			headers.Authorization = `Bearer ${this.config.apiKey}`;
 		}
 
 		const response = await fetch(url, {

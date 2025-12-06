@@ -2,16 +2,14 @@
 // @vitest-execute serial
 
 import 'reflect-metadata';
-import { describe, it, expect, beforeEach } from 'vitest';
-
+import { beforeEach, describe, expect, it } from 'vitest';
+import { SessionEntity } from '@/backend/entities/session.entity';
+import { UserEntity } from '@/backend/entities/user.entity';
+import { prepareRepoTest } from '@/test/repo-test';
+import type { SessionRepository } from './interface';
+import { SessionOrmEntity } from './relational-orm-entity';
 import { SessionDynamodbRepository } from './session.dynamodb-repository';
 import { SessionRelationalRepository } from './session.relational-repository';
-import { SessionRepository } from './interface';
-import { SessionOrmEntity } from './relational-orm-entity';
-
-import { UserEntity } from '@/backend/entities/user.entity';
-import { SessionEntity } from '@/backend/entities/session.entity';
-import { prepareRepoTest } from '@/test/repo-test';
 
 const repoTestCases = prepareRepoTest<SessionRepository>({
 	name: 'Session',

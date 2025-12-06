@@ -1,12 +1,9 @@
-import path from 'path';
-import fs from 'fs';
-
+import fs from 'node:fs';
+import path from 'node:path';
 import chalk from 'chalk';
-
-import { ApiEndpoint } from './api';
-import { EventEndpoint } from './events';
-
 import { HttpVerbs } from '@/common/api-types';
+import type { ApiEndpoint } from './api';
+import type { EventEndpoint } from './events';
 
 export function handleFile(filepath: string, commonPrefix: string) {
 	const relativePath = filepath.replace(path.resolve(commonPrefix), '');
@@ -109,9 +106,7 @@ const printEndpointLine = (
 	console.log(
 		`${change}${
 			(endpoint as ApiEndpoint).method
-				? `[${endpoint.method}] ${endpoint.path} ${chalk.gray(
-						endpoint.handler,
-					)}`
+				? `[${endpoint.method}] ${endpoint.path} ${chalk.gray(endpoint.handler)}`
 				: `[EVENT] ${endpoint.eventType} ${chalk.gray(endpoint.handler)}`
 		}`,
 	);

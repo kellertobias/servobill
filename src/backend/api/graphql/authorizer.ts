@@ -1,6 +1,6 @@
-import { AuthChecker } from 'type-graphql';
+import type { AuthChecker } from 'type-graphql';
 
-import { GqlContext } from './types';
+import type { GqlContext } from './types';
 
 export const authChecker: AuthChecker<GqlContext> = ({ context }, roles) => {
 	// Read user from context

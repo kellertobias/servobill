@@ -1,4 +1,4 @@
-import { LambdaContextSession } from '../session';
+import type { LambdaContextSession } from '../session';
 
 export class GqlHttpContext {
 	domainName!: string;

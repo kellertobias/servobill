@@ -1,6 +1,5 @@
-import { AbstractRepositoryInterface } from '../abstract-repository';
-
-import { EmailEntity } from '@/backend/entities/email.entity';
+import type { EmailEntity } from '@/backend/entities/email.entity';
+import type { AbstractRepositoryInterface } from '../abstract-repository';
 
 /**
  * Interface for all Email repositories (DynamoDB, Postgres, SQLite).

@@ -2,13 +2,11 @@ import 'reflect-metadata';
 
 import '@/backend/services/config.service';
 
-import { EventHandler } from '../../types';
+import { DefaultContainer } from '@/common/di';
 import { makeEventHandler } from '../../event-handler';
-
+import type { EventHandler } from '../../types';
 import { InvoiceSendLaterEvent } from './event';
 import { HandlerExecution } from './execute';
-
-import { DefaultContainer } from '@/common/di';
 
 /**
  * Lambda handler for the InvoiceSendLaterEvent.

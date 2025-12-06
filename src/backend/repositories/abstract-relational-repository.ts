@@ -1,19 +1,16 @@
 import { randomUUID } from 'node:crypto';
 
-import {
-	Repository,
-	EntityManager,
-	ObjectLiteral,
+import type {
 	DeepPartial,
+	EntityManager,
 	FindOptionsWhere,
+	ObjectLiteral,
+	Repository,
 } from 'typeorm';
-
-import { DomainEntity as DomainBaseEntity } from '../entities/abstract.entity';
-
-import { AbstractRepository } from './abstract-repository';
-
 import type { RelationalDbService } from '@/backend/services/relationaldb.service';
 import { DeferredPromise } from '@/common/deferred';
+import type { DomainEntity as DomainBaseEntity } from '../entities/abstract.entity';
+import { AbstractRepository } from './abstract-repository';
 
 /**
  * Abstract base repository for relational DB-backed entities using TypeORM (Postgres/SQLite).

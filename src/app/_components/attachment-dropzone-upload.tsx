@@ -1,11 +1,10 @@
-import React, { useRef, useState } from 'react';
-import clsx from 'clsx';
-
-import { PhotoIcon } from '@heroicons/react/24/outline';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
-
+import { PhotoIcon } from '@heroicons/react/24/outline';
+import clsx from 'clsx';
+import type React from 'react';
+import { useRef, useState } from 'react';
+import type { AttachmentFilePartial } from '@/api/download-attachment';
 import { gql, query } from '@/api/graphql';
-import { AttachmentFilePartial } from '@/api/download-attachment';
 
 /**
  * Props for AttachmentDropzoneUpload component.

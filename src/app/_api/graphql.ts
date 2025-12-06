@@ -1,11 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import { DeferredPromise } from '@/common/deferred';
+import type { DocumentType, gql as origTypedGql } from '@/common/gql';
 import { connection, restConnection } from './graphql-connection';
 import { handleGqlError, revalidateOnError } from './graphql-error-handling';
-
-import { gql as origTypedGql, DocumentType } from '@/common/gql';
-import { DeferredPromise } from '@/common/deferred';
 
 type GQLHelper = typeof origTypedGql;
 

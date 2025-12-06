@@ -1,23 +1,19 @@
-import { useRouter } from 'next/navigation';
-
 import { CalendarDaysIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 import dayjs from 'dayjs';
+import { useRouter } from 'next/navigation';
 
 import { API } from '@/api/index';
+import { InvoiceStatus, InvoiceSubmissionType } from '@/common/gql/graphql';
 import {
 	InvoiceStatusBadgeOffer,
 	InvoiceStatusBadgeOfferCancelled,
 } from '@/components/status-badges';
-
-import { InvoiceData } from '../data';
-
+import type { InvoiceData } from '../data';
 import { InvoiceActions } from './actions';
-import { onClickDownloadInvoice } from './invoice-download';
-import { onClickSendInvoice } from './invoice-submit';
 import { onClickCancelInvoice } from './invoice-cancel-unpaid';
 import { onClickInvoiceCopy } from './invoice-copy';
-
-import { InvoiceStatus, InvoiceSubmissionType } from '@/common/gql/graphql';
+import { onClickDownloadInvoice } from './invoice-download';
+import { onClickSendInvoice } from './invoice-submit';
 
 export function InvoiceStatusOfferSent({
 	data,

@@ -2,18 +2,16 @@
 // @vitest-execute serial
 
 import 'reflect-metadata';
-import { describe, it, expect, beforeEach } from 'vitest';
-
-import { SettingsDynamodbRepository } from './settings.dynamodb-repository';
-import { SettingsRelationalRepository } from './settings.relational-repository';
-import { SettingsRepository } from './interface';
-import { SettingsOrmEntity } from './relational-orm-entity';
-
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
-	SettingsEntity,
 	PdfTemplateSetting,
+	SettingsEntity,
 } from '@/backend/entities/settings.entity';
 import { prepareRepoTest } from '@/test/repo-test';
+import type { SettingsRepository } from './interface';
+import { SettingsOrmEntity } from './relational-orm-entity';
+import { SettingsDynamodbRepository } from './settings.dynamodb-repository';
+import { SettingsRelationalRepository } from './settings.relational-repository';
 
 const repoTestCases = prepareRepoTest<SettingsRepository>({
 	name: 'Settings',

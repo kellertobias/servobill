@@ -2,15 +2,13 @@
 // @vitest-execute serial
 
 import 'reflect-metadata';
-import { describe, it, expect, beforeEach } from 'vitest';
-
-import { CustomerDynamodbRepository } from './customer.dynamodb-repository';
-import { CustomerRelationalRepository } from './customer.relational-repository';
-import { CustomerOrmEntity } from './relational-orm-entity';
-import { CustomerRepository } from './interface';
-
+import { beforeEach, describe, expect, it } from 'vitest';
 import { CustomerEntity } from '@/backend/entities/customer.entity';
 import { prepareRepoTest } from '@/test/repo-test';
+import { CustomerDynamodbRepository } from './customer.dynamodb-repository';
+import { CustomerRelationalRepository } from './customer.relational-repository';
+import type { CustomerRepository } from './interface';
+import { CustomerOrmEntity } from './relational-orm-entity';
 
 /**
  * Parameterized test suite for both repository implementations.

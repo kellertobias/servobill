@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export class DomainEvent<T = any> {

@@ -1,11 +1,9 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-
-import { AttachmentRelationalRepository } from './attachment.relational-repository';
-import { AttachmentDynamoDBRepository } from './attachment.dynamodb-repository';
-import { AttachmentOrmEntity } from './relational-orm-entity';
-import type { AttachmentCreateInput, AttachmentRepository } from './interface';
-
+import { beforeEach, describe, expect, it } from 'vitest';
 import { prepareRepoTest } from '@/test/repo-test';
+import { AttachmentDynamoDBRepository } from './attachment.dynamodb-repository';
+import { AttachmentRelationalRepository } from './attachment.relational-repository';
+import type { AttachmentCreateInput, AttachmentRepository } from './interface';
+import { AttachmentOrmEntity } from './relational-orm-entity';
 
 const repoTestCases = prepareRepoTest<AttachmentRepository>({
 	name: 'Attachment',

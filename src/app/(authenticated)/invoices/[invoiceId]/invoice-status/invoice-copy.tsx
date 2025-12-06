@@ -1,14 +1,11 @@
-import { useRouter } from 'next/navigation';
+import type { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-
-import { doToast } from '@/components/toast';
-import { confirmDialog } from '@/components/dialog';
-import { Toggle } from '@/components/toggle';
 import { API, gql } from '@/api/index';
-
-import { InvoiceData } from '../data';
-
 import { InvoiceType } from '@/common/gql/graphql';
+import { confirmDialog } from '@/components/dialog';
+import { doToast } from '@/components/toast';
+import { Toggle } from '@/components/toggle';
+import type { InvoiceData } from '../data';
 
 function InvoiceCopyForm({
 	onChange,

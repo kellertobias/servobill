@@ -1,23 +1,21 @@
 // XRechnungInvoiceGenerator: Strategy for generating XRechnung XML invoices.
-import { Invoice, InvoiceService } from '@e-invoice-eu/core';
-import {
+import { type Invoice, InvoiceService } from '@e-invoice-eu/core';
+import type {
 	InvoiceCurrencyCode,
 	PaymentMeansTypeCode,
 	VATBREAKDOWN,
 	VATCategoryCode,
 } from '@e-invoice-eu/core/dist/invoice/invoice.interface';
-
-import { InvoiceGeneratorStrategy } from './interface';
-import { PDFInvoiceGenerator } from './pdf-invoice-generator';
-
-import { InvoiceEntity } from '@/backend/entities/invoice.entity';
+import type { InvoiceEntity } from '@/backend/entities/invoice.entity';
+import type { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
 import {
-	CompanyDataSetting,
-	InvoiceSettingsEntity,
-	PdfTemplateSetting,
+	type CompanyDataSetting,
+	type InvoiceSettingsEntity,
+	type PdfTemplateSetting,
 	VatStatus,
 } from '@/backend/entities/settings.entity';
-import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
+import { InvoiceGeneratorStrategy } from './interface';
+import type { PDFInvoiceGenerator } from './pdf-invoice-generator';
 
 /**
  * Helper to determine VAT category code based on tax percentage, exemption, and company VAT status.
@@ -132,7 +130,7 @@ function mapInvoiceToUbl(
 	}
 
 	// Group regular items by VAT rate and code for tax subtotals
-	let taxGroups;
+	let taxGroups: any;
 	const allExempt =
 		vatStatus === VatStatus.VAT_DISABLED_KLEINUNTERNEHMER ||
 		vatStatus === VatStatus.VAT_DISABLED_OTHER
@@ -168,10 +166,10 @@ function mapInvoiceToUbl(
 	});
 
 	// Calculate tax subtotals, subtracting document-level allowances for each group
-	const taxSubtotals = taxGroups.map((group): VATBREAKDOWN => {
+	const taxSubtotals = taxGroups.map((group: any): VATBREAKDOWN => {
 		const key = `${group.code}_${group.rate}`;
 		const taxableAmountLines = group.items.reduce(
-			(sum, item) => sum + (item.priceCents * item.quantity) / 100,
+			(sum: number, item: any) => sum + (item.priceCents * item.quantity) / 100,
 			0,
 		);
 		const allowanceAmount = allowanceSumsByKey[key] || 0;
@@ -207,7 +205,7 @@ function mapInvoiceToUbl(
 		};
 	});
 	const totalTaxAmount = taxSubtotals.reduce(
-		(sum, t) => sum + Number.parseFloat(t['cbc:TaxAmount']),
+		(sum: number, t: any) => sum + Number.parseFloat(t['cbc:TaxAmount']),
 		0,
 	);
 

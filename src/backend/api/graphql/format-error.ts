@@ -1,7 +1,7 @@
-import { ValidationError } from 'class-validator';
-import chalk from 'chalk';
 import { trace } from '@opentelemetry/api';
-import { GraphQLError, GraphQLFormattedError } from 'graphql';
+import chalk from 'chalk';
+import type { ValidationError } from 'class-validator';
+import type { GraphQLError, GraphQLFormattedError } from 'graphql';
 
 import { Logger } from '@/backend/services/logger.service';
 
@@ -67,9 +67,9 @@ export function formatError(error: GraphQLError): GraphQLFormattedError {
 				? `Input Data Validation Failed\n${exception.validationErrors
 						.map(
 							(e) =>
-								`- ${e.target?.constructor?.name} ${e.constraints?.[
-									Object.keys(e.constraints)[0]
-								]} (${`${e.value?.toString?.()}`.slice(0, 10)}...) }`,
+								`- ${e.target?.constructor?.name} ${
+									e.constraints?.[Object.keys(e.constraints)[0]]
+								} (${`${e.value?.toString?.()}`.slice(0, 10)}...) }`,
 						)
 						.join('\n')}`
 				: String(error.message);

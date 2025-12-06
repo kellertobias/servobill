@@ -18,13 +18,11 @@
  */
 
 import { describe, it } from 'vitest';
-
-import { ZugferdInvoiceGenerator } from './zugferd-invoice-generator';
-import { XRechnungInvoiceGenerator } from './xrechnung-invoice-generator';
-import { runGenerator } from './invoice-generator-spec-helper';
-
 import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
 import { VatStatus } from '@/backend/entities/settings.entity';
+import { runGenerator } from './invoice-generator-spec-helper';
+import { XRechnungInvoiceGenerator } from './xrechnung-invoice-generator';
+import { ZugferdInvoiceGenerator } from './zugferd-invoice-generator';
 
 // Helper to create invoice items for test cases
 function createItems(

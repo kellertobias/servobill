@@ -1,9 +1,9 @@
-import { APIGatewayProxyEventV2 } from 'aws-lambda';
+import type { APIGatewayProxyEventV2 } from 'aws-lambda';
 import * as cookie from 'cookie';
 
-import { SessionLambdaContext } from '../session';
+import type { SessionLambdaContext } from '../session';
 
-import { GqlContext } from './types';
+import type { GqlContext } from './types';
 
 export const contextBuilder = async ({
 	event,

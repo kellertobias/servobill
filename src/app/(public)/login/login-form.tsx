@@ -1,9 +1,8 @@
 'use client';
 
+import { XCircleIcon } from '@heroicons/react/20/solid';
 import { useSearchParams } from 'next/navigation';
 import React from 'react';
-
-import { XCircleIcon } from '@heroicons/react/20/solid';
 
 /**
  * Login form component that handles the authentication flow
@@ -70,9 +69,7 @@ export function LoginForm() {
 						<div>
 							<a
 								className="flex w-full justify-center rounded-md bg-indigo-500 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
-								href={`${
-									process.env.NEXT_PUBLIC_API_URL || ''
-								}/api/auth/authorize`}
+								href={`${process.env.NEXT_PUBLIC_API_URL || ''}/api/auth/authorize`}
 							>
 								Sign in with Google
 							</a>

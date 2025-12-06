@@ -1,5 +1,6 @@
-import { GraphQLClient } from 'graphql-request';
 import axios from 'axios';
+import { GraphQLClient } from 'graphql-request';
+
 export { gql } from '@/common/gql';
 
 // export type DocumentNode = ReturnType<typeof gql>;

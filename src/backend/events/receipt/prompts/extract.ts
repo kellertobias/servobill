@@ -1,7 +1,7 @@
-import { ExpenseCategory } from '@/backend/entities/settings.entity';
+import type { ExpenseCategory } from '@/backend/entities/settings.entity';
 
 export default (
-	rawEmailText: string,
+	_rawEmailText: string,
 	categories: ExpenseCategory[],
 	currency: string,
 ) => {

@@ -1,6 +1,6 @@
-import { APIGatewayProxyHandlerV2 } from 'aws-lambda';
+import type { APIGatewayProxyHandlerV2 } from 'aws-lambda';
 
-import { EventHandler } from '@/backend/events/types';
+import type { EventHandler } from '@/backend/events/types';
 
 export const HttpVerbs = [
 	'GET',

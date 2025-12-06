@@ -7,24 +7,24 @@
  * Why: Ensures resolver logic, DB integration, and GraphQL schema are all working as expected.
  * How: Uses prepareGraphqlTest to get an app and execute GraphQL operations, and verifies repository state after mutations.
  */
-import { describe, it, beforeEach, expect } from 'vitest';
-import { gql } from 'graphql-request';
 
-import { prepareGraphqlTest } from '@/test/graphql-test';
-import { INVOICE_REPOSITORY } from '@/backend/repositories/invoice/di-tokens';
-import { CUSTOMER_REPOSITORY } from '@/backend/repositories/customer/di-tokens';
-import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
+import { gql } from 'graphql-request';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { CustomerEntity } from '@/backend/entities/customer.entity';
 import {
 	InvoiceEntity,
-	InvoiceType,
 	InvoiceStatus,
+	InvoiceType,
 } from '@/backend/entities/invoice.entity';
-import { CustomerEntity } from '@/backend/entities/customer.entity';
 import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
 import { SettingsEntity } from '@/backend/entities/settings.entity';
-import type { InvoiceRepository } from '@/backend/repositories/invoice/interface';
+import { CUSTOMER_REPOSITORY } from '@/backend/repositories/customer/di-tokens';
 import type { CustomerRepository } from '@/backend/repositories/customer/interface';
+import { INVOICE_REPOSITORY } from '@/backend/repositories/invoice/di-tokens';
+import type { InvoiceRepository } from '@/backend/repositories/invoice/interface';
+import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
 import type { SettingsRepository } from '@/backend/repositories/settings/interface';
+import { prepareGraphqlTest } from '@/test/graphql-test';
 
 // Helper: create a minimal customer
 function sampleCustomer(overrides: Partial<CustomerEntity> = {}) {

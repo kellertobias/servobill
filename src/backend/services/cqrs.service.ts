@@ -1,10 +1,8 @@
 import 'reflect-metadata';
 
-import { Span } from '../instrumentation';
-
-import { Logger } from './logger.service';
-
 import { DefaultContainer, Service } from '@/common/di';
+import { Span } from '../instrumentation';
+import { Logger } from './logger.service';
 
 export enum CqrsCommandType {
 	Query = 'query',
@@ -28,19 +26,16 @@ export abstract class ICqrsHandler<C extends ICqrsCommand> {
 // export a class decorator CqrsHandler
 // that takes a command class as an argument
 // and adds a static property cqrsHandlerFor with the command class as a value
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function CqrsHandler<C extends new (...args: any[]) => ICqrsCommand>(
 	CommandClass: C,
 ): ClassDecorator {
-	// eslint-disable-next-line @typescript-eslint/ban-types
-	return function (constructor: Function) {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// biome-ignore lint/suspicious/noShadowRestrictedNames: boilerplate
+	// biome-ignore lint/complexity/noBannedTypes: boilerplate
+	return (constructor: Function) => {
 		const type = (CommandClass as any).type;
 		const name = CommandClass.name;
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		(constructor as any).cqrsHandlerFor = { name, type };
 
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		Service()(constructor as any);
 	};
 }

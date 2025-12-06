@@ -6,17 +6,16 @@
  */
 
 import {
-	describe,
-	it,
-	expect,
-	vi,
-	beforeEach,
 	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	it,
 	type Mock,
+	vi,
 } from 'vitest';
-
-import { LLMService, LLMConfig, LLMRequest } from './llm.service';
 import type { ConfigService } from './config.service';
+import { type LLMConfig, type LLMRequest, LLMService } from './llm.service';
 
 // Mock Logger to avoid real logging
 vi.mock('./logger.service', () => ({

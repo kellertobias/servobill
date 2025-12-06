@@ -1,3 +1,11 @@
+import {
+	type AttributeValue,
+	context,
+	type Span as OtelSpan,
+	propagation,
+	SpanStatusCode,
+	trace,
+} from '@opentelemetry/api';
 import type {
 	APIGatewayProxyEventV2,
 	Callback,
@@ -5,14 +13,6 @@ import type {
 	EventBridgeEvent,
 	Handler,
 } from 'aws-lambda';
-import {
-	type AttributeValue,
-	trace,
-	SpanStatusCode,
-	propagation,
-	context,
-	type Span as OtelSpan,
-} from '@opentelemetry/api';
 
 const tracer = trace.getTracer('lambda');
 
@@ -81,8 +81,8 @@ export function Span(
 	// the type metadata while building using sst.
 	if (!process.env.OTEL_ENABLED) {
 		return (
-			target: unknown,
-			propertyKey: string,
+			_target: unknown,
+			_propertyKey: string,
 			descriptor: PropertyDescriptor,
 		) => {
 			return descriptor;
@@ -91,8 +91,8 @@ export function Span(
 
 	// biome-ignore lint/complexity/useArrowFunction: <explanation>
 	return function (
-		target: unknown,
-		propertyKey: string,
+		_target: unknown,
+		_propertyKey: string,
 		descriptor: PropertyDescriptor,
 	) {
 		const originalMethod = descriptor.value;
@@ -118,12 +118,12 @@ export function Span(
 
 // Method Parameter Decorator that gets the currently active span as a parameter
 export function ActiveSpan() {
-	return function (
+	return (
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		target: any,
 		propertyKey: string,
 		parameterIndex: number,
-	) {
+	) => {
 		// eslint-disable-next-line @typescript-eslint/ban-types
 		const originalMethod = target[propertyKey] as Function;
 		target[propertyKey] = function (...args: unknown[]) {
@@ -146,9 +146,9 @@ const withEventBridgeInstrumentation = async <
 		attributes?: Record<string, AttributeValue>;
 		onThrow?: (error: Error) => Awaited<R> | null;
 	},
-	handler: Handler<E, R | void>,
-	[evt, ctx, cb]: Parameters<Handler<E, R | void>>,
-): Promise<R | void> => {
+	handler: Handler<E, R | undefined>,
+	[evt, ctx, cb]: Parameters<Handler<E, R | undefined>>,
+): Promise<R | undefined> => {
 	const { traceId, spanId, traceparent, tracestate } =
 		(evt.detail as
 			| undefined
@@ -226,9 +226,9 @@ const withApiGatewayInstrumentation = async <
 		attributes?: Record<string, AttributeValue>;
 		onThrow?: (error: Error) => Awaited<R> | null;
 	},
-	handler: Handler<E, R | void>,
-	[evt, ctx, cb]: Parameters<Handler<E, R | void>>,
-): Promise<R | void> => {
+	handler: Handler<E, R | undefined>,
+	[evt, ctx, cb]: Parameters<Handler<E, R | undefined>>,
+): Promise<R | undefined> => {
 	return tracer.startActiveSpan(spanInfo.name, async (span) => {
 		if (spanInfo.attributes) {
 			span.setAttributes({
@@ -259,13 +259,13 @@ const handleSpanExecution = async <E, R>(
 		span: OtelSpan;
 		onThrow?: (error: Error) => Awaited<R> | null;
 	},
-	handler: Handler<E, R | void>,
-	[evt, ctx, cb]: Parameters<Handler<E, R | void>>,
-): Promise<R | void> => {
-	let answer: Awaited<R> | void;
+	handler: Handler<E, R | undefined>,
+	[evt, ctx, cb]: Parameters<Handler<E, R | undefined>>,
+): Promise<R | undefined> => {
+	let answer: Awaited<R> | undefined;
 	try {
 		span.addEvent('start handler');
-		answer = await handler(evt, ctx, cb);
+		answer = (await handler(evt, ctx, cb)) || undefined;
 	} catch (error) {
 		span.setStatus({ code: SpanStatusCode.ERROR });
 		if (error instanceof Error) {
@@ -297,9 +297,9 @@ const withWrappedInstrumentation = <E, R>(
 		attributes?: Record<string, AttributeValue>;
 		onThrow?: (error: Error) => Awaited<R> | null;
 	},
-	handler: Handler<E, R | void>,
-	args: Parameters<Handler<E, R | void>>,
-): Promise<R | void> => {
+	handler: Handler<E, R | undefined>,
+	args: Parameters<Handler<E, R | undefined>>,
+): Promise<R | undefined> => {
 	return tracer.startActiveSpan(spanInfo.name, (span) => {
 		if (spanInfo.attributes) {
 			span.setAttributes(spanInfo.attributes);
@@ -317,8 +317,8 @@ export const withInstrumentation = <E, R>(
 		name: string;
 		onThrow?: (error: Error) => Awaited<R> | null;
 	},
-	handler: Handler<E, R | void>,
-): Handler<E, R | void> => {
+	handler: Handler<E, R | undefined>,
+): Handler<E, R | undefined> => {
 	return async (evt: E, ctx: Context, cb: Callback) => {
 		const apiGatewayEvent = evt as unknown as APIGatewayProxyEventV2;
 		const eventHandlerEvent = evt as unknown as EventBridgeEvent<

@@ -8,20 +8,19 @@
  * Dependency Injection is used for settings and other dependencies as per project rules.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
-
-import { InvoiceEntity, InvoiceStatus, InvoiceType } from './invoice.entity';
-import { InvoiceSettingsEntity } from './settings.entity';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { CustomerEntity } from './customer.entity';
-import { InvoiceItemEntity } from './invoice-item.entity';
+import { InvoiceEntity, InvoiceStatus, InvoiceType } from './invoice.entity';
 import {
 	InvoiceActivityEntity,
 	InvoiceActivityType,
 } from './invoice-activity.entity';
+import { InvoiceItemEntity } from './invoice-item.entity';
 import {
 	InvoiceSubmissionEntity,
 	InvoiceSubmissionType,
 } from './invoice-submission.entity';
+import { InvoiceSettingsEntity } from './settings.entity';
 
 /**
  * Helper to create a real InvoiceSettingsEntity with predictable number generation.

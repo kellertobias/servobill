@@ -1,17 +1,15 @@
 'use client';
 
 import React from 'react';
-
-import { PageContent } from '@/components/page';
-import { useLoadData } from '@/hooks/load-data';
 import { API, gql } from '@/api/index';
+import { backoff } from '@/common/exponential-backoff';
+import { Button } from '@/components/button';
+import { Input } from '@/components/input';
 import { LoadingSkeleton } from '@/components/loading';
 import { NotFound } from '@/components/not-found';
-import { Button } from '@/components/button';
+import { PageContent } from '@/components/page';
 import { doToast } from '@/components/toast';
-import { Input } from '@/components/input';
-
-import { backoff } from '@/common/exponential-backoff';
+import { useLoadData } from '@/hooks/load-data';
 
 function TemplateSettings({
 	data,
@@ -120,8 +118,7 @@ function TemplateSettings({
 							<br />
 							<span className="text-slate-400">
 								# Now open your browser at http://localhost:2998
-								<br />
-								# And edit the files
+								<br /># And edit the files
 								<br /># invoice-template-example.{'{html,css}'}
 							</span>
 						</pre>

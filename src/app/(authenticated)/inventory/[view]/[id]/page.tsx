@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-import { InventoryView } from '../../types';
+import type { InventoryView } from '../../types';
 import InventoryNodePage from '../inventory-node-page';
 
 /**
@@ -12,7 +12,8 @@ import InventoryNodePage from '../inventory-node-page';
 export default function InventoryDetailPage({
 	params,
 }: {
-	params: { view: InventoryView; id: string };
+	params: Promise<{ view: InventoryView; id: string }>;
 }) {
-	return <InventoryNodePage params={params} />;
+	const resolvedParams = React.use(params);
+	return <InventoryNodePage params={resolvedParams} />;
 }

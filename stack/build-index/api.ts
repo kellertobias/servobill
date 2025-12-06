@@ -1,9 +1,7 @@
-import path from 'path';
-import fs from 'fs';
-
+import fs from 'node:fs';
+import path from 'node:path';
+import type { HttpVerb } from '@/common/api-types';
 import { findFiles, handleFile } from './helpers';
-
-import { HttpVerb } from '@/common/api-types';
 
 export type ApiEndpoint = {
 	method: HttpVerb;
@@ -36,7 +34,6 @@ const sortApiEndpoints = (apiEndpoints: ApiEndpoint[]) => {
 				}
 
 				if (aSegment.startsWith('[') && bSegment.startsWith('[')) {
-					continue;
 				} else if (aSegment.startsWith('[')) {
 					// aSegment is a parameter
 					return -1;

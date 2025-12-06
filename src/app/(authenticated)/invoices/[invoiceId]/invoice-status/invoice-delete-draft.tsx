@@ -1,10 +1,9 @@
-import { useRouter } from 'next/navigation';
-
+import type { useRouter } from 'next/navigation';
+import { API, gql } from '@/api/index';
 import { confirmDialog } from '@/components/dialog';
 import { doToast } from '@/components/toast';
-import { API, gql } from '@/api/index';
 
-import { InvoiceData } from '../data';
+import type { InvoiceData } from '../data';
 
 export const onClickDeleteDraft = async (props: {
 	data: InvoiceData;

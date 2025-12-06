@@ -1,4 +1,3 @@
-import { Field, ObjectType, Int, Float, InputType } from 'type-graphql';
 import {
 	IsInt,
 	IsNotEmpty,
@@ -8,26 +7,25 @@ import {
 	IsUUID,
 	MaxLength,
 } from 'class-validator';
-
-import { Customer, CustomerInput } from '../customers/customers.schema';
-import { FilteredObjectProperties } from '../types';
-import { Attachment } from '../attachments/attachment.schema';
-
+import { Field, Float, InputType, Int, ObjectType } from 'type-graphql';
 import {
-	InvoiceEntity,
+	type InvoiceEntity,
 	InvoiceStatus,
 	InvoiceType,
 } from '@/backend/entities/invoice.entity';
 import {
-	InvoiceSubmissionEntity,
-	InvoiceSubmissionType,
-} from '@/backend/entities/invoice-submission.entity';
-import {
-	InvoiceActivityEntity,
+	type InvoiceActivityEntity,
 	InvoiceActivityType,
 } from '@/backend/entities/invoice-activity.entity';
-import { ObjectProperties } from '@/common/ts-helpers';
-import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
+import type { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
+import {
+	type InvoiceSubmissionEntity,
+	InvoiceSubmissionType,
+} from '@/backend/entities/invoice-submission.entity';
+import type { ObjectProperties } from '@/common/ts-helpers';
+import { Attachment } from '../attachments/attachment.schema';
+import { Customer, type CustomerInput } from '../customers/customers.schema';
+import type { FilteredObjectProperties } from '../types';
 
 @InputType('InvoiceItemExpenseInput')
 export class InvoiceItemExpenseInput {

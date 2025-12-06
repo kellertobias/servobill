@@ -1,11 +1,8 @@
+import { DeferredPromise } from '@/common/deferred';
 import { doToast } from '@/components/toast';
-
 import { API, gql } from '../index';
-
 import { requestFile } from './helper';
 import { loadInvoiceImportData } from './invoices-import-helper';
-
-import { DeferredPromise } from '@/common/deferred';
 
 export const importInvoices = async () => {
 	const raw = await requestFile();

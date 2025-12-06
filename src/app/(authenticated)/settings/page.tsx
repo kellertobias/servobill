@@ -1,25 +1,21 @@
 'use client';
 
-import React from 'react';
-
 import useDebouncedMemo from '@sevenoutman/use-debounced-memo';
-
-import { PageContent } from '@/components/page';
-import { useHasChanges, useLoadData } from '@/hooks/load-data';
+import React from 'react';
+import { exportSettings, importSettings } from '@/api/import-export/settings';
 import { API, gql } from '@/api/index';
+import SelectInput from '@/app/_components/select-input';
+import { VatStatus } from '@/common/gql/graphql';
+import { Numbering } from '@/common/numbers';
+import { Button } from '@/components/button';
+import { CountryCodeSelection } from '@/components/country-code-selection';
 import { Input } from '@/components/input';
 import { LoadingSkeleton } from '@/components/loading';
 import { NotFound } from '@/components/not-found';
-import { Button } from '@/components/button';
-import { doToast } from '@/components/toast';
-import { exportSettings, importSettings } from '@/api/import-export/settings';
+import { PageContent } from '@/components/page';
 import { SettingsBlock } from '@/components/settings-block';
-import { CountryCodeSelection } from '@/components/country-code-selection';
-
-import SelectInput from '@/app/_components/select-input';
-
-import { Numbering } from '@/common/numbers';
-import { VatStatus } from '@/common/gql/graphql';
+import { doToast } from '@/components/toast';
+import { useHasChanges, useLoadData } from '@/hooks/load-data';
 
 function NumberValidity({
 	template,

@@ -1,8 +1,13 @@
-import { inflate } from 'zlib';
-import { promisify } from 'util';
-
-import { PDFDict, PDFName, PDFRawStream, PDFArray, PDFRef } from 'pdf-lib';
-import { PDFDocument } from 'pdf-lib';
+import { promisify } from 'node:util';
+import { inflate } from 'node:zlib';
+import {
+	PDFArray,
+	PDFDict,
+	PDFDocument,
+	PDFName,
+	PDFRawStream,
+	PDFRef,
+} from 'pdf-lib';
 
 const inflateAsync = promisify(inflate);
 

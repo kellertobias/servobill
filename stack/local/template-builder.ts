@@ -1,13 +1,15 @@
-import fs from 'fs';
-import path from 'path';
-
+import fs from 'node:fs';
+import path from 'node:path';
 import express from 'express';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import ws from 'ws';
 
-import { GenerateInvoiceHtmlCommand } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.command';
+import type { GenerateInvoiceHtmlCommand } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.command';
 import { GenerateInvoiceHtmlHandler } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.handler';
-import { InvoiceEntity, InvoiceType } from '@/backend/entities/invoice.entity';
+import {
+	type InvoiceEntity,
+	InvoiceType,
+} from '@/backend/entities/invoice.entity';
 
 const invoice = {
 	subject: 'Test Invoice PDF',
@@ -161,13 +163,13 @@ fs.watch(
 	},
 );
 
-const port = Number.parseInt(`${process.env.PORT || 2998}`);
+const port = Number.parseInt(`${process.env.PORT || 2998}`, 10);
 const app = express();
 const wss = new ws.Server({ port: port + 1 });
 
 app.get('/', async (req, res) => {
 	// Get query parameter ?items=1 to render only one item
-	const amountItems = Number.parseInt(`${req.query?.items || -1}`);
+	const amountItems = Number.parseInt(`${req.query?.items || -1}`, 10);
 	const tax = req.query?.tax !== 'false';
 	const compiledTemplate = await execute(amountItems, tax);
 	res.send(

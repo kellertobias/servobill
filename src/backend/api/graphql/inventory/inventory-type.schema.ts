@@ -1,5 +1,5 @@
-import { Field, ObjectType, InputType, Int } from 'type-graphql';
-import { IsOptional, IsString, IsNumber, MaxLength } from 'class-validator';
+import { IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
+import { Field, InputType, Int, ObjectType } from 'type-graphql';
 
 import { InventoryItem } from './inventory-item.schema';
 

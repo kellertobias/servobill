@@ -1,17 +1,15 @@
 import clsx from 'clsx';
 
 import { API } from '@/api/index';
-
-import { InvoiceData } from './data';
-import { InlineEditableText, InvoiceItemDivider } from './helpers';
-import { InvoiceItem } from './invoice-item';
-
+import { VatStatus } from '@/common/gql/graphql';
 import {
 	getInvoiceSubTotal,
 	getInvoiceTaxTotal,
 	getInvoiceTotal,
 } from '@/common/invoice';
-import { VatStatus } from '@/common/gql/graphql';
+import type { InvoiceData } from './data';
+import { InlineEditableText, InvoiceItemDivider } from './helpers';
+import { InvoiceItem } from './invoice-item';
 
 /**
  * InvoicePositions renders the invoice item table and summary.

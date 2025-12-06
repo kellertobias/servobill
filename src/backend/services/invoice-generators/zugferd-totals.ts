@@ -1,13 +1,11 @@
-import { ProfileBasic } from 'node-zugferd/profile/basic';
-
-import { Allowance, CurrencyCode, Totals } from './zugferd-types';
-import { getVatInfo } from './zugferd-helpers';
-
-import { InvoiceEntity } from '@/backend/entities/invoice.entity';
-import {
+import type { ProfileBasic } from 'node-zugferd/profile/basic';
+import type { InvoiceEntity } from '@/backend/entities/invoice.entity';
+import type {
 	CompanyDataSetting,
 	VatStatus,
 } from '@/backend/entities/settings.entity';
+import { getVatInfo } from './zugferd-helpers';
+import type { Allowance, CurrencyCode, Totals } from './zugferd-types';
 
 function getPaymentInstruction(
 	invoice: InvoiceEntity,

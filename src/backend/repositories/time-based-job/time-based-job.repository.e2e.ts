@@ -4,15 +4,13 @@
 import 'reflect-metadata';
 import { randomUUID } from 'node:crypto';
 
-import { describe, it, expect, beforeEach } from 'vitest';
-
-import { TimeBasedJobDynamodbRepository } from './time-based-job.dynamodb-repository';
-import { TimeBasedJobRelationalRepository } from './time-based-job.relational-repository';
-import { TimeBasedJobOrmEntity } from './relational-orm-entity';
-import { TimeBasedJobRepository } from './interface';
-
+import { beforeEach, describe, expect, it } from 'vitest';
 import { TimeBasedJobEntity } from '@/backend/entities/time-based-job.entity';
 import { prepareRepoTest } from '@/test/repo-test';
+import type { TimeBasedJobRepository } from './interface';
+import { TimeBasedJobOrmEntity } from './relational-orm-entity';
+import { TimeBasedJobDynamodbRepository } from './time-based-job.dynamodb-repository';
+import { TimeBasedJobRelationalRepository } from './time-based-job.relational-repository';
 
 /**
  * Parameterized test suite for both repository implementations (DynamoDB, Relational).

@@ -1,9 +1,7 @@
-import { randomUUID } from 'crypto';
-
-import { DomainEntity, DomainEntityKeys } from './abstract.entity';
-import { CompanyDataSetting } from './settings.entity';
-
-import { ObjectProperties } from '@/common/ts-helpers';
+import { randomUUID } from 'node:crypto';
+import type { ObjectProperties } from '@/common/ts-helpers';
+import { DomainEntity, type DomainEntityKeys } from './abstract.entity';
+import type { CompanyDataSetting } from './settings.entity';
 
 export class CustomerEntity extends DomainEntity {
 	public id!: string;

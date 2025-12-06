@@ -1,5 +1,5 @@
-import { Field, ObjectType, InputType, ID, Int } from 'type-graphql';
 import { IsInt, IsOptional, IsUUID } from 'class-validator';
+import { Field, ID, InputType, Int, ObjectType } from 'type-graphql';
 
 /**
  * GraphQL type representing an uploaded file attachment.

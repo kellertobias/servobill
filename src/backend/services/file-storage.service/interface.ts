@@ -1,4 +1,4 @@
-import { AttachmentEntity } from '@/backend/entities/attachment.entity';
+import type { AttachmentEntity } from '@/backend/entities/attachment.entity';
 
 /**
  * Abstraction for file storage (S3 or local), for retrieving and deleting files.
