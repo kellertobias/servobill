@@ -39,6 +39,7 @@ vi.mock('openai', () => ({
 			create: mockFilesCreate,
 		},
 	})),
+	toFile: vi.fn().mockResolvedValue({}),
 	APIError: class extends Error {
 		status: number;
 		name: string;

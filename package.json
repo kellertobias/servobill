@@ -97,7 +97,6 @@
     "react": "$react",
     "react-dom": "$react-dom",
     "nodemailer": "^7.0.11",
-    "yargs-parser": "^5.0.1",
     "hono": "^4.10.7",
     "xmlbuilder2": {
       "js-yaml": "^3.14.2"
