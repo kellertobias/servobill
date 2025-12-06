@@ -9,7 +9,7 @@
  * SES and SMTP, and that attachments are handled as expected.
  */
 
-import { SESClient } from '@aws-sdk/client-ses';
+import { SESv2Client } from '@aws-sdk/client-sesv2';
 import type { SendMailOptions } from 'nodemailer';
 import nodemailer from 'nodemailer';
 import {
@@ -36,9 +36,9 @@ vi.mock('nodemailer', () => {
 });
 
 // Mock AWS SDK SESClient
-vi.mock('@aws-sdk/client-ses', () => {
+vi.mock('@aws-sdk/client-sesv2', () => {
 	return {
-		SESClient: vi.fn(),
+		SESv2Client: vi.fn(),
 	};
 });
 
@@ -129,7 +129,7 @@ describe('SESService', () => {
 		createTransportMock = vi.fn(() => ({ sendMail: sendMailMock }));
 		(nodemailer.createTransport as unknown as typeof createTransportMock) =
 			createTransportMock;
-		(SESClient as unknown as { mockClear: () => void }).mockClear();
+		(SESv2Client as unknown as { mockClear: () => void }).mockClear();
 		createTransportMock.mockClear();
 		sendMailMock.mockClear();
 	});
@@ -219,7 +219,7 @@ describe('SESService', () => {
 			html: '<b>SES</b>',
 		});
 		// Should initialize SESClient
-		expect(SESClient).toHaveBeenCalledWith(
+		expect(SESv2Client).toHaveBeenCalledWith(
 			expect.objectContaining({
 				endpoint: config.endpoints.ses,
 				region: config.region,
