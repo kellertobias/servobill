@@ -71,44 +71,44 @@ const INVENTORY_LOCATIONS_QUERY = gql(`
  * @returns An object containing inventory types and locations data, loading states, and reload functions.
  */
 export function useInventory(searchQuery: string) {
-  // Load inventory types data
-  const {
-    data: typesData,
-    loading: typesLoading,
-    reload: reloadTypes,
-  } = useLoadData(async () =>
-    API.query({
-      query: INVENTORY_TYPES_QUERY,
-      variables: {
-        where: searchQuery ? { search: searchQuery } : undefined,
-      },
-    })
-  );
+	// Load inventory types data
+	const {
+		data: typesData,
+		loading: typesLoading,
+		reload: reloadTypes,
+	} = useLoadData(async () =>
+		API.query({
+			query: INVENTORY_TYPES_QUERY,
+			variables: {
+				where: searchQuery ? { search: searchQuery } : undefined,
+			},
+		}),
+	);
 
-  // Load inventory locations data
-  const {
-    data: locationsData,
-    loading: locationsLoading,
-    reload: reloadLocations,
-  } = useLoadData(async () =>
-    API.query({
-      query: INVENTORY_LOCATIONS_QUERY,
-      variables: {
-        where: searchQuery ? { search: searchQuery } : undefined,
-      },
-    })
-  );
+	// Load inventory locations data
+	const {
+		data: locationsData,
+		loading: locationsLoading,
+		reload: reloadLocations,
+	} = useLoadData(async () =>
+		API.query({
+			query: INVENTORY_LOCATIONS_QUERY,
+			variables: {
+				where: searchQuery ? { search: searchQuery } : undefined,
+			},
+		}),
+	);
 
-  // Reload data when search query changes
-  React.useEffect(() => {
-    reloadTypes();
-    reloadLocations();
-  }, [searchQuery, reloadTypes, reloadLocations]);
+	// Reload data when search query changes
+	React.useEffect(() => {
+		reloadTypes();
+		reloadLocations();
+	}, [searchQuery, reloadTypes, reloadLocations]);
 
-  return {
-    typesData,
-    typesLoading,
-    locationsData,
-    locationsLoading,
-  };
+	return {
+		typesData,
+		typesLoading,
+		locationsData,
+		locationsLoading,
+	};
 }

@@ -18,7 +18,7 @@ export class App {
 	static defaultContainer = new Container();
 	static forRoot({ modules }: { modules: ModuleBinding[] }) {
 		const container = new Container();
-		const app = new this(container);
+		const app = new App(container);
 
 		for (const binding of modules) {
 			if (typeof binding === 'function') {
@@ -34,7 +34,7 @@ export class App {
 	}
 
 	static get<T>(type: string | symbol | (new (...args: any[]) => T)) {
-		return this.defaultContainer.get<T>(type);
+		return App.defaultContainer.get<T>(type);
 	}
 
 	static testSets: Record<
@@ -46,10 +46,10 @@ export class App {
 		testSet: string,
 		binding: { token: ModuleTokenName; module: ModuleToken },
 	) {
-		if (!this.testSets[testSet]) {
-			this.testSets[testSet] = [];
+		if (!App.testSets[testSet]) {
+			App.testSets[testSet] = [];
 		}
-		this.testSets[testSet].push(binding);
+		App.testSets[testSet].push(binding);
 	}
 
 	constructor(private readonly container: Container) {}
@@ -124,7 +124,7 @@ export function Service<T extends new (...args: any[]) => unknown>(
 				addToTestSet?: string[];
 		  },
 ): (target: T) => T {
-	return function (target: T) {
+	return (target: T) => {
 		const { name, singleton, shouldRegister, addToTestSet } =
 			typeof nameOrOptions === 'string' || typeof nameOrOptions === 'symbol'
 				? {
@@ -168,9 +168,7 @@ export function Service<T extends new (...args: any[]) => unknown>(
 
 		if (App.defaultLogger && App.defaultLogger.debug) {
 			App.defaultLogger.debug(
-				`Registering Service *${name ? String(name) : target.name}* ${
-					target.name
-				}`,
+				`Registering Service *${name ? String(name) : target.name}* ${target.name}`,
 			);
 		}
 		const bound = App.defaultContainer.bind(name || target).to(target);

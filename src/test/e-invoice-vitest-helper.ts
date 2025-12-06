@@ -1,19 +1,16 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { execSync } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { randomUUID } from 'node:crypto';
-
-import { parseStringPromise } from 'xml2js';
 import { expect } from 'vitest';
-
+import { parseStringPromise } from 'xml2js';
+import { MUSTANG_JAR_PATH } from '@/test/vitest.setup-e2e';
 import {
 	formatXmlLocation,
 	getValueFromXmlJson,
 	stripXmlNamespace,
 } from './xml-vitest-helper';
-
-import { MUSTANG_JAR_PATH } from '@/test/vitest.setup-e2e';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -106,7 +103,7 @@ export const validateInvoiceXml = async (xml: string) => {
 	*/
 	const command = `java -Xmx1G -Dfile.encoding=UTF-8 -jar ${MUSTANG_JAR_PATH} --no-notices --action validate --source ${fileName} 2>/dev/null`;
 
-	let output;
+	let output: any;
 	try {
 		output = execSync(command, {
 			encoding: 'utf8',

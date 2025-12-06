@@ -9,63 +9,63 @@ import { OrmEntity } from '@/common/orm-entity-registry';
 @OrmEntity
 @Entity('customer')
 export class CustomerOrmEntity {
-  /** Unique identifier for the customer */
-  @PrimaryColumn('text')
-  id!: string;
+	/** Unique identifier for the customer */
+	@PrimaryColumn('text')
+	id!: string;
 
-  /** Customer number (business logic identifier) */
-  @Column('text')
-  customerNumber!: string;
+	/** Customer number (business logic identifier) */
+	@Column('text')
+	customerNumber!: string;
 
-  /** Customer name */
-  @Column('text')
-  name!: string;
+	/** Customer name */
+	@Column('text')
+	name!: string;
 
-  /** Lowercase name for search */
-  @Column('text')
-  searchName!: string;
+	/** Lowercase name for search */
+	@Column('text')
+	searchName!: string;
 
-  /** Contact name */
-  @Column('text', { nullable: true })
-  contactName?: string;
+	/** Contact name */
+	@Column('text', { nullable: true })
+	contactName?: string;
 
-  /** Whether to show contact */
-  @Column('boolean', { nullable: false, default: false })
-  showContact!: boolean;
+	/** Whether to show contact */
+	@Column('boolean', { nullable: false, default: false })
+	showContact!: boolean;
 
-  /** Email address */
-  @Column('text', { nullable: true })
-  email?: string;
+	/** Email address */
+	@Column('text', { nullable: true })
+	email?: string;
 
-  /** Street address */
-  @Column('text', { nullable: true })
-  street?: string;
+	/** Street address */
+	@Column('text', { nullable: true })
+	street?: string;
 
-  /** ZIP code */
-  @Column('text', { nullable: true })
-  zip?: string;
+	/** ZIP code */
+	@Column('text', { nullable: true })
+	zip?: string;
 
-  /** City */
-  @Column('text', { nullable: true })
-  city?: string;
+	/** City */
+	@Column('text', { nullable: true })
+	city?: string;
 
-  /** State */
-  @Column('text', { nullable: true })
-  state?: string;
+	/** State */
+	@Column('text', { nullable: true })
+	state?: string;
 
-  /** Country */
-  @Column('text', { nullable: true })
-  countryCode?: string;
+	/** Country */
+	@Column('text', { nullable: true })
+	countryCode?: string;
 
-  /** Notes */
-  @Column('text', { nullable: true })
-  notes?: string;
+	/** Notes */
+	@Column('text', { nullable: true })
+	notes?: string;
 
-  /** Creation timestamp */
-  @Column('timestamp', { nullable: false })
-  createdAt!: Date;
+	/** Creation timestamp */
+	@Column('timestamp', { nullable: false })
+	createdAt!: Date;
 
-  /** Last update timestamp */
-  @Column('timestamp', { nullable: false })
-  updatedAt!: Date;
+	/** Last update timestamp */
+	@Column('timestamp', { nullable: false })
+	updatedAt!: Date;
 }

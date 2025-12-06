@@ -1,14 +1,17 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import 'reflect-metadata';
+import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { execSync } from 'node:child_process';
-
-import type { TestProject } from 'vitest/node';
 import pg from 'pg';
 // Now import the rest of the test dependencies
-import { GenericContainer, StartedTestContainer, Wait } from 'testcontainers';
+import {
+	GenericContainer,
+	type StartedTestContainer,
+	Wait,
+} from 'testcontainers';
+import type { TestProject } from 'vitest/node';
 
 // Register ConfigService in DI container BEFORE any other imports
 import { DatabaseType } from '@/backend/services/constants';

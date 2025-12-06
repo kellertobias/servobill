@@ -6,41 +6,41 @@ import { Field, ID, InputType, Int, ObjectType } from 'type-graphql';
  */
 @ObjectType('Attachment')
 export class Attachment {
-  @Field(() => ID)
-  id!: string;
+	@Field(() => ID)
+	id!: string;
 
-  @Field(() => String)
-  fileName!: string;
+	@Field(() => String)
+	fileName!: string;
 
-  @Field(() => String)
-  mimeType!: string;
+	@Field(() => String)
+	mimeType!: string;
 
-  @Field(() => Int)
-  size!: number;
+	@Field(() => Int)
+	size!: number;
 
-  @Field(() => String)
-  s3Key!: string;
+	@Field(() => String)
+	s3Key!: string;
 
-  @Field(() => String)
-  s3Bucket!: string;
+	@Field(() => String)
+	s3Bucket!: string;
 
-  @Field(() => String)
-  status!: string;
+	@Field(() => String)
+	status!: string;
 
-  @Field(() => String, { nullable: true })
-  invoiceId?: string;
+	@Field(() => String, { nullable: true })
+	invoiceId?: string;
 
-  @Field(() => String, { nullable: true })
-  expenseId?: string;
+	@Field(() => String, { nullable: true })
+	expenseId?: string;
 
-  @Field(() => String, { nullable: true })
-  inventoryId?: string;
+	@Field(() => String, { nullable: true })
+	inventoryId?: string;
 
-  @Field(() => Date)
-  createdAt!: Date;
+	@Field(() => Date)
+	createdAt!: Date;
 
-  @Field(() => Date)
-  updatedAt!: Date;
+	@Field(() => Date)
+	updatedAt!: Date;
 }
 
 /**
@@ -48,11 +48,11 @@ export class Attachment {
  */
 @ObjectType('RequestAttachmentUploadUrlResult')
 export class RequestAttachmentUploadUrlResult {
-  @Field(() => String)
-  uploadUrl!: string;
+	@Field(() => String)
+	uploadUrl!: string;
 
-  @Field(() => String)
-  attachmentId!: string;
+	@Field(() => String)
+	attachmentId!: string;
 }
 
 /**
@@ -60,8 +60,8 @@ export class RequestAttachmentUploadUrlResult {
  */
 @ObjectType('AttachmentDownloadUrlResult')
 export class AttachmentDownloadUrlResult {
-  @Field(() => String)
-  downloadUrl!: string;
+	@Field(() => String)
+	downloadUrl!: string;
 }
 
 /**
@@ -69,28 +69,28 @@ export class AttachmentDownloadUrlResult {
  */
 @InputType('ListAttachmentsInput')
 export class ListAttachmentsInput {
-  @Field(() => String, { nullable: true })
-  @IsUUID()
-  @IsOptional()
-  invoiceId?: string;
+	@Field(() => String, { nullable: true })
+	@IsUUID()
+	@IsOptional()
+	invoiceId?: string;
 
-  @Field(() => String, { nullable: true })
-  @IsUUID()
-  @IsOptional()
-  expenseId?: string;
+	@Field(() => String, { nullable: true })
+	@IsUUID()
+	@IsOptional()
+	expenseId?: string;
 
-  @Field(() => String, { nullable: true })
-  @IsUUID()
-  @IsOptional()
-  inventoryId?: string;
+	@Field(() => String, { nullable: true })
+	@IsUUID()
+	@IsOptional()
+	inventoryId?: string;
 
-  @Field(() => Int, { nullable: true })
-  @IsOptional()
-  @IsInt()
-  skip?: number;
+	@Field(() => Int, { nullable: true })
+	@IsOptional()
+	@IsInt()
+	skip?: number;
 
-  @Field(() => Int, { nullable: true })
-  @IsOptional()
-  @IsInt()
-  limit?: number;
+	@Field(() => Int, { nullable: true })
+	@IsOptional()
+	@IsInt()
+	limit?: number;
 }

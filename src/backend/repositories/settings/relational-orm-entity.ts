@@ -8,15 +8,15 @@ import { OrmEntity } from '@/common/orm-entity-registry';
 @OrmEntity
 @Entity('settings')
 export class SettingsOrmEntity {
-  /** Unique identifier for the settings record. */
-  @PrimaryColumn('varchar')
-  settingId!: string;
+	/** Unique identifier for the settings record. */
+	@PrimaryColumn('varchar')
+	settingId!: string;
 
-  /** The store id (partition key). */
-  @PrimaryColumn('varchar')
-  storeId!: string;
+	/** The store id (partition key). */
+	@PrimaryColumn('varchar')
+	storeId!: string;
 
-  /** The settings data, as a string (JSON). */
-  @Column('text')
-  data!: string;
+	/** The settings data, as a string (JSON). */
+	@Column('text')
+	data!: string;
 }

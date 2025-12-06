@@ -17,7 +17,10 @@ import { HandlerExecution } from './execute';
  */
 export const handlerName = 'handler';
 export const layers = ['layers/chromium'];
-export const handler: EventHandler = makeEventHandler(InvoiceSendLaterEvent, async (event) => {
-  const handler = DefaultContainer.get(HandlerExecution);
-  await handler.execute(event);
-});
+export const handler: EventHandler = makeEventHandler(
+	InvoiceSendLaterEvent,
+	async (event) => {
+		const handler = DefaultContainer.get(HandlerExecution);
+		await handler.execute(event);
+	},
+);

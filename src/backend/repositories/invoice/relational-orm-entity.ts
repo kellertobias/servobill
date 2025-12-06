@@ -10,114 +10,114 @@ import { OrmEntity } from '@/common/orm-entity-registry';
 @OrmEntity
 @Entity('invoice')
 export class InvoiceOrmEntity {
-  /** Unique identifier for the invoice */
-  @PrimaryColumn('text')
-  id!: string;
+	/** Unique identifier for the invoice */
+	@PrimaryColumn('text')
+	id!: string;
 
-  /** Subject of the invoice */
-  @Column('text', { nullable: true })
-  subject?: string;
+	/** Subject of the invoice */
+	@Column('text', { nullable: true })
+	subject?: string;
 
-  /** Offer number */
-  @Column('text', { nullable: true })
-  offerNumber?: string;
+	/** Offer number */
+	@Column('text', { nullable: true })
+	offerNumber?: string;
 
-  /** Invoice number */
-  @Column('text', { nullable: true })
-  invoiceNumber?: string;
+	/** Invoice number */
+	@Column('text', { nullable: true })
+	invoiceNumber?: string;
 
-  /** Type of invoice (enum as string) */
-  @Column('text')
-  type!: string;
+	/** Type of invoice (enum as string) */
+	@Column('text')
+	type!: string;
 
-  /** Status of the invoice (enum as string) */
-  @Column('text', { nullable: true })
-  status?: string;
+	/** Status of the invoice (enum as string) */
+	@Column('text', { nullable: true })
+	status?: string;
 
-  /** Creation timestamp */
-  @Column('timestamp', { nullable: false })
-  createdAt!: Date;
+	/** Creation timestamp */
+	@Column('timestamp', { nullable: false })
+	createdAt!: Date;
 
-  /** Last update timestamp */
-  @Column('timestamp', { nullable: false })
-  updatedAt!: Date;
+	/** Last update timestamp */
+	@Column('timestamp', { nullable: false })
+	updatedAt!: Date;
 
-  /** When the invoice was offered */
-  @Column('timestamp', { nullable: true })
-  offeredAt?: Date;
+	/** When the invoice was offered */
+	@Column('timestamp', { nullable: true })
+	offeredAt?: Date;
 
-  /** When the invoice was issued */
-  @Column('timestamp', { nullable: true })
-  invoicedAt?: Date;
+	/** When the invoice was issued */
+	@Column('timestamp', { nullable: true })
+	invoicedAt?: Date;
 
-  /** When the invoice is due */
-  @Column('timestamp', { nullable: true })
-  dueAt?: Date;
+	/** When the invoice is due */
+	@Column('timestamp', { nullable: true })
+	dueAt?: Date;
 
-  /** When the invoice was paid */
-  @Column('timestamp', { nullable: true })
-  paidAt?: Date;
+	/** When the invoice was paid */
+	@Column('timestamp', { nullable: true })
+	paidAt?: Date;
 
-  /** Amount paid in cents */
-  @Column('integer', { nullable: true })
-  paidCents?: number;
+	/** Amount paid in cents */
+	@Column('integer', { nullable: true })
+	paidCents?: number;
 
-  /** How the invoice was paid */
-  @Column('text', { nullable: true })
-  paidVia?: string;
+	/** How the invoice was paid */
+	@Column('text', { nullable: true })
+	paidVia?: string;
 
-  /** Footer text */
-  @Column('text', { nullable: true })
-  footerText?: string;
+	/** Footer text */
+	@Column('text', { nullable: true })
+	footerText?: string;
 
-  /** Total amount in cents */
-  @Column('integer', { nullable: true })
-  totalCents?: number;
+	/** Total amount in cents */
+	@Column('integer', { nullable: true })
+	totalCents?: number;
 
-  /** Total tax in cents */
-  @Column('integer', { nullable: true })
-  totalTax?: number;
+	/** Total tax in cents */
+	@Column('integer', { nullable: true })
+	totalTax?: number;
 
-  /** Customer ID */
-  @Column('text')
-  customerId!: string;
+	/** Customer ID */
+	@Column('text')
+	customerId!: string;
 
-  /** Customer JSON (stringified) */
-  @Column('text', { nullable: false })
-  customer!: string;
+	/** Customer JSON (stringified) */
+	@Column('text', { nullable: false })
+	customer!: string;
 
-  /** Submissions JSON (stringified) */
-  @Column('text', { nullable: true })
-  submissions?: string;
+	/** Submissions JSON (stringified) */
+	@Column('text', { nullable: true })
+	submissions?: string;
 
-  /** Items JSON (stringified) */
-  @Column('text', { nullable: true })
-  items?: string;
+	/** Items JSON (stringified) */
+	@Column('text', { nullable: true })
+	items?: string;
 
-  /** Activity JSON (stringified) */
-  @Column('text', { nullable: true })
-  activity?: string;
+	/** Activity JSON (stringified) */
+	@Column('text', { nullable: true })
+	activity?: string;
 
-  /** Links JSON (stringified) */
-  @Column('text', { nullable: true })
-  links?: string;
+	/** Links JSON (stringified) */
+	@Column('text', { nullable: true })
+	links?: string;
 
-  /** PDF JSON (stringified) */
-  @Column('text', { nullable: true })
-  pdf?: string;
+	/** PDF JSON (stringified) */
+	@Column('text', { nullable: true })
+	pdf?: string;
 
-  /** Content hash */
-  @Column('text', { nullable: true })
-  contentHash?: string;
+	/** Content hash */
+	@Column('text', { nullable: true })
+	contentHash?: string;
 
-  /** List of processed event IDs */
-  @Column('text', { nullable: true })
-  processedEventIds?: string;
+	/** List of processed event IDs */
+	@Column('text', { nullable: true })
+	processedEventIds?: string;
 
-  /**
-   * The ID of the scheduled time-based job for sending this invoice later, if any.
-   * Used to allow cancellation of scheduled sends before the job runs.
-   */
-  @Column('text', { nullable: true })
-  scheduledSendJobId?: string;
+	/**
+	 * The ID of the scheduled time-based job for sending this invoice later, if any.
+	 * Used to allow cancellation of scheduled sends before the job runs.
+	 */
+	@Column('text', { nullable: true })
+	scheduledSendJobId?: string;
 }

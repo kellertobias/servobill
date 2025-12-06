@@ -13,16 +13,16 @@ import { getGraphQLServer } from './server';
 export const method = 'ANY';
 export const handlerName = 'handler';
 export const handler = withInstrumentation(
-  {
-    name: 'api.graphql',
-  },
-  withSession(async (evt, ctx) => {
-    const gqlHandler = await getGraphQLServer(contextBuilder);
-    const answer = await gqlHandler(
-      { ...evt, httpMethod: evt.requestContext.http.method },
-      ctx,
-      () => {}
-    );
-    return answer;
-  })
+	{
+		name: 'api.graphql',
+	},
+	withSession(async (evt, ctx) => {
+		const gqlHandler = await getGraphQLServer(contextBuilder);
+		const answer = await gqlHandler(
+			{ ...evt, httpMethod: evt.requestContext.http.method },
+			ctx,
+			() => {},
+		);
+		return answer;
+	}),
 );

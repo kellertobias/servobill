@@ -15,6 +15,8 @@
     "gql:type:watch": "graphql-codegen --config codegen.ts --watch | grep -F '[FAILED]'",
     "gql:type:watch-verbose": "graphql-codegen --config codegen.ts --watch",
     "lint": "biome lint .",
+    "lint:errors": "biome lint . --diagnostic-level=error",
+    "lint:fix": "biome check --write .",
     "stage": "sst bind next dev",
     "start": "next start",
     "template": "tsx stack/local/template-builder.ts",

@@ -15,14 +15,15 @@ import * as resolvers from './index';
 // });
 
 if (process.env.VITEST) {
-  console.error('THIS FILE SHOULD NOT BE IMPORTED IN TESTS');
-  throw new Error('THIS FILE SHOULD NOT BE IMPORTED IN TESTS');
+	console.error('THIS FILE SHOULD NOT BE IMPORTED IN TESTS');
+	throw new Error('THIS FILE SHOULD NOT BE IMPORTED IN TESTS');
 }
 
 export const globalSchema = buildSchema({
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  resolvers: Object.values(resolvers) as unknown as NonEmptyArray<Function>,
-  emitSchemaFile: process.env.NODE_ENV === 'development' ? 'src/schema.gql' : false,
-  container: DefaultContainer,
-  authChecker,
+	// eslint-disable-next-line @typescript-eslint/ban-types
+	resolvers: Object.values(resolvers) as unknown as NonEmptyArray<Function>,
+	emitSchemaFile:
+		process.env.NODE_ENV === 'development' ? 'src/schema.gql' : false,
+	container: DefaultContainer,
+	authChecker,
 });

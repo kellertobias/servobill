@@ -10,31 +10,31 @@
  *   async category(expense: Expense) { ... }
  */
 export function Cached({
-  getKey,
-  ttl,
+	getKey,
+	ttl,
 }: {
-  getKey: (...args: any[]) => (string | number | boolean | undefined | null)[];
-  ttl: number;
+	getKey: (...args: any[]) => (string | number | boolean | undefined | null)[];
+	ttl: number;
 }) {
-  // The cache is a static Map shared across all decorated methods/classes
-  // Structure: Map<cacheKey, { value: any, expires: number }>
-  const cache = new Map<string, { value: any; expires: number }>();
+	// The cache is a static Map shared across all decorated methods/classes
+	// Structure: Map<cacheKey, { value: any, expires: number }>
+	const cache = new Map<string, { value: any; expires: number }>();
 
-  return (_target: any, _propertyKey: string, descriptor: any) => {
-    const originalMethod = descriptor.value!;
+	return (_target: any, _propertyKey: string, descriptor: any) => {
+		const originalMethod = descriptor.value!;
 
-    descriptor.value = async function (this: any, ...args: unknown[]) {
-      const key = getKey(...args).join('::');
-      const now = Date.now();
-      const cached = cache.get(key);
-      if (cached && cached.expires > now) {
-        return cached.value;
-      }
-      const result = await originalMethod.apply(this, args);
-      cache.set(key, { value: result, expires: now + ttl * 1000 });
-      return result;
-    } as typeof originalMethod;
+		descriptor.value = async function (this: any, ...args: unknown[]) {
+			const key = getKey(...args).join('::');
+			const now = Date.now();
+			const cached = cache.get(key);
+			if (cached && cached.expires > now) {
+				return cached.value;
+			}
+			const result = await originalMethod.apply(this, args);
+			cache.set(key, { value: result, expires: now + ttl * 1000 });
+			return result;
+		} as typeof originalMethod;
 
-    return descriptor as TypedPropertyDescriptor<any>;
-  };
+		return descriptor as TypedPropertyDescriptor<any>;
+	};
 }

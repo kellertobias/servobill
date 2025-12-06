@@ -9,42 +9,42 @@ import { OrmEntity } from '@/common/orm-entity-registry';
 @OrmEntity
 @Entity('products')
 export class ProductOrmEntity {
-  @PrimaryColumn('text')
-  id!: string;
+	@PrimaryColumn('text')
+	id!: string;
 
-  @Column('text')
-  category!: string;
+	@Column('text')
+	category!: string;
 
-  @Column('text')
-  name!: string;
+	@Column('text')
+	name!: string;
 
-  @Column('text', { nullable: true })
-  description?: string;
+	@Column('text', { nullable: true })
+	description?: string;
 
-  @Column('text', { nullable: true })
-  notes?: string;
+	@Column('text', { nullable: true })
+	notes?: string;
 
-  @Column('text', { nullable: true })
-  unit?: string;
+	@Column('text', { nullable: true })
+	unit?: string;
 
-  @Column('integer')
-  priceCents!: number;
+	@Column('integer')
+	priceCents!: number;
 
-  @Column('integer')
-  taxPercentage!: number;
+	@Column('integer')
+	taxPercentage!: number;
 
-  @Column('json', { nullable: true })
-  expenses?: ProductEntity['expenses'];
+	@Column('json', { nullable: true })
+	expenses?: ProductEntity['expenses'];
 
-  /**
-   * Date and time when the product was created.
-   */
-  @Column('timestamp')
-  createdAt!: Date;
+	/**
+	 * Date and time when the product was created.
+	 */
+	@Column('timestamp')
+	createdAt!: Date;
 
-  /**
-   * Date and time when the product was last updated.
-   */
-  @Column('timestamp')
-  updatedAt!: Date;
+	/**
+	 * Date and time when the product was last updated.
+	 */
+	@Column('timestamp')
+	updatedAt!: Date;
 }

@@ -1,6 +1,6 @@
 import 'reflect-metadata';
-import { DefaultContainer } from '@/common/di';
 import { CONFIG_SERVICE } from '@/backend/services/di-tokens';
+import { DefaultContainer } from '@/common/di';
 
 if (!DefaultContainer.isBound(CONFIG_SERVICE)) {
 	DefaultContainer.bind(CONFIG_SERVICE).toConstantValue({

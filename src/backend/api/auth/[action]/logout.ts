@@ -5,15 +5,15 @@ import type { APIHandler } from '../../types';
 import { AuthenticationService } from '../authentication';
 
 export const logoutHandler: APIHandler = withSpan(
-  {
-    name: 'api.auth.logout',
-  },
-  async (evt) => {
-    const { siteUrl } = getSiteUrl(evt);
-    const auth = DefaultContainer.get(AuthenticationService);
+	{
+		name: 'api.auth.logout',
+	},
+	async (evt) => {
+		const { siteUrl } = getSiteUrl(evt);
+		const auth = DefaultContainer.get(AuthenticationService);
 
-    return auth.endSession(evt, {
-      forwardUrl: `${siteUrl}/login?logout`,
-    });
-  }
+		return auth.endSession(evt, {
+			forwardUrl: `${siteUrl}/login?logout`,
+		});
+	},
 );

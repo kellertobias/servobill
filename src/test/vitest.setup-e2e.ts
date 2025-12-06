@@ -4,10 +4,9 @@ import 'reflect-metadata';
 import { randomUUID } from 'crypto';
 
 import { inject } from 'vitest';
-
+import { CONFIG_SERVICE } from '@/backend/services/di-tokens';
 // Register ConfigService in DI container BEFORE any other imports
 import { App, DefaultContainer } from '@/common/di';
-import { CONFIG_SERVICE } from '@/backend/services/di-tokens';
 
 process.env.VITEST = 'true';
 process.env.JWT_SECRET = randomUUID();

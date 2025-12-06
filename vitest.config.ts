@@ -11,56 +11,56 @@ import { defineConfig } from 'vitest/config';
  * See: https://vitest.dev/guide/coverage.html
  */
 export default defineConfig({
-	test: {
-		environment: 'node',
-		globalSetup: './src/test/vitest.global-setup-e2e.ts',
-		setupFiles: ['./src/test/vitest.setup-e2e.ts'],
-		include: ['src/**/*.e2e.ts', 'src/**/*.spec.ts'],
-		testTimeout: 60000,
-		hookTimeout: 60000,
-		// Run all test files sequentially to avoid DynamoDB table race conditions
-		fileParallelism: false,
-		sequence: {
-			concurrent: false,
-		},
-		coverage: {
-			provider: 'v8', // Use built-in V8 for coverage (default)
-			reporter: ['text', 'html', 'lcov'], // Output coverage in multiple formats
-			exclude: [
-				'.next/**',
-				'.sst/**',
-				'.swc/**',
-				'node_modules/**',
-				'dist/**',
-				'build/**',
-				'deploy/**',
-				'coverage/**',
-				'src/test/**',
-				'**/*.d.ts',
-				'stack/**',
-				'templates/**',
-				'src/common/gql/**',
-				'**/handler.ts',
-				'**/event.ts',
-				'**/index.ts',
-				'**/*.e2e.ts',
-				'**/*.spec.ts',
-				'**/*.schema.ts',
-				'src/backend/instrumentation.ts',
-				'**/di-tokens.ts',
-			], // Exclude test files and type definitions
-			// Optionally, set thresholds to enforce minimum coverage
-			// thresholds: {
-			//   lines: 80,
-			//   functions: 80,
-			//   branches: 70,
-			//   statements: 80,
-			// },
-		},
-	},
-	resolve: {
-		alias: {
-			'@': join(__dirname, 'src'),
-		},
-	},
+  test: {
+    environment: 'node',
+    globalSetup: './src/test/vitest.global-setup-e2e.ts',
+    setupFiles: ['./src/test/vitest.setup-e2e.ts'],
+    include: ['src/**/*.e2e.ts', 'src/**/*.spec.ts'],
+    testTimeout: 60000,
+    hookTimeout: 60000,
+    // Run all test files sequentially to avoid DynamoDB table race conditions
+    fileParallelism: false,
+    sequence: {
+      concurrent: false,
+    },
+    coverage: {
+      provider: 'v8', // Use built-in V8 for coverage (default)
+      reporter: ['text', 'html', 'lcov'], // Output coverage in multiple formats
+      exclude: [
+        '.next/**',
+        '.sst/**',
+        '.swc/**',
+        'node_modules/**',
+        'dist/**',
+        'build/**',
+        'deploy/**',
+        'coverage/**',
+        'src/test/**',
+        '**/*.d.ts',
+        'stack/**',
+        'templates/**',
+        'src/common/gql/**',
+        '**/handler.ts',
+        '**/event.ts',
+        '**/index.ts',
+        '**/*.e2e.ts',
+        '**/*.spec.ts',
+        '**/*.schema.ts',
+        'src/backend/instrumentation.ts',
+        '**/di-tokens.ts',
+      ], // Exclude test files and type definitions
+      // Optionally, set thresholds to enforce minimum coverage
+      // thresholds: {
+      //   lines: 80,
+      //   functions: 80,
+      //   branches: 70,
+      //   statements: 80,
+      // },
+    },
+  },
+  resolve: {
+    alias: {
+      '@': join(__dirname, 'src'),
+    },
+  },
 });

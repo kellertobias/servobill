@@ -1,81 +1,81 @@
 import { IsBoolean, IsString } from 'class-validator';
 
 class TemplateDataCompanyBank {
-  @IsString()
-  accountHolder!: string;
+	@IsString()
+	accountHolder!: string;
 
-  @IsString()
-  iban!: string;
+	@IsString()
+	iban!: string;
 
-  @IsString()
-  bic!: string;
+	@IsString()
+	bic!: string;
 }
 
 class TemplateDataCompany {
-  @IsString()
-  name!: string;
+	@IsString()
+	name!: string;
 
-  @IsString()
-  street!: string;
+	@IsString()
+	street!: string;
 
-  @IsString()
-  zip!: string;
+	@IsString()
+	zip!: string;
 
-  @IsString()
-  city!: string;
+	@IsString()
+	city!: string;
 
-  @IsString()
-  phone!: string;
+	@IsString()
+	phone!: string;
 
-  @IsString()
-  email!: string;
+	@IsString()
+	email!: string;
 
-  @IsString()
-  web!: string;
+	@IsString()
+	web!: string;
 
-  @IsString()
-  vatId!: string;
+	@IsString()
+	vatId!: string;
 
-  @IsString()
-  taxId!: string;
+	@IsString()
+	taxId!: string;
 
-  bank!: TemplateDataCompanyBank;
+	bank!: TemplateDataCompanyBank;
 }
 
 class TemplateData {
-  company!: TemplateDataCompany;
+	company!: TemplateDataCompany;
 
-  @IsString()
-  invoiceNumber!: string;
+	@IsString()
+	invoiceNumber!: string;
 
-  @IsString()
-  offerNumber!: string;
+	@IsString()
+	offerNumber!: string;
 
-  @IsString()
-  customerNumber!: string;
+	@IsString()
+	customerNumber!: string;
 
-  @IsString()
-  logo!: string;
+	@IsString()
+	logo!: string;
 }
 
 export class GenerateTemplatePreviewEvent {
-  @IsBoolean()
-  pdf!: boolean;
+	@IsBoolean()
+	pdf!: boolean;
 
-  @IsString()
-  template!: string;
+	@IsString()
+	template!: string;
 
-  @IsString()
-  styles!: string;
+	@IsString()
+	styles!: string;
 
-  @IsString()
-  key!: string;
+	@IsString()
+	key!: string;
 
-  data!: TemplateData;
+	data!: TemplateData;
 
-  constructor(props?: GenerateTemplatePreviewEvent) {
-    if (props) {
-      Object.assign(this, props);
-    }
-  }
+	constructor(props?: GenerateTemplatePreviewEvent) {
+		if (props) {
+			Object.assign(this, props);
+		}
+	}
 }

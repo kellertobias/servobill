@@ -1,28 +1,63 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.3.8/schema.json",
-	"vcs": {
-		"enabled": true,
-		"clientKind": "git",
-		"useIgnoreFile": true
-	},
 	"files": {
-		"ignoreUnknown": false
+		"includes": [
+			"src/**/*.ts",
+			"src/**/*.tsx",
+			"stack/**/*.ts",
+			"sst.config.ts"
+		],
+		"ignoreUnknown": true
 	},
 	"formatter": {
 		"enabled": true,
-		"indentStyle": "space",
+		"indentStyle": "tab",
 		"indentWidth": 2,
-		"lineWidth": 100
+		"lineEnding": "lf",
+		"lineWidth": 80
 	},
+	"assist": {},
 	"linter": {
 		"enabled": true,
 		"rules": {
 			"recommended": true,
-			"complexity": {
-				"noBannedTypes": "off"
-			},
 			"style": {
+				"useBlockStatements": "off",
 				"noNonNullAssertion": "off"
+			},
+			"complexity": {
+				"useArrowFunction": "off",
+				"noStaticOnlyClass": "off"
+			},
+			"suspicious": {
+				"noExplicitAny": "off",
+				"noArrayIndexKey": "off",
+				"noConfusingVoidType": "off"
+			},
+			"correctness": {
+				"useHookAtTopLevel": "off",
+				"noUnusedVariables": {
+					"level": "warn",
+					"options": {
+						"ignoreRestSiblings": true
+					}
+				},
+				"noUnusedFunctionParameters": {
+					"level": "off"
+				},
+				"useExhaustiveDependencies": "warn"
+			},
+			"performance": {
+				"noImgElement": "off"
+			},
+			"a11y": {
+				"useValidAnchor": "off",
+				"noStaticElementInteractions": "off",
+				"useButtonType": "warn",
+				"useSemanticElements": "off",
+				"noLabelWithoutControl": "off",
+				"useKeyWithClickEvents": "off",
+				"noSvgWithoutTitle": "off",
+				"useAltText": "off"
 			}
 		}
 	},
@@ -32,15 +67,9 @@
 		},
 		"formatter": {
 			"quoteStyle": "single",
-			"trailingCommas": "es5"
-		}
-	},
-	"assist": {
-		"enabled": true,
-		"actions": {
-			"source": {
-				"organizeImports": "on"
-			}
+			"trailingCommas": "all",
+			"arrowParentheses": "always",
+			"semicolons": "always"
 		}
 	}
 }

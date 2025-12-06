@@ -14,52 +14,52 @@ import { useInventoryDrawer } from './use-inventory-drawer';
  * Includes all editable fields and parentName for display.
  */
 type InventoryTypeDrawerData = {
-  id: string | null;
-  name: string;
-  checkInterval?: string;
-  checkType?: string;
-  properties: string[];
-  parent?: string;
-  parentName?: string;
+	id: string | null;
+	name: string;
+	checkInterval?: string;
+	checkType?: string;
+	properties: string[];
+	parent?: string;
+	parentName?: string;
 };
 
 const useInventoryTypeDrawer = ({
-  ref,
-  onReload,
+	ref,
+	onReload,
 }: {
-  ref: React.Ref<{ openDrawer: (id: string) => void }>;
-  onReload: () => void;
+	ref: React.Ref<{ openDrawer: (id: string) => void }>;
+	onReload: () => void;
 }) => {
-  const { drawerId, handleClose, parentIdRef, reloadRef } = useInventoryDrawer({
-    ref,
-    onReload,
-  });
+	const { drawerId, handleClose, parentIdRef, reloadRef } = useInventoryDrawer({
+		ref,
+		onReload,
+	});
 
-  // useLoadData for fetching and managing type data
-  const { data, setData, initialData, reload, loading } = useLoadData<
-    InventoryTypeDrawerData,
-    { typeId: string }
-  >(
-    async ({ typeId }) => {
-      if (!typeId) {
-        return null;
-      }
-      const empty = {
-        id: 'new',
-        name: '',
-        checkInterval: undefined,
-        checkType: '',
-        properties: [],
-        parent: parentIdRef.current,
-        parentName: undefined,
-      };
+	// useLoadData for fetching and managing type data
+	const { data, setData, initialData, reload, loading } = useLoadData<
+		InventoryTypeDrawerData,
+		{ typeId: string }
+	>(
+		async ({ typeId }) => {
+			if (!typeId) {
+				return null;
+			}
+			const empty = {
+				id: 'new',
+				name: '',
+				checkInterval: undefined,
+				checkType: '',
+				properties: [],
+				parent: parentIdRef.current,
+				parentName: undefined,
+			};
 
-      if (typeId === 'new') {
-        return empty;
-      }
+			if (typeId === 'new') {
+				return empty;
+			}
 
-      const res = await API.query({
-        query: gql(`
+			const res = await API.query({
+				query: gql(`
 					query InventoryTypeDetail($id: String!) {
 						inventoryType(id: $id) {
 							id
@@ -71,63 +71,65 @@ const useInventoryTypeDrawer = ({
 						}
 					}
 				`),
-        variables: { id: typeId },
-      });
+				variables: { id: typeId },
+			});
 
-      if (!res || !res.inventoryType) {
-        throw new Error('Inventory type not found');
-      }
-      const { inventoryType } = res;
-      return {
-        id: inventoryType.id,
-        name: inventoryType.name,
-        checkInterval: inventoryType.checkInterval
-          ? Number(inventoryType.checkInterval).toFixed(0)
-          : undefined,
-        checkType: inventoryType.checkType ?? undefined,
-        properties: inventoryType.properties,
-        parent: inventoryType.parent ?? undefined,
-        parentName: undefined,
-      };
-    },
-    { typeId: drawerId ?? 'new' }
-  );
+			if (!res || !res.inventoryType) {
+				throw new Error('Inventory type not found');
+			}
+			const { inventoryType } = res;
+			return {
+				id: inventoryType.id,
+				name: inventoryType.name,
+				checkInterval: inventoryType.checkInterval
+					? Number(inventoryType.checkInterval).toFixed(0)
+					: undefined,
+				checkType: inventoryType.checkType ?? undefined,
+				properties: inventoryType.properties,
+				parent: inventoryType.parent ?? undefined,
+				parentName: undefined,
+			};
+		},
+		{ typeId: drawerId ?? 'new' },
+	);
 
-  // useSaveCallback for saving changes
-  const { onSave } = useSaveCallback({
-    id: drawerId || 'new',
-    entityName: 'InventoryType',
-    data,
-    initialData,
-    onSaved: () => {
-      reload();
-      reloadRef.current?.();
-    },
-    mapper: (d) => ({
-      name: d.name,
-      checkInterval:
-        d.checkInterval === undefined || d.checkInterval === null || d.checkInterval === ''
-          ? undefined
-          : Number(d.checkInterval),
-      checkType: d.checkType || null,
-      properties: Array.isArray(d.properties)
-        ? d.properties.filter((p: string) => p && p.trim())
-        : [],
-      parent: d.parent === '' || d.parent === undefined ? undefined : d.parent,
-    }),
-  });
+	// useSaveCallback for saving changes
+	const { onSave } = useSaveCallback({
+		id: drawerId || 'new',
+		entityName: 'InventoryType',
+		data,
+		initialData,
+		onSaved: () => {
+			reload();
+			reloadRef.current?.();
+		},
+		mapper: (d) => ({
+			name: d.name,
+			checkInterval:
+				d.checkInterval === undefined ||
+				d.checkInterval === null ||
+				d.checkInterval === ''
+					? undefined
+					: Number(d.checkInterval),
+			checkType: d.checkType || null,
+			properties: Array.isArray(d.properties)
+				? d.properties.filter((p: string) => p && p.trim())
+				: [],
+			parent: d.parent === '' || d.parent === undefined ? undefined : d.parent,
+		}),
+	});
 
-  return {
-    data,
-    setData,
-    initialData,
-    reload,
-    loading,
-    onSave,
-    drawerId,
-    handleClose,
-    reloadRef,
-  };
+	return {
+		data,
+		setData,
+		initialData,
+		reload,
+		loading,
+		onSave,
+		drawerId,
+		handleClose,
+		reloadRef,
+	};
 };
 
 /**
@@ -140,184 +142,202 @@ const useInventoryTypeDrawer = ({
  * @param {React.Ref<{ openDrawer: (id: string) => void }>} ref - Ref to control the drawer imperatively.
  */
 const EditInventoryTypeDrawer = forwardRef(
-  (
-    {
-      onReload,
-    }: {
-      onReload: () => void;
-    },
-    ref: React.Ref<{ openDrawer: (id: string) => void }>
-  ) => {
-    const { data, setData, initialData, loading, onSave, drawerId, handleClose, reloadRef } =
-      useInventoryTypeDrawer({
-        ref,
-        onReload,
-      });
+	(
+		{
+			onReload,
+		}: {
+			onReload: () => void;
+		},
+		ref: React.Ref<{ openDrawer: (id: string) => void }>,
+	) => {
+		const {
+			data,
+			setData,
+			initialData,
+			loading,
+			onSave,
+			drawerId,
+			handleClose,
+			reloadRef,
+		} = useInventoryTypeDrawer({
+			ref,
+			onReload,
+		});
 
-    // --- UI for properties array ---
-    const handlePropertyChange = useCallback(
-      (idx: number, value: string) => {
-        setData((current) => {
-          if (!current) {
-            return current;
-          }
-          const next = [...(current.properties || [])];
-          next[idx] = value ?? '';
-          return { ...current, properties: next };
-        });
-      },
-      [setData]
-    );
+		// --- UI for properties array ---
+		const handlePropertyChange = useCallback(
+			(idx: number, value: string) => {
+				setData((current) => {
+					if (!current) {
+						return current;
+					}
+					const next = [...(current.properties || [])];
+					next[idx] = value ?? '';
+					return { ...current, properties: next };
+				});
+			},
+			[setData],
+		);
 
-    const handleAddProperty = useCallback(() => {
-      setData((current) => {
-        if (!current) {
-          return current;
-        }
-        return { ...current, properties: [...(current.properties || []), ''] };
-      });
-    }, [setData]);
+		const handleAddProperty = useCallback(() => {
+			setData((current) => {
+				if (!current) {
+					return current;
+				}
+				return { ...current, properties: [...(current.properties || []), ''] };
+			});
+		}, [setData]);
 
-    const handleRemoveProperty = useCallback(
-      (idx: number) => {
-        setData((current) => {
-          if (!current) {
-            return current;
-          }
-          const next = [...(current.properties || [])];
-          next.splice(idx, 1);
-          return { ...current, properties: next };
-        });
-      },
-      [setData]
-    );
+		const handleRemoveProperty = useCallback(
+			(idx: number) => {
+				setData((current) => {
+					if (!current) {
+						return current;
+					}
+					const next = [...(current.properties || [])];
+					next.splice(idx, 1);
+					return { ...current, properties: next };
+				});
+			},
+			[setData],
+		);
 
-    const drawerOnSave = useCallback(async () => {
-      await onSave?.();
-      handleClose();
-    }, [onSave, handleClose]);
+		const drawerOnSave = useCallback(async () => {
+			await onSave?.();
+			handleClose();
+		}, [onSave, handleClose]);
 
-    const drawerOnDelete = useCallback(async () => {
-      await API.query({
-        query: gql(`
+		const drawerOnDelete = useCallback(async () => {
+			await API.query({
+				query: gql(`
 				mutation DeleteInventoryType($id: String!) {
 					deleteInventoryType(id: $id)
 				}
 			`),
-        variables: {
-          id: data?.id,
-        },
-      });
-      reloadRef.current?.();
-      handleClose();
-    }, [data?.id, reloadRef, handleClose]);
+				variables: {
+					id: data?.id,
+				},
+			});
+			reloadRef.current?.();
+			handleClose();
+		}, [data?.id, reloadRef, handleClose]);
 
-    if (!data) {
-      return null;
-    }
+		if (!data) {
+			return null;
+		}
 
-    return (
-      <Drawer
-        id={drawerId}
-        title={drawerId === 'new' ? 'New Type' : 'Edit Type'}
-        subtitle={initialData?.name}
-        onClose={handleClose}
-        onCancel={handleClose}
-        onSave={drawerOnSave}
-        saveText={loading ? 'Saving...' : 'Save'}
-        cancelText="Cancel"
-        deleteText={{
-          title: 'Delete Inventory Type',
-          content: (
-            <>
-              Are you sure you want to delete the Inventory Type
-              <b>{data?.name}</b>? This action cannot be undone.
-            </>
-          ),
-        }}
-        onDelete={drawerOnDelete}
-      >
-        <div className="divide-y divide-gray-200 px-4 sm:px-6">
-          <div className="space-y-6 pb-5 pt-6">
-            {/* Parent type dropdown */}
-            <InventoryTypeSelect
-              value={data.parent || ''}
-              onChange={(parent) =>
-                setData((current) => ({
-                  ...current!,
-                  parent: parent || undefined,
-                }))
-              }
-              excludeId={drawerId || undefined}
-            />
-            {/* Name input */}
-            <Input
-              label="Name"
-              value={data.name}
-              onChange={(name) => setData((current) => ({ ...current!, name: name ?? '' }))}
-              placeholder="Type name"
-            />
-            {/* CheckInterval and CheckType in one row */}
-            <div className="flex gap-2">
-              <Input
-                label="Check Interval (days)"
-                type="number"
-                value={
-                  typeof data.checkInterval === 'string'
-                    ? data.checkInterval
-                    : data.checkInterval == null
-                      ? ''
-                      : String(data.checkInterval)
-                }
-                onChange={(v) =>
-                  setData((current) => ({
-                    ...current!,
-                    checkInterval: v ?? '',
-                  }))
-                }
-                placeholder="e.g. 30"
-                className="flex-1"
-              />
-              <Input
-                label="Check Type"
-                value={data.checkType}
-                onChange={(v) => setData((current) => ({ ...current!, checkType: v ?? '' }))}
-                placeholder="e.g. NONE, MANUAL, ..."
-                className="flex-1"
-              />
-            </div>
-            {/* Properties array */}
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-sm font-medium leading-6 text-gray-900">
-                  Properties
-                </label>
-                <Button small secondary onClick={handleAddProperty}>
-                  Add
-                </Button>
-              </div>
-              {data.properties.length === 0 && (
-                <div className="text-xs text-gray-400">No properties defined.</div>
-              )}
-              {data.properties.map((prop: string, idx: number) => (
-                <div key={idx} className="flex gap-2 items-center mb-1">
-                  <Input
-                    value={prop}
-                    onChange={(v) => handlePropertyChange(idx, v ?? '')}
-                    placeholder={`Property #${idx + 1}`}
-                    className="flex-1"
-                  />
-                  <Button small danger onClick={() => handleRemoveProperty(idx)}>
-                    Remove
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </Drawer>
-    );
-  }
+		return (
+			<Drawer
+				id={drawerId}
+				title={drawerId === 'new' ? 'New Type' : 'Edit Type'}
+				subtitle={initialData?.name}
+				onClose={handleClose}
+				onCancel={handleClose}
+				onSave={drawerOnSave}
+				saveText={loading ? 'Saving...' : 'Save'}
+				cancelText="Cancel"
+				deleteText={{
+					title: 'Delete Inventory Type',
+					content: (
+						<>
+							Are you sure you want to delete the Inventory Type
+							<b>{data?.name}</b>? This action cannot be undone.
+						</>
+					),
+				}}
+				onDelete={drawerOnDelete}
+			>
+				<div className="divide-y divide-gray-200 px-4 sm:px-6">
+					<div className="space-y-6 pb-5 pt-6">
+						{/* Parent type dropdown */}
+						<InventoryTypeSelect
+							value={data.parent || ''}
+							onChange={(parent) =>
+								setData((current) => ({
+									...current!,
+									parent: parent || undefined,
+								}))
+							}
+							excludeId={drawerId || undefined}
+						/>
+						{/* Name input */}
+						<Input
+							label="Name"
+							value={data.name}
+							onChange={(name) =>
+								setData((current) => ({ ...current!, name: name ?? '' }))
+							}
+							placeholder="Type name"
+						/>
+						{/* CheckInterval and CheckType in one row */}
+						<div className="flex gap-2">
+							<Input
+								label="Check Interval (days)"
+								type="number"
+								value={
+									typeof data.checkInterval === 'string'
+										? data.checkInterval
+										: data.checkInterval == null
+											? ''
+											: String(data.checkInterval)
+								}
+								onChange={(v) =>
+									setData((current) => ({
+										...current!,
+										checkInterval: v ?? '',
+									}))
+								}
+								placeholder="e.g. 30"
+								className="flex-1"
+							/>
+							<Input
+								label="Check Type"
+								value={data.checkType}
+								onChange={(v) =>
+									setData((current) => ({ ...current!, checkType: v ?? '' }))
+								}
+								placeholder="e.g. NONE, MANUAL, ..."
+								className="flex-1"
+							/>
+						</div>
+						{/* Properties array */}
+						<div>
+							<div className="flex items-center justify-between mb-1">
+								<label className="block text-sm font-medium leading-6 text-gray-900">
+									Properties
+								</label>
+								<Button small secondary onClick={handleAddProperty}>
+									Add
+								</Button>
+							</div>
+							{data.properties.length === 0 && (
+								<div className="text-xs text-gray-400">
+									No properties defined.
+								</div>
+							)}
+							{data.properties.map((prop: string, idx: number) => (
+								<div key={idx} className="flex gap-2 items-center mb-1">
+									<Input
+										value={prop}
+										onChange={(v) => handlePropertyChange(idx, v ?? '')}
+										placeholder={`Property #${idx + 1}`}
+										className="flex-1"
+									/>
+									<Button
+										small
+										danger
+										onClick={() => handleRemoveProperty(idx)}
+									>
+										Remove
+									</Button>
+								</div>
+							))}
+						</div>
+					</div>
+				</div>
+			</Drawer>
+		);
+	},
 );
 
 export { EditInventoryTypeDrawer };

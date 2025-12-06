@@ -1,9 +1,9 @@
 import { API, gql } from '@/api/index';
 
 export class Exporters {
-  static async invoices() {
-    const { invoices } = await API.query({
-      query: gql(`
+	static async invoices() {
+		const { invoices } = await API.query({
+			query: gql(`
                 query ExportInvoices {
                     invoices {
                         id
@@ -67,13 +67,13 @@ export class Exporters {
                     }
                 }
             `),
-    });
-    return invoices;
-  }
+		});
+		return invoices;
+	}
 
-  static async expenses() {
-    const { expenses } = await API.query({
-      query: gql(`
+	static async expenses() {
+		const { expenses } = await API.query({
+			query: gql(`
                 query ExportExpenses {
                     expenses {
                         id
@@ -89,13 +89,13 @@ export class Exporters {
                     }
                 }
             `),
-    });
+		});
 
-    return expenses;
-  }
-  static async customers() {
-    const { customers } = await API.query({
-      query: gql(`
+		return expenses;
+	}
+	static async customers() {
+		const { customers } = await API.query({
+			query: gql(`
 					query ExportCustomers {
 						customers {
 							id
@@ -113,14 +113,14 @@ export class Exporters {
 						}
 					}
 				`),
-    });
+		});
 
-    return customers;
-  }
+		return customers;
+	}
 
-  static async products() {
-    const { products } = await API.query({
-      query: gql(`
+	static async products() {
+		const { products } = await API.query({
+			query: gql(`
                 query ExportProducts {
                     products {
                         id
@@ -140,14 +140,14 @@ export class Exporters {
                     }
                 }
             `),
-    });
+		});
 
-    return products;
-  }
+		return products;
+	}
 
-  static async settings() {
-    const data = await API.query({
-      query: gql(`
+	static async settings() {
+		const data = await API.query({
+			query: gql(`
                 query ExportSettings {
                     settings {
                         invoiceNumbersTemplate
@@ -199,15 +199,15 @@ export class Exporters {
                     }
                 }
             `),
-    });
+		});
 
-    return data;
-  }
+		return data;
+	}
 
-  static async inventory() {
-    // Fetch all types
-    const typesRes = await API.query({
-      query: gql(`
+	static async inventory() {
+		// Fetch all types
+		const typesRes = await API.query({
+			query: gql(`
                 query ExportAllInventoryTypes {
                     inventoryTypes {
                         id
@@ -221,11 +221,11 @@ export class Exporters {
                     }
                 }
             `),
-    });
+		});
 
-    // Fetch all locations
-    const locationsRes = await API.query({
-      query: gql(`
+		// Fetch all locations
+		const locationsRes = await API.query({
+			query: gql(`
                 query ExportAllInventoryLocations {
                     inventoryLocations { 
                         id
@@ -237,11 +237,11 @@ export class Exporters {
                     }
                 }
             `),
-    });
+		});
 
-    // Fetch all items
-    const itemsRes = await API.query({
-      query: gql(`
+		// Fetch all items
+		const itemsRes = await API.query({
+			query: gql(`
                 query ExportAllInventoryItems {
                     inventoryItems {
                         id
@@ -263,12 +263,12 @@ export class Exporters {
                     }
                 }
             `),
-    });
+		});
 
-    return {
-      types: typesRes.inventoryTypes,
-      locations: locationsRes.inventoryLocations,
-      items: itemsRes.inventoryItems,
-    };
-  }
+		return {
+			types: typesRes.inventoryTypes,
+			locations: locationsRes.inventoryLocations,
+			items: itemsRes.inventoryItems,
+		};
+	}
 }

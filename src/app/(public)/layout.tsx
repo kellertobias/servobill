@@ -8,8 +8,16 @@ import { useRequireGuest } from '@/hooks/require-login';
 
 const inter = Inter({ subsets: ['latin'] });
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  useRequireGuest();
+export default function RootLayout({
+	children,
+}: {
+	children: React.ReactNode;
+}) {
+	useRequireGuest();
 
-  return <body className={clsx('h-full bg-gray-900', inter.className)}>{children}</body>;
+	return (
+		<body className={clsx('h-full bg-gray-900', inter.className)}>
+			{children}
+		</body>
+	);
 }

@@ -1,6 +1,13 @@
 import { promisify } from 'node:util';
 import { inflate } from 'node:zlib';
-import { PDFArray, PDFDict, PDFDocument, PDFName, PDFRawStream, PDFRef } from 'pdf-lib';
+import {
+	PDFArray,
+	PDFDict,
+	PDFDocument,
+	PDFName,
+	PDFRawStream,
+	PDFRef,
+} from 'pdf-lib';
 
 const inflateAsync = promisify(inflate);
 
@@ -18,91 +25,98 @@ const inflateAsync = promisify(inflate);
  * @returns XML string if found, undefined otherwise
  */
 export const extractEmbeddedXmlWithPdfLib = async (
-  pdfBuffer: Buffer
+	pdfBuffer: Buffer,
 ): Promise<string | undefined> => {
-  try {
-    const pdfDoc = await PDFDocument.load(new Uint8Array(pdfBuffer));
+	try {
+		const pdfDoc = await PDFDocument.load(new Uint8Array(pdfBuffer));
 
-    // Navigate to the PDF catalog and look for embedded files
-    const catalog = pdfDoc.catalog as PDFDict;
-    const names = catalog.lookupMaybe(PDFName.of('Names'), PDFDict) as PDFDict | undefined;
+		// Navigate to the PDF catalog and look for embedded files
+		const catalog = pdfDoc.catalog as PDFDict;
+		const names = catalog.lookupMaybe(PDFName.of('Names'), PDFDict) as
+			| PDFDict
+			| undefined;
 
-    if (!names) {
-      return undefined;
-    }
+		if (!names) {
+			return undefined;
+		}
 
-    const embeddedFiles = names.lookupMaybe(PDFName.of('EmbeddedFiles'), PDFDict) as
-      | PDFDict
-      | undefined;
+		const embeddedFiles = names.lookupMaybe(
+			PDFName.of('EmbeddedFiles'),
+			PDFDict,
+		) as PDFDict | undefined;
 
-    if (!embeddedFiles) {
-      return undefined;
-    }
+		if (!embeddedFiles) {
+			return undefined;
+		}
 
-    const namesArrayObj = embeddedFiles.lookup(PDFName.of('Names'));
+		const namesArrayObj = embeddedFiles.lookup(PDFName.of('Names'));
 
-    // Handle PDFArray objects by accessing the .array property
-    let namesArray: unknown[];
-    if (namesArrayObj instanceof PDFArray) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      namesArray = (namesArrayObj as any).array;
-    } else if (Array.isArray(namesArrayObj)) {
-      namesArray = namesArrayObj;
-    } else {
-      return undefined;
-    }
+		// Handle PDFArray objects by accessing the .array property
+		let namesArray: unknown[];
+		if (namesArrayObj instanceof PDFArray) {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			namesArray = (namesArrayObj as any).array;
+		} else if (Array.isArray(namesArrayObj)) {
+			namesArray = namesArrayObj;
+		} else {
+			return undefined;
+		}
 
-    // Iterate through embedded files (every two entries: filename, file spec)
-    for (let i = 0; i < namesArray.length; i += 2) {
-      const fileSpecRef = namesArray[i + 1];
+		// Iterate through embedded files (every two entries: filename, file spec)
+		for (let i = 0; i < namesArray.length; i += 2) {
+			const fileSpecRef = namesArray[i + 1];
 
-      // Resolve PDFRef to get the actual file specification object
-      let fileSpec: PDFDict;
-      if (fileSpecRef instanceof PDFRef) {
-        const resolvedObj = pdfDoc.context.lookup(fileSpecRef);
-        if (resolvedObj instanceof PDFDict) {
-          fileSpec = resolvedObj;
-        } else {
-          continue;
-        }
-      } else if (fileSpecRef instanceof PDFDict) {
-        fileSpec = fileSpecRef;
-      } else {
-        continue;
-      }
+			// Resolve PDFRef to get the actual file specification object
+			let fileSpec: PDFDict;
+			if (fileSpecRef instanceof PDFRef) {
+				const resolvedObj = pdfDoc.context.lookup(fileSpecRef);
+				if (resolvedObj instanceof PDFDict) {
+					fileSpec = resolvedObj;
+				} else {
+					continue;
+				}
+			} else if (fileSpecRef instanceof PDFDict) {
+				fileSpec = fileSpecRef;
+			} else {
+				continue;
+			}
 
-      // Look for the embedded file stream
-      const ef = fileSpec.lookupMaybe(PDFName.of('EF'), PDFDict) as PDFDict | undefined;
+			// Look for the embedded file stream
+			const ef = fileSpec.lookupMaybe(PDFName.of('EF'), PDFDict) as
+				| PDFDict
+				| undefined;
 
-      if (ef) {
-        const fileStreamObj = ef.lookup(PDFName.of('F'));
-        if (fileStreamObj instanceof PDFRawStream) {
-          const compressedBuffer = fileStreamObj.getContents();
+			if (ef) {
+				const fileStreamObj = ef.lookup(PDFName.of('F'));
+				if (fileStreamObj instanceof PDFRawStream) {
+					const compressedBuffer = fileStreamObj.getContents();
 
-          try {
-            // Try to decompress the buffer (PDF files typically compress embedded data)
-            const decompressedBuffer = await inflateAsync(new Uint8Array(compressedBuffer));
-            const xmlString = decompressedBuffer.toString('utf8');
+					try {
+						// Try to decompress the buffer (PDF files typically compress embedded data)
+						const decompressedBuffer = await inflateAsync(
+							new Uint8Array(compressedBuffer),
+						);
+						const xmlString = decompressedBuffer.toString('utf8');
 
-            // Return the first XML file found
-            if (xmlString.trim().startsWith('<?xml')) {
-              return xmlString;
-            }
-          } catch {
-            // If decompression fails, try the raw buffer
-            const xmlString = Buffer.from(compressedBuffer).toString('utf8');
-            if (xmlString.trim().startsWith('<?xml')) {
-              return xmlString;
-            }
-          }
-        }
-      }
-    }
-    return undefined;
-  } catch (error) {
-    console.error('Failed to extract embedded XML with pdf-lib', {
-      error: error,
-    });
-    return undefined;
-  }
+						// Return the first XML file found
+						if (xmlString.trim().startsWith('<?xml')) {
+							return xmlString;
+						}
+					} catch {
+						// If decompression fails, try the raw buffer
+						const xmlString = Buffer.from(compressedBuffer).toString('utf8');
+						if (xmlString.trim().startsWith('<?xml')) {
+							return xmlString;
+						}
+					}
+				}
+			}
+		}
+		return undefined;
+	} catch (error) {
+		console.error('Failed to extract embedded XML with pdf-lib', {
+			error: error,
+		});
+		return undefined;
+	}
 };

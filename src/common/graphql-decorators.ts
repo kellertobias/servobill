@@ -25,11 +25,11 @@
 export function AllowUnauthorized(): MethodDecorator {
 	// This is a no-op decorator that serves as an explicit marker
 	// for public endpoints that don't require authorization
-	return function (
+	return (
 		target: object,
 		propertyKey: string | symbol,
 		descriptor: PropertyDescriptor,
-	) {
+	) => {
 		// Do nothing - this is just a marker decorator
 		return descriptor;
 	};

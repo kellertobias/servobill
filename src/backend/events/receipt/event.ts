@@ -6,40 +6,40 @@ import { IsArray, IsBoolean, IsOptional, IsString } from 'class-validator';
  * or received via email
  */
 export class ReceiptEvent {
-  @IsString()
-  id!: string;
+	@IsString()
+	id!: string;
 
-  @IsOptional()
-  @IsBoolean()
-  isBreakdown?: boolean;
+	@IsOptional()
+	@IsBoolean()
+	isBreakdown?: boolean;
 
-  @IsOptional()
-  @IsString()
-  originalEventId?: string;
+	@IsOptional()
+	@IsString()
+	originalEventId?: string;
 
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  attachmentIds?: string[];
+	@IsOptional()
+	@IsArray()
+	@IsString({ each: true })
+	attachmentIds?: string[];
 
-  @IsOptional()
-  @IsString()
-  emailText?: string;
+	@IsOptional()
+	@IsString()
+	emailText?: string;
 
-  /**
-   * The currency code (ISO 4217, e.g. 'EUR', 'USD') for this receipt event.
-   * Used for extraction and summary email.
-   */
-  @IsOptional()
-  @IsString()
-  currency?: string;
+	/**
+	 * The currency code (ISO 4217, e.g. 'EUR', 'USD') for this receipt event.
+	 * Used for extraction and summary email.
+	 */
+	@IsOptional()
+	@IsString()
+	currency?: string;
 
-  constructor(props?: ReceiptEvent) {
-    if (props) {
-      Object.assign(this, props);
-      if (!this.currency) {
-        this.currency = props.currency || 'EUR';
-      }
-    }
-  }
+	constructor(props?: ReceiptEvent) {
+		if (props) {
+			Object.assign(this, props);
+			if (!this.currency) {
+				this.currency = props.currency || 'EUR';
+			}
+		}
+	}
 }

@@ -6,9 +6,9 @@ import { CreateInvoicePdfCommand } from '@/backend/cqrs/generate-pdf/create-invo
 import { CreateInvoicePdfHandler } from '@/backend/cqrs/generate-pdf/create-invoice-pdf.handler';
 import type { InvoiceEntity } from '@/backend/entities/invoice.entity';
 import type {
-  CompanyDataSetting,
-  InvoiceSettingsEntity,
-  PdfTemplateSetting,
+	CompanyDataSetting,
+	InvoiceSettingsEntity,
+	PdfTemplateSetting,
 } from '@/backend/entities/settings.entity';
 import { CqrsBus } from '@/backend/services/cqrs.service';
 import { DefaultContainer } from '@/common/di';
@@ -20,67 +20,67 @@ import type { StorageLoaderStrategy } from './storage';
  * This is the default strategy for standard PDF invoices.
  */
 export class PDFInvoiceGenerator extends InvoiceGeneratorStrategy {
-  private readonly cqrs: CqrsBus;
+	private readonly cqrs: CqrsBus;
 
-  constructor(private readonly storageStrategy?: StorageLoaderStrategy) {
-    super();
-    this.cqrs = CqrsBus.forRoot({
-      handlers: [CreateInvoicePdfHandler, GenerateInvoiceHtmlHandler],
-      container: DefaultContainer,
-    });
-  }
+	constructor(private readonly storageStrategy?: StorageLoaderStrategy) {
+		super();
+		this.cqrs = CqrsBus.forRoot({
+			handlers: [CreateInvoicePdfHandler, GenerateInvoiceHtmlHandler],
+			container: DefaultContainer,
+		});
+	}
 
-  /**
-   * Generates a PDF invoice using the CQRS bus and returns it as a single attachment.
-   */
-  async generate(
-    invoice: InvoiceEntity,
-    options: {
-      companyData: CompanyDataSetting;
-      invoiceSettings: InvoiceSettingsEntity;
-      template: PdfTemplateSetting;
-    }
-  ): Promise<{ content: Buffer; filename: string; mimeType?: string }[]> {
-    if (
-      invoice.pdf?.forContentHash === invoice.contentHash &&
-      invoice.pdf?.key &&
-      this.storageStrategy
-    ) {
-      return await this.storageStrategy.generate(invoice, options);
-    }
+	/**
+	 * Generates a PDF invoice using the CQRS bus and returns it as a single attachment.
+	 */
+	async generate(
+		invoice: InvoiceEntity,
+		options: {
+			companyData: CompanyDataSetting;
+			invoiceSettings: InvoiceSettingsEntity;
+			template: PdfTemplateSetting;
+		},
+	): Promise<{ content: Buffer; filename: string; mimeType?: string }[]> {
+		if (
+			invoice.pdf?.forContentHash === invoice.contentHash &&
+			invoice.pdf?.key &&
+			this.storageStrategy
+		) {
+			return await this.storageStrategy.generate(invoice, options);
+		}
 
-    // Generate HTML for the invoice
-    const { html } = await this.cqrs.execute(
-      new GenerateInvoiceHtmlCommand({
-        logoUrl: options.companyData.invoiceCompanyLogo,
-        template: options.template.pdfTemplate,
-        styles: options.template.pdfStyles,
-        invoice,
-        company: options.companyData.companyData,
-      })
-    );
-    // Generate PDF from HTML
-    const { success, pdf } = await this.cqrs.execute(
-      new CreateInvoicePdfCommand({
-        invoice,
-        html,
-      })
-    );
+		// Generate HTML for the invoice
+		const { html } = await this.cqrs.execute(
+			new GenerateInvoiceHtmlCommand({
+				logoUrl: options.companyData.invoiceCompanyLogo,
+				template: options.template.pdfTemplate,
+				styles: options.template.pdfStyles,
+				invoice,
+				company: options.companyData.companyData,
+			}),
+		);
+		// Generate PDF from HTML
+		const { success, pdf } = await this.cqrs.execute(
+			new CreateInvoicePdfCommand({
+				invoice,
+				html,
+			}),
+		);
 
-    if (!success) {
-      throw new Error('PDF generation failed');
-    }
+		if (!success) {
+			throw new Error('PDF generation failed');
+		}
 
-    if (this.storageStrategy) {
-      await this.storageStrategy.store(invoice, pdf, 'invoice.pdf');
-    }
+		if (this.storageStrategy) {
+			await this.storageStrategy.store(invoice, pdf, 'invoice.pdf');
+		}
 
-    return [
-      {
-        content: pdf,
-        filename: 'invoice.pdf',
-        mimeType: 'application/pdf',
-      },
-    ];
-  }
+		return [
+			{
+				content: pdf,
+				filename: 'invoice.pdf',
+				mimeType: 'application/pdf',
+			},
+		];
+	}
 }

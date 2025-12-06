@@ -8,14 +8,14 @@ import type { FilteredObjectProperties } from '../types';
  */
 @ObjectType('ProductExpense')
 export class ProductExpense {
-  @Field(() => String)
-  name!: string;
+	@Field(() => String)
+	name!: string;
 
-  @Field(() => Int)
-  price!: number;
+	@Field(() => Int)
+	price!: number;
 
-  @Field(() => String, { nullable: true })
-  categoryId?: string;
+	@Field(() => String, { nullable: true })
+	categoryId?: string;
 }
 
 /**
@@ -23,84 +23,86 @@ export class ProductExpense {
  */
 @InputType('ProductExpenseInput')
 export class ProductExpenseInput {
-  @Field(() => String)
-  name!: string;
+	@Field(() => String)
+	name!: string;
 
-  @Field(() => Int)
-  price!: number;
+	@Field(() => Int)
+	price!: number;
 
-  @Field(() => String, { nullable: true })
-  categoryId?: string;
+	@Field(() => String, { nullable: true })
+	categoryId?: string;
 }
 
 @ObjectType('Product')
 export class Product implements FilteredObjectProperties<ProductEntity> {
-  @Field(() => String)
-  id!: string;
+	@Field(() => String)
+	id!: string;
 
-  @Field(() => String)
-  category!: string;
+	@Field(() => String)
+	category!: string;
 
-  @Field(() => String)
-  name!: string;
+	@Field(() => String)
+	name!: string;
 
-  @Field(() => String, { nullable: true })
-  description?: string;
+	@Field(() => String, { nullable: true })
+	description?: string;
 
-  @Field(() => String, { nullable: true })
-  notes?: string;
+	@Field(() => String, { nullable: true })
+	notes?: string;
 
-  @Field(() => String, { nullable: true })
-  unit?: string;
+	@Field(() => String, { nullable: true })
+	unit?: string;
 
-  @Field(() => Int)
-  priceCents!: number;
+	@Field(() => Int)
+	priceCents!: number;
 
-  @Field(() => Int)
-  taxPercentage!: number;
+	@Field(() => Int)
+	taxPercentage!: number;
 
-  @Field(() => [ProductExpense], { nullable: true })
-  expenses?: ProductExpense[];
+	@Field(() => [ProductExpense], { nullable: true })
+	expenses?: ProductExpense[];
 
-  @Field(() => Date)
-  createdAt!: Date;
+	@Field(() => Date)
+	createdAt!: Date;
 
-  @Field(() => Date)
-  updatedAt!: Date;
+	@Field(() => Date)
+	updatedAt!: Date;
 }
 
 @InputType('ProductInput')
-export class ProductInput implements Omit<Product, 'id' | 'createdAt' | 'updatedAt'> {
-  @IsString()
-  @Field(() => String)
-  name!: string;
+export class ProductInput
+	implements Omit<Product, 'id' | 'createdAt' | 'updatedAt'>
+{
+	@IsString()
+	@Field(() => String)
+	name!: string;
 
-  @Field(() => String)
-  category!: string;
+	@Field(() => String)
+	category!: string;
 
-  @Field(() => String, { nullable: true })
-  description?: string;
+	@Field(() => String, { nullable: true })
+	description?: string;
 
-  @Field(() => String, { nullable: true })
-  notes?: string;
+	@Field(() => String, { nullable: true })
+	notes?: string;
 
-  @Field(() => Int)
-  priceCents!: number;
+	@Field(() => Int)
+	priceCents!: number;
 
-  @Field(() => Int)
-  taxPercentage!: number;
+	@Field(() => Int)
+	taxPercentage!: number;
 
-  @Field(() => [ProductExpenseInput], { nullable: true })
-  expenses?: ProductExpenseInput[];
+	@Field(() => [ProductExpenseInput], { nullable: true })
+	expenses?: ProductExpenseInput[];
 }
 
 @InputType('ProductWhereInput')
 export class ProductWhereInput {
-  @IsOptional()
-  @Field(() => String, { nullable: true })
-  search?: string;
+	@IsOptional()
+	@Field(() => String, { nullable: true })
+	search?: string;
 
-  @IsOptional()
-  @Field(() => String, { nullable: true })
-  category?: string;
+	@IsOptional()
+	@Field(() => String, { nullable: true })
+	category?: string;
 }

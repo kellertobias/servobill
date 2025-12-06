@@ -4,70 +4,74 @@ import type { VatStatus } from '@/backend/entities/settings.entity';
 import { getVatInfo } from './zugferd-helpers';
 import type { Allowance, InvoiceLine, Totals } from './zugferd-types';
 
-const getLine = (idx: number, item: InvoiceItemEntity, isVatDisabled: boolean) => {
-  const priceCents = item.priceCents ?? 0;
-  const quantity = item.quantity ?? 1;
-  const totalPriceCents = priceCents * quantity;
-  const itemTaxPercentage = item.taxPercentage ?? 0;
+const getLine = (
+	idx: number,
+	item: InvoiceItemEntity,
+	isVatDisabled: boolean,
+) => {
+	const priceCents = item.priceCents ?? 0;
+	const quantity = item.quantity ?? 1;
+	const totalPriceCents = priceCents * quantity;
+	const itemTaxPercentage = item.taxPercentage ?? 0;
 
-  const itemSinglePrice = totalPriceCents / 100;
-  const itemTotalPrice = totalPriceCents / 100;
-  const itemTaxAmount = (itemTotalPrice * itemTaxPercentage) / 100;
+	const itemSinglePrice = totalPriceCents / 100;
+	const itemTotalPrice = totalPriceCents / 100;
+	const itemTaxAmount = (itemTotalPrice * itemTaxPercentage) / 100;
 
-  const vatCategoryCode = isVatDisabled
-    ? ('E' as const)
-    : itemTaxPercentage === 0
-      ? ('Z' as const)
-      : ('S' as const);
+	const vatCategoryCode = isVatDisabled
+		? ('E' as const)
+		: itemTaxPercentage === 0
+			? ('Z' as const)
+			: ('S' as const);
 
-  const itemTaxCode = `${vatCategoryCode}_${itemTaxPercentage}`;
+	const itemTaxCode = `${vatCategoryCode}_${itemTaxPercentage}`;
 
-  return {
-    identifier: `${idx + 1}`,
-    itemSinglePrice,
-    itemTotalPrice,
-    itemTaxAmount,
-    itemTaxCode,
-    vatCategoryCode,
-    itemTaxPercentage,
-    totalPriceCents,
-    quantity,
-    unitMeasureCode: 'C62' as const,
-  };
+	return {
+		identifier: `${idx + 1}`,
+		itemSinglePrice,
+		itemTotalPrice,
+		itemTaxAmount,
+		itemTaxCode,
+		vatCategoryCode,
+		itemTaxPercentage,
+		totalPriceCents,
+		quantity,
+		unitMeasureCode: 'C62' as const,
+	};
 };
 
 const getLineItem = (
-  item: InvoiceItemEntity,
-  prep: ReturnType<typeof getLine>,
-  exemptionReason: ReturnType<typeof getVatInfo>['exemptionReason']
+	item: InvoiceItemEntity,
+	prep: ReturnType<typeof getLine>,
+	exemptionReason: ReturnType<typeof getVatInfo>['exemptionReason'],
 ) => ({
-  identifier: prep.identifier,
-  note: item.description,
-  tradeProduct: {
-    name: item.name || `Item ${prep.identifier}`,
-  },
-  tradeAgreement: {
-    netTradePrice: {
-      chargeAmount: Number(prep.itemSinglePrice).toFixed(2),
-    },
-  },
-  tradeDelivery: {
-    billedQuantity: {
-      amount: prep.quantity,
-      unitMeasureCode: prep.unitMeasureCode,
-    },
-  },
-  tradeSettlement: {
-    tradeTax: {
-      typeCode: 'VAT',
-      categoryCode: prep.vatCategoryCode,
-      ...exemptionReason,
-      rateApplicablePercent: prep.itemTaxPercentage.toFixed(2),
-    },
-    monetarySummation: {
-      lineTotalAmount: Number(prep.itemTotalPrice).toFixed(2),
-    },
-  },
+	identifier: prep.identifier,
+	note: item.description,
+	tradeProduct: {
+		name: item.name || `Item ${prep.identifier}`,
+	},
+	tradeAgreement: {
+		netTradePrice: {
+			chargeAmount: Number(prep.itemSinglePrice).toFixed(2),
+		},
+	},
+	tradeDelivery: {
+		billedQuantity: {
+			amount: prep.quantity,
+			unitMeasureCode: prep.unitMeasureCode,
+		},
+	},
+	tradeSettlement: {
+		tradeTax: {
+			typeCode: 'VAT',
+			categoryCode: prep.vatCategoryCode,
+			...exemptionReason,
+			rateApplicablePercent: prep.itemTaxPercentage.toFixed(2),
+		},
+		monetarySummation: {
+			lineTotalAmount: Number(prep.itemTotalPrice).toFixed(2),
+		},
+	},
 });
 
 /**
@@ -87,26 +91,26 @@ const getLineItem = (
  * @returns Allowance object for ZUGFeRD
  */
 const getAllowanceItem = (
-  item: InvoiceItemEntity,
-  prep: ReturnType<typeof getLine>,
-  exemptionReason: ReturnType<typeof getVatInfo>['exemptionReason']
+	item: InvoiceItemEntity,
+	prep: ReturnType<typeof getLine>,
+	exemptionReason: ReturnType<typeof getVatInfo>['exemptionReason'],
 ): Allowance => {
-  const actualAmount = Math.abs(prep.itemTotalPrice).toFixed(2);
+	const actualAmount = Math.abs(prep.itemTotalPrice).toFixed(2);
 
-  // Per EN16931, reasonCode '95' is used for "Discount" (see https://www.unece.org/trade/untdid/d16b/tred/tred4465.htm)
-  const reasonCode = '95';
-  const reason = item.name || 'Discount';
+	// Per EN16931, reasonCode '95' is used for "Discount" (see https://www.unece.org/trade/untdid/d16b/tred/tred4465.htm)
+	const reasonCode = '95';
+	const reason = item.name || 'Discount';
 
-  return {
-    actualAmount,
-    reasonCode,
-    reason,
-    categoryTradeTax: {
-      categoryCode: prep.vatCategoryCode,
-      vatRate: prep.itemTaxPercentage.toFixed(2),
-      ...exemptionReason,
-    },
-  };
+	return {
+		actualAmount,
+		reasonCode,
+		reason,
+		categoryTradeTax: {
+			categoryCode: prep.vatCategoryCode,
+			vatRate: prep.itemTaxPercentage.toFixed(2),
+			...exemptionReason,
+		},
+	};
 };
 
 /**
@@ -120,60 +124,68 @@ const getAllowanceItem = (
  * @returns Object with mapped lines, allowances, and totals
  */
 export function mapInvoiceItemsToProfileBasic(
-  invoice: InvoiceEntity,
-  vatStatus: VatStatus
+	invoice: InvoiceEntity,
+	vatStatus: VatStatus,
 ): {
-  line: InvoiceLine[];
-  allowances: Allowance[];
-  totals: Totals;
+	line: InvoiceLine[];
+	allowances: Allowance[];
+	totals: Totals;
 } {
-  const taxTotals: Totals['taxTotals'] = {};
+	const taxTotals: Totals['taxTotals'] = {};
 
-  let lineNetAmount: Totals['lineNetAmount'] = 0;
-  let allowanceNetAmount: Totals['allowanceNetAmount'] = 0;
+	let lineNetAmount: Totals['lineNetAmount'] = 0;
+	let allowanceNetAmount: Totals['allowanceNetAmount'] = 0;
 
-  const { isVatDisabled, exemptionReason } = getVatInfo(vatStatus);
+	const { isVatDisabled, exemptionReason } = getVatInfo(vatStatus);
 
-  const lines: InvoiceLine[] = [];
-  const allowances: Allowance[] = [];
+	const lines: InvoiceLine[] = [];
+	const allowances: Allowance[] = [];
 
-  (invoice.items || []).forEach((item, idx) => {
-    const prep = getLine(idx, item, isVatDisabled);
+	(invoice.items || []).forEach((item, idx) => {
+		const prep = getLine(idx, item, isVatDisabled);
 
-    if (prep.totalPriceCents < 0) {
-      allowanceNetAmount += Math.abs(prep.itemTotalPrice);
+		if (prep.totalPriceCents < 0) {
+			allowanceNetAmount += Math.abs(prep.itemTotalPrice);
 
-      taxTotals[prep.itemTaxCode] = {
-        taxAmount: (taxTotals[prep.itemTaxCode]?.taxAmount ?? 0) - Math.abs(prep.itemTaxAmount),
-        netAmount: (taxTotals[prep.itemTaxCode]?.netAmount ?? 0) - Math.abs(prep.itemTotalPrice),
-        vatCategoryCode: prep.vatCategoryCode,
-        itemTaxCode: prep.itemTaxCode,
-        taxRate: prep.itemTaxPercentage,
-      };
+			taxTotals[prep.itemTaxCode] = {
+				taxAmount:
+					(taxTotals[prep.itemTaxCode]?.taxAmount ?? 0) -
+					Math.abs(prep.itemTaxAmount),
+				netAmount:
+					(taxTotals[prep.itemTaxCode]?.netAmount ?? 0) -
+					Math.abs(prep.itemTotalPrice),
+				vatCategoryCode: prep.vatCategoryCode,
+				itemTaxCode: prep.itemTaxCode,
+				taxRate: prep.itemTaxPercentage,
+			};
 
-      allowances.push(getAllowanceItem(item, prep, exemptionReason));
-    } else {
-      lines.push(getLineItem(item, prep, exemptionReason));
+			allowances.push(getAllowanceItem(item, prep, exemptionReason));
+		} else {
+			lines.push(getLineItem(item, prep, exemptionReason));
 
-      lineNetAmount += prep.itemTotalPrice;
+			lineNetAmount += prep.itemTotalPrice;
 
-      taxTotals[prep.itemTaxCode] = {
-        taxAmount: (taxTotals[prep.itemTaxCode]?.taxAmount ?? 0) + Math.abs(prep.itemTaxAmount),
-        netAmount: (taxTotals[prep.itemTaxCode]?.netAmount ?? 0) + Math.abs(prep.itemTotalPrice),
-        vatCategoryCode: prep.vatCategoryCode,
-        itemTaxCode: prep.itemTaxCode,
-        taxRate: prep.itemTaxPercentage,
-      };
-    }
-  });
+			taxTotals[prep.itemTaxCode] = {
+				taxAmount:
+					(taxTotals[prep.itemTaxCode]?.taxAmount ?? 0) +
+					Math.abs(prep.itemTaxAmount),
+				netAmount:
+					(taxTotals[prep.itemTaxCode]?.netAmount ?? 0) +
+					Math.abs(prep.itemTotalPrice),
+				vatCategoryCode: prep.vatCategoryCode,
+				itemTaxCode: prep.itemTaxCode,
+				taxRate: prep.itemTaxPercentage,
+			};
+		}
+	});
 
-  return {
-    line: lines,
-    allowances,
-    totals: {
-      taxTotals,
-      lineNetAmount,
-      allowanceNetAmount,
-    },
-  };
+	return {
+		line: lines,
+		allowances,
+		totals: {
+			taxTotals,
+			lineNetAmount,
+			allowanceNetAmount,
+		},
+	};
 }

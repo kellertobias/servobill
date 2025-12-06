@@ -5,14 +5,14 @@ import type { AbstractRepositoryInterface } from '../abstract-repository';
  * Interface for all Product repositories (DynamoDB, Postgres, SQLite).
  */
 export type ProductRepository = AbstractRepositoryInterface<
-  ProductEntity,
-  [],
-  {
-    listByQuery(query: {
-      where?: { search?: string };
-      skip?: number;
-      limit?: number;
-      cursor?: string;
-    }): Promise<ProductEntity[]>;
-  }
+	ProductEntity,
+	[],
+	{
+		listByQuery(query: {
+			where?: { search?: string };
+			skip?: number;
+			limit?: number;
+			cursor?: string;
+		}): Promise<ProductEntity[]>;
+	}
 >;

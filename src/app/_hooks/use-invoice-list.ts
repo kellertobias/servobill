@@ -3,9 +3,9 @@ import { API, gql } from '@/api/index';
 import { useLoadData } from './load-data';
 
 export const useInvoiceList = () =>
-  useLoadData(async () =>
-    API.query({
-      query: gql(`
+	useLoadData(async () =>
+		API.query({
+			query: gql(`
                 query InvoiceHomePageListData {
                     invoices {
                         id
@@ -27,7 +27,9 @@ export const useInvoiceList = () =>
                     }
                 }
             `),
-    })
-  );
+		}),
+	);
 
-export type InvoiceListData = NonNullable<ReturnType<typeof useInvoiceList>['data']>['invoices'];
+export type InvoiceListData = NonNullable<
+	ReturnType<typeof useInvoiceList>['data']
+>['invoices'];

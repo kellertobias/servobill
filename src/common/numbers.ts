@@ -17,16 +17,19 @@ export class Numbering {
 		incrementSchema: string,
 		current: string,
 	): string {
-		const parsed = this.parseNumber(schema, current);
+		const parsed = Numbering.parseNumber(schema, current);
 		if (!parsed) {
-			return this.makeNumber(schema, 1);
+			return Numbering.makeNumber(schema, 1);
 		}
 
 		// Compare each parts in the increment schema in order.
 		// If any part of the increment schema is bigger than the current number
 		// we just increment the current number and return it
-		const incrementNumber = this.makeNumber(incrementSchema, 0);
-		const incrementParsed = this.parseNumber(incrementSchema, incrementNumber);
+		const incrementNumber = Numbering.makeNumber(incrementSchema, 0);
+		const incrementParsed = Numbering.parseNumber(
+			incrementSchema,
+			incrementNumber,
+		);
 
 		if (!incrementParsed) {
 			throw new Error('Increment schema is invalid');
@@ -37,17 +40,17 @@ export class Numbering {
 			parsed.year &&
 			incrementParsed.year > parsed.year
 		) {
-			return this.makeNumber(schema, 1);
+			return Numbering.makeNumber(schema, 1);
 		}
 		if (
 			incrementParsed.month &&
 			parsed.month &&
 			incrementParsed.month > parsed.month
 		) {
-			return this.makeNumber(schema, 1);
+			return Numbering.makeNumber(schema, 1);
 		}
 		if (incrementParsed.day && parsed.day && incrementParsed.day > parsed.day) {
-			return this.makeNumber(schema, 1);
+			return Numbering.makeNumber(schema, 1);
 		}
 
 		parsed.year = new Date().getFullYear();
@@ -55,7 +58,7 @@ export class Numbering {
 		parsed.day = new Date().getDate();
 		parsed.number += 1;
 
-		return this.makeNumber(schema, parsed);
+		return Numbering.makeNumber(schema, parsed);
 	}
 	/**
 	 * Formats a number or number parts according to the given schema.
@@ -69,9 +72,9 @@ export class Numbering {
 		schema: string,
 		input: number | NumberParts,
 	): string {
-		const schemaParts = this.getSchemaParts(schema);
+		const schemaParts = Numbering.getSchemaParts(schema);
 
-		let number: string | undefined = undefined;
+		let number: string | undefined;
 		let year = `${new Date().getFullYear()}`;
 		let month = `${new Date().getMonth() + 1}`;
 		let day = `${new Date().getDate()}`;
@@ -113,7 +116,6 @@ export class Numbering {
 			}
 			if (schemaPart.type === 'number' && number !== undefined) {
 				result += number.padStart(schemaPart.size, '0');
-				continue;
 			}
 		}
 		return result;
@@ -140,7 +142,7 @@ export class Numbering {
 		// it is defined like: '[INV]-YYYY-####'
 		// Allowed parameters are Y, M, D, #; every other letter
 		// needs to be within square brackets
-		const schemaParts = this.getSchemaParts(schema);
+		const schemaParts = Numbering.getSchemaParts(schema);
 		const parts: NumberParts = { number: 0 };
 		let remainingNumber = instance;
 
@@ -203,7 +205,6 @@ export class Numbering {
 					return null;
 				}
 				parts.number = number;
-				continue;
 			}
 		}
 

@@ -3,13 +3,6 @@
 import { randomUUID } from 'node:crypto';
 
 import { vi } from 'vitest';
-
-import {
-	getConfigForDynamodb,
-	getConfigForRelationalDb,
-} from './create-config';
-import { ensureDynamoTableExists } from './ensure-dynamo-table';
-
 import { DatabaseType } from '@/backend/services/constants';
 import {
 	CONFIG_SERVICE,
@@ -17,9 +10,14 @@ import {
 	EVENTBUS_SERVICE,
 	RELATIONALDB_SERVICE,
 } from '@/backend/services/di-tokens';
-import { App } from '@/common/di';
 import { DynamoDBService } from '@/backend/services/dynamodb.service';
 import { RelationalDbService } from '@/backend/services/relationaldb.service';
+import { App } from '@/common/di';
+import {
+	getConfigForDynamodb,
+	getConfigForRelationalDb,
+} from './create-config';
+import { ensureDynamoTableExists } from './ensure-dynamo-table';
 
 interface PrepareRepoTestOptions<T> {
 	name: string;
