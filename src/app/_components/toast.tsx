@@ -94,7 +94,7 @@ export const doToast = (
 		});
 	}
 	return toast.custom(
-		(t) => (
+		(t: any) => (
 			<CustomToast
 				{...t}
 				type={props.type || 'info'}
