@@ -1,3 +1,32 @@
+## [1.15.0](https://github.com/kellertobias/servobill/compare/v1.14.0...v1.15.0) (2025-12-06)
+
+
+### ✨ Features
+
+* allow image uploads for AI invoice analysis ([7b2df7f](https://github.com/kellertobias/servobill/commit/7b2df7f3714c9694e2af6eb508358a08f126da4e))
+
+
+### 🐛 Bug Fixes
+
+* auto-fixable security audit ([fc11f66](https://github.com/kellertobias/servobill/commit/fc11f664a84358ef9bb26abdafff92cd9fa4b80a))
+* build and tests after merge ([127a9c5](https://github.com/kellertobias/servobill/commit/127a9c5a01f41b9030f4020dc17298a8d97d5a0f))
+* type error in file extraction ([37d5521](https://github.com/kellertobias/servobill/commit/37d5521793c9d53f22744680a029bc59912a4f9f))
+
+
+### ♻️ Code Refactoring
+
+* Upgrade AWS SDK SES client to v2. ([c8e65c7](https://github.com/kellertobias/servobill/commit/c8e65c7e73ee07e1bbb680418a65ea5b9444d31d))
+
+
+### 👷 CI/CD
+
+* fix lint ([22422de](https://github.com/kellertobias/servobill/commit/22422de2fcb851a9418a2f96dc9b0a723ddce300))
+
+
+### 🔧 Chores
+
+* Update react and react-dom overrides to version 19.2.1. ([0b6d34a](https://github.com/kellertobias/servobill/commit/0b6d34ab2c5f704a81520fbcacd6cae1faf6383d))
+
 ## [1.14.0](https://github.com/kellertobias/servobill/compare/v1.13.4...v1.14.0) (2025-12-06)
 
 
