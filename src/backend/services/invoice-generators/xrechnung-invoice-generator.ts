@@ -297,7 +297,7 @@ function mapInvoiceToUbl(
 			: undefined,
 		'cbc:InvoiceTypeCode': '380',
 		'cbc:DocumentCurrencyCode': currency as InvoiceCurrencyCode,
-		'cbc:Note': invoice.footerText,
+		'cbc:Note': invoice.footerText ? [invoice.footerText] : undefined,
 		'cbc:BuyerReference': buyerReference,
 		'cac:AccountingSupplierParty': {
 			'cac:Party': {
