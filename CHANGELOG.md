@@ -1,3 +1,10 @@
+## [1.15.2](https://github.com/kellertobias/servobill/compare/v1.15.1...v1.15.2) (2025-12-12)
+
+
+### 🔧 Chores
+
+* Update Next.js and React dependencies, reformat service files, and add type assertion for download API response. ([b99e0dd](https://github.com/kellertobias/servobill/commit/b99e0dd4bd959d8c6ca08fd364b60b298c5984f4))
+
 ## [1.15.1](https://github.com/kellertobias/servobill/compare/v1.15.0...v1.15.1) (2025-12-06)
 
 
