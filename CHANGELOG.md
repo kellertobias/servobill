@@ -1,3 +1,10 @@
+## [1.15.1](https://github.com/kellertobias/servobill/compare/v1.15.0...v1.15.1) (2025-12-06)
+
+
+### 🐛 Bug Fixes
+
+* sending emails ([2966d75](https://github.com/kellertobias/servobill/commit/2966d75c99dd0c0f0d19a207970bc2269784546b))
+
 ## [1.15.0](https://github.com/kellertobias/servobill/compare/v1.14.0...v1.15.0) (2025-12-06)
 
 
