@@ -17,7 +17,7 @@ const nextConfig = {
   typescript: {
     tsconfigPath: './tsconfig.next.json',
   },
-  serverExternalPackages: ['graphql', 'typeorm', 'apollo-server-lambda', 'apollo-server-core'],
+  serverExternalPackages: ['graphql', 'typeorm', 'apollo-server-lambda', 'apollo-server-core', 'pino'],
   // Next 16 defaults to turbopack for `next build`.
 };
 

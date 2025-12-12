@@ -14,113 +14,118 @@ import type { FileStorageService } from './interface';
  * Implementation of FileStorageService that delegates to S3 or local file system.
  */
 @Service({
-  name: FILE_STORAGE_SERVICE,
-  shouldRegister: () => {
-    const configService = DefaultContainer.get<ConfigService>(CONFIG_SERVICE);
+	name: FILE_STORAGE_SERVICE,
+	shouldRegister: () => {
+		const configService = DefaultContainer.get<ConfigService>(CONFIG_SERVICE);
 
-    return configService.fileStorage.type === FileStorageType.LOCAL;
-  },
-  addToTestSet: [FILE_STORAGE_LOCAL_TEST_SET],
+		return configService.fileStorage.type === FileStorageType.LOCAL;
+	},
+	addToTestSet: [FILE_STORAGE_LOCAL_TEST_SET],
 })
 export class FileStorageServiceLocal implements FileStorageService {
-  private filesDirectory: string;
-  private defaultSubDirectory = 'uploads';
+	private filesDirectory: string;
+	private defaultSubDirectory = 'uploads';
 
-  constructor(@Inject(CONFIG_SERVICE) private readonly config: ConfigService) {
-    if (this.config.fileStorage.type !== FileStorageType.LOCAL) {
-      throw new Error('FileStorageServiceLocal is not supported');
-    }
-    this.filesDirectory = this.config.fileStorage.baseDirectory;
-  }
+	constructor(@Inject(CONFIG_SERVICE) private readonly config: ConfigService) {
+		if (this.config.fileStorage.type !== FileStorageType.LOCAL) {
+			throw new Error('FileStorageServiceLocal is not supported');
+		}
+		this.filesDirectory = this.config.fileStorage.baseDirectory;
+	}
 
-  /**
-   * Retrieve a file as a Buffer, from S3 or local disk.
-   */
-  @Span('FileStorageServiceS3.getFile')
-  async getFile(key: string, options?: { bucket?: string }): Promise<Buffer> {
-    const bucket = options?.bucket ?? this.defaultSubDirectory;
-    const filePath = path.join(this.filesDirectory, bucket, key);
-    return await fs.readFile(filePath);
-  }
+	/**
+	 * Retrieve a file as a Buffer, from S3 or local disk.
+	 */
+	@Span('FileStorageServiceS3.getFile')
+	async getFile(key: string, options?: { bucket?: string }): Promise<Buffer> {
+		const bucket = options?.bucket ?? this.defaultSubDirectory;
+		const filePath = path.join(this.filesDirectory, bucket, key);
+		return await fs.readFile(filePath);
+	}
 
-  /**
-   * Save a file to S3 or local disk.
-   * Converts Buffer to Uint8Array to ensure compatibility with fs.writeFile.
-   */
-  @Span('FileStorageServiceS3.saveFile')
-  async saveFile(key: string, file: Buffer, options?: { bucket?: string }): Promise<string> {
-    const bucket = options?.bucket ?? this.defaultSubDirectory;
-    const filePath = path.join(this.filesDirectory, bucket, key);
+	/**
+	 * Save a file to S3 or local disk.
+	 * Converts Buffer to Uint8Array to ensure compatibility with fs.writeFile.
+	 */
+	@Span('FileStorageServiceS3.saveFile')
+	async saveFile(
+		key: string,
+		file: Buffer,
+		options?: { bucket?: string },
+	): Promise<string> {
+		const bucket = options?.bucket ?? this.defaultSubDirectory;
+		const filePath = path.join(this.filesDirectory, bucket, key);
 
-    // Ensure the directory exists
-    const dir = path.dirname(filePath);
-    if (!existsSync(dir)) {
-      await fs.mkdir(dir, { recursive: true });
-    }
+		// Ensure the directory exists
+		const dir = path.dirname(filePath);
+		if (!existsSync(dir)) {
+			await fs.mkdir(dir, { recursive: true });
+		}
 
-    // Convert Buffer to Uint8Array for compatibility with fs.writeFile
-    await fs.writeFile(filePath, new Uint8Array(file));
+		// Convert Buffer to Uint8Array for compatibility with fs.writeFile
+		await fs.writeFile(filePath, new Uint8Array(file));
 
-    return this.getDownloadUrl({ bucket, key });
-  }
+		return this.getDownloadUrl({ bucket, key });
+	}
 
-  /**
-   * Delete a file from S3 or local disk.
-   */
-  @Span('FileStorageServiceS3.deleteFile')
-  async deleteFile(key: string, options?: { bucket?: string }): Promise<void> {
-    const bucket = options?.bucket ?? this.defaultSubDirectory;
-    const filePath = path.join(this.filesDirectory, bucket, key);
-    try {
-      await fs.unlink(filePath);
-    } catch (error: unknown) {
-      // Ignore file not found errors for idempotency
-      if (
-        error &&
-        typeof error === 'object' &&
-        'code' in error &&
-        (error as { code: string }).code === 'ENOENT'
-      ) {
-        return;
-      }
-      throw error;
-    }
-  }
+	/**
+	 * Delete a file from S3 or local disk.
+	 */
+	@Span('FileStorageServiceS3.deleteFile')
+	async deleteFile(key: string, options?: { bucket?: string }): Promise<void> {
+		const bucket = options?.bucket ?? this.defaultSubDirectory;
+		const filePath = path.join(this.filesDirectory, bucket, key);
+		try {
+			await fs.unlink(filePath);
+		} catch (error: unknown) {
+			// Ignore file not found errors for idempotency
+			if (
+				error &&
+				typeof error === 'object' &&
+				'code' in error &&
+				(error as { code: string }).code === 'ENOENT'
+			) {
+				return;
+			}
+			throw error;
+		}
+	}
 
-  /**
-   * Get a URL for uploading a file (S3 signed URL or local API endpoint).
-   */
-  @Span('FileStorageServiceS3.getUploadUrl')
-  async getUploadUrl(attachment: AttachmentEntity): Promise<string> {
-    return `/api/upload?attachmentId=${encodeURIComponent(attachment.id)}`;
-  }
+	/**
+	 * Get a URL for uploading a file (S3 signed URL or local API endpoint).
+	 */
+	@Span('FileStorageServiceS3.getUploadUrl')
+	async getUploadUrl(attachment: AttachmentEntity): Promise<string> {
+		return `/api/upload?attachmentId=${encodeURIComponent(attachment.id)}`;
+	}
 
-  /**
-   * Get a URL for downloading a file (S3 signed URL or local API endpoint).
-   */
-  @Span('FileStorageServiceS3.getDownloadUrl')
-  async getDownloadUrl(
-    attachment: AttachmentEntity | { bucket: string; key: string }
-  ): Promise<string> {
-    const bucket = 'bucket' in attachment ? attachment.bucket : attachment.s3Bucket;
-    const key = 'key' in attachment ? attachment.key : attachment.s3Key;
+	/**
+	 * Get a URL for downloading a file (S3 signed URL or local API endpoint).
+	 */
+	@Span('FileStorageServiceS3.getDownloadUrl')
+	async getDownloadUrl(
+		attachment: AttachmentEntity | { bucket: string; key: string },
+	): Promise<string> {
+		const bucket =
+			'bucket' in attachment ? attachment.bucket : attachment.s3Bucket;
+		const key = 'key' in attachment ? attachment.key : attachment.s3Key;
 
-    if (attachment instanceof AttachmentEntity) {
-      return `/api/download?attachmentId=${encodeURIComponent(attachment.id)}`;
-    }
+		if (attachment instanceof AttachmentEntity) {
+			return `/api/download?attachmentId=${encodeURIComponent(attachment.id)}`;
+		}
 
-    return `/api/download?bucket=${encodeURIComponent(bucket)}&key=${encodeURIComponent(key)}`;
-  }
+		return `/api/download?bucket=${encodeURIComponent(bucket)}&key=${encodeURIComponent(key)}`;
+	}
 
-  getFileDescriptor(url: string): { bucket?: string; key: string } | null {
-    try {
-      const urlObj = new URL(url);
-      return {
-        bucket: urlObj.hostname,
-        key: urlObj.pathname.slice(1),
-      };
-    } catch {
-      return null;
-    }
-  }
+	getFileDescriptor(url: string): { bucket?: string; key: string } | null {
+		try {
+			const urlObj = new URL(url);
+			return {
+				bucket: urlObj.hostname,
+				key: urlObj.pathname.slice(1),
+			};
+		} catch {
+			return null;
+		}
+	}
 }

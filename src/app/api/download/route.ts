@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
 			});
 		}
 
-		return new Response(file.file, {
+		return new Response(file.file as unknown as BodyInit, {
 			status: 200,
 			headers: {
 				'Content-Type': file.contentType,
