@@ -12,8 +12,11 @@ import { SettingsBlock } from '@/components/settings-block';
 import { StatsDisplay, type StatsDisplayStat } from '@/components/stats';
 import { Table } from '@/components/table';
 import { useLoadData } from '@/hooks/load-data';
+import ReportPdfDialog from './report-pdf-dialog';
+import { doToast } from '@/components/toast';
 
 function ReportPreview({ start, end }: { start?: string; end?: string }) {
+	const [isPdfDialogOpen, setIsPdfDialogOpen] = React.useState(false);
 	const { data, loading } = useLoadData(async () =>
 		API.query({
 			query: gql(`
@@ -150,12 +153,43 @@ function ReportPreview({ start, end }: { start?: string; end?: string }) {
 						>
 							Download as JSON
 						</Button>
-						{/* <Button secondary onClick={() => {
-							// Later
-						}}>
-							Download as PDF
-						</Button> */}
+						<Button
+							secondary
+							onClick={() => {
+								setIsPdfDialogOpen(true);
+							}}
+						>
+							Generate PDF report
+						</Button>
 					</div>
+					<ReportPdfDialog
+						isOpen={isPdfDialogOpen}
+						onClose={() => setIsPdfDialogOpen(false)}
+						onGenerate={(format) => {
+							if (start && end) {
+								doToast({
+									promise: API.query({
+										query: gql(`
+											mutation GenerateReportPdf($where: IncomeSurplusReportWhereInput!, $format: String!) {
+												generateReportPdf(where: $where, format: $format)
+											}
+										`) as any,
+										variables: {
+											where: {
+												startDate: dayjs(start).toDate().toISOString(),
+												endDate: dayjs(end).toDate().toISOString(),
+											},
+											format,
+										},
+									}),
+									loading: 'Generating report...',
+									success:
+										'Report generation started. You will receive an email shortly.',
+									error: 'Failed to generate report.',
+								});
+							}
+						}}
+					/>
 				</SettingsBlock>
 			</PageCard>
 			<PageCard noPadding className="pt-6">

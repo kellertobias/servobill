@@ -21,6 +21,10 @@ const handlers: Record<string, EventHandlerImport> = {
 		await import('@/backend/events/receipt/handler').then(
 			(importedModule) => importedModule.handler,
 		),
+	'report.generate': async () =>
+		await import('@/backend/events/report/generate/handler').then(
+			(importedModule) => importedModule.handler,
+		),
 	'template': async () =>
 		await import('@/backend/events/template/handler').then(
 			(importedModule) => importedModule.handler,

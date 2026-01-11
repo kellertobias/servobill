@@ -1,5 +1,8 @@
 import 'reflect-metadata';
 
+// Ensure ConfigService is registered
+import '@/backend/services/config.service';
+
 import type { NextRequest } from 'next/server';
 
 import * as multipart from 'parse-multipart-data';

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import dayjs from 'dayjs';
-import { Arg, Authorized, Query, Resolver } from 'type-graphql';
+import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 import type { ExpenseEntity } from '@/backend/entities/expense.entity';
 import { type InvoiceEntity, InvoiceStatus, InvoiceType } from '@/backend/entities/invoice.entity';
 import { ExpenseSettingsEntity } from '@/backend/entities/settings.entity';
@@ -11,6 +11,8 @@ import { INVOICE_REPOSITORY } from '@/backend/repositories/invoice/di-tokens';
 import type { InvoiceRepository } from '@/backend/repositories/invoice/interface';
 import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
 import type { SettingsRepository } from '@/backend/repositories/settings/interface';
+import { EVENTBUS_SERVICE } from '@/backend/services/di-tokens';
+import { EventBusService } from '@/backend/services/eventbus.service';
 import { Inject, Service } from '@/common/di';
 import { GRAPHQL_TEST_SET } from '../di-tokens';
 import {
@@ -32,7 +34,8 @@ export class ReportsResolver {
   constructor(
     @Inject(INVOICE_REPOSITORY) private invoiceRepository: InvoiceRepository,
     @Inject(EXPENSE_REPOSITORY) private expenseRepository: ExpenseRepository,
-    @Inject(SETTINGS_REPOSITORY) private settingsRepository: SettingsRepository
+    @Inject(SETTINGS_REPOSITORY) private settingsRepository: SettingsRepository,
+    @Inject(EVENTBUS_SERVICE) private eventBus: EventBusService
   ) {}
 
   private async getRelevantData(
@@ -163,5 +166,34 @@ export class ReportsResolver {
     }
 
     return report;
+  }
+
+  @Authorized()
+  @Mutation(() => Boolean)
+  async generateReportPdf(
+    @Arg('where', () => IncomeSurplusReportWhereInput) where: IncomeSurplusReportWhereInput,
+    @Arg('format') format: string,
+    @Ctx() context: any // Need context to get user email
+  ): Promise<boolean> {
+    const startDate = where?.startDate || dayjs().startOf('year').toDate();
+    const endDate = where?.endDate || dayjs().endOf('year').toDate();
+
+    // Extract user email from context
+    // Assuming context has user info. Based on other resolvers/auth logic
+    // src/backend/api/graphql/context-builder.ts defines the context
+    // Let's check session usage
+    const email = context.session?.email;
+    if (!email) {
+        throw new Error('User email not found in session');
+    }
+
+    await this.eventBus.send('report.generate', {
+        start: startDate.toISOString(),
+        end: endDate.toISOString(),
+        format: format as 'simple' | 'categorized',
+        recipientEmail: email
+    });
+
+    return true;
   }
 }
