@@ -2,6 +2,8 @@ import { randomUUID } from 'node:crypto';
 import dayjs from 'dayjs';
 import { Arg, Authorized, Mutation, Query, Resolver } from 'type-graphql';
 import {
+  BackupFrequency,
+  BackupSettingsEntity,
   CompanyDataSetting,
   ExpenseSettingsEntity,
   type InvoiceOutputFormat,
@@ -12,6 +14,8 @@ import { GenerateTemplatePreviewEvent } from '@/backend/events/template/event';
 import { EXPENSE_REPOSITORY, type ExpenseRepository } from '@/backend/repositories/expense';
 import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
 import type { SettingsRepository } from '@/backend/repositories/settings/interface';
+import { TIME_BASED_JOB_REPOSITORY } from '@/backend/repositories/time-based-job/di-tokens';
+import type { TimeBasedJobRepository } from '@/backend/repositories/time-based-job/interface';
 import { EVENTBUS_SERVICE } from '@/backend/services/di-tokens';
 import type { EventBusService } from '@/backend/services/eventbus.service';
 import {
@@ -27,6 +31,7 @@ import {
   InvoiceTemplateResult,
   SettingsInput,
   SettingsResult,
+  UpdateBackupSettingsInput,
 } from './system.schema';
 
 @Service({
@@ -39,7 +44,9 @@ export class SystemResolver {
     @Inject(EXPENSE_REPOSITORY) private expenseRepository: ExpenseRepository,
     @Inject(EVENTBUS_SERVICE) private eventBus: EventBusService,
     @Inject(FILE_STORAGE_SERVICE)
-    private fileStorageService: FileStorageService
+    private fileStorageService: FileStorageService,
+    @Inject(TIME_BASED_JOB_REPOSITORY)
+    private timeBasedJobRepository: TimeBasedJobRepository
   ) {}
 
   /**
@@ -50,10 +57,12 @@ export class SystemResolver {
     invoices,
     company,
     expenses,
+    backup,
   }: {
     invoices: InvoiceSettingsEntity;
     company: CompanyDataSetting;
     expenses?: ExpenseSettingsEntity;
+    backup?: BackupSettingsEntity;
   }): SettingsResult {
     return {
       // Data from company:
@@ -102,6 +111,13 @@ export class SystemResolver {
       categories: expenses ? (expenses.categories || []).map((cat) => ({ ...cat })) : undefined,
       currency: company.currency || 'EUR',
       invoiceOutputFormat: invoices.invoiceOutputFormat as InvoiceOutputFormat | undefined,
+      backup: backup
+        ? {
+            backupEmail: backup.backupEmail,
+            backupFrequency: backup.backupFrequency,
+            backupEnabled: backup.backupEnabled,
+          }
+        : undefined,
     };
   }
 
@@ -112,11 +128,13 @@ export class SystemResolver {
     const company = await this.settingsRepository.getSetting(CompanyDataSetting);
 
     const expenses = await this.settingsRepository.getSetting(ExpenseSettingsEntity);
+    const backup = await this.settingsRepository.getSetting(BackupSettingsEntity);
 
     return this.mapInvoiceSettingsEntityToResponse({
       company,
       invoices,
       expenses,
+      backup,
     });
   }
 
@@ -128,6 +146,68 @@ export class SystemResolver {
       pdfTemplate: emails.pdfTemplate || '',
       pdfStyles: emails.pdfStyles || '',
     };
+  }
+
+  @Authorized()
+  @Mutation(() => SettingsResult)
+  async updateBackupSettings(
+    @Arg('data', () => UpdateBackupSettingsInput) nextData: UpdateBackupSettingsInput
+  ): Promise<SettingsResult> {
+    const backupSettings = await this.settingsRepository.getSetting(BackupSettingsEntity);
+
+    backupSettings.backupEmail = nextData.backupEmail || '';
+    if (nextData.backupFrequency) {
+      backupSettings.backupFrequency = nextData.backupFrequency;
+    }
+    if (nextData.backupEnabled !== undefined) {
+      backupSettings.backupEnabled = nextData.backupEnabled;
+    }
+
+    await backupSettings.save();
+
+    // Schedule or cancel job
+    if (backupSettings.backupEnabled) {
+      await this.scheduleNextBackup(backupSettings);
+    } else {
+      await this.cancelBackupJob(backupSettings);
+    }
+
+    // Return full settings result
+    const invoices = await this.settingsRepository.getSetting(InvoiceSettingsEntity);
+    const company = await this.settingsRepository.getSetting(CompanyDataSetting);
+    const expenses = await this.settingsRepository.getSetting(ExpenseSettingsEntity);
+
+    return this.mapInvoiceSettingsEntityToResponse({
+      company,
+      invoices,
+      expenses,
+      backup: backupSettings,
+    });
+  }
+
+  private async scheduleNextBackup(settings: BackupSettingsEntity) {
+    await this.cancelBackupJob(settings);
+
+    // Run immediately (next cron tick)
+    const now = Math.floor(Date.now() / 1000);
+    const runAfter = now;
+
+    const job = await this.timeBasedJobRepository.create({
+      eventType: 'backup.execute',
+      eventPayload: {},
+      runAfter,
+    });
+
+    settings.backupJobId = job.id;
+    await settings.save();
+  }
+
+  private async cancelBackupJob(settings: BackupSettingsEntity) {
+    if (settings.backupJobId) {
+      await this.timeBasedJobRepository.delete(settings.backupJobId);
+      settings.backupJobId = undefined;
+      await settings.save();
+    }
   }
 
   @Authorized()

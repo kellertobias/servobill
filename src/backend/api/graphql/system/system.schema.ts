@@ -2,6 +2,7 @@ import { IsBoolean, IsString } from 'class-validator';
 import { Field, InputType, Int, ObjectType } from 'type-graphql';
 
 import {
+	BackupFrequency,
 	InvoiceOutputFormat,
 	type PdfTemplateSetting,
 	VatStatus,
@@ -343,6 +344,24 @@ export class SettingsResult {
 	 */
 	@Field(() => String, { nullable: true })
 	currency?: string;
+
+	/**
+	 * Backup settings. Now nullable.
+	 */
+	@Field(() => BackupSettings, { nullable: true })
+	backup?: BackupSettings;
+}
+
+@ObjectType('BackupSettings')
+export class BackupSettings {
+	@Field(() => String, { nullable: true })
+	backupEmail?: string;
+
+	@Field(() => BackupFrequency, { nullable: true })
+	backupFrequency?: BackupFrequency;
+
+	@Field(() => Boolean, { nullable: true })
+	backupEnabled?: boolean;
 }
 
 @InputType('SettingsCompanyInput')
@@ -517,6 +536,20 @@ export class InvoiceTemplateResult
 
 	@Field(() => String)
 	pdfStyles!: string;
+}
+
+@InputType('UpdateBackupSettingsInput')
+export class UpdateBackupSettingsInput {
+	@IsString()
+	@Field(() => String, { nullable: true })
+	backupEmail?: string;
+
+	@Field(() => BackupFrequency, { nullable: true })
+	backupFrequency?: BackupFrequency;
+
+	@IsBoolean()
+	@Field(() => Boolean, { nullable: true })
+	backupEnabled?: boolean;
 }
 
 @InputType('InvoiceTemplateInput')

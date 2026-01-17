@@ -16,6 +16,7 @@ import { PageContent } from '@/components/page';
 import { SettingsBlock } from '@/components/settings-block';
 import { doToast } from '@/components/toast';
 import { useHasChanges, useLoadData } from '@/hooks/load-data';
+import { BackupSettings } from './backup-settings';
 
 function NumberValidity({
 	template,
@@ -863,6 +864,16 @@ export default function SettingsHomePage() {
 								Manage Categories
 							</Button>
 						</div>
+					</SettingsBlock>
+					<SettingsBlock
+						title="Backup Settings"
+						subtitle={
+							<div className="prose prose-sm leading-4 text-xs text-gray-500/80">
+								Configure automated backups for your data.
+							</div>
+						}
+					>
+						<BackupSettings />
 					</SettingsBlock>
 					<SettingsBlock
 						title="Danger Zone"

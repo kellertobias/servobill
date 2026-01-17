@@ -29,6 +29,15 @@ export enum VatStatus {
 	VAT_DISABLED_OTHER = 'VAT_DISABLED_OTHER',
 }
 
+/**
+ * Enum for backup frequency.
+ */
+export enum BackupFrequency {
+	DAILY = 'DAILY',
+	WEEKLY = 'WEEKLY',
+	MONTHLY = 'MONTHLY',
+}
+
 export abstract class AbstractSettingsEntity {
 	public async save(): Promise<void> {}
 	public static settingId: string;
@@ -596,6 +605,42 @@ export class InvoiceSettingsEntity extends AbstractSettingsEntity {
 			defaultInvoiceFooterText: this.defaultInvoiceFooterText,
 			// Always serialize as enum value (string)
 			invoiceOutputFormat: this.invoiceOutputFormat,
+		};
+	}
+
+	public async save(): Promise<void> {
+		const data = CustomJson.toJson(this.serializable());
+		await this.saveInner(data);
+	}
+}
+
+/**
+ * Settings for auto-export/backup.
+ */
+export class BackupSettingsEntity extends AbstractSettingsEntity {
+	public static settingId = 'backup-settings';
+	public backupEmail!: string;
+	public backupFrequency!: BackupFrequency;
+	public backupEnabled!: boolean;
+	public backupJobId?: string;
+
+	constructor(
+		params: Partial<ObjectProperties<BackupSettingsEntity>> = {},
+		private saveInner: (data: string) => Promise<void>,
+	) {
+		super(params, saveInner);
+		this.backupEmail = params.backupEmail || '';
+		this.backupFrequency = params.backupFrequency || BackupFrequency.WEEKLY;
+		this.backupEnabled = params.backupEnabled || false;
+		this.backupJobId = params.backupJobId;
+	}
+
+	public serializable() {
+		return {
+			backupEmail: this.backupEmail,
+			backupFrequency: this.backupFrequency,
+			backupEnabled: this.backupEnabled,
+			backupJobId: this.backupJobId,
 		};
 	}
 
