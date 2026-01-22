@@ -4,8 +4,8 @@ import '@/backend/services/config.service';
 
 import { GenerateInvoiceHtmlCommand } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.command';
 import { GenerateInvoiceHtmlHandler } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.handler';
-import { CreateInvoicePdfCommand } from '@/backend/cqrs/generate-pdf/create-invoice-pdf.command';
-import { CreateInvoicePdfHandler } from '@/backend/cqrs/generate-pdf/create-invoice-pdf.handler';
+import { CreatePdfCommand } from '@/backend/cqrs/generate-pdf/create-pdf.command';
+import { CreatePdfHandler } from '@/backend/cqrs/generate-pdf/create-pdf.handler';
 import {
 	CompanyDataSetting,
 	PdfTemplateSetting,
@@ -36,7 +36,7 @@ export const handler: EventHandler = makeEventHandler(
 			SETTINGS_REPOSITORY,
 		) as SettingsRepository;
 		const cqrs = CqrsBus.forRoot({
-			handlers: [CreateInvoicePdfHandler, GenerateInvoiceHtmlHandler],
+			handlers: [CreatePdfHandler, GenerateInvoiceHtmlHandler],
 			container: DefaultContainer,
 		});
 
@@ -75,7 +75,7 @@ export const handler: EventHandler = makeEventHandler(
 		);
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const { success, pdf, ...location } = await cqrs.execute(
-			new CreateInvoicePdfCommand({
+			new CreatePdfCommand({
 				invoice,
 				html,
 			}),

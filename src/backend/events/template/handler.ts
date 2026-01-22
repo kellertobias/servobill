@@ -4,8 +4,8 @@ import '@/backend/services/config.service';
 
 import { GenerateInvoiceHtmlCommand } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.command';
 import { GenerateInvoiceHtmlHandler } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.handler';
-import { CreateInvoicePdfCommand } from '@/backend/cqrs/generate-pdf/create-invoice-pdf.command';
-import { CreateInvoicePdfHandler } from '@/backend/cqrs/generate-pdf/create-invoice-pdf.handler';
+import { CreatePdfCommand } from '@/backend/cqrs/generate-pdf/create-pdf.command';
+import { CreatePdfHandler } from '@/backend/cqrs/generate-pdf/create-pdf.handler';
 import {
 	type InvoiceEntity,
 	InvoiceType,
@@ -30,7 +30,7 @@ export const handler: EventHandler = makeEventHandler(
 		const fileStorageService =
 			DefaultContainer.get<FileStorageService>(FILE_STORAGE_SERVICE);
 		const bus = CqrsBus.forRoot({
-			handlers: [GenerateInvoiceHtmlHandler, CreateInvoicePdfHandler],
+			handlers: [GenerateInvoiceHtmlHandler, CreatePdfHandler],
 			container: DefaultContainer,
 		});
 
@@ -87,7 +87,7 @@ export const handler: EventHandler = makeEventHandler(
 
 		if (event.pdf) {
 			await bus.execute(
-				new CreateInvoicePdfCommand({
+				new CreatePdfCommand({
 					key: event.key,
 					html,
 					invoice,

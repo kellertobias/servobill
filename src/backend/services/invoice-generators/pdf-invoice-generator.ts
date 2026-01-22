@@ -2,8 +2,8 @@
 
 import { GenerateInvoiceHtmlCommand } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.command';
 import { GenerateInvoiceHtmlHandler } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.handler';
-import { CreateInvoicePdfCommand } from '@/backend/cqrs/generate-pdf/create-invoice-pdf.command';
-import { CreateInvoicePdfHandler } from '@/backend/cqrs/generate-pdf/create-invoice-pdf.handler';
+import { CreatePdfCommand } from '@/backend/cqrs/generate-pdf/create-pdf.command';
+import { CreatePdfHandler } from '@/backend/cqrs/generate-pdf/create-pdf.handler';
 import type { InvoiceEntity } from '@/backend/entities/invoice.entity';
 import type {
 	CompanyDataSetting,
@@ -25,7 +25,7 @@ export class PDFInvoiceGenerator extends InvoiceGeneratorStrategy {
 	constructor(private readonly storageStrategy?: StorageLoaderStrategy) {
 		super();
 		this.cqrs = CqrsBus.forRoot({
-			handlers: [CreateInvoicePdfHandler, GenerateInvoiceHtmlHandler],
+			handlers: [CreatePdfHandler, GenerateInvoiceHtmlHandler],
 			container: DefaultContainer,
 		});
 	}
@@ -61,7 +61,7 @@ export class PDFInvoiceGenerator extends InvoiceGeneratorStrategy {
 		);
 		// Generate PDF from HTML
 		const { success, pdf } = await this.cqrs.execute(
-			new CreateInvoicePdfCommand({
+			new CreatePdfCommand({
 				invoice,
 				html,
 			}),
