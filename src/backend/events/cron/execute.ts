@@ -1,3 +1,13 @@
+import dayjs from 'dayjs';
+import {
+	BackupFrequency,
+	BackupSettingsEntity,
+} from '@/backend/entities/settings.entity';
+import { BackupExecuteEvent } from '@/backend/events/backup/event';
+import {
+	SETTINGS_REPOSITORY,
+	type SettingsRepository,
+} from '@/backend/repositories';
 import { TIME_BASED_JOB_REPOSITORY } from '@/backend/repositories/time-based-job/di-tokens';
 import type { TimeBasedJobRepository } from '@/backend/repositories/time-based-job/interface';
 import { EVENTBUS_SERVICE } from '@/backend/services/di-tokens';
@@ -21,6 +31,8 @@ export class HandlerExecution {
 		private readonly jobRepository: TimeBasedJobRepository,
 		@Inject(EVENTBUS_SERVICE)
 		private readonly eventBus: EventBusService,
+		@Inject(SETTINGS_REPOSITORY)
+		private readonly settingsRepository: SettingsRepository,
 	) {}
 
 	/**
@@ -36,6 +48,23 @@ export class HandlerExecution {
 			eventId: event.id,
 			triggeredAt: event.triggeredAt,
 		});
+
+		// Check and trigger backup if needed
+		try {
+			const backupSettings =
+				await this.settingsRepository.getSetting(BackupSettingsEntity);
+
+			if (this.shouldTriggerBackup(backupSettings)) {
+				this.logger.info('Backup due. Triggering BackupExecuteEvent.');
+				await this.eventBus.send('backup.execute', new BackupExecuteEvent());
+
+				backupSettings.lastBackupAt = new Date().toISOString();
+				await backupSettings.save();
+			}
+		} catch (error) {
+			this.logger.error('Failed to check backup schedule', { error });
+		}
+
 		const now = Date.now();
 		let jobs: any;
 		try {
@@ -65,5 +94,38 @@ export class HandlerExecution {
 				// Continue processing other jobs
 			}
 		}
+	}
+
+	private shouldTriggerBackup(backupSettings: BackupSettingsEntity): boolean {
+		if (!backupSettings.backupEnabled) {
+			return false;
+		}
+
+		const lastBackup = backupSettings.lastBackupAt
+			? dayjs(backupSettings.lastBackupAt)
+			: null;
+
+		if (!lastBackup) {
+			return true;
+		}
+
+		const now = dayjs();
+		let threshold = now;
+
+		switch (backupSettings.backupFrequency) {
+			case BackupFrequency.DAILY:
+				threshold = lastBackup.add(1, 'day');
+				break;
+			case BackupFrequency.WEEKLY:
+				threshold = lastBackup.add(1, 'week');
+				break;
+			case BackupFrequency.MONTHLY:
+				threshold = lastBackup.add(1, 'month');
+				break;
+			default:
+				threshold = lastBackup.add(1, 'week');
+		}
+
+		return now.isAfter(threshold);
 	}
 }

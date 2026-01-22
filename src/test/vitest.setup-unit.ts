@@ -1,10 +1,18 @@
 import 'reflect-metadata';
 import { CONFIG_SERVICE } from '@/backend/services/di-tokens';
+// Import ConfigService to ensure its decorator runs and registers the service
+import '@/backend/services/config.service';
 import { DefaultContainer } from '@/common/di';
 
-if (!DefaultContainer.isBound(CONFIG_SERVICE)) {
+if (DefaultContainer.isBound(CONFIG_SERVICE)) {
+	DefaultContainer.rebind(CONFIG_SERVICE).toConstantValue({
+		fileStorage: { type: 'LOCAL' },
+		tables: { databaseType: 'POSTGRES' },
+	} as any);
+} else {
 	DefaultContainer.bind(CONFIG_SERVICE).toConstantValue({
 		fileStorage: { type: 'LOCAL' },
+		tables: { databaseType: 'POSTGRES' },
 	} as any);
 }
 

@@ -8,6 +8,7 @@ import { InvoiceStatus, InvoiceType } from '@/backend/entities/invoice.entity';
 import { InvoiceActivityType } from '@/backend/entities/invoice-activity.entity';
 import { InvoiceSubmissionType } from '@/backend/entities/invoice-submission.entity';
 import {
+	BackupFrequency,
 	InvoiceOutputFormat,
 	VatStatus,
 } from '@/backend/entities/settings.entity';
@@ -64,4 +65,9 @@ registerEnumType(VatStatus, {
 	name: 'VatStatus',
 	description:
 		'VAT/tax status of the company (affects invoice tax display and legal compliance)',
+});
+
+registerEnumType(BackupFrequency, {
+	name: 'BackupFrequency',
+	description: 'The frequency for automated backups',
 });
