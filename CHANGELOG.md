@@ -1,3 +1,10 @@
+## [1.17.0](https://github.com/kellertobias/servobill/compare/v1.16.0...v1.17.0) (2026-01-22)
+
+
+### ✨ Features
+
+* add description and line references to PDF report ([8b6518f](https://github.com/kellertobias/servobill/commit/8b6518ff779ba5e171dc450dbe1cd85d57489388))
+
 ## [1.16.0](https://github.com/kellertobias/servobill/compare/v1.15.2...v1.16.0) (2026-01-22)
 
 
