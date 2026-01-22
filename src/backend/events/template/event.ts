@@ -40,6 +40,9 @@ class TemplateDataCompany {
 	taxId!: string;
 
 	bank!: TemplateDataCompanyBank;
+
+	@IsString()
+	countryCode!: string;
 }
 
 class TemplateData {

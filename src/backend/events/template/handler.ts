@@ -6,10 +6,14 @@ import { GenerateInvoiceHtmlCommand } from '@/backend/cqrs/generate-invoice-html
 import { GenerateInvoiceHtmlHandler } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.handler';
 import { CreatePdfCommand } from '@/backend/cqrs/generate-pdf/create-pdf.command';
 import { CreatePdfHandler } from '@/backend/cqrs/generate-pdf/create-pdf.handler';
+import { CustomerEntity } from '@/backend/entities/customer.entity';
 import {
-	type InvoiceEntity,
+	InvoiceEntity,
+	InvoiceStatus,
 	InvoiceType,
 } from '@/backend/entities/invoice.entity';
+import { InvoiceItemEntity } from '@/backend/entities/invoice-item.entity';
+import type { CompanyDataSetting } from '@/backend/entities/settings.entity';
 import { CqrsBus } from '@/backend/services/cqrs.service';
 import {
 	FILE_STORAGE_SERVICE,
@@ -34,13 +38,17 @@ export const handler: EventHandler = makeEventHandler(
 			container: DefaultContainer,
 		});
 
-		const invoice = {
+		const invoice = new InvoiceEntity({
+			id: 'test-invoice-id',
+			status: InvoiceStatus.DRAFT,
 			subject: 'Test Invoice PDF',
 			invoiceNumber: event.data.invoiceNumber,
 			type: InvoiceType.INVOICE,
 			invoicedAt: new Date(),
 			dueAt: new Date(),
-			customer: {
+			submissions: [],
+			activity: [],
+			customer: new CustomerEntity({
 				customerNumber: event.data.customerNumber,
 				showContact: true,
 				contactName: 'John Doe',
@@ -48,10 +56,10 @@ export const handler: EventHandler = makeEventHandler(
 				street: 'Test Address',
 				zip: '12345',
 				city: 'Test City',
-				country: 'Test Country',
-			},
+				countryCode: 'DE',
+			}),
 			items: [
-				{
+				new InvoiceItemEntity({
 					id: '1',
 					name: 'Expensive Item',
 					description:
@@ -59,27 +67,28 @@ export const handler: EventHandler = makeEventHandler(
 					quantity: 11,
 					priceCents: 100000,
 					taxPercentage: 19,
-				},
-				{
+				}),
+				new InvoiceItemEntity({
 					id: '2',
 					name: 'Driving to the customer',
 					description: 'This is a cheap item\nWith a high quantity',
 					quantity: 999,
 					priceCents: 10,
 					taxPercentage: 7,
-				},
+				}),
 			],
 			footerText:
 				'This is a footer text\n\nIt can be used to add additional information to the invoice',
 			totalCents: 100000 * 11 + 10 * 999 + 100000 * 11 * 0.19 + 10 * 999 * 0.07,
 			totalTax: 100000 * 11 * 0.19 + 10 * 999 * 0.07,
-		} as InvoiceEntity;
+		});
 
 		const { html } = await bus.execute(
 			new GenerateInvoiceHtmlCommand({
 				logoUrl: event.data.logo,
 				invoice,
-				company: event.data.company,
+				company: event.data
+					.company as unknown as CompanyDataSetting['companyData'],
 				template,
 				styles,
 			}),
