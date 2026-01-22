@@ -79,6 +79,12 @@ export const CATEGORIZED_TEMPLATE = `
 
 	{{#each categorizedItems}}
 	<h2>{{name}}</h2>
+	{{#if description}}
+	<p style="margin-top: 5px; margin-bottom: 10px; color: #666; font-size: 13px;">{{description}}</p>
+	{{/if}}
+	{{#if reference}}
+	<p style="margin-top: 5px; margin-bottom: 10px; color: #666; font-size: 12px;"><strong>Reference:</strong> {{reference}}</p>
+	{{/if}}
 	<div class="summary" style="padding: 10px; font-size: 12px; margin-bottom: 10px;">
 		Income: {{totalIncome}} | Expenses: {{totalExpense}} | Total: <strong>{{totalSurplus}}</strong> | Tax: {{totalTax}}
 	</div>

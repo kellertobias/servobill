@@ -1,5 +1,8 @@
 import dayjs from 'dayjs';
-import type { IncomeSurplusReport } from '@/backend/api/graphql/reports/reports.schema';
+import type {
+	IncomeSurplusReport,
+	IncomeSurplusReportItem,
+} from '@/backend/api/graphql/reports/reports.schema';
 
 import { CreatePdfCommand } from '@/backend/cqrs/generate-pdf/create-pdf.command';
 import { CreatePdfHandler } from '@/backend/cqrs/generate-pdf/create-pdf.handler';
@@ -26,7 +29,6 @@ import type { ConfigService } from '@/backend/services/config.service';
 import { CqrsBus } from '@/backend/services/cqrs.service';
 import { CONFIG_SERVICE } from '@/backend/services/di-tokens';
 import { Logger } from '@/backend/services/logger.service';
-import type { ReportItem } from '@/backend/services/report-generator/report-html-generator';
 import { SESService } from '@/backend/services/ses.service';
 import { DefaultContainer, Inject, Service } from '@/common/di';
 import type { ReportGenerateEvent } from './event';
@@ -105,7 +107,7 @@ export class ReportGenerateHandlerExecution {
 			startDate,
 			endDate,
 		);
-		const bookings: ReportItem[] = [];
+		const bookings: IncomeSurplusReportItem[] = [];
 
 		invoices.forEach((invoice) => {
 			if (!invoice.invoicedAt) {

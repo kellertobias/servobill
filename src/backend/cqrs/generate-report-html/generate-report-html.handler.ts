@@ -76,6 +76,8 @@ export class GenerateReportHtmlHandler
 			string,
 			{
 				name: string;
+				description?: string;
+				reference?: string;
 				items: any[];
 				totalIncome: number;
 				totalExpense: number;
@@ -87,10 +89,14 @@ export class GenerateReportHtmlHandler
 		for (const item of items) {
 			const catId = item.category?.id || 'uncategorized';
 			const catName = item.category?.name || 'Uncategorized';
+			const catDescription = item.category?.description;
+			const catReference = item.category?.reference;
 
 			if (!groups.has(catId)) {
 				groups.set(catId, {
 					name: catName,
+					description: catDescription,
+					reference: catReference,
 					items: [],
 					totalIncome: 0,
 					totalExpense: 0,
@@ -126,9 +132,18 @@ export class GenerateReportHtmlHandler
 			);
 		}
 
-		const sortedGroups = Array.from(groups.values()).sort((a, b) =>
-			a.name.localeCompare(b.name),
-		);
+		// Sort categories: Income first, then alphabetically by name
+		const sortedGroups = Array.from(groups.values()).sort((a, b) => {
+			// Income category should always come first
+			const aIsIncome = a.name === 'Income';
+			const bIsIncome = b.name === 'Income';
+
+			if (aIsIncome && !bIsIncome) return -1;
+			if (!aIsIncome && bIsIncome) return 1;
+
+			// For all other categories, sort alphabetically
+			return a.name.localeCompare(b.name);
+		});
 
 		// Format totals
 		return sortedGroups.map((group) => ({
