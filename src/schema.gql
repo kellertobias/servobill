@@ -29,6 +29,25 @@ type AuthCheckResult {
   userName: String
 }
 
+"""The frequency for automated backups"""
+enum BackupFrequency {
+  DAILY
+  MONTHLY
+  WEEKLY
+}
+
+type BackupSettings {
+  backupEmail: String
+  backupEnabled: Boolean
+  backupFrequency: BackupFrequency
+}
+
+input BackupSettingsInput {
+  backupEmail: String
+  backupEnabled: Boolean
+  backupFrequency: BackupFrequency
+}
+
 type Customer {
   city: String
   contactName: String
@@ -559,6 +578,7 @@ type Mutation {
   deleteInvoiceAttachmentActivity(activityId: String!, invoiceId: String!): InvoiceChangedResponse!
   deleteProduct(id: String!): Product!
   extractReceipt(input: ExtractReceiptInput!): ExtractReceiptResult!
+  generateReportPdf(format: String!, where: IncomeSurplusReportWhereInput!): Boolean!
   importInvoices(data: [InvoiceImportInput!]!): [Invoice!]!
   invoiceAddComment(attachToEmail: Boolean, attachmentId: String, comment: String, invoiceId: String!): InvoiceChangedResponse!
   invoiceAddPayment(id: String!, payment: InvoicePaymentInput!): InvoiceChangedResponse!
@@ -572,6 +592,7 @@ type Mutation {
   sendTestEvent(data: String!, name: String!): String!
   setInvoiceActivityAttachmentEmailFlag(activityId: String!, attachToEmail: Boolean!, invoiceId: String!): InvoiceChangedResponse!
   testRenderTemplate(pdf: Boolean, styles: String!, template: String!): String!
+  updateBackupSettings(data: BackupSettingsInput!): BackupSettings!
   updateCustomer(data: CustomerInput!, id: String!): Customer!
   updateExpense(data: ExpenseInput!, id: String!): Expense!
   updateExpenseSettings(categories: [ExpenseCategoryInputType!]!, fixExpensesForImport: Boolean): [ExpenseCategoryType!]!
@@ -700,6 +721,7 @@ input SettingsInput {
 }
 
 type SettingsResult {
+  backup: BackupSettings
   categories: [ExpenseCategoryType!]
   company: SettingsResultCompany
   currency: String

@@ -193,6 +193,18 @@ export class ExpenseCategoryType {
 	description?: string;
 }
 
+@ObjectType('BackupSettings')
+export class BackupSettings {
+	@Field(() => String, { nullable: true })
+	backupEmail?: string;
+
+	@Field(() => BackupFrequency, { nullable: true })
+	backupFrequency?: BackupFrequency;
+
+	@Field(() => Boolean, { nullable: true })
+	backupEnabled?: boolean;
+}
+
 @ObjectType('SettingsResult')
 export class SettingsResult {
 	/**
@@ -350,18 +362,6 @@ export class SettingsResult {
 	 */
 	@Field(() => BackupSettings, { nullable: true })
 	backup?: BackupSettings;
-}
-
-@ObjectType('BackupSettings')
-export class BackupSettings {
-	@Field(() => String, { nullable: true })
-	backupEmail?: string;
-
-	@Field(() => BackupFrequency, { nullable: true })
-	backupFrequency?: BackupFrequency;
-
-	@Field(() => Boolean, { nullable: true })
-	backupEnabled?: boolean;
 }
 
 @InputType('SettingsCompanyInput')
@@ -538,8 +538,8 @@ export class InvoiceTemplateResult
 	pdfStyles!: string;
 }
 
-@InputType('UpdateBackupSettingsInput')
-export class UpdateBackupSettingsInput {
+@InputType('BackupSettingsInput')
+export class BackupSettingsInput {
 	@IsString()
 	@Field(() => String, { nullable: true })
 	backupEmail?: string;

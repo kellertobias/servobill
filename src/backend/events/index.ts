@@ -1,12 +1,12 @@
-import type { EventHandlerImport } from '@/common/api-types';
+import { EventHandlerImport } from '@/common/api-types';
 
 const handlers: Record<string, EventHandlerImport> = {
-	cron: async () =>
-		await import('@/backend/events/cron/handler').then(
+	'backup': async () =>
+		await import('@/backend/events/backup/handler').then(
 			(importedModule) => importedModule.handler,
 		),
-	'backup.execute': async () =>
-		await import('@/backend/events/backup/handler').then(
+	'cron': async () =>
+		await import('@/backend/events/cron/handler').then(
 			(importedModule) => importedModule.handler,
 		),
 	'invoice.later': async () =>
@@ -21,11 +21,11 @@ const handlers: Record<string, EventHandlerImport> = {
 		await import('@/backend/events/invoice/send/handler').then(
 			(importedModule) => importedModule.handler,
 		),
-	receipt: async () =>
+	'receipt': async () =>
 		await import('@/backend/events/receipt/handler').then(
 			(importedModule) => importedModule.handler,
 		),
-	template: async () =>
+	'template': async () =>
 		await import('@/backend/events/template/handler').then(
 			(importedModule) => importedModule.handler,
 		),

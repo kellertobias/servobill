@@ -2,16 +2,19 @@ import { randomUUID } from 'node:crypto';
 import dayjs from 'dayjs';
 import { Arg, Authorized, Mutation, Query, Resolver } from 'type-graphql';
 import {
-  BackupFrequency,
-  BackupSettingsEntity,
-  CompanyDataSetting,
-  ExpenseSettingsEntity,
-  type InvoiceOutputFormat,
-  InvoiceSettingsEntity,
-  PdfTemplateSetting,
+	BackupFrequency,
+	BackupSettingsEntity,
+	CompanyDataSetting,
+	ExpenseSettingsEntity,
+	type InvoiceOutputFormat,
+	InvoiceSettingsEntity,
+	PdfTemplateSetting,
 } from '@/backend/entities/settings.entity';
 import { GenerateTemplatePreviewEvent } from '@/backend/events/template/event';
-import { EXPENSE_REPOSITORY, type ExpenseRepository } from '@/backend/repositories/expense';
+import {
+	EXPENSE_REPOSITORY,
+	type ExpenseRepository,
+} from '@/backend/repositories/expense';
 import { SETTINGS_REPOSITORY } from '@/backend/repositories/settings/di-tokens';
 import type { SettingsRepository } from '@/backend/repositories/settings/interface';
 import { TIME_BASED_JOB_REPOSITORY } from '@/backend/repositories/time-based-job/di-tokens';
@@ -19,424 +22,410 @@ import type { TimeBasedJobRepository } from '@/backend/repositories/time-based-j
 import { EVENTBUS_SERVICE } from '@/backend/services/di-tokens';
 import type { EventBusService } from '@/backend/services/eventbus.service';
 import {
-  FILE_STORAGE_SERVICE,
-  type FileStorageService,
+	FILE_STORAGE_SERVICE,
+	type FileStorageService,
 } from '@/backend/services/file-storage.service';
 import { Inject, Service } from '@/common/di';
 import { GRAPHQL_TEST_SET } from '../di-tokens';
 import {
-  ExpenseCategoryInputType,
-  ExpenseCategoryType,
-  InvoiceTemplateInput,
-  InvoiceTemplateResult,
-  SettingsInput,
-  SettingsResult,
-  UpdateBackupSettingsInput,
+	BackupSettings,
+	BackupSettingsInput,
+	ExpenseCategoryInputType,
+	ExpenseCategoryType,
+	InvoiceTemplateInput,
+	InvoiceTemplateResult,
+	SettingsInput,
+	SettingsResult,
 } from './system.schema';
 
 @Service({
-  addToTestSet: [GRAPHQL_TEST_SET],
+	addToTestSet: [GRAPHQL_TEST_SET],
 })
 @Resolver()
 export class SystemResolver {
-  constructor(
-    @Inject(SETTINGS_REPOSITORY) private settingsRepository: SettingsRepository,
-    @Inject(EXPENSE_REPOSITORY) private expenseRepository: ExpenseRepository,
-    @Inject(EVENTBUS_SERVICE) private eventBus: EventBusService,
-    @Inject(FILE_STORAGE_SERVICE)
-    private fileStorageService: FileStorageService,
-    @Inject(TIME_BASED_JOB_REPOSITORY)
-    private timeBasedJobRepository: TimeBasedJobRepository
-  ) {}
+	constructor(
+		@Inject(SETTINGS_REPOSITORY) private settingsRepository: SettingsRepository,
+		@Inject(EXPENSE_REPOSITORY) private expenseRepository: ExpenseRepository,
+		@Inject(EVENTBUS_SERVICE) private eventBus: EventBusService,
+		@Inject(FILE_STORAGE_SERVICE)
+		private fileStorageService: FileStorageService,
+		@Inject(TIME_BASED_JOB_REPOSITORY)
+		private timeBasedJobRepository: TimeBasedJobRepository,
+	) {}
 
-  /**
-   * Maps the InvoiceSettingsEntity and related entities to the GraphQL SettingsResult type.
-   * Ensures the invoiceOutputFormat is included in the response.
-   */
-  private mapInvoiceSettingsEntityToResponse({
-    invoices,
-    company,
-    expenses,
-    backup,
-  }: {
-    invoices: InvoiceSettingsEntity;
-    company: CompanyDataSetting;
-    expenses?: ExpenseSettingsEntity;
-    backup?: BackupSettingsEntity;
-  }): SettingsResult {
-    return {
-      // Data from company:
-      company: {
-        name: company.companyData.name || '',
-        street: company.companyData.street || '',
-        zip: company.companyData.zip || '',
-        city: company.companyData.city || '',
-        phone: company.companyData.phone || '',
-        email: company.companyData.email || '',
-        web: company.companyData.web || '',
-        vatId: company.companyData.vatId || '',
-        taxId: company.companyData.taxId || '',
-        bankAccountHolder: company.companyData.bank.accountHolder || '',
-        bankIban: company.companyData.bank.iban || '',
-        bankBic: company.companyData.bank.bic || '',
-        vatStatus: company.vatStatus,
-      },
-      sendFrom: company.sendFrom || '',
-      replyTo: company.replyTo || '',
+	/**
+	 * Maps the InvoiceSettingsEntity and related entities to the GraphQL SettingsResult type.
+	 * Ensures the invoiceOutputFormat is included in the response.
+	 */
+	private mapInvoiceSettingsEntityToResponse({
+		invoices,
+		company,
+		expenses,
+		backup,
+	}: {
+		invoices: InvoiceSettingsEntity;
+		company: CompanyDataSetting;
+		expenses?: ExpenseSettingsEntity;
+		backup?: BackupSettingsEntity;
+	}): SettingsResult {
+		return {
+			// Data from company:
+			company: {
+				name: company.companyData.name || '',
+				street: company.companyData.street || '',
+				zip: company.companyData.zip || '',
+				city: company.companyData.city || '',
+				phone: company.companyData.phone || '',
+				email: company.companyData.email || '',
+				web: company.companyData.web || '',
+				vatId: company.companyData.vatId || '',
+				taxId: company.companyData.taxId || '',
+				bankAccountHolder: company.companyData.bank.accountHolder || '',
+				bankIban: company.companyData.bank.iban || '',
+				bankBic: company.companyData.bank.bic || '',
+				vatStatus: company.vatStatus,
+			},
+			sendFrom: company.sendFrom || '',
+			replyTo: company.replyTo || '',
 
-      // will move into separate setting entity later, currently in company data
-      emailTemplate: company.emailTemplate || '',
-      emailSubjectInvoices: company.emailSubjectInvoices || '',
-      emailSubjectOffers: company.emailSubjectOffers || '',
-      emailSubjectReminder: company.emailSubjectReminder || '',
-      emailSubjectWarning: company.emailSubjectWarning || '',
-      invoiceCompanyLogo: company.invoiceCompanyLogo || '',
-      emailCompanyLogo: company.emailCompanyLogo || '',
+			// will move into separate setting entity later, currently in company data
+			emailTemplate: company.emailTemplate || '',
+			emailSubjectInvoices: company.emailSubjectInvoices || '',
+			emailSubjectOffers: company.emailSubjectOffers || '',
+			emailSubjectReminder: company.emailSubjectReminder || '',
+			emailSubjectWarning: company.emailSubjectWarning || '',
+			invoiceCompanyLogo: company.invoiceCompanyLogo || '',
+			emailCompanyLogo: company.emailCompanyLogo || '',
 
-      // invoice and order settings
-      invoiceNumbersTemplate: invoices.invoiceNumbers.template || '',
-      invoiceNumbersIncrementTemplate: invoices.invoiceNumbers.incrementTemplate || '',
-      invoiceNumbersLast: invoices.invoiceNumbers.lastNumber || '',
-      offerNumbersTemplate: invoices.offerNumbers.template || '',
-      offerNumbersIncrementTemplate: invoices.offerNumbers.incrementTemplate || '',
-      offerNumbersLast: invoices.offerNumbers.lastNumber || '',
-      customerNumbersTemplate: invoices.customerNumbers.template || '',
-      customerNumbersIncrementTemplate: invoices.customerNumbers.incrementTemplate || '',
-      customerNumbersLast: invoices.customerNumbers.lastNumber || '',
-      offerValidityDays: invoices.offerValidityDays || 0,
-      defaultInvoiceDueDays: invoices.defaultInvoiceDueDays || 0,
-      defaultInvoiceFooterText: invoices.defaultInvoiceFooterText || '',
+			// invoice and order settings
+			invoiceNumbersTemplate: invoices.invoiceNumbers.template || '',
+			invoiceNumbersIncrementTemplate:
+				invoices.invoiceNumbers.incrementTemplate || '',
+			invoiceNumbersLast: invoices.invoiceNumbers.lastNumber || '',
+			offerNumbersTemplate: invoices.offerNumbers.template || '',
+			offerNumbersIncrementTemplate:
+				invoices.offerNumbers.incrementTemplate || '',
+			offerNumbersLast: invoices.offerNumbers.lastNumber || '',
+			customerNumbersTemplate: invoices.customerNumbers.template || '',
+			customerNumbersIncrementTemplate:
+				invoices.customerNumbers.incrementTemplate || '',
+			customerNumbersLast: invoices.customerNumbers.lastNumber || '',
+			offerValidityDays: invoices.offerValidityDays || 0,
+			defaultInvoiceDueDays: invoices.defaultInvoiceDueDays || 0,
+			defaultInvoiceFooterText: invoices.defaultInvoiceFooterText || '',
 
-      // expenses
-      categories: expenses ? (expenses.categories || []).map((cat) => ({ ...cat })) : undefined,
-      currency: company.currency || 'EUR',
-      invoiceOutputFormat: invoices.invoiceOutputFormat as InvoiceOutputFormat | undefined,
-      backup: backup
-        ? {
-            backupEmail: backup.backupEmail,
-            backupFrequency: backup.backupFrequency,
-            backupEnabled: backup.backupEnabled,
-          }
-        : undefined,
-    };
-  }
+			// expenses
+			categories: expenses
+				? (expenses.categories || []).map((cat) => ({ ...cat }))
+				: undefined,
+			currency: company.currency || 'EUR',
+			invoiceOutputFormat: invoices.invoiceOutputFormat as
+				| InvoiceOutputFormat
+				| undefined,
+			backup: backup
+				? {
+						backupEmail: backup.backupEmail,
+						backupFrequency: backup.backupFrequency,
+						backupEnabled: backup.backupEnabled,
+					}
+				: undefined,
+		};
+	}
 
-  @Authorized()
-  @Query(() => SettingsResult)
-  async settings(): Promise<SettingsResult> {
-    const invoices = await this.settingsRepository.getSetting(InvoiceSettingsEntity);
-    const company = await this.settingsRepository.getSetting(CompanyDataSetting);
+	@Authorized()
+	@Query(() => SettingsResult)
+	async settings(): Promise<SettingsResult> {
+		const invoices = await this.settingsRepository.getSetting(
+			InvoiceSettingsEntity,
+		);
+		const company =
+			await this.settingsRepository.getSetting(CompanyDataSetting);
 
-    const expenses = await this.settingsRepository.getSetting(ExpenseSettingsEntity);
-    const backup = await this.settingsRepository.getSetting(BackupSettingsEntity);
+		const expenses = await this.settingsRepository.getSetting(
+			ExpenseSettingsEntity,
+		);
+		const backup =
+			await this.settingsRepository.getSetting(BackupSettingsEntity);
 
-    return this.mapInvoiceSettingsEntityToResponse({
-      company,
-      invoices,
-      expenses,
-      backup,
-    });
-  }
+		return this.mapInvoiceSettingsEntityToResponse({
+			company,
+			invoices,
+			expenses,
+			backup,
+		});
+	}
 
-  @Authorized()
-  @Query(() => InvoiceTemplateResult)
-  async template(): Promise<InvoiceTemplateResult> {
-    const emails = await this.settingsRepository.getSetting(PdfTemplateSetting);
-    return {
-      pdfTemplate: emails.pdfTemplate || '',
-      pdfStyles: emails.pdfStyles || '',
-    };
-  }
+	@Authorized()
+	@Query(() => InvoiceTemplateResult)
+	async template(): Promise<InvoiceTemplateResult> {
+		const emails = await this.settingsRepository.getSetting(PdfTemplateSetting);
+		return {
+			pdfTemplate: emails.pdfTemplate || '',
+			pdfStyles: emails.pdfStyles || '',
+		};
+	}
 
-  @Authorized()
-  @Mutation(() => SettingsResult)
-  async updateBackupSettings(
-    @Arg('data', () => UpdateBackupSettingsInput) nextData: UpdateBackupSettingsInput
-  ): Promise<SettingsResult> {
-    const backupSettings = await this.settingsRepository.getSetting(BackupSettingsEntity);
+	@Authorized()
+	@Mutation(() => BackupSettings)
+	async updateBackupSettings(
+		@Arg('data', () => BackupSettingsInput) nextData: BackupSettingsInput,
+	): Promise<BackupSettings> {
+		const backupSettings =
+			await this.settingsRepository.getSetting(BackupSettingsEntity);
 
-    backupSettings.backupEmail = nextData.backupEmail || '';
-    if (nextData.backupFrequency) {
-      backupSettings.backupFrequency = nextData.backupFrequency;
-    }
-    if (nextData.backupEnabled !== undefined) {
-      backupSettings.backupEnabled = nextData.backupEnabled;
-    }
+		backupSettings.backupEmail = nextData.backupEmail || '';
+		if (nextData.backupFrequency) {
+			backupSettings.backupFrequency = nextData.backupFrequency;
+		}
+		if (nextData.backupEnabled !== undefined) {
+			backupSettings.backupEnabled = nextData.backupEnabled;
+		}
 
-    await backupSettings.save();
+		await backupSettings.save();
 
-    // Schedule or cancel job
-    if (backupSettings.backupEnabled) {
-      await this.scheduleNextBackup(backupSettings);
-    } else {
-      await this.cancelBackupJob(backupSettings);
-    }
+		return { ...backupSettings };
+	}
 
-    // Return full settings result
-    const invoices = await this.settingsRepository.getSetting(InvoiceSettingsEntity);
-    const company = await this.settingsRepository.getSetting(CompanyDataSetting);
-    const expenses = await this.settingsRepository.getSetting(ExpenseSettingsEntity);
+	@Authorized()
+	@Mutation(() => SettingsResult)
+	async updateSettings(
+		@Arg('data', () => SettingsInput) nextData: SettingsInput,
+	): Promise<SettingsResult> {
+		const genericSettings = await this.settingsRepository.getSetting(
+			InvoiceSettingsEntity,
+		);
 
-    return this.mapInvoiceSettingsEntityToResponse({
-      company,
-      invoices,
-      expenses,
-      backup: backupSettings,
-    });
-  }
+		genericSettings.invoiceNumbers.update({
+			template: nextData.invoiceNumbersTemplate,
+			incrementTemplate: nextData.invoiceNumbersIncrementTemplate,
+			lastNumber: nextData.invoiceNumbersLast,
+		});
 
-  private async scheduleNextBackup(settings: BackupSettingsEntity) {
-    await this.cancelBackupJob(settings);
+		genericSettings.offerNumbers.update({
+			template: nextData.offerNumbersTemplate,
+			incrementTemplate: nextData.offerNumbersIncrementTemplate,
+			lastNumber: nextData.offerNumbersLast,
+		});
 
-    // Run immediately (next cron tick)
-    const now = Math.floor(Date.now() / 1000);
-    const runAfter = now;
+		genericSettings.customerNumbers.update({
+			template: nextData.customerNumbersTemplate,
+			incrementTemplate: nextData.customerNumbersIncrementTemplate,
+			lastNumber: nextData.customerNumbersLast,
+		});
 
-    const job = await this.timeBasedJobRepository.create({
-      eventType: 'backup.execute',
-      eventPayload: {},
-      runAfter,
-    });
+		genericSettings.offerValidityDays = nextData.offerValidityDays || 14;
+		genericSettings.defaultInvoiceDueDays =
+			nextData.defaultInvoiceDueDays || 28;
+		genericSettings.defaultInvoiceFooterText =
+			nextData.defaultInvoiceFooterText || 'Created by Servobill';
 
-    settings.backupJobId = job.id;
-    await settings.save();
-  }
+		// Set the invoice output format if provided, otherwise keep current or default
+		if (nextData.invoiceOutputFormat) {
+			genericSettings.invoiceOutputFormat = nextData.invoiceOutputFormat;
+		}
 
-  private async cancelBackupJob(settings: BackupSettingsEntity) {
-    if (settings.backupJobId) {
-      await this.timeBasedJobRepository.delete(settings.backupJobId);
-      settings.backupJobId = undefined;
-      await settings.save();
-    }
-  }
+		await genericSettings.save();
 
-  @Authorized()
-  @Mutation(() => SettingsResult)
-  async updateSettings(
-    @Arg('data', () => SettingsInput) nextData: SettingsInput
-  ): Promise<SettingsResult> {
-    const genericSettings = await this.settingsRepository.getSetting(InvoiceSettingsEntity);
+		const companyData =
+			await this.settingsRepository.getSetting(CompanyDataSetting);
 
-    genericSettings.invoiceNumbers.update({
-      template: nextData.invoiceNumbersTemplate,
-      incrementTemplate: nextData.invoiceNumbersIncrementTemplate,
-      lastNumber: nextData.invoiceNumbersLast,
-    });
+		companyData.emailTemplate = nextData.emailTemplate || '';
+		companyData.emailSubjectInvoices =
+			nextData.emailSubjectInvoices || 'Here is your invoice {{number}}';
+		companyData.emailSubjectOffers =
+			nextData.emailSubjectOffers || 'Your offer {{number}} is ready';
+		companyData.emailSubjectReminder =
+			nextData.emailSubjectReminder || 'Reminder: Invoice {{number}} is due';
+		companyData.emailSubjectWarning =
+			nextData.emailSubjectWarning || 'Warning: Invoice {{number}} is over due';
 
-    genericSettings.offerNumbers.update({
-      template: nextData.offerNumbersTemplate,
-      incrementTemplate: nextData.offerNumbersIncrementTemplate,
-      lastNumber: nextData.offerNumbersLast,
-    });
+		companyData.sendFrom = nextData.sendFrom || 'no-reply@example.com';
+		companyData.replyTo = nextData.replyTo || 'no-reply@example.com';
 
-    genericSettings.customerNumbers.update({
-      template: nextData.customerNumbersTemplate,
-      incrementTemplate: nextData.customerNumbersIncrementTemplate,
-      lastNumber: nextData.customerNumbersLast,
-    });
+		companyData.invoiceCompanyLogo = nextData.invoiceCompanyLogo || '';
+		companyData.emailCompanyLogo = nextData.emailCompanyLogo || '';
 
-    genericSettings.offerValidityDays = nextData.offerValidityDays || 14;
-    genericSettings.defaultInvoiceDueDays = nextData.defaultInvoiceDueDays || 28;
-    genericSettings.defaultInvoiceFooterText =
-      nextData.defaultInvoiceFooterText || 'Created by Servobill';
+		companyData.companyData.name = nextData.company?.name || '';
+		companyData.companyData.street = nextData.company?.street || '';
+		companyData.companyData.zip = nextData.company?.zip || '';
+		companyData.companyData.city = nextData.company?.city || '';
+		companyData.companyData.phone = nextData.company?.phone || '';
+		companyData.companyData.email = nextData.company?.email || '';
+		companyData.companyData.web = nextData.company?.web || '';
+		companyData.companyData.vatId = nextData.company?.vatId || '';
+		companyData.companyData.taxId = nextData.company?.taxId || '';
+		companyData.companyData.bank.accountHolder =
+			nextData.company?.bankAccountHolder || '';
+		companyData.companyData.bank.iban = nextData.company?.bankIban || '';
+		companyData.companyData.bank.bic = nextData.company?.bankBic || '';
 
-    // Set the invoice output format if provided, otherwise keep current or default
-    if (nextData.invoiceOutputFormat) {
-      genericSettings.invoiceOutputFormat = nextData.invoiceOutputFormat;
-    }
+		if (nextData.currency) {
+			companyData.currency = nextData.currency;
+		}
 
-    await genericSettings.save();
+		if (nextData.company?.vatStatus) {
+			companyData.vatStatus = nextData.company.vatStatus;
+		}
 
-    const companyData = await this.settingsRepository.getSetting(CompanyDataSetting);
+		await companyData.save();
 
-    companyData.emailTemplate = nextData.emailTemplate || '';
-    companyData.emailSubjectInvoices =
-      nextData.emailSubjectInvoices || 'Here is your invoice {{number}}';
-    companyData.emailSubjectOffers =
-      nextData.emailSubjectOffers || 'Your offer {{number}} is ready';
-    companyData.emailSubjectReminder =
-      nextData.emailSubjectReminder || 'Reminder: Invoice {{number}} is due';
-    companyData.emailSubjectWarning =
-      nextData.emailSubjectWarning || 'Warning: Invoice {{number}} is over due';
+		return this.mapInvoiceSettingsEntityToResponse({
+			company: companyData,
+			invoices: genericSettings,
+		});
+	}
 
-    companyData.sendFrom = nextData.sendFrom || 'no-reply@example.com';
-    companyData.replyTo = nextData.replyTo || 'no-reply@example.com';
+	@Authorized()
+	@Mutation(() => InvoiceTemplateResult)
+	async updateTemplate(
+		@Arg('data', () => InvoiceTemplateInput) nextData: InvoiceTemplateInput,
+	): Promise<InvoiceTemplateResult> {
+		const template =
+			await this.settingsRepository.getSetting(PdfTemplateSetting);
 
-    companyData.invoiceCompanyLogo = nextData.invoiceCompanyLogo || '';
-    companyData.emailCompanyLogo = nextData.emailCompanyLogo || '';
+		template.pdfTemplate = nextData.pdfTemplate;
+		template.pdfStyles = nextData.pdfStyles;
 
-    companyData.companyData.name = nextData.company?.name || '';
-    companyData.companyData.street = nextData.company?.street || '';
-    companyData.companyData.zip = nextData.company?.zip || '';
-    companyData.companyData.city = nextData.company?.city || '';
-    companyData.companyData.phone = nextData.company?.phone || '';
-    companyData.companyData.email = nextData.company?.email || '';
-    companyData.companyData.web = nextData.company?.web || '';
-    companyData.companyData.vatId = nextData.company?.vatId || '';
-    companyData.companyData.taxId = nextData.company?.taxId || '';
-    companyData.companyData.bank.accountHolder = nextData.company?.bankAccountHolder || '';
-    companyData.companyData.bank.iban = nextData.company?.bankIban || '';
-    companyData.companyData.bank.bic = nextData.company?.bankBic || '';
+		await template.save();
 
-    if (nextData.currency) {
-      companyData.currency = nextData.currency;
-    }
+		return {
+			pdfTemplate: template.pdfTemplate || '',
+			pdfStyles: template.pdfStyles || '',
+		};
+	}
 
-    if (nextData.company?.vatStatus) {
-      companyData.vatStatus = nextData.company.vatStatus;
-    }
+	@Authorized()
+	@Mutation(() => [ExpenseCategoryType])
+	async updateExpenseSettings(
+		@Arg('categories', () => [ExpenseCategoryInputType])
+		categories: ExpenseCategoryInputType[],
+		@Arg('fixExpensesForImport', () => Boolean, { nullable: true })
+		fixExpensesForImport?: boolean,
+	): Promise<ExpenseCategoryType[]> {
+		if (fixExpensesForImport && categories.length === 0) {
+			return [];
+		}
 
-    await companyData.save();
+		const expenseSettings = await this.settingsRepository.getSetting(
+			ExpenseSettingsEntity,
+		);
 
-    return this.mapInvoiceSettingsEntityToResponse({
-      company: companyData,
-      invoices: genericSettings,
-    });
-  }
+		// this happens in two steps, so that we do not get client generated
+		// ids for the categories.
+		// update existing entries, match by categoryId
+		const existingCategories = expenseSettings.categories;
+		expenseSettings.categories = [];
+		const existingCategoryIds = new Set<string>();
+		for (const category of existingCategories) {
+			const updatedCategory = categories.find(
+				(cat) => cat.categoryId === category.id,
+			);
+			if (!updatedCategory) {
+				continue;
+			}
 
-  @Authorized()
-  @Mutation(() => InvoiceTemplateResult)
-  async updateTemplate(
-    @Arg('data', () => InvoiceTemplateInput) nextData: InvoiceTemplateInput
-  ): Promise<InvoiceTemplateResult> {
-    const template = await this.settingsRepository.getSetting(PdfTemplateSetting);
+			existingCategoryIds.add(category.id);
+			expenseSettings.categories.push({
+				...category,
+				...updatedCategory,
+			});
+			// the ones that are not in the updatedCategories, get deleted
+			// since they are not in the new array.
+		}
 
-    template.pdfTemplate = nextData.pdfTemplate;
-    template.pdfStyles = nextData.pdfStyles;
+		// now create the new categories
+		const newCategories = categories.filter(
+			(cat) => !existingCategoryIds.has(cat.categoryId || ''),
+		);
 
-    await template.save();
+		const categoryMap: Record<string, string> = {};
 
-    return {
-      pdfTemplate: template.pdfTemplate || '',
-      pdfStyles: template.pdfStyles || '',
-    };
-  }
+		for (const category of newCategories) {
+			// Generate a single UUID for the new category.
+			const id = randomUUID();
+			// Map the client-side categoryId (if present) to the new server-generated ID.
+			if (category.categoryId) {
+				categoryMap[category.categoryId] = id;
+			}
+			// If a category with the same name (and color) exists, map its old server-generated ID to the new one.
+			const oldCategory = existingCategories.find(
+				(cat) => cat.name === category.name && cat.color === category.color,
+			);
+			if (oldCategory) {
+				categoryMap[oldCategory.id] = id;
+			}
+			expenseSettings.categories.push({
+				...category,
+				id, // Use the same UUID for the category's id
+				isDefault: category.isDefault || false,
+				sumForTaxSoftware: category.sumForTaxSoftware || false,
+			});
+		}
 
-  @Authorized()
-  @Mutation(() => [ExpenseCategoryType])
-  async updateExpenseSettings(
-    @Arg('categories', () => [ExpenseCategoryInputType])
-    categories: ExpenseCategoryInputType[],
-    @Arg('fixExpensesForImport', () => Boolean, { nullable: true })
-    fixExpensesForImport?: boolean
-  ): Promise<ExpenseCategoryType[]> {
-    if (fixExpensesForImport && categories.length === 0) {
-      return [];
-    }
+		if (fixExpensesForImport) {
+			// if we are importing expense categories,
+			// since we do not allow client sided IDs,
+			// we now need to re-map the categories of already
+			// imported expenses.
+			const expenses = await this.expenseRepository.listByQuery({});
 
-    const expenseSettings = await this.settingsRepository.getSetting(ExpenseSettingsEntity);
+			for (const expense of expenses) {
+				const categoryId = expense.categoryId;
+				if (categoryId && categoryMap[categoryId]) {
+					expense.categoryId = categoryMap[categoryId];
+					await this.expenseRepository.save(expense);
+				}
+			}
+		}
 
-    // this happens in two steps, so that we do not get client generated
-    // ids for the categories.
-    // update existing entries, match by categoryId
-    const existingCategories = expenseSettings.categories;
-    expenseSettings.categories = [];
-    const existingCategoryIds = new Set<string>();
-    for (const category of existingCategories) {
-      const updatedCategory = categories.find((cat) => cat.categoryId === category.id);
-      if (!updatedCategory) {
-        continue;
-      }
+		await expenseSettings.save();
+		return expenseSettings.categories;
+	}
 
-      existingCategoryIds.add(category.id);
-      expenseSettings.categories.push({
-        ...category,
-        ...updatedCategory,
-      });
-      // the ones that are not in the updatedCategories, get deleted
-      // since they are not in the new array.
-    }
+	@Authorized()
+	@Mutation(() => String)
+	async testRenderTemplate(
+		@Arg('template', () => String) template: string,
+		@Arg('styles', () => String) styles: string,
+		@Arg('pdf', () => Boolean, { nullable: true }) pdf?: boolean,
+	): Promise<string> {
+		const numbers = await this.settingsRepository.getSetting(
+			InvoiceSettingsEntity,
+		);
+		const companyData =
+			await this.settingsRepository.getSetting(CompanyDataSetting);
 
-    // now create the new categories
-    const newCategories = categories.filter(
-      (cat) => !existingCategoryIds.has(cat.categoryId || '')
-    );
+		const key = `template-tests/${dayjs().format('YYMMDD-HHmmss')}.${pdf ? 'pdf' : 'html'}`;
 
-    const categoryMap: Record<string, string> = {};
+		this.eventBus.send(
+			'template',
+			new GenerateTemplatePreviewEvent({
+				pdf: pdf || false,
+				template,
+				styles,
+				key,
+				data: {
+					logo: companyData.invoiceCompanyLogo,
+					company: companyData.companyData,
+					invoiceNumber: numbers.invoiceNumbers.lastNumber,
+					offerNumber: numbers.offerNumbers.lastNumber,
+					customerNumber: numbers.customerNumbers.lastNumber,
+				},
+			}),
+		);
 
-    for (const category of newCategories) {
-      // Generate a single UUID for the new category.
-      const id = randomUUID();
-      // Map the client-side categoryId (if present) to the new server-generated ID.
-      if (category.categoryId) {
-        categoryMap[category.categoryId] = id;
-      }
-      // If a category with the same name (and color) exists, map its old server-generated ID to the new one.
-      const oldCategory = existingCategories.find(
-        (cat) => cat.name === category.name && cat.color === category.color
-      );
-      if (oldCategory) {
-        categoryMap[oldCategory.id] = id;
-      }
-      expenseSettings.categories.push({
-        ...category,
-        id, // Use the same UUID for the category's id
-        isDefault: category.isDefault || false,
-        sumForTaxSoftware: category.sumForTaxSoftware || false,
-      });
-    }
+		const url = await this.fileStorageService.getDownloadUrl({ key });
 
-    if (fixExpensesForImport) {
-      // if we are importing expense categories,
-      // since we do not allow client sided IDs,
-      // we now need to re-map the categories of already
-      // imported expenses.
-      const expenses = await this.expenseRepository.listByQuery({});
+		return url;
+	}
 
-      for (const expense of expenses) {
-        const categoryId = expense.categoryId;
-        if (categoryId && categoryMap[categoryId]) {
-          expense.categoryId = categoryMap[categoryId];
-          await this.expenseRepository.save(expense);
-        }
-      }
-    }
-
-    await expenseSettings.save();
-    return expenseSettings.categories;
-  }
-
-  @Authorized()
-  @Mutation(() => String)
-  async testRenderTemplate(
-    @Arg('template', () => String) template: string,
-    @Arg('styles', () => String) styles: string,
-    @Arg('pdf', () => Boolean, { nullable: true }) pdf?: boolean
-  ): Promise<string> {
-    const numbers = await this.settingsRepository.getSetting(InvoiceSettingsEntity);
-    const companyData = await this.settingsRepository.getSetting(CompanyDataSetting);
-
-    const key = `template-tests/${dayjs().format('YYMMDD-HHmmss')}.${pdf ? 'pdf' : 'html'}`;
-
-    this.eventBus.send(
-      'template',
-      new GenerateTemplatePreviewEvent({
-        pdf: pdf || false,
-        template,
-        styles,
-        key,
-        data: {
-          logo: companyData.invoiceCompanyLogo,
-          company: companyData.companyData,
-          invoiceNumber: numbers.invoiceNumbers.lastNumber,
-          offerNumber: numbers.offerNumbers.lastNumber,
-          customerNumber: numbers.customerNumbers.lastNumber,
-        },
-      })
-    );
-
-    const url = await this.fileStorageService.getDownloadUrl({ key });
-
-    return url;
-  }
-
-  @Authorized()
-  @Mutation(() => String)
-  async sendTestEvent(
-    @Arg('name', () => String) name: string,
-    @Arg('data', () => String) data: string
-  ): Promise<string | undefined> {
-    const eventId = await this.eventBus.send(name, JSON.parse(data));
-    return eventId;
-  }
+	@Authorized()
+	@Mutation(() => String)
+	async sendTestEvent(
+		@Arg('name', () => String) name: string,
+		@Arg('data', () => String) data: string,
+	): Promise<string | undefined> {
+		const eventId = await this.eventBus.send(name, JSON.parse(data));
+		return eventId;
+	}
 }

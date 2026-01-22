@@ -29,6 +29,8 @@ import { Logger } from '@/backend/services/logger.service';
 import { SESService } from '@/backend/services/ses.service';
 import { Inject, Service } from '@/common/di';
 
+import '@/backend/repositories';
+
 @Service()
 export class BackupHandler {
 	private readonly logger = new Logger('BackupHandler');
