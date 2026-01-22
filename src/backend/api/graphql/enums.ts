@@ -7,11 +7,17 @@ import {
 import { InvoiceStatus, InvoiceType } from '@/backend/entities/invoice.entity';
 import { InvoiceActivityType } from '@/backend/entities/invoice-activity.entity';
 import { InvoiceSubmissionType } from '@/backend/entities/invoice-submission.entity';
+import { ReportFormat } from '@/backend/entities/report.entity';
 import {
 	BackupFrequency,
 	InvoiceOutputFormat,
 	VatStatus,
 } from '@/backend/entities/settings.entity';
+
+registerEnumType(ReportFormat, {
+	name: 'ReportFormat',
+	description: 'The format of the report',
+});
 
 // Register enums for GraphQL
 registerEnumType(InventoryItemState, {

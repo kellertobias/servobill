@@ -5,13 +5,21 @@ import dayjs from 'dayjs';
 import React from 'react';
 import { downloadFile } from '@/api/import-export/helper';
 import { API, gql } from '@/api/index';
+import { ReportFormat } from '@/backend/entities/report.entity';
 import { Button } from '@/components/button';
 import { DateInput } from '@/components/date';
 import { PageCard, PageContent } from '@/components/page';
 import { SettingsBlock } from '@/components/settings-block';
 import { StatsDisplay, type StatsDisplayStat } from '@/components/stats';
 import { Table } from '@/components/table';
+import { doToast } from '@/components/toast';
 import { useLoadData } from '@/hooks/load-data';
+
+const GENERATE_REPORT_PDF = gql(`
+	mutation GenerateReportPdf($where: IncomeSurplusReportWhereInput!, $format: ReportFormat!) {
+		generateReportPdf(where: $where, format: $format)
+	}
+`);
 
 function ReportPreview({ start, end }: { start?: string; end?: string }) {
 	const { data, loading } = useLoadData(async () =>
@@ -150,11 +158,44 @@ function ReportPreview({ start, end }: { start?: string; end?: string }) {
 						>
 							Download as JSON
 						</Button>
-						{/* <Button secondary onClick={() => {
-							// Later
-						}}>
-							Download as PDF
-						</Button> */}
+						<Button
+							secondary
+							onClick={async () => {
+								await doToast({
+									promise: API.query({
+										query: GENERATE_REPORT_PDF,
+										variables: {
+											where: { startDate: start, endDate: end },
+											format: ReportFormat.CATEGORIZED,
+										},
+									}),
+									success: 'Report successfully requested',
+									loading: 'Requesting report...',
+									error: 'Failed to send report',
+								});
+							}}
+						>
+							Email PDF (Categorized)
+						</Button>
+						<Button
+							secondary
+							onClick={async () => {
+								await doToast({
+									promise: API.query({
+										query: GENERATE_REPORT_PDF,
+										variables: {
+											where: { startDate: start, endDate: end },
+											format: ReportFormat.PLAIN,
+										},
+									}),
+									success: 'Report successfully requested',
+									loading: 'Requesting report...',
+									error: 'Failed to send report',
+								});
+							}}
+						>
+							Email PDF (Plain)
+						</Button>
 					</div>
 				</SettingsBlock>
 			</PageCard>

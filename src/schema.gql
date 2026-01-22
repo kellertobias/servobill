@@ -578,7 +578,7 @@ type Mutation {
   deleteInvoiceAttachmentActivity(activityId: String!, invoiceId: String!): InvoiceChangedResponse!
   deleteProduct(id: String!): Product!
   extractReceipt(input: ExtractReceiptInput!): ExtractReceiptResult!
-  generateReportPdf(format: String!, where: IncomeSurplusReportWhereInput!): Boolean!
+  generateReportPdf(format: ReportFormat!, where: IncomeSurplusReportWhereInput!): Boolean!
   importInvoices(data: [InvoiceImportInput!]!): [Invoice!]!
   invoiceAddComment(attachToEmail: Boolean, attachmentId: String, comment: String, invoiceId: String!): InvoiceChangedResponse!
   invoiceAddPayment(id: String!, payment: InvoicePaymentInput!): InvoiceChangedResponse!
@@ -669,6 +669,12 @@ type Query {
   products(limit: Int, skip: Int, where: ProductWhereInput): [Product!]!
   settings: SettingsResult!
   template: InvoiceTemplateResult!
+}
+
+"""The format of the report"""
+enum ReportFormat {
+  CATEGORIZED
+  PLAIN
 }
 
 type RequestAttachmentUploadUrlResult {
