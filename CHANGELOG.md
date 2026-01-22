@@ -1,3 +1,23 @@
+## [1.16.0](https://github.com/kellertobias/servobill/compare/v1.15.2...v1.16.0) (2026-01-22)
+
+
+### ✨ Features
+
+* report pdf generator ([44d81b2](https://github.com/kellertobias/servobill/commit/44d81b232f02fffe346910c4ec1dfb06be79b301))
+* request report endpoint & UI ([8fe4357](https://github.com/kellertobias/servobill/commit/8fe4357311f2b2024be359bbdf9846671e78e003))
+* scheduled backup UI + fixes ([58ab849](https://github.com/kellertobias/servobill/commit/58ab8494faf5de3a7ed9d4f0e31527006bb394b8))
+* scheduled backups execution ([84bf7ec](https://github.com/kellertobias/servobill/commit/84bf7ec8699e9045a8b63d5fc656095331ee40e7))
+
+
+### 🐛 Bug Fixes
+
+* template typings ([fd1ba40](https://github.com/kellertobias/servobill/commit/fd1ba4005e2edcf4be084939fe0a6dae5af7f1fb))
+
+
+### 🔧 Chores
+
+* rename generate-invoice-pdf to generate-pdf ([405bfd2](https://github.com/kellertobias/servobill/commit/405bfd2a2ac83e1d00475ea68dfab91768ffee2a))
+
 ## [1.15.2](https://github.com/kellertobias/servobill/compare/v1.15.1...v1.15.2) (2025-12-12)
 
 
