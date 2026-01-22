@@ -1,4 +1,4 @@
 export enum ReportFormat {
-	CATEGORIZED = 'categorized',
-	PLAIN = 'simple',
+	CATEGORIZED = 'CATEGORIZED',
+	PLAIN = 'PLAIN',
 }

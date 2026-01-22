@@ -9,7 +9,10 @@ import {
 	InvoiceType,
 } from '@/backend/entities/invoice.entity';
 import { ReportFormat } from '@/backend/entities/report.entity';
-import { ExpenseSettingsEntity } from '@/backend/entities/settings.entity';
+import {
+	CompanyDataSetting,
+	ExpenseSettingsEntity,
+} from '@/backend/entities/settings.entity';
 import { EXPENSE_REPOSITORY } from '@/backend/repositories/expense/di-tokens';
 import type { ExpenseRepository } from '@/backend/repositories/expense/interface';
 import { INVOICE_REPOSITORY } from '@/backend/repositories/invoice/di-tokens';
@@ -197,13 +200,20 @@ export class ReportsResolver {
 		const startDate = where?.startDate || dayjs().startOf('year').toDate();
 		const endDate = where?.endDate || dayjs().endOf('year').toDate();
 
-		// Extract user email from context
-		// Assuming context has user info. Based on other resolvers/auth logic
-		// src/backend/api/graphql/context-builder.ts defines the context
-		// Let's check session usage
-		const email = context.session?.email;
+		// Extract user email from context, fall back to company sendFrom email
+		let email = context.session?.email;
+
 		if (!email) {
-			throw new Error('User email not found in session');
+			// Fetch company settings to get the sendFrom email as fallback
+			const companySettings =
+				await this.settingsRepository.getSetting(CompanyDataSetting);
+			email = companySettings.replyTo;
+
+			if (!email) {
+				throw new Error(
+					'No recipient email available. Please configure a sendFrom email in company settings or ensure your user profile has an email.',
+				);
+			}
 		}
 
 		await this.eventBus.send('report.generate', {

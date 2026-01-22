@@ -32,6 +32,7 @@ import type { InvoiceSendEvent } from './event';
 @Service()
 export class HandlerExecution {
 	private readonly logger = new Logger('InvoiceSendHandler');
+
 	constructor(
 		@Inject(INVOICE_REPOSITORY)
 		private readonly invoiceRepository: InvoiceRepository,
@@ -44,7 +45,7 @@ export class HandlerExecution {
 		@Inject(CONFIG_SERVICE)
 		private readonly config: ConfigService,
 	) {
-		this.cqrsBus = CqrsBus.forRoot({
+		CqrsBus.forRoot({
 			handlers: [CreatePdfHandler, GenerateInvoiceHtmlHandler],
 			container: DefaultContainer,
 		});
