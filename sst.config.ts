@@ -122,6 +122,43 @@ export default $config({
 		const path = await import('node:path');
 		const pulumi = await import('@pulumi/pulumi');
 		const aws = await import('@pulumi/aws');
+    // The managed Lambda runtime currently trails the October security fixes.
+    // Keep the supported Node 22 integration and supply the patched interpreter
+    // through AWS's documented startup-wrapper mechanism, including ISR helpers.
+    const securityLayers = {
+      x86_64: new aws.lambda.LayerVersion("NodeSecurityRuntimeX64", {
+        layerName: `${$app.name}-${$app.stage}-node22-security-x64`,
+        description: "Checksum-verified upstream Node 22.23.4 security runtime",
+        compatibleRuntimes: ["nodejs22.x"],
+        compatibleArchitectures: ["x86_64"],
+        code: new pulumi.asset.FileArchive(`${$cli.paths.root}/.sst/node-security-layers/node-security-22.23.4-x86_64.zip`),
+      }),
+      arm64: new aws.lambda.LayerVersion("NodeSecurityRuntimeArm64", {
+        layerName: `${$app.name}-${$app.stage}-node22-security-arm64`,
+        description: "Checksum-verified upstream Node 22.23.4 security runtime",
+        compatibleRuntimes: ["nodejs22.x"],
+        compatibleArchitectures: ["arm64"],
+        code: new pulumi.asset.FileArchive(`${$cli.paths.root}/.sst/node-security-layers/node-security-22.23.4-arm64.zip`),
+      }),
+    }
+    $transform(sst.aws.Function, (args) => {
+      args.runtime = "nodejs22.x"
+    })
+    // Apply at the native Lambda boundary so SST's internal helper defaults
+    // cannot discard the security layer or overwrite its startup setting.
+    $transform(aws.lambda.Function, (args) => {
+      args.layers = pulumi.all([args.layers ?? [], args.architectures ?? ["x86_64"]]).apply(
+        ([layers, architectures]) => [...layers, securityLayers[architectures[0]].arn],
+      )
+      args.environment = pulumi.output(args.environment ?? {}).apply((environment) => ({
+        ...environment,
+        variables: {
+          ...environment.variables,
+          AWS_LAMBDA_EXEC_WRAPPER: "/opt/bin/node-security-wrapper",
+        },
+      }))
+    })
+
 		const esbuildPluginTsc = (await import('esbuild-plugin-tsc')).default;
 		const { apiEndpoints, eventHandlerEndpoints } = await import(
 			'./stack/build-index'
@@ -130,7 +167,7 @@ export default $config({
 			'./stack/local/initialize/definitions/tables'
 		);
 
-		const runtime = aws.lambda.Runtime.NodeJS20dX;
+		const runtime = aws.lambda.Runtime.NodeJS22dX;
 
 		// Validate environment variables before proceeding
 		const requiredEnv = validateEnvironmentVariables();
@@ -466,6 +503,8 @@ export default $config({
 
 		// Frontend
 		const web = new sst.aws.Nextjs('ServobillWeb', {
+      openNextVersion: '4.1.12',
+      buildCommand: 'SHARP_VERSION=0.35.5 npx --yes @opennextjs/aws@4.1.12 build && node scripts/bundle-runtime-sdk.mjs',
 			link: [dataBucket],
 			permissions: [...defaultPermissions],
 			domain: requiredEnv.SITE_DOMAIN,

@@ -5,7 +5,7 @@
   "scripts": {
     "build": "next build",
     "clean": "rm -rf ./layers",
-    "deploy": "npx tsx --tsconfig tsconfig.json stack/build-prep.ts && npm run gql:type && sst deploy --stage prod; git checkout -f -- .;",
+    "deploy": "node scripts/deploy-serverless.mjs",
     "dev": "concurrently -k -t 'HH:mm:ss' -c green,red,auto -p '{time} [{name}] | ' -n '' npm:watch-*",
     "dev:server": "concurrently -k -t 'HH:mm:ss' -c green,red,auto -p '{time} [{name}] | ' -n '' npm:watch-nxt  npm:watch-api npm:watch-bus",
     "dev:tools": "concurrently -k -t 'HH:mm:ss' -c green,red,auto -p '{time} [{name}] | ' -n '' npm:watch-gql",
@@ -27,7 +27,8 @@
     "watch-bus": "npx tsx watch --clear-screen=false --ignore src/app --ignore src/backend/api stack/local/queue/index.ts --preserveWatchOutput",
     "watch-gql": "npm run gql:type:watch",
     "watch-nxt": "NEXT_PUBLIC_API_URL='http://localhost:3000' next dev",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "security:runtime-layers": "python3 scripts/build-node-security-layers.py"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.478.0",
@@ -43,13 +44,13 @@
     "@opentelemetry/context-async-hooks": "^1.20.0",
     "@popperjs/core": "^2.11.8",
     "@sevenoutman/use-debounced-memo": "^1.0.0",
-    "@sparticuz/chromium": "^137.0.1",
+    "@sparticuz/chromium": "153.0.0",
     "@uiw/react-textarea-code-editor": "^3.0.2",
     "@yudiel/react-qr-scanner": "^2.3.1",
     "apollo-server-core": "^3.13.0",
     "apollo-server-lambda": "^3.13.0",
     "aws-sdk": "^2.1519.0",
-    "axios": "^1.6.2",
+    "axios": "1.20.0",
     "bson": "^6.2.0",
     "chalk": "^5.3.0",
     "class-validator": "^0.14.0",
@@ -66,10 +67,10 @@
     "inversify": "^6.0.2",
     "jsonwebtoken": "^9.0.2",
     "mailparser": "^3.9.0",
-    "next": "^16.0.10",
+    "next": "16.4.1",
     "node-fetch": "^3.3.2",
     "node-zugferd": "^0.0.10-beta.3",
-    "nodemailer": "^7.0.11",
+    "nodemailer": "10.2.1",
     "openai": "^4.104.0",
     "papaparse": "^5.5.3",
     "parse-multipart-data": "^1.5.0",
@@ -77,7 +78,7 @@
     "pdfkit": "^0.14.0",
     "pg": "^8.16.0",
     "pino": "^8.17.2",
-    "puppeteer-core": "^24.10.1",
+    "puppeteer-core": "25.11.0",
     "react": "^19.2.3",
     "react-confirm": "^0.3.0-7",
     "react-dom": "^19.2.3",
@@ -96,7 +97,7 @@
   "overrides": {
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "nodemailer": "^7.0.11",
+    "nodemailer": "10.2.1",
     "hono": "^4.10.7",
     "xmlbuilder2": {
       "js-yaml": "^3.14.2"
@@ -105,7 +106,8 @@
       "npm": "^11.6.4"
     },
     "@modelcontextprotocol/sdk": "^1.24.0",
-    "glob": "^10.4.5"
+    "glob": "^10.4.5",
+    "follow-redirects": "1.16.2"
   },
   "optionalDependencies": {
     "@biomejs/cli-linux-x64": "2.3.8"
@@ -151,7 +153,9 @@
     "concurrently": "^8.2.2",
     "constructs": "10.3.0",
     "conventional-changelog-conventionalcommits": "^7.0.2",
+    "esbuild": "0.28.1",
     "esbuild-plugin-tsc": "^0.4.0",
+    "eslint-config-next": "16.4.1",
     "express": "^4.18.2",
     "js-yaml": "^4.1.0",
     "postcss": "^8",
@@ -166,5 +170,8 @@
     "vitest": "^3.1.4",
     "webpack-node-externals": "^3.0.0",
     "ws": "^8.16.0"
+  },
+  "engines": {
+    "node": ">=22.23.4 <23 || >=24.22.1 <25"
   }
 }
