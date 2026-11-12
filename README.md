@@ -62,6 +62,8 @@ Servobill is built with a serverless architecture in mind. It uses AWS Lambda fu
 
 In the serverless deployment, we use SST to deploy the application to AWS. For the frontend, we use CloudFront and for the APIs we use the AWS API Gateway. Data is stored in AWS DynamoDB and long-running processes are decoupled from the API requests by using AWS EventBridge to trigger Lambda functions.
 
+Upgrading an existing AWS deployment from SST 3: SST 4 moves the AWS provider from Pulumi AWS 6 to 7 and migrates the stored state on the first deploy. The migration cannot be undone, so run `npx sst diff --stage <stage>` first and check the planned changes; do not use `--target` for that first deploy. See the [SST migration guide](https://sst.dev/docs/migrate-from-v3/).
+
 #### Dockerized Architecture
 For the dockerized deployment, the Next.js app in one docker container also handles the API requests while another container handles the queue workers. For dockerized deployments, we use Postgres rather than DynamoDB for structured data storage.
 
