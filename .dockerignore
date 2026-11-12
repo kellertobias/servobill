@@ -1,5 +1,8 @@
 node_modules
 .next
+.open-next
+.sst
+.test-temp
 .env
 .env.*
 templates
@@ -10,7 +13,11 @@ sst-env.d.ts
 .gitignore
 tsconfig.sst.json
 src/test
+src/**/*.e2e.ts
+src/**/*.spec.ts
 docs
+deploy
 .cursor
 .vscode
 .github
+*.tsbuildinfo

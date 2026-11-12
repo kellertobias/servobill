@@ -1,0 +1,7 @@
+# Optional in-cluster MinIO (replaces S3) for attachments and generated PDFs.
+# Browsers download files through presigned URLs, so MinIO needs its own
+# public hostname (S3_PUBLIC_ENDPOINT), see the ingress below.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+resources:
+  - minio.yaml

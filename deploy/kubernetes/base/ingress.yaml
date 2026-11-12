@@ -1,0 +1,17 @@
+# Adjust host, ingress class and TLS in your overlay.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: servobill-app
+spec:
+  rules:
+    - host: billing.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: servobill-app
+                port:
+                  name: http

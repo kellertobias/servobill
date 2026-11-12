@@ -1,0 +1,115 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: servobill-minio
+  labels:
+    app.kubernetes.io/name: servobill-minio
+spec:
+  serviceName: servobill-minio
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: servobill-minio
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: servobill-minio
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: minio
+          image: quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
+          args: ['server', '/data']
+          ports:
+            - name: s3
+              containerPort: 9000
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: servobill-secrets
+                  key: AWS_ACCESS_KEY_ID
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: servobill-secrets
+                  key: AWS_SECRET_ACCESS_KEY
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          readinessProbe:
+            httpGet:
+              path: /minio/health/ready
+              port: s3
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ['ReadWriteOnce']
+        resources:
+          requests:
+            storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: servobill-minio
+spec:
+  selector:
+    app.kubernetes.io/name: servobill-minio
+  ports:
+    - name: s3
+      port: 9000
+      targetPort: s3
+---
+# Creates the bucket once MinIO is up (idempotent).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: servobill-minio-bucket
+spec:
+  backoffLimit: 10
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: mc
+          image: quay.io/minio/mc:RELEASE.2025-04-16T18-13-26Z
+          command:
+            - /bin/sh
+            - -c
+            - >-
+              mc alias set servobill http://servobill-minio:9000 "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY" &&
+              mc mb --ignore-existing "servobill/$BUCKET_FILES"
+          env:
+            - name: HOME
+              value: /tmp
+          envFrom:
+            - configMapRef:
+                name: servobill-config
+            - secretRef:
+                name: servobill-secrets
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: servobill-minio
+spec:
+  rules:
+    - host: s3.billing.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: servobill-minio
+                port:
+                  name: s3
