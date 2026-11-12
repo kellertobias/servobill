@@ -15,7 +15,7 @@ resources:
 components:
   # Remove these when you use an external Postgres / S3 compatible storage
   - ../../components/postgres
-  - ../../components/minio
+  - ../../components/s3
 
 configMapGenerator:
   - name: servobill-config
@@ -27,10 +27,11 @@ secretGenerator:
     envs:
       - secrets.env
 
+# Pin the image version (the base defaults to v1)
 images:
-  - name: servobill-app
+  - name: ghcr.io/kellertobias/servobill/app
     newTag: v1
-  - name: servobill-workers
+  - name: ghcr.io/kellertobias/servobill/workers
     newTag: v1
 
 patches:
@@ -48,7 +49,7 @@ patches:
             secretName: servobill-tls
   - target:
       kind: Ingress
-      name: servobill-minio
+      name: servobill-s3
     patch: |-
       - op: replace
         path: /spec/rules/0/host

@@ -68,5 +68,7 @@ See [deploy/kubernetes](../deploy/kubernetes/README.md).
 - **Reverse proxy.** Terminate TLS in front of the app (Traefik, Caddy, nginx,
   an Ingress) and forward the `Host` and `X-Forwarded-Proto` headers, or set
   `PUBLIC_URL`.
-- **Sign-in rate limiting** is per container and in memory; use your proxy's
-  rate limiting for internet-facing instances.
+- **Sign-in rate limiting.** After 10 wrong passwords an account's password
+  sign in is locked for 15 minutes (stored in the database, so it holds across
+  containers). For internet-facing instances add per-IP rate limiting in your
+  proxy as well.

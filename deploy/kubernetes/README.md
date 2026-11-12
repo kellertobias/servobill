@@ -5,7 +5,7 @@ Kustomize manifests for running Servobill on Kubernetes:
 ```
 base/                 app + workers Deployments, Services, Ingress, queue volume
 components/postgres/  optional in-cluster Postgres (StatefulSet)
-components/minio/     optional in-cluster MinIO + bucket job + Ingress
+components/s3/        optional in-cluster S3 (SeaweedFS) + bucket job + Ingress
 overlays/example/     an installation using both components
 ```
 
@@ -14,7 +14,7 @@ overlays/example/     an installation using both components
 | `servobill-app` Deployment | CloudFront, API Gateway, API Lambdas |
 | `servobill-workers` Deployment (1 replica) | EventBridge, event handler Lambdas, cron, PDF rendering |
 | Postgres (component or external) | DynamoDB |
-| MinIO (component) or any S3-compatible storage | S3 |
+| SeaweedFS (component) or any S3-compatible storage | S3 |
 | your SMTP server | SES |
 
 ## Install
@@ -38,8 +38,8 @@ If you keep the overlay in Git, manage `secrets.env` with your secret tooling
 
 - **Storage.** The app is stateless when files are in S3/MinIO, so it can run
   several replicas. `S3_PUBLIC_ENDPOINT` must be reachable by browsers
-  (presigned download URLs), which is why the MinIO component has its own
-  Ingress. With an external S3, drop the MinIO component and set
+  (presigned download URLs), which is why the S3 component has its own
+  Ingress. With an external S3, drop the S3 component and set
   `ENDPOINT_S3`, `S3_PUBLIC_ENDPOINT`, `BUCKET_FILES` and the credentials.
   A ReadWriteMany volume mounted at `/data/files` in both Deployments with
   `UPLOAD_DIRECTORY=/data/files` works too.

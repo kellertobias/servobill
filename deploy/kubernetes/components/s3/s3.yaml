@@ -1,38 +1,41 @@
+# Single node SeaweedFS (master, volume, filer and S3 gateway in one pod).
+# The S3 credentials are AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY from
+# servobill-secrets, the same the app uses.
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: servobill-minio
+  name: servobill-s3
   labels:
-    app.kubernetes.io/name: servobill-minio
+    app.kubernetes.io/name: servobill-s3
 spec:
-  serviceName: servobill-minio
+  serviceName: servobill-s3
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: servobill-minio
+      app.kubernetes.io/name: servobill-s3
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: servobill-minio
+        app.kubernetes.io/name: servobill-s3
     spec:
       securityContext:
         runAsUser: 1000
         runAsGroup: 1000
         fsGroup: 1000
       containers:
-        - name: minio
-          image: quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
-          args: ['server', '/data']
+        - name: seaweedfs
+          image: docker.io/chrislusf/seaweedfs:3.97
+          args: ['server', '-dir=/data', '-s3', '-s3.port=8333']
           ports:
             - name: s3
-              containerPort: 9000
+              containerPort: 8333
           env:
-            - name: MINIO_ROOT_USER
+            - name: AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
                   name: servobill-secrets
                   key: AWS_ACCESS_KEY_ID
-            - name: MINIO_ROOT_PASSWORD
+            - name: AWS_SECRET_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
                   name: servobill-secrets
@@ -41,9 +44,9 @@ spec:
             - name: data
               mountPath: /data
           readinessProbe:
-            httpGet:
-              path: /minio/health/ready
+            tcpSocket:
               port: s3
+            initialDelaySeconds: 10
           resources:
             requests:
               cpu: 50m
@@ -60,47 +63,53 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: servobill-minio
+  name: servobill-s3
 spec:
   selector:
-    app.kubernetes.io/name: servobill-minio
+    app.kubernetes.io/name: servobill-s3
   ports:
     - name: s3
-      port: 9000
+      port: 8333
       targetPort: s3
 ---
-# Creates the bucket once MinIO is up (idempotent).
+# Creates the bucket once the S3 gateway is up (idempotent).
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: servobill-minio-bucket
+  name: servobill-s3-bucket
 spec:
   backoffLimit: 10
   template:
     spec:
       restartPolicy: OnFailure
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
       containers:
-        - name: mc
-          image: quay.io/minio/mc:RELEASE.2025-04-16T18-13-26Z
-          command:
-            - /bin/sh
-            - -c
-            - >-
-              mc alias set servobill http://servobill-minio:9000 "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY" &&
-              mc mb --ignore-existing "servobill/$BUCKET_FILES"
+        - name: rclone
+          image: docker.io/rclone/rclone:1.71.2
+          args:
+            - mkdir
+            - ":s3,provider=SeaweedFS,endpoint='http://servobill-s3:8333',env_auth=true:$(BUCKET_FILES)"
           env:
-            - name: HOME
-              value: /tmp
+            - name: RCLONE_CONFIG
+              value: /tmp/rclone.conf
           envFrom:
             - configMapRef:
                 name: servobill-config
             - secretRef:
                 name: servobill-secrets
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: servobill-minio
+  name: servobill-s3
 spec:
   rules:
     - host: s3.billing.example.com
@@ -110,6 +119,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: servobill-minio
+                name: servobill-s3
                 port:
                   name: s3

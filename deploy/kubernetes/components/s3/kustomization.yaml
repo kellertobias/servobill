@@ -1,0 +1,8 @@
+# Optional in-cluster S3 storage (replaces AWS S3) for attachments and
+# generated PDFs, based on SeaweedFS. Browsers download files through
+# presigned URLs, so it needs its own public hostname (S3_PUBLIC_ENDPOINT),
+# see the ingress in s3.yaml.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+resources:
+  - s3.yaml
