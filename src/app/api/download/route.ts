@@ -1,4 +1,6 @@
 import 'reflect-metadata';
+// Register the ConfigService before any repository/service decorators run.
+import '@/backend/services/config.service';
 
 import type { NextRequest } from 'next/server';
 import { DefaultContainer } from '@/common/di';
