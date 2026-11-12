@@ -5,6 +5,8 @@ import { API } from '@/api/index';
 export type SessionUserState = {
 	userName: string;
 	profilePictureUrl?: string;
+	email?: string;
+	isAdmin: boolean;
 };
 
 export const UserContext = React.createContext<SessionUserState | null>(null);

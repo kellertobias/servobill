@@ -6,6 +6,7 @@ import { Span } from '@/backend/instrumentation';
 import { SESSION_REPOSITORY } from '@/backend/repositories/session/di-tokens';
 import type { SessionRepository } from '@/backend/repositories/session/interface';
 import { Logger } from '@/backend/services/logger.service';
+import { UserDirectoryService } from '@/backend/services/user-directory.service';
 import { Inject, Service } from '@/common/di';
 import { extractToken, type JwtToken, makeTokenCookie, Session } from '../session';
 
@@ -30,7 +31,26 @@ const makeForwardPage = (url: string) => `<html>
 
 @Service()
 export class AuthenticationService {
-  constructor(@Inject(SESSION_REPOSITORY) private sessionRepository: SessionRepository) {}
+  constructor(
+    @Inject(SESSION_REPOSITORY) private sessionRepository: SessionRepository,
+    @Inject(UserDirectoryService) private userDirectory: UserDirectoryService
+  ) {}
+
+  /**
+   * Builds the session token payload. Only explicitly listed fields are put
+   * into the JWT, never password hashes or linked identities.
+   */
+  private buildSession(user: UserEntity, sessionId: string, renewalId?: string): Session {
+    return new Session({
+      userId: user.id,
+      name: user.name,
+      email: user.email,
+      roles: user.roles,
+      picture: user.profilePictureUrl,
+      sessionId,
+      renewalId,
+    });
+  }
 
   @Span('AuthenticationService.generateResponse')
   public generateResponse(props: {
@@ -74,20 +94,15 @@ export class AuthenticationService {
     // Construct a new SessionEntity to satisfy the repository type requirements
     const sessionEntity = await this.sessionRepository.createSession(
       new SessionEntity({
-        userId: user.userId,
+        userId: user.id,
         renewalId,
         expiresAt: new Date(Date.now() + (options?.expireIn || DEFAULT_SESSION_EXPIRATION)),
       })
     );
 
-    const session = new Session({
-      ...user,
-      picture: user.profilePictureUrl,
-      sessionId: sessionEntity.sessionId,
-      renewalId,
-    });
+    const session = this.buildSession(user, sessionEntity.sessionId, renewalId);
 
-    logger.debug('Starting session', { sessionEntity, session });
+    logger.debug('Starting session', { sessionId: sessionEntity.sessionId, userId: user.id });
 
     return this.generateResponse({
       statusCode: 200,
@@ -196,9 +211,10 @@ export class AuthenticationService {
       });
     }
 
-    const user = await this.sessionRepository.findUserForSession(data);
+    const user = await this.userDirectory.getActiveUser(sessionEntity.userId);
 
     if (!user) {
+      await this.sessionRepository.deleteSession(data.sessionId);
       return this.generateResponse({
         statusCode: 403,
         body: { message: 'No such user' },
@@ -207,12 +223,8 @@ export class AuthenticationService {
       });
     }
 
-    const session = new Session({
-      ...user,
-      picture: user.profilePictureUrl,
-      sessionId: sessionEntity.sessionId,
-      renewalId: undefined, // This forces a new renewal id to be generated
-    });
+    // No renewal id: this forces a new renewal id to be generated
+    const session = this.buildSession(user, sessionEntity.sessionId);
 
     await this.sessionRepository.updateSession(sessionEntity.sessionId, {
       updatedAt: new Date(),

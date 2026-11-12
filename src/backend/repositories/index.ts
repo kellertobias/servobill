@@ -14,3 +14,4 @@ export * from './product';
 export * from './session';
 export * from './settings';
 export * from './time-based-job';
+export * from './user';

@@ -13,6 +13,12 @@ import {
 	InvoiceOutputFormat,
 	VatStatus,
 } from '@/backend/entities/settings.entity';
+import { UserRole } from '@/backend/entities/user.entity';
+
+registerEnumType(UserRole, {
+	name: 'UserRole',
+	description: 'Administrators can manage users and settings',
+});
 
 registerEnumType(ReportFormat, {
 	name: 'ReportFormat',
