@@ -7,6 +7,7 @@ import {
 import { DefaultContainer } from '@/common/di';
 import { getBody } from '../../helpers';
 import type { APIHandler } from '../../types';
+import { auditAuthEvent } from '../audit';
 import { AuthenticationService } from '../authentication';
 import { getAuthConfig } from '../config';
 
@@ -80,6 +81,11 @@ export const localLoginHandler: APIHandler = withSpan(
 			});
 		}
 		if (isLockedOut(key)) {
+			await auditAuthEvent(evt, {
+				action: 'auth.login_locked',
+				success: false,
+				email: key,
+			});
 			return auth.generateResponse({
 				statusCode: 429,
 				body: { message: 'Too many failed attempts. Try again later.' },
@@ -95,6 +101,11 @@ export const localLoginHandler: APIHandler = withSpan(
 		} catch (error) {
 			if (error instanceof AccountLockedError) {
 				logger.info('Local sign in for a locked account');
+				await auditAuthEvent(evt, {
+					action: 'auth.login_locked',
+					success: false,
+					email: key,
+				});
 				return auth.generateResponse({
 					statusCode: 429,
 					body: { message: error.message },
@@ -106,6 +117,12 @@ export const localLoginHandler: APIHandler = withSpan(
 		if (!user) {
 			recordFailure(key);
 			logger.info('Failed local sign in');
+			await auditAuthEvent(evt, {
+				action: 'auth.login_failed',
+				success: false,
+				email: key,
+				details: { reason: 'Invalid email or password' },
+			});
 			return auth.generateResponse({
 				statusCode: 401,
 				body: { message: 'Invalid email or password' },
@@ -113,6 +130,7 @@ export const localLoginHandler: APIHandler = withSpan(
 		}
 
 		failures.delete(key);
+		await auditAuthEvent(evt, { action: 'auth.login', success: true, user });
 		return auth.startSession(evt, { user });
 	},
 );

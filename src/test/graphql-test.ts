@@ -14,6 +14,7 @@ import { getConfigForRelationalDb } from './create-config';
 
 import '@/backend/repositories';
 
+import { AuditMiddleware } from '@/backend/api/graphql/audit.middleware';
 import { authChecker } from '@/backend/api/graphql/authorizer';
 import { contextBuilder } from '@/backend/api/graphql/context-builder';
 import { GRAPHQL_TEST_SET } from '@/backend/api/graphql/di-tokens';
@@ -88,6 +89,7 @@ export async function prepareGraphqlTest() {
 		resolvers: Object.values(resolvers) as unknown as NonEmptyArray<Function>,
 		container: app,
 		authChecker,
+		globalMiddlewares: [AuditMiddleware],
 		// 'validate: true' enables class-transformer for input types in type-graphql
 		validate: true,
 	});
