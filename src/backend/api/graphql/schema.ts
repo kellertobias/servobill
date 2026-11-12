@@ -5,6 +5,7 @@ import './enums';
 
 import { DefaultContainer } from '@/common/di';
 import { authChecker } from './authorizer';
+import { schemaScalarOptions } from './scalars';
 import * as resolvers from './index';
 
 // import { CqrsBus } from '@/backend/services/cqrs.service';
@@ -26,4 +27,5 @@ export const globalSchema = buildSchema({
 		process.env.NODE_ENV === 'development' ? 'src/schema.gql' : false,
 	container: DefaultContainer,
 	authChecker,
+	...schemaScalarOptions,
 });

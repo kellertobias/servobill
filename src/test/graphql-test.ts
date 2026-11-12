@@ -1,21 +1,29 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { randomUUID } from 'node:crypto';
-import { ApolloServer } from 'apollo-server-lambda';
 import type {
 	APIGatewayEventRequestContextV2,
 	APIGatewayProxyEventV2,
 	Context,
 } from 'aws-lambda';
 import type { ExecutionResult } from 'graphql';
-import { buildSchema, type NonEmptyArray } from 'type-graphql';
+import {
+	buildSchema,
+	getMetadataStorage,
+	type NonEmptyArray,
+} from 'type-graphql';
 import { vi } from 'vitest';
 
 import { getConfigForRelationalDb } from './create-config';
 
 import '@/backend/repositories';
 
+import {
+	createApolloServer,
+	toLambdaHandler,
+} from '@/backend/api/graphql/apollo-lambda';
 import { authChecker } from '@/backend/api/graphql/authorizer';
 import { contextBuilder } from '@/backend/api/graphql/context-builder';
+import { schemaScalarOptions } from '@/backend/api/graphql/scalars';
 import { GRAPHQL_TEST_SET } from '@/backend/api/graphql/di-tokens';
 import * as resolvers from '@/backend/api/graphql/index';
 import { Session, type SessionLambdaContext } from '@/backend/api/session';
@@ -81,24 +89,31 @@ export async function prepareGraphqlTest() {
 	await dbService.dataSource.synchronize(true); // this wipes the DB
 
 	// Build GraphQL schema
+	// type-graphql 2 appends argument metadata to its caches on every
+	// buildSchema call. Tests rebuild the schema per test, so without a reset
+	// every argument would be registered twice and arguments get shifted.
+	const metadata = getMetadataStorage() as unknown as {
+		paramsCache: Map<unknown, unknown>;
+		fieldDirectivesByTargetAndFieldCache: Map<unknown, unknown>;
+	};
+	metadata.paramsCache = new Map();
+	metadata.fieldDirectivesByTargetAndFieldCache = new Map();
+
 	const schema = await buildSchema({
 		// eslint-disable-next-line @typescript-eslint/ban-types
 		resolvers: Object.values(resolvers) as unknown as NonEmptyArray<Function>,
 		container: app,
 		authChecker,
-		// 'validate: true' enables class-transformer for input types in type-graphql
-		validate: true,
+		...schemaScalarOptions,
 	});
 
-	const server = new ApolloServer({
-		schema,
-		persistedQueries: false,
-		formatError: (error) => {
-			console.log(error);
-			return error;
-		},
-		context: contextBuilder,
-	});
+	// Tests assert on the raw error messages, so errors are passed through.
+	const gqlHandler = toLambdaHandler(
+		createApolloServer(schema, {
+			formatError: (formattedError) => formattedError,
+		}),
+		contextBuilder,
+	);
 
 	const execute: ExecuteTestFunction = async ({
 		source,
@@ -115,7 +130,6 @@ export async function prepareGraphqlTest() {
 					})
 				: null;
 
-		const gqlHandler = server.createHandler();
 		const cb = vi.fn();
 		const ctx = {
 			callbackWaitsForEmptyEventLoop: false,
@@ -174,7 +188,10 @@ export async function prepareGraphqlTest() {
 			path: string;
 			httpMethod: string;
 		} as unknown as APIGatewayProxyEventV2;
-		const answer = await gqlHandler(event, ctx, () => {});
+		const answer = await gqlHandler(
+			event,
+			ctx as unknown as SessionLambdaContext,
+		);
 
 		try {
 			return JSON.parse(answer.body as string) as ExecutionResult;

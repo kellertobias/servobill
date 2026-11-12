@@ -59,8 +59,14 @@ export default defineConfig({
     },
   },
   resolve: {
-    alias: {
-      '@': join(__dirname, 'src'),
-    },
+    alias: [
+      { find: /^@\//, replacement: `${join(__dirname, 'src')}/` },
+      // graphql ships separate CommonJS and ESM builds. type-graphql loads the
+      // CommonJS one, so the app code must use it too ("another realm" error).
+      {
+        find: /^graphql$/,
+        replacement: join(__dirname, 'node_modules/graphql/index.js'),
+      },
+    ],
   },
 });
