@@ -10,6 +10,7 @@ import type {
 } from 'aws-lambda';
 import type { GraphQLSchema } from 'graphql';
 import { formatError } from './format-error';
+import { queryLimitsRule } from './limits';
 
 export type ContextBuilder<C, Ctx> = (args: {
 	event: APIGatewayProxyEventV2;
@@ -21,9 +22,18 @@ export type GraphqlLambdaHandler<C> = (
 	context: C,
 ) => Promise<APIGatewayProxyStructuredResultV2>;
 
-const CORS_HEADERS = {
-	'access-control-allow-origin': '*',
-	'access-control-allow-credentials': 'true',
+/**
+ * Introspection exposes the whole API schema. It is only on during
+ * development and tests, unless GRAPHQL_INTROSPECTION is set explicitly
+ * (Lambda functions do not necessarily set NODE_ENV=production).
+ */
+export const isIntrospectionEnabled = (
+	env: Record<string, string | undefined> = process.env,
+): boolean => {
+	if (env.GRAPHQL_INTROSPECTION) {
+		return env.GRAPHQL_INTROSPECTION === 'true';
+	}
+	return env.NODE_ENV === 'development' || env.NODE_ENV === 'test';
 };
 
 /**
@@ -36,7 +46,8 @@ export function createApolloServer<Ctx extends BaseContext>(
 ) {
 	return new ApolloServer<Ctx>({
 		schema,
-		introspection: true,
+		introspection: isIntrospectionEnabled(),
+		validationRules: [queryLimitsRule()],
 		formatError,
 		...options,
 	} as ApolloServerOptions<Ctx>);
@@ -56,8 +67,9 @@ export function toLambdaHandler<C, Ctx extends BaseContext>(
 		await started;
 		const method = event.requestContext.http.method.toUpperCase();
 		if (method === 'OPTIONS') {
-			// No body: a 204 response must not have one
-			return { statusCode: 204, headers: CORS_HEADERS };
+			// CORS is answered by API Gateway on AWS; self-hosted installs serve
+			// the API from the same origin as the app.
+			return { statusCode: 204 };
 		}
 
 		const headers = new HeaderMap();
@@ -76,11 +88,7 @@ export function toLambdaHandler<C, Ctx extends BaseContext>(
 			try {
 				body = JSON.parse(rawBody);
 			} catch {
-				return {
-					statusCode: 400,
-					headers: CORS_HEADERS,
-					body: 'Invalid JSON body',
-				};
+				return { statusCode: 400, body: 'Invalid JSON body' };
 			}
 		}
 
@@ -105,10 +113,7 @@ export function toLambdaHandler<C, Ctx extends BaseContext>(
 
 		return {
 			statusCode: response.status ?? 200,
-			headers: {
-				...CORS_HEADERS,
-				...Object.fromEntries(response.headers),
-			},
+			headers: Object.fromEntries(response.headers),
 			body: responseBody,
 		};
 	};
