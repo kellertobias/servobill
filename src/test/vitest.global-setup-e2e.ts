@@ -16,6 +16,7 @@ import type { TestProject } from 'vitest/node';
 // Register ConfigService in DI container BEFORE any other imports
 import { DatabaseType } from '@/backend/services/constants';
 import { App } from '@/common/di';
+import { removeSqliteTestFiles } from './sqlite-test-files';
 
 process.env.VITEST = 'true';
 
@@ -220,6 +221,7 @@ export default async function globalSetup(project: TestProject) {
 		await dynamoContainer?.stop();
 		await s3Container?.stop();
 		await postgresContainer?.stop();
+		removeSqliteTestFiles();
 	};
 }
 
