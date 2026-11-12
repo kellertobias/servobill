@@ -48,6 +48,9 @@ If you keep the overlay in Git, manage `secrets.env` with your secret tooling
 - **Database.** The Postgres component is meant for small installations. For
   production prefer a managed database or an operator such as CloudNativePG
   and set `POSTGRES_URL` accordingly.
+- **Backups.** `components/backup` (included in the example) runs a nightly
+  CronJob that dumps the database and copies the bucket to the
+  `servobill-backups` volume, see [docs/backup.md](../../docs/backup.md).
 - **Ingress.** The manifests do not set an ingress class or cert-manager
   annotations; add them in your overlay. The app reads `PUBLIC_URL` for sign-in
   redirects.

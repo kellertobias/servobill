@@ -15,20 +15,22 @@ container replacement:
 | DynamoDB | PostgreSQL | `POSTGRES_URL` |
 | S3 | Local volume **or** any S3-compatible storage (MinIO, Garage, AWS S3, …) | `UPLOAD_DIRECTORY` **or** `BUCKET_FILES`, `ENDPOINT_S3`, `S3_PUBLIC_ENDPOINT`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` |
 | SES | Any SMTP server | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`, `SMTP_FROM_NAME` |
+| DynamoDB point-in-time recovery, S3 versioning | `backup` container: daily database dump + file archive, retention, optional offsite copy | `BACKUP_TIME`, `BACKUP_RETENTION_DAYS`, `BACKUP_REMOTE`, see [Backups](backup.md) |
 | Google sign in / users | Local users, Google, or any OIDC provider | see [Authentication & Users](authentication.md) |
 
 ## Images
 
-One multi-stage `Dockerfile` builds both images:
+One multi-stage `Dockerfile` builds all images:
 
 ```bash
 docker build --target app     -t servobill-app .
 docker build --target workers -t servobill-workers .
+docker build --target backup  -t servobill-backup .
 ```
 
-Released images are published as `ghcr.io/kellertobias/servobill/app` and
-`ghcr.io/kellertobias/servobill/workers` (tags `latest`, `vX` and `vX.Y.Z`).
-Both run as the unprivileged user `node` (uid 1000) and have health checks
+Released images are published as `ghcr.io/kellertobias/servobill/app`,
+`ghcr.io/kellertobias/servobill/workers` and `ghcr.io/kellertobias/servobill/backup`
+(tags `latest`, `vX` and `vX.Y.Z`). App and workers run as the unprivileged user `node` (uid 1000) and have health checks
 (`/api/health` on port 3000, `/health` on port 9326).
 
 ## Environment variables
@@ -63,8 +65,8 @@ See [deploy/kubernetes](../deploy/kubernetes/README.md).
 - **Single workers replica.** The event queue is a SQLite file, so run exactly
   one workers container. The app can be scaled when files are stored in
   S3/MinIO (or on a ReadWriteMany volume).
-- **Backups.** Back up the Postgres database and the file storage (data volume
-  or bucket). The built-in email backup feature works in containers too.
+- **Backups.** The `backup` container / CronJob backs up the database and the
+  files every night and can restore them, see [Backups](backup.md).
 - **Reverse proxy.** Terminate TLS in front of the app (Traefik, Caddy, nginx,
   an Ingress) and forward the `Host` and `X-Forwarded-Proto` headers, or set
   `PUBLIC_URL`.

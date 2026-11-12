@@ -16,6 +16,8 @@ components:
   # Remove these when you use an external Postgres / S3 compatible storage
   - ../../components/postgres
   - ../../components/s3
+  # Nightly database + file backups, see docs/backup.md
+  - ../../components/backup
 
 configMapGenerator:
   - name: servobill-config
@@ -27,11 +29,13 @@ secretGenerator:
     envs:
       - secrets.env
 
-# Pin the image version (the base defaults to v1)
+# Pin the image version (the base and components default to v1)
 images:
   - name: ghcr.io/kellertobias/servobill/app
     newTag: v1
   - name: ghcr.io/kellertobias/servobill/workers
+    newTag: v1
+  - name: ghcr.io/kellertobias/servobill/backup
     newTag: v1
 
 patches:

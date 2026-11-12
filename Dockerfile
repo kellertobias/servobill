@@ -4,10 +4,13 @@
 #
 #   docker build --target app     -t servobill-app .
 #   docker build --target workers -t servobill-workers .
+#   docker build --target backup  -t servobill-backup .
 #
 # The serverless deployment (AWS/SST) does not use these images.
 
 ARG NODE_IMAGE=node:22-alpine
+# Must match the Postgres server version (backup image only)
+ARG POSTGRES_VERSION=15
 
 # ---------------------------------------------------------------------------
 # Dependencies (including dev dependencies needed for the build and tsx)
@@ -85,3 +88,22 @@ EXPOSE 9326
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
   CMD wget -qO- http://127.0.0.1:9326/health >/dev/null || exit 1
 CMD ["node_modules/.bin/tsx", "stack/local/queue/index.ts"]
+
+# ---------------------------------------------------------------------------
+# Backups: scheduled database dumps and file archives with restore
+# (replaces DynamoDB point-in-time recovery and S3 versioning).
+# The Postgres major version must match the database server.
+# ---------------------------------------------------------------------------
+FROM postgres:${POSTGRES_VERSION}-alpine AS backup
+RUN apk add --no-cache rclone sqlite tzdata
+COPY --chmod=755 deploy/backup/servobill-backup.sh /usr/local/bin/servobill-backup
+# Same uid as the app, so the data volume can be read and restored
+RUN mkdir -p /backups /data && chown 1000:1000 /backups /data
+ENV BACKUP_DIR=/backups \
+    DATA_DIR=/data \
+    RCLONE_CONFIG=/tmp/rclone.conf
+USER 1000:1000
+HEALTHCHECK --interval=1h --timeout=10s --start-period=1m \
+  CMD servobill-backup health
+ENTRYPOINT ["servobill-backup"]
+CMD ["schedule"]

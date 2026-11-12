@@ -13,6 +13,7 @@
 #   postgres -> DynamoDB
 #   /data    -> S3 (or set UPLOAD_DIRECTORY= and ENDPOINT_S3=... for S3/MinIO)
 #   SMTP     -> SES (configure SMTP_* in .env)
+#   backup   -> DynamoDB point-in-time recovery / S3 versioning (docs/backup.md)
 
 x-servobill-env: &servobill-env
   POSTGRES_URL: postgres://servobill-user:${DB_PASSWORD:?set DB_PASSWORD in .env}@postgres:5432/servobill-db
@@ -76,6 +77,27 @@ services:
       workers:
         condition: service_started
 
+  # Daily database dump + file archive with retention and optional offsite
+  # copy. See docs/backup.md for configuration and restoring.
+  backup:
+    image: ${SERVOBILL_IMAGE_PREFIX:-ghcr.io/kellertobias/servobill}/backup:${SERVOBILL_VERSION:-v1}
+    build:
+      context: ../..
+      target: backup
+    container_name: servobill-backup
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      <<: *servobill-env
+      TZ: ${TZ:-UTC}
+    volumes:
+      - ${DATA_VOLUME:-servobill-data}:/data
+      - ${BACKUP_VOLUME:-servobill-backups}:/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   postgres-data: {}
   servobill-data: {}
+  servobill-backups: {}
