@@ -1,5 +1,5 @@
 import * as ses from '@aws-sdk/client-sesv2';
-import nodemailer from 'nodemailer';
+import nodemailer, { type Transporter } from 'nodemailer';
 import type SESTransport from 'nodemailer/lib/ses-transport';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 import { Inject, Service } from '@/common/di';
@@ -16,7 +16,9 @@ import { Logger } from './logger.service';
 export class SESService {
 	private logger = new Logger('SESService');
 	private client: ses.SESv2Client | undefined;
-	private transporter: nodemailer.Transporter;
+	private transporter: Transporter<
+		SESTransport.SentMessageInfo | SMTPTransport.SentMessageInfo
+	>;
 
 	constructor(
 		@Inject(CONFIG_SERVICE) private readonly configuration: ConfigService,
@@ -51,19 +53,22 @@ export class SESService {
 			});
 		} else {
 			// SMTP configuration
+			const smtp = this.configuration.email;
 			this.transporter = nodemailer.createTransport({
-				host: this.configuration.email.host,
-				port: this.configuration.email.port,
-				secure: this.configuration.email.port === 465,
-				auth: {
-					user: this.configuration.email.user,
-					pass: this.configuration.email.password,
-				},
+				host: smtp.host,
+				port: smtp.port,
+				secure: smtp.secure ?? smtp.port === 465,
+				requireTLS: !!smtp.requireTLS,
+				// Relays inside a private network often need no login
+				...(smtp.user
+					? { auth: { user: smtp.user, pass: smtp.password } }
+					: {}),
+				tls: { rejectUnauthorized: smtp.rejectUnauthorized !== false },
 			} as SMTPTransport.Options);
 			this.logger.info('SMTP client initialized', {
-				host: this.configuration.email.host,
-				port: this.configuration.email.port,
-				user: this.configuration.email.user,
+				host: smtp.host,
+				port: smtp.port,
+				user: smtp.user || '(no authentication)',
 			});
 		}
 	}
@@ -87,11 +92,10 @@ export class SESService {
 			content: Buffer | string;
 		}[];
 	}): Promise<SESTransport.SentMessageInfo | SMTPTransport.SentMessageInfo> {
-		// If using SMTP and no from address is provided, use the configured default
-		const fromAddress =
-			this.configuration.email.type === EmailType.SMTP && !from
-				? this.configuration.email.from
-				: from;
+		const { from: fromAddress, replyTo: replyToAddress } = this.resolveSender(
+			from,
+			replyTo,
+		);
 
 		return new Promise((resolve, reject) => {
 			this.transporter.sendMail(
@@ -99,7 +103,7 @@ export class SESService {
 					from: fromAddress,
 					to,
 					subject,
-					replyTo,
+					replyTo: replyToAddress,
 					html,
 					attachments,
 				},
@@ -112,5 +116,42 @@ export class SESService {
 				},
 			);
 		});
+	}
+
+	/**
+	 * Sender and Reply-To for a message. With SMTP the configured SMTP_FROM
+	 * (and SMTP_FROM_NAME) is used when no sender is given, or always when
+	 * SMTP_ENFORCE_FROM is set; the requested sender then becomes Reply-To.
+	 */
+	public resolveSender(
+		from: string | undefined,
+		replyTo: string | undefined,
+	): { from: string | { name: string; address: string }; replyTo?: string } {
+		const email = this.configuration.email;
+		if (email.type !== EmailType.SMTP || !email.from) {
+			return { from: from || '', replyTo };
+		}
+		const configured = email.fromName
+			? { name: email.fromName, address: email.from }
+			: email.from;
+		if (!from) {
+			return { from: configured, replyTo };
+		}
+		if (email.enforceFrom && from.toLowerCase() !== email.from.toLowerCase()) {
+			return { from: configured, replyTo: replyTo || from };
+		}
+		return { from, replyTo };
+	}
+
+	/**
+	 * Checks that the mail server can be reached and accepts the login.
+	 * SES has no such check and always reports success.
+	 */
+	@Span('SESService.verifyConnection')
+	public async verifyConnection(): Promise<void> {
+		if (this.configuration.email.type !== EmailType.SMTP) {
+			return;
+		}
+		await this.transporter.verify();
 	}
 }

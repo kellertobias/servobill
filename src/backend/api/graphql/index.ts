@@ -5,6 +5,7 @@ import './enums';
 export { AttachmentResolver } from './attachments/attachment.resolver';
 export { AuthResolver } from './auth/auth.resolver';
 export { CustomerResolver } from './customers/customers.resolver';
+export { EmailResolver } from './email/email.resolver';
 export { ExpenseResolver } from './expenses/expenses.resolver';
 export { InventoryResolver } from './inventory/inventory-item.resolver';
 export { InventoryLocationResolver } from './inventory/inventory-location.resolver';

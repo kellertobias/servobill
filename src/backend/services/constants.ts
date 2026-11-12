@@ -36,8 +36,22 @@ export type EmailConfig =
 			type: EmailType.SMTP;
 			host: string;
 			port: number;
+			/** Empty for relays that do not require authentication. */
 			user: string;
 			password: string;
+			/** Default sender address. */
 			from: string;
 			fromName?: string;
+			/** Implicit TLS (port 465). Defaults to true for port 465. */
+			secure?: boolean;
+			/** Fail if the server does not offer STARTTLS. */
+			requireTLS?: boolean;
+			/** Set to false to accept self-signed certificates. */
+			rejectUnauthorized?: boolean;
+			/**
+			 * Always send from `from`. The sender address from the company
+			 * settings becomes the Reply-To. For providers that only accept
+			 * verified sender addresses.
+			 */
+			enforceFrom?: boolean;
 	  };

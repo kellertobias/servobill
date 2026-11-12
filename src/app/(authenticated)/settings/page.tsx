@@ -17,6 +17,7 @@ import { PageContent } from '@/components/page';
 import { SettingsBlock } from '@/components/settings-block';
 import { doToast } from '@/components/toast';
 import { useHasChanges, useLoadData } from '@/hooks/load-data';
+import { TestEmail } from './test-email';
 
 function NumberValidity({
 	template,
@@ -750,6 +751,7 @@ export default function SettingsHomePage() {
 							}));
 						}}
 					/>
+					<TestEmail />
 				</SettingsBlock>
 				<SettingsBlock
 					title="E-Mail Templates"

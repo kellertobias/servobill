@@ -103,6 +103,13 @@ export class ConfigService {
 					password: process.env.SMTP_PASSWORD!,
 					from: process.env.SMTP_FROM!,
 					fromName: process.env.SMTP_FROM_NAME,
+					secure: process.env.SMTP_SECURE
+						? process.env.SMTP_SECURE === 'true'
+						: undefined,
+					requireTLS: process.env.SMTP_REQUIRE_TLS === 'true',
+					rejectUnauthorized:
+						process.env.SMTP_TLS_REJECT_UNAUTHORIZED !== 'false',
+					enforceFrom: process.env.SMTP_ENFORCE_FROM === 'true',
 				}
 			: {
 					type: EmailType.SES,
