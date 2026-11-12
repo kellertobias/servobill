@@ -79,12 +79,12 @@ export const onClickEnterPayment = async (props: {
 	if (
 		await confirmDialog({
 			primary: true,
-			title: 'Send Invoice to Customer?',
+			title: 'Enter Payment',
 			content: (
 				<>
 					<p className="mb-3">
-						This will send the invoice to the customer and mark it as sent. This
-						action cannot be undone.
+						Record a payment received for this invoice. Once the full amount has
+						been paid, the invoice will be marked as paid.
 					</p>
 					<InvoicePaymentForm
 						initialValue={payment.current}
