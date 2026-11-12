@@ -418,6 +418,7 @@ describe('SystemResolver', () => {
 			await settingsRepository.getSetting(CompanyDataSetting);
 		companySetting.companyData = {
 			name: 'Test Company',
+			countryCode: 'DE',
 			street: 'Test Street 123',
 			city: 'Test City',
 			zip: '12345',

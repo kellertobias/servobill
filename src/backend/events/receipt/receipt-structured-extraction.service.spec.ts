@@ -70,7 +70,7 @@ describe('ReceiptStructuredExtractionService extracts correct xml', () => {
 			} as unknown as ExpenseRepository);
 
 			// when
-			const format = service.detectInvoiceFormat(parsed);
+			const format = service['detectInvoiceFormat'](parsed);
 
 			// then
 			switch (name) {

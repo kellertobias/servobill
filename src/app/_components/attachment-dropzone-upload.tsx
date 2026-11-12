@@ -75,7 +75,7 @@ export const AttachmentDropzoneUpload: React.FC<
 		if (!fileList) {
 			return;
 		}
-		const newFiles: File[] = [...fileList];
+		const newFiles: File[] = Array.from(fileList);
 		for (const file of newFiles) {
 			if (file.size > maxSize) {
 				onError?.('File too large. Max size is 10MB.');

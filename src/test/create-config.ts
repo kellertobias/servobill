@@ -4,7 +4,6 @@ import {
 	EmailType,
 	FileStorageType,
 } from '@/backend/services/constants';
-import { DYNAMODB_TABLE_NAME } from './ensure-dynamo-table';
 import {
 	DYNAMODB_PORT,
 	POSTGRES_DB,
@@ -13,6 +12,9 @@ import {
 	POSTGRES_USER,
 	S3_PORT,
 } from './vitest.setup-e2e';
+
+/** Fallback table name when a test does not pass its own. */
+const DYNAMODB_TABLE_NAME = 'test-table';
 
 /**
  * Returns a minimal config object for DynamoDB-based tests.
