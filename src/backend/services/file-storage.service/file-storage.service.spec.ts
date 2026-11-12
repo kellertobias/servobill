@@ -132,6 +132,25 @@ describe('FileStorageServiceLocal', () => {
 		expect(result).toEqual(Buffer.from('data'));
 	});
 
+	it('rejects keys and buckets that escape the files directory', async () => {
+		await expect(service.getFile('../../etc/passwd')).rejects.toThrow(
+			/Invalid file path/,
+		);
+		await expect(service.getFile('x', { bucket: '../..' })).rejects.toThrow(
+			/Invalid file path/,
+		);
+		await expect(service.getFile('/proc/self/environ')).rejects.toThrow(
+			/Invalid file path/,
+		);
+		await expect(service.deleteFile('../../secret')).rejects.toThrow(
+			/Invalid file path/,
+		);
+		await expect(service.saveFile('../../x', Buffer.from('a'))).rejects.toThrow(
+			/Invalid file path/,
+		);
+		expect(fsPromises.readFile).not.toHaveBeenCalled();
+	});
+
 	it('should save a file (saveFile)', async () => {
 		fs.existsSync.mockReturnValue(false);
 		fsPromises.mkdir.mockResolvedValue(undefined);
