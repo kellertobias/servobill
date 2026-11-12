@@ -76,6 +76,10 @@ export class UserDynamodbRepository
 			lastLoginAt: entity.lastLoginAt
 				? new Date(entity.lastLoginAt)
 				: undefined,
+			failedLoginCount: entity.failedLoginCount || 0,
+			lockedUntil: entity.lockedUntil
+				? new Date(entity.lockedUntil)
+				: undefined,
 			createdAt: new Date(entity.createdAt),
 			updatedAt: new Date(entity.updatedAt),
 		});
@@ -94,6 +98,8 @@ export class UserDynamodbRepository
 			disabled: !!domainEntity.disabled,
 			profilePictureUrl: domainEntity.profilePictureUrl || '',
 			lastLoginAt: domainEntity.lastLoginAt?.toISOString() || '',
+			failedLoginCount: domainEntity.failedLoginCount || 0,
+			lockedUntil: domainEntity.lockedUntil?.toISOString() || '',
 			createdAt: domainEntity.createdAt.toISOString(),
 			updatedAt: domainEntity.updatedAt.toISOString(),
 		};

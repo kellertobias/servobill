@@ -30,6 +30,8 @@ export type UserProps = {
 	disabled?: boolean;
 	profilePictureUrl?: string;
 	lastLoginAt?: Date;
+	failedLoginCount?: number;
+	lockedUntil?: Date;
 	createdAt?: Date;
 	updatedAt?: Date;
 };
@@ -56,6 +58,10 @@ export class UserEntity extends DomainEntity {
 	/** Optional URL to the user's profile picture. */
 	public profilePictureUrl?: string;
 	public lastLoginAt?: Date;
+	/** Failed password attempts since the last successful sign in or lockout. */
+	public failedLoginCount = 0;
+	/** Password sign in is refused until this time. */
+	public lockedUntil?: Date;
 	public createdAt: Date = new Date();
 	public updatedAt: Date = new Date();
 
@@ -70,6 +76,8 @@ export class UserEntity extends DomainEntity {
 		this.disabled = !!props.disabled;
 		this.profilePictureUrl = props.profilePictureUrl || undefined;
 		this.lastLoginAt = props.lastLoginAt;
+		this.failedLoginCount = props.failedLoginCount || 0;
+		this.lockedUntil = props.lockedUntil;
 		this.createdAt = props.createdAt || new Date();
 		this.updatedAt = props.updatedAt || new Date();
 	}
@@ -138,11 +146,37 @@ export class UserEntity extends DomainEntity {
 
 	public setPasswordHash(passwordHash: string | undefined): void {
 		this.passwordHash = passwordHash;
+		// A new password also lifts a lockout.
+		this.failedLoginCount = 0;
+		this.lockedUntil = undefined;
 		this.touch();
 	}
 
 	public recordLogin(): void {
 		this.lastLoginAt = new Date();
+		this.failedLoginCount = 0;
+		this.lockedUntil = undefined;
+		this.touch();
+	}
+
+	public isLockedOut(now = new Date()): boolean {
+		return !!this.lockedUntil && this.lockedUntil > now;
+	}
+
+	/**
+	 * Counts a wrong password. After `maxFailures` attempts the password sign
+	 * in is locked for `lockoutMs` and the counter starts again.
+	 */
+	public recordFailedLogin(
+		maxFailures: number,
+		lockoutMs: number,
+		now = new Date(),
+	): void {
+		this.failedLoginCount += 1;
+		if (this.failedLoginCount >= maxFailures) {
+			this.lockedUntil = new Date(now.getTime() + lockoutMs);
+			this.failedLoginCount = 0;
+		}
 		this.touch();
 	}
 

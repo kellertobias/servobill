@@ -3,7 +3,11 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { type AuthConfig, getAuthConfig } from '@/backend/api/auth/config';
 import { UserEntity, UserRole } from '@/backend/entities/user.entity';
 import type { UserRepository } from '@/backend/repositories/user/interface';
-import { UserDirectoryService } from './user-directory.service';
+import {
+	AccountLockedError,
+	MAX_FAILED_LOGINS,
+	UserDirectoryService,
+} from './user-directory.service';
 
 /** In-memory repository; clones on read/write like a real database. */
 class MemoryUserRepository implements UserRepository {
@@ -237,6 +241,52 @@ describe('UserDirectoryService', () => {
 					'a-good-password',
 				),
 			).toBeNull();
+		});
+
+		it('locks the password sign in after repeated wrong passwords', async () => {
+			const created = await directory.createUser({
+				email: 'user@example.com',
+				name: 'U',
+				password: 'a-good-password',
+			});
+			for (let i = 0; i < MAX_FAILED_LOGINS; i++) {
+				expect(
+					await directory.authenticateLocal('user@example.com', 'wrong'),
+				).toBeNull();
+			}
+			// The lockout is stored on the user, not in memory
+			expect(repo.rows.get(created.id)?.isLockedOut()).toBe(true);
+			await expect(
+				directory.authenticateLocal('user@example.com', 'a-good-password'),
+			).rejects.toBeInstanceOf(AccountLockedError);
+
+			// An administrator setting a new password lifts the lock
+			await directory.setPassword(created.id, 'another-good-password');
+			const user = await directory.authenticateLocal(
+				'user@example.com',
+				'another-good-password',
+			);
+			expect(user?.failedLoginCount).toBe(0);
+		});
+
+		it('resets the failure count after a successful sign in', async () => {
+			await directory.createUser({
+				email: 'user@example.com',
+				name: 'U',
+				password: 'a-good-password',
+			});
+			for (let i = 0; i < MAX_FAILED_LOGINS - 1; i++) {
+				await directory.authenticateLocal('user@example.com', 'wrong');
+			}
+			await directory.authenticateLocal('user@example.com', 'a-good-password');
+			expect(
+				await directory.authenticateLocal('user@example.com', 'wrong'),
+			).toBeNull();
+			const user = await directory.authenticateLocal(
+				'user@example.com',
+				'a-good-password',
+			);
+			expect(user).not.toBeNull();
 		});
 
 		it('is off unless LOCAL_AUTH_ENABLED is set', async () => {

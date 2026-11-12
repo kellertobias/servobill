@@ -1,6 +1,9 @@
 import { withSpan } from '@/backend/instrumentation';
 import { Logger } from '@/backend/services/logger.service';
-import { UserDirectoryService } from '@/backend/services/user-directory.service';
+import {
+	AccountLockedError,
+	UserDirectoryService,
+} from '@/backend/services/user-directory.service';
 import { DefaultContainer } from '@/common/di';
 import { getBody } from '../../helpers';
 import type { APIHandler } from '../../types';
@@ -13,9 +16,9 @@ const WINDOW_MS = 15 * 60 * 1000;
 const MAX_FAILURES = 10;
 
 /**
- * Best effort brute force protection. The counter lives in memory, so it is
- * per container / Lambda instance. Put a rate limiting proxy or WAF in front
- * of the app for stronger guarantees.
+ * Fast first line of defence per instance. The lockout that holds across
+ * Lambda instances and containers is stored on the user (see
+ * UserDirectoryService.authenticateLocal).
  */
 const failures = new Map<string, { count: number; since: number }>();
 
@@ -83,9 +86,22 @@ export const localLoginHandler: APIHandler = withSpan(
 			});
 		}
 
-		const user = await DefaultContainer.get(
-			UserDirectoryService,
-		).authenticateLocal(email, password);
+		let user: Awaited<ReturnType<UserDirectoryService['authenticateLocal']>>;
+		try {
+			user = await DefaultContainer.get(UserDirectoryService).authenticateLocal(
+				email,
+				password,
+			);
+		} catch (error) {
+			if (error instanceof AccountLockedError) {
+				logger.info('Local sign in for a locked account');
+				return auth.generateResponse({
+					statusCode: 429,
+					body: { message: error.message },
+				});
+			}
+			throw error;
+		}
 
 		if (!user) {
 			recordFailure(key);

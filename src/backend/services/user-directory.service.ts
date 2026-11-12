@@ -15,6 +15,18 @@ const logger = new Logger('UserDirectory');
 
 export class UserDirectoryError extends Error {}
 
+/** Thrown when password sign in is temporarily locked for an account. */
+export class AccountLockedError extends Error {
+	constructor(public readonly lockedUntil: Date) {
+		super('Too many failed attempts. Try again later.');
+	}
+}
+
+/** Wrong passwords before an account's password sign in is locked. */
+export const MAX_FAILED_LOGINS = 10;
+/** How long the password sign in stays locked. */
+export const LOGIN_LOCKOUT_MS = 15 * 60 * 1000;
+
 export type ExternalLogin = {
 	provider: string;
 	subject: string;
@@ -249,7 +261,15 @@ export class UserDirectoryService {
 			// Keep the response time similar for unknown users.
 			await verifyPassword(password, await getDummyPasswordHash());
 			return null;
+		} else if (user.isLockedOut()) {
+			// Do not test the password while locked, but take the same time.
+			await verifyPassword(password, await getDummyPasswordHash());
+			throw new AccountLockedError(user.lockedUntil as Date);
 		} else if (!(await verifyPassword(password, user.passwordHash))) {
+			// Stored on the user, so the limit holds across Lambda instances
+			// and containers.
+			user.recordFailedLogin(MAX_FAILED_LOGINS, LOGIN_LOCKOUT_MS);
+			await this.users.save(user);
 			return null;
 		}
 

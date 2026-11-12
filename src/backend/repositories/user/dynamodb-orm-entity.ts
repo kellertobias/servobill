@@ -21,6 +21,8 @@ export const entitySchema = DynamoDBService.getSchema({
 		disabled: { type: 'boolean' },
 		profilePictureUrl: { type: 'string' },
 		lastLoginAt: { type: 'string' },
+		failedLoginCount: { type: 'number' },
+		lockedUntil: { type: 'string' },
 		createdAt: { type: 'string', required: true },
 		updatedAt: { type: 'string', required: true },
 	},

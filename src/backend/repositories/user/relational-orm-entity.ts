@@ -36,6 +36,12 @@ export class UserOrmEntity {
 	@Column('timestamp', { nullable: true })
 	lastLoginAt?: Date | null;
 
+	@Column('integer', { default: 0 })
+	failedLoginCount!: number;
+
+	@Column('timestamp', { nullable: true })
+	lockedUntil?: Date | null;
+
 	@Column('timestamp')
 	createdAt!: Date;
 

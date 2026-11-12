@@ -48,6 +48,8 @@ export class UserRelationalRepository
 			disabled: !!orm.disabled,
 			profilePictureUrl: orm.profilePictureUrl || undefined,
 			lastLoginAt: orm.lastLoginAt || undefined,
+			failedLoginCount: orm.failedLoginCount || 0,
+			lockedUntil: orm.lockedUntil || undefined,
 			createdAt: orm.createdAt,
 			updatedAt: orm.updatedAt,
 		});
@@ -64,6 +66,8 @@ export class UserRelationalRepository
 			disabled: !!domain.disabled,
 			profilePictureUrl: domain.profilePictureUrl || null,
 			lastLoginAt: domain.lastLoginAt || null,
+			failedLoginCount: domain.failedLoginCount || 0,
+			lockedUntil: domain.lockedUntil || null,
 			createdAt: domain.createdAt,
 			updatedAt: domain.updatedAt,
 		};
