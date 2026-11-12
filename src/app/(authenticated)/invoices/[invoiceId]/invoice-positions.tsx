@@ -84,6 +84,7 @@ export function InvoicePositions({
 							...(data.items || []),
 							{
 								id: Math.random().toString(),
+								productId: null,
 								name: '',
 								description: '',
 								price: '0.00',

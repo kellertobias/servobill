@@ -11,8 +11,8 @@ import { API, gql } from '@/api/index';
 
 import type {
 	DevToolsInventoryItemsQuery,
-	InventoryLocationsListQuery,
-	InventoryTypesListQuery,
+	DevToolsInventoryLocationsQuery,
+	DevToolsInventoryTypesQuery,
 } from '@/common/gql/graphql';
 
 /**
@@ -907,8 +907,8 @@ export async function populateDemoInventory(): Promise<void> {
  * Usage: await window.devUtils.fetchAllInventoryData()
  */
 export async function fetchAllInventoryData(): Promise<{
-	types: InventoryTypesListQuery['entries'];
-	locations: InventoryLocationsListQuery['entries'];
+	types: DevToolsInventoryTypesQuery['inventoryTypes'];
+	locations: DevToolsInventoryLocationsQuery['inventoryLocations'];
 	items: DevToolsInventoryItemsQuery['inventoryItems'];
 }> {
 	try {

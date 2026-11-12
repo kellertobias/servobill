@@ -38,8 +38,12 @@ const mockConfigService = {
 vi.mock('@aws-sdk/client-eventbridge', () => {
 	const mockSend = vi.fn();
 	return {
-		EventBridgeClient: vi.fn().mockImplementation(() => ({ send: mockSend })),
-		PutEventsCommand: vi.fn().mockImplementation((input) => input),
+		EventBridgeClient: vi.fn().mockImplementation(function () {
+			return { send: mockSend };
+		}),
+		PutEventsCommand: vi.fn().mockImplementation(function (input) {
+			return input;
+		}),
 		mocks: { mockSend },
 	};
 });
@@ -68,9 +72,11 @@ vi.mock('@opentelemetry/api', () => {
 vi.mock('./logger.service', () => {
 	const mockLoggerInfo = vi.fn();
 	return {
-		Logger: vi.fn().mockImplementation(() => ({
-			info: mockLoggerInfo,
-		})),
+		Logger: vi.fn().mockImplementation(function () {
+			return {
+				info: mockLoggerInfo,
+			};
+		}),
 		mocks: { mockLoggerInfo },
 	};
 });

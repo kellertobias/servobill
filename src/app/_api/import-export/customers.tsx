@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { DeferredPromise } from '@/common/deferred';
-import type { Customer } from '@/common/gql/graphql';
+import type { Customer } from '@/common/gql/schema';
 import { doToast } from '@/components/toast';
 import { API, gql } from '../index';
 import { Exporters } from './exporters/exporters';

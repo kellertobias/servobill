@@ -73,7 +73,8 @@ export function ProductCatalogModal({
 								onClick={() => {
 									onSelect(item.id, {
 										...item,
-										__typename: undefined,
+										// Responses may carry __typename, which the mutation input rejects
+										...({ __typename: undefined } as object),
 										productId: item.id,
 										price: API.centsToPrice(item.priceCents),
 										quantity: 1,
@@ -82,6 +83,7 @@ export function ProductCatalogModal({
 											price: e.price,
 											categoryId: e.categoryId,
 											enabled: true,
+											expenseId: null,
 										})),
 									});
 									onClose();

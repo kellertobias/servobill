@@ -1,6 +1,5 @@
+import type { Customer, Invoice } from '@/common/gql/schema';
 import {
-	type Customer,
-	type Invoice,
 	type InvoiceImportInput,
 	InvoiceStatus,
 	InvoiceType,

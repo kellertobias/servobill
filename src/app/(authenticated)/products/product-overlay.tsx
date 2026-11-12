@@ -2,7 +2,7 @@ import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import React from 'react';
 import { API, gql } from '@/api/index';
 import { useExpenseCategories } from '@/app/_hooks/use-expense-categories';
-import type { ProductExpense } from '@/common/gql/graphql';
+import type { ProductExpense } from '@/common/gql/schema';
 import { Button } from '@/components/button';
 import { Drawer } from '@/components/drawer';
 import { Input } from '@/components/input';
@@ -37,7 +37,7 @@ export default function ProductOverlay({
 						expenses: [] as (Omit<ProductExpense, 'price'> & {
 							price: string;
 							id: string;
-							categoryId?: string;
+							categoryId?: string | null;
 						})[],
 					}
 				: API.query({

@@ -136,7 +136,7 @@ export const useInventoryListData = ({
 					const result = (await API.query({
 						query: QUERY_TYPE_SEARCH,
 						variables: { where },
-					})) as { entries: InventoryType[] };
+					})) as unknown as { entries: InventoryType[] };
 					const fakeRoot: FakeRootNode = {
 						id: 'search',
 						name: 'Search Results',
@@ -161,7 +161,7 @@ export const useInventoryListData = ({
 					const result = (await API.query({
 						query: QUERY_LOCATION_SEARCH,
 						variables: { where },
-					})) as { entries: InventoryLocation[] };
+					})) as unknown as { entries: InventoryLocation[] };
 					const fakeRoot: FakeRootNode = {
 						id: 'search',
 						name: 'Search Results',
@@ -196,14 +196,20 @@ export const useInventoryListData = ({
 				return (await API.query({
 					query: QUERY_TYPE,
 					variables: { where, id: id ?? null },
-				})) as { entries: InventoryType[]; node: InventoryType | null };
+				})) as unknown as {
+					entries: InventoryType[];
+					node: InventoryType | null;
+				};
 			}
 			if (view === 'location') {
 				// We cast the result to InventoryListDataResult due to generic GraphQL query system
 				return (await API.query({
 					query: QUERY_LOCATION,
 					variables: { where, id: id ?? null },
-				})) as { entries: InventoryLocation[]; node: InventoryLocation | null };
+				})) as unknown as {
+					entries: InventoryLocation[];
+					node: InventoryLocation | null;
+				};
 			}
 			throw new Error('Invalid view');
 		},
