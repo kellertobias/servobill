@@ -13,6 +13,11 @@ import handlers from '@/backend/events';
 import { CustomJson } from '@/common/json';
 
 const port = process.env.PORT || 9326;
+/**
+ * SQLite file that persists queued events. In containers point this to a
+ * volume (e.g. /data/event-queue.db) so queued jobs survive restarts.
+ */
+const queueDbPath = process.env.EVENT_QUEUE_DB || './event-queue.db';
 
 // Load environment variables from .env file for local development
 // Load environment variables from .env and .env.dev files
@@ -73,7 +78,7 @@ function getAsync<T = any>(
  */
 async function initDb() {
 	return new Promise<void>((resolve, reject) => {
-		db = new sqlite3.Database('./event-queue.db', (err) => {
+		db = new sqlite3.Database(queueDbPath, (err) => {
 			if (err) {
 				reject(err);
 				return;
@@ -123,7 +128,9 @@ async function enqueueJob(job: {
 }
 
 /**
- * Dequeue (fetch and remove) the next job from the database.
+ * Fetch the next job from the database. The job is only removed with
+ * `completeJob` after it was handled, so a crash or restart while a job is
+ * running does not lose it (at-least-once delivery).
  * @returns The next job or null if none exist.
  */
 async function dequeueJob() {
@@ -133,7 +140,6 @@ async function dequeueJob() {
 	if (!row) {
 		return null;
 	}
-	await runAsync(`DELETE FROM jobs WHERE id = ?`, [row.id]);
 	return {
 		eventId: row.id,
 		type: row.type,
@@ -142,6 +148,22 @@ async function dequeueJob() {
 		data: JSON.parse(row.data),
 	};
 }
+
+async function completeJob(eventId: string) {
+	await runAsync(`DELETE FROM jobs WHERE id = ?`, [eventId]);
+}
+
+/** Liveness/readiness probe for Docker and Kubernetes. */
+app.get('/health', async (_req, res) => {
+	try {
+		const row = await getAsync<{ count: number }>(
+			'SELECT COUNT(*) AS count FROM jobs',
+		);
+		res.json({ status: 'ok', queuedJobs: row?.count ?? 0 });
+	} catch (error) {
+		res.status(503).json({ status: 'error', message: String(error) });
+	}
+});
 
 app.all('/', async (req, res) => {
 	if (req.headers['x-amz-target'] !== 'AWSEvents.PutEvents') {
@@ -197,6 +219,7 @@ const handleNextEvent = async () => {
 			chalk.bgBlue('[EventBus] Error '),
 			chalk.red(`No handler for event type ${type}`),
 		);
+		await completeJob(event.eventId);
 		return;
 	}
 	const handler = await handlerImport();
@@ -246,6 +269,8 @@ const handleNextEvent = async () => {
 		);
 	}
 	console.log = origLog;
+	// Failed jobs are not retried (same as before), only crashes are.
+	await completeJob(event.eventId);
 	console.log(chalk.bgBlue('[EventBus] Done '), type, event.eventId);
 };
 
@@ -274,6 +299,7 @@ const createCronEvent = async () => {
 		data: {
 			id: eventId,
 			scheduledAt: new Date(Date.now()),
+			triggeredAt: new Date().toISOString(),
 		},
 	});
 };
@@ -313,7 +339,7 @@ initDb()
 		}, 10000);
 
 		waitForNextEvent();
-		app.listen(port, () => {
+		app.listen(Number(port), '0.0.0.0', () => {
 			console.log(`EventBus Dev Router listening on port ${port}`);
 		});
 		return;

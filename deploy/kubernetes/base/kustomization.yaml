@@ -1,0 +1,22 @@
+# Servobill on Kubernetes - base resources.
+# Use an overlay (see ../overlays/example) to add configuration and secrets.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: servobill
+    includeSelectors: false
+
+resources:
+  - app.yaml
+  - workers.yaml
+  - ingress.yaml
+
+images:
+  - name: servobill-app
+    newName: ghcr.io/kellertobias/servobill/app
+    newTag: v1
+  - name: servobill-workers
+    newName: ghcr.io/kellertobias/servobill/workers
+    newTag: v1

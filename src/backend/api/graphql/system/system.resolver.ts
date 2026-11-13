@@ -10,6 +10,7 @@ import {
 	InvoiceSettingsEntity,
 	PdfTemplateSetting,
 } from '@/backend/entities/settings.entity';
+import { UserRole } from '@/backend/entities/user.entity';
 import { GenerateTemplatePreviewEvent } from '@/backend/events/template/event';
 import {
 	EXPENSE_REPOSITORY,
@@ -165,7 +166,7 @@ export class SystemResolver {
 		};
 	}
 
-	@Authorized()
+	@Authorized(UserRole.ADMIN)
 	@Mutation(() => BackupSettings)
 	async updateBackupSettings(
 		@Arg('data', () => BackupSettingsInput) nextData: BackupSettingsInput,
@@ -186,7 +187,7 @@ export class SystemResolver {
 		return { ...backupSettings };
 	}
 
-	@Authorized()
+	@Authorized(UserRole.ADMIN)
 	@Mutation(() => SettingsResult)
 	async updateSettings(
 		@Arg('data', () => SettingsInput) nextData: SettingsInput,
@@ -275,7 +276,7 @@ export class SystemResolver {
 		});
 	}
 
-	@Authorized()
+	@Authorized(UserRole.ADMIN)
 	@Mutation(() => InvoiceTemplateResult)
 	async updateTemplate(
 		@Arg('data', () => InvoiceTemplateInput) nextData: InvoiceTemplateInput,
@@ -294,7 +295,7 @@ export class SystemResolver {
 		};
 	}
 
-	@Authorized()
+	@Authorized(UserRole.ADMIN)
 	@Mutation(() => [ExpenseCategoryType])
 	async updateExpenseSettings(
 		@Arg('categories', () => [ExpenseCategoryInputType])
@@ -382,7 +383,7 @@ export class SystemResolver {
 		return expenseSettings.categories;
 	}
 
-	@Authorized()
+	@Authorized(UserRole.ADMIN)
 	@Mutation(() => String)
 	async testRenderTemplate(
 		@Arg('template', () => String) template: string,
@@ -419,7 +420,7 @@ export class SystemResolver {
 		return url;
 	}
 
-	@Authorized()
+	@Authorized(UserRole.ADMIN)
 	@Mutation(() => String)
 	async sendTestEvent(
 		@Arg('name', () => String) name: string,

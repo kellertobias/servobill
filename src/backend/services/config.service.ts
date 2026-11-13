@@ -13,7 +13,14 @@ export class ConfigService {
 	public readonly endpoints: Record<
 		's3' | 'dynamodb' | 'eventbridge' | 'ses',
 		string | undefined
-	>;
+	> & {
+		/**
+		 * Public URL of the S3 compatible storage (e.g. MinIO behind an
+		 * ingress). Used to sign download/upload URLs for the browser when the
+		 * app talks to the storage through an internal endpoint.
+		 */
+		s3Public?: string;
+	};
 	public readonly tables: {
 		electordb: string | undefined;
 		sqlite: string | undefined;
@@ -65,6 +72,7 @@ export class ConfigService {
 			s3: process.env.ENDPOINT_S3,
 			eventbridge: process.env.ENDPOINT_EVENTBRIDGE,
 			ses: process.env.ENDPOINT_SES,
+			s3Public: process.env.S3_PUBLIC_ENDPOINT,
 		};
 		this.eventBusName = process.env.EVENT_BUS_NAME || 'default';
 		this.tables = {

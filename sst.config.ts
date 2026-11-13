@@ -15,8 +15,45 @@ const requiredEnvVars = [
 	['EMAIL_SENDER', 'EMAIL_SENDER_IDENTITY'],
 	['DNS_ZONE'],
 	['JWT_SECRET'],
-	['OAUTH_CLIENT_ID'],
 ] as const satisfies string[][];
+
+/**
+ * Authentication settings are optional individually (Google, OIDC providers,
+ * local users), so they are passed through to the API as they are set.
+ * See README.md, section "Authentication".
+ */
+const getAuthEnvironment = (): Record<string, string> => {
+	const passThrough = [
+		'OAUTH_CLIENT_ID',
+		'ALLOWED_EMAILS',
+		'ADMIN_EMAILS',
+		'LOCAL_AUTH_ENABLED',
+		'INITIAL_ADMIN_EMAIL',
+		'INITIAL_ADMIN_PASSWORD',
+		'INITIAL_ADMIN_NAME',
+	];
+	const environment: Record<string, string> = {};
+	for (const [key, value] of Object.entries(process.env)) {
+		if (
+			value !== undefined &&
+			value.trim() !== '' &&
+			(passThrough.includes(key) || key.startsWith('OIDC_'))
+		) {
+			environment[key] = value;
+		}
+	}
+	if (
+		!environment.OAUTH_CLIENT_ID &&
+		!environment.OIDC_ISSUER &&
+		!environment.OIDC_PROVIDERS &&
+		environment.LOCAL_AUTH_ENABLED !== 'true'
+	) {
+		throw new Error(
+			'No sign in method configured: set OAUTH_CLIENT_ID, OIDC_PROVIDERS (or OIDC_ISSUER) or LOCAL_AUTH_ENABLED=true',
+		);
+	}
+	return environment;
+};
 
 const logGroupPrefix = process.env.LOG_GROUP_PREFIX ?? 'servobill';
 const logGroupNames = {
@@ -283,8 +320,8 @@ export default $config({
 			SITE_DOMAIN: requiredEnv.SITE_DOMAIN,
 			API_DOMAIN: `api.${requiredEnv.SITE_DOMAIN}`,
 			BUCKET_FILES: dataBucket.name,
-			ALLOWED_EMAILS: process.env.ALLOWED_EMAILS!,
 		};
+		const authEnvironment = getAuthEnvironment();
 		// ===============================
 		// Create Remaining Resources:
 		// ===============================
@@ -489,8 +526,8 @@ export default $config({
 				...getApiFunction(endpoint, {
 					environment: {
 						...baseEnvironment,
+						...authEnvironment,
 						JWT_SECRET: requiredEnv.JWT_SECRET,
-						OAUTH_CLIENT_ID: requiredEnv.OAUTH_CLIENT_ID,
 						BUCKET_FILES: dataBucket.name,
 					},
 					npmInstall: npm.api.install,

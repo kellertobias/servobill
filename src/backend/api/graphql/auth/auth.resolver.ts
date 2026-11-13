@@ -7,7 +7,9 @@ import { Inject, Service } from '@/common/di';
 import { AllowUnauthorized } from '@/common/graphql-decorators';
 import { GRAPHQL_TEST_SET } from '../di-tokens';
 import type { GqlContext } from '../types';
-import { AuthCheckResult, GetContextResult } from './auth.schema';
+import { UserRole } from '@/backend/entities/user.entity';
+import { GOOGLE_PROVIDER_ID, getAuthConfig } from '../../auth/config';
+import { AuthCheckResult, AuthOptions, GetContextResult } from './auth.schema';
 
 @Service({
   addToTestSet: [GRAPHQL_TEST_SET],
@@ -39,6 +41,27 @@ export class AuthResolver {
       userName: context.session?.user?.name || '',
       profilePictureUrl: profilePictureSignedUrl || '',
       refreshable: context.session?.refreshable || false,
+      email: context.session?.user?.email || '',
+      isAdmin: (context.session?.user?.roles || []).includes(UserRole.ADMIN),
+    };
+  }
+
+  @AllowUnauthorized()
+  @Query(() => AuthOptions)
+  authOptions(): AuthOptions {
+    const config = getAuthConfig();
+    return {
+      localEnabled: config.localEnabled,
+      providers: [
+        ...(config.google
+          ? [{ id: GOOGLE_PROVIDER_ID, name: 'Google', loginPath: '/api/auth/authorize' }]
+          : []),
+        ...config.oidcProviders.map((provider) => ({
+          id: provider.id,
+          name: provider.name,
+          loginPath: `/api/auth/authorize?provider=${encodeURIComponent(provider.id)}`,
+        })),
+      ],
     };
   }
 

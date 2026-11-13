@@ -1,65 +1,71 @@
-version: '3.8'
+# Servobill - self-hosted deployment with pre-built images.
+#
+#   cp env.example .env   # and adjust it
+#   docker compose -f docker-compose.release.yml up -d
+#
+# Services replace the AWS parts of the serverless deployment:
+#   app      -> CloudFront, API Gateway, API Lambdas
+#   workers  -> EventBridge, event handler Lambdas, scheduled cron, PDF rendering
+#   postgres -> DynamoDB
+#   /data    -> S3 (or set UPLOAD_DIRECTORY= and ENDPOINT_S3=... for S3/MinIO)
+#   SMTP     -> SES (configure SMTP_* in .env)
 
-# Release Docker Compose for Servobill
-# Loads environment variables from .env file (docker-compose does this automatically)
-# Uses pre-built images tagged with the latest major version
+x-servobill-env: &servobill-env
+  POSTGRES_URL: postgres://servobill-user:${DB_PASSWORD:?set DB_PASSWORD in .env}@postgres:5432/servobill-db
+  UPLOAD_DIRECTORY: ${UPLOAD_DIRECTORY-/data/files}
+  ENDPOINT_EVENTBRIDGE: http://workers:9326
 
 services:
   postgres:
     image: postgres:15
-    restart: unless-stopped
     container_name: servobill-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_USER: servobill-user
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
       POSTGRES_DB: servobill-db
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U servobill-user -d servobill-db']
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   workers:
-    image: ghcr.io/kellertobias/servobill/workers:v1
-    container_name: servobill-queue-workers
+    image: ${SERVOBILL_IMAGE_PREFIX:-ghcr.io/kellertobias/servobill}/workers:${SERVOBILL_VERSION:-v1}
+    container_name: servobill-workers
     restart: unless-stopped
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    env_file: .env
     environment:
-      UPLOAD_DIRECTORY: "/data"
-      ENDPOINT_EVENTBRIDGE: http://workers:9326
-      POSTGRES_URL: postgres://servobill-user:${DB_PASSWORD}@postgres:5432/servobill-db
-      SMTP_HOST: ${SMTP_HOST}
-      SMTP_PORT: ${SMTP_PORT}
-      SMTP_USER: ${SMTP_USER}
-      SMTP_PASSWORD: ${SMTP_PASSWORD}
-      SMTP_FROM: ${SMTP_FROM}
-      SMTP_FROM_NAME: ${SMTP_FROM_NAME}
-    depends_on:
-      - postgres
-    working_dir: /app
+      <<: *servobill-env
+      PORT: '9326'
     volumes:
-      - ./data:/data
+      - ${DATA_VOLUME:-servobill-data}:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   app:
-    image: ghcr.io/your-username/servobill/app:v1
+    image: ${SERVOBILL_IMAGE_PREFIX:-ghcr.io/kellertobias/servobill}/app:${SERVOBILL_VERSION:-v1}
     container_name: servobill-app
     restart: unless-stopped
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    # Authentication (LOCAL_AUTH_*, INITIAL_ADMIN_*, OIDC_*, ...), SMTP and
+    # everything else comes from .env, see env.example and docs/authentication.md
+    env_file: .env
     environment:
-      UPLOAD_DIRECTORY: "/data"
-      ENDPOINT_EVENTBRIDGE: http://workers:9326
-      INSECURE_COOKIES: ${INSECURE_COOKIES:-false}
-      POSTGRES_URL: postgres://servobill-user:${DB_PASSWORD}@postgres:5432/servobill-db
-      ALLOWED_EMAILS: ${ALLOWED_EMAILS:-}
-      OAUTH_CLIENT_ID: ${OAUTH_CLIENT_ID}
-      OAUTH_CLIENT_SECRET: ${OAUTH_CLIENT_SECRET}
-      JWT_SECRET: ${JWT_SECRET}
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      <<: *servobill-env
+      PORT: '3000'
     ports:
-      - "${PORT}:3000"
-    depends_on:
-      - postgres
+      - '${HTTP_PORT:-3000}:3000'
     volumes:
-      - ./data:/data
+      - ${DATA_VOLUME:-servobill-data}:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      workers:
+        condition: service_started
 
 volumes:
-  postgres-data: {} 
+  postgres-data: {}
+  servobill-data: {}

@@ -1,3 +1,4 @@
+import { UserRole } from '@/backend/entities/user.entity';
 import { Arg, Authorized, FieldResolver, Int, Mutation, Query, Resolver, Root } from 'type-graphql';
 import { ExpenseSettingsEntity } from '@/backend/entities/settings.entity';
 import { ATTACHMENT_REPOSITORY } from '@/backend/repositories/attachment/di-tokens';
@@ -57,7 +58,7 @@ export class ExpenseResolver {
       });
   }
 
-  @Authorized()
+  @Authorized(UserRole.ADMIN)
   @Mutation(() => Boolean)
   async purgeExpenses(@Arg('confirm', () => String) confirm: string): Promise<boolean> {
     if (confirm !== 'confirm') {

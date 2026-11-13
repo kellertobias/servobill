@@ -1,3 +1,4 @@
+import { UserRole } from '@/backend/entities/user.entity';
 import { Arg, Authorized, Ctx, Int, Mutation, Query, Resolver } from 'type-graphql';
 import type { CustomerEntity } from '@/backend/entities/customer.entity';
 import { type InvoiceEntity, InvoiceType } from '@/backend/entities/invoice.entity';
@@ -205,7 +206,7 @@ export class InvoiceResolver {
   }
 
   @Span('InvoiceResolver.purgeInvoices')
-  @Authorized()
+  @Authorized(UserRole.ADMIN)
   @Mutation(() => Boolean)
   async purgeInvoices(@Arg('confirm', () => String) confirm: string): Promise<boolean> {
     if (confirm !== 'confirm') {

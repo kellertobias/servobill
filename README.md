@@ -33,14 +33,18 @@ These are the high level next steps:
 - [X] Scheduled invoice sending
 - [X] Auto-Generate expenses (based on incoming structured invoices, e.g. ZUGFeRD/ X-Rechnung)
 - [ ] Forward incoming invoice email to servobill
-- [ ] Full Standalone (Local User Management, Multi-user support, automatic backups, etc.)
+- [X] Local User Management & Multi-user support (admins and users)
+- [X] OpenID Connect sign in (Zitadel, Keycloak, ...)
+- [ ] Full Standalone (automatic backups, etc.)
 
 ## Developing & Deploying
 
 We offer two production ready deployment options and a development setup:
 
 - [⚡ Serverless on your AWS account](deploy/serverless/README.md)
-- [🐳 Dockerized on your own hardware](deploy/dockerized/README.md)
+- [🐳 Dockerized on your own hardware (Docker Compose)](deploy/dockerized/README.md)
+- [☸️ Kubernetes](deploy/kubernetes/README.md)
+- [📖 Self-hosting overview: which container replaces which AWS service](docs/self-hosting.md)
 - [💻 Development setup](README.md#developing)
 
 If you have no experience with AWS, we recommend the dockerized deployment, however all ways of deploying Servobill require some level of technical knowledge to deploy it securely.
@@ -63,20 +67,18 @@ Servobill is built with a serverless architecture in mind. It uses AWS Lambda fu
 In the serverless deployment, we use SST to deploy the application to AWS. For the frontend, we use CloudFront and for the APIs we use the AWS API Gateway. Data is stored in AWS DynamoDB and long-running processes are decoupled from the API requests by using AWS EventBridge to trigger Lambda functions.
 
 #### Dockerized Architecture
-For the dockerized deployment, the Next.js app in one docker container also handles the API requests while another container handles the queue workers. For dockerized deployments, we use Postgres rather than DynamoDB for structured data storage.
+For self-hosted deployments (Docker Compose or Kubernetes), the Next.js app in one container also handles the API requests, while a workers container replaces EventBridge, the event handler Lambdas and the cron job. Postgres replaces DynamoDB, SMTP replaces SES.
 
-For storing assets (such as generated invoices or attachments), you can choose if you want to set up and maintain a minio instance (which is basically a self-hostable S3-Clone) or if you want to use an extremely simple local data storage where you just need to provide a folder to store the data in.
+For storing assets (such as generated invoices or attachments), you can use any S3-compatible storage (e.g. MinIO) or a simple data volume shared by both containers. See [Self-hosting](docs/self-hosting.md) for the full mapping and all settings.
 
 From a code perspective, all these options are implemented transparently with an adapter pattern.
 
 
 #### Authentication
 
-In all deployment types, we use Google OAuth/ OpenID to authenticate users. This is the only supported authentication method for now. 
+Servobill has its own user management with two roles: administrators (manage users and settings) and regular users. Users sign in with a local password, with Google, or with any OpenID Connect provider such as Zitadel, Keycloak or Authentik. Everything is configured through environment variables, see [Authentication & Users](docs/authentication.md).
 
-You can allow a given set of email addresses to access the application by setting the `ALLOWED_EMAILS` environment variable. Email addresses not in this list will be denied access.
-
-Once authenticated, you get two JWT tokens in your cookies, one short-lived session token and one long-lived refresh token. The session token is used to authenticate your requests to the API and the refresh token is used to refresh the session token when it expires. When using the refresh token, we also check if the user is still allowed to access the application against the database.
+Once authenticated, you get two JWT tokens in your cookies, one short-lived session token and one long-lived refresh token. The session token is used to authenticate your requests to the API and the refresh token is used to refresh the session token when it expires. When using the refresh token, we also check if the user still exists and is active in the database.
 
 ### Development Setup
 
@@ -87,7 +89,7 @@ If you want to develop Servobill, you can do so by following these steps to get 
 - Start the complimentary background services (`docker-compose up -d`)
 - Copy and adapt the env files: `.env.example` → `.env` & `.env.dev.example` → `.env.dev`
 - Run `npm run dev` in the root directory.
-- Setup a Google OAuth client ID and secret and add them to the env files
+- Configure a sign in method in the env files: `LOCAL_AUTH_ENABLED=true` with `INITIAL_ADMIN_EMAIL`/`INITIAL_ADMIN_PASSWORD`, an OIDC provider, or a Google OAuth client ID (see [Authentication & Users](docs/authentication.md))
 - Open [http://localhost:3000](http://localhost:3000) with your browser for local development.
 
 

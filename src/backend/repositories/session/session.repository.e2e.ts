@@ -4,7 +4,6 @@
 import 'reflect-metadata';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { SessionEntity } from '@/backend/entities/session.entity';
-import { UserEntity } from '@/backend/entities/user.entity';
 import { prepareRepoTest } from '@/test/repo-test';
 import type { SessionRepository } from './interface';
 import { SessionOrmEntity } from './relational-orm-entity';
@@ -59,30 +58,5 @@ describe.each(repoTestCases)('$name (E2E)', ({ setup, onBeforeEach }) => {
 		await repo.deleteSession(created.sessionId);
 		const afterDelete = await repo.getSession(created.sessionId);
 		expect(afterDelete).toBeNull();
-	});
-
-	it('should return undefined for disallowed user in findUserForSession', async () => {
-		const { app, RepositoryImplementation } = await setup();
-		const repo = app.create<SessionRepository>(RepositoryImplementation);
-		const user = await repo.findUserForSession({
-			userId: 'u1',
-			name: 'Test User',
-			email: 'notallowed@example.com',
-		});
-		expect(user).toBeUndefined();
-	});
-
-	it('should return a UserEntity for allowed user in findUserForSession', async () => {
-		const { app, RepositoryImplementation } = await setup();
-		const repo = app.create<SessionRepository>(RepositoryImplementation);
-		process.env.ALLOWED_EMAILS = 'allowed@example.com';
-		const user = await repo.findUserForSession({
-			userId: 'u1',
-			name: 'Test User',
-			email: 'allowed@example.com',
-			profilePictureUrl: 'http://example.com/pic.png',
-		});
-		expect(user).toBeInstanceOf(UserEntity);
-		expect(user?.email).toBe('allowed@example.com');
 	});
 });

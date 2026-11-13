@@ -54,12 +54,46 @@ export class RelationalDbService {
     }
   }
 
+  private initializing?: Promise<void>;
+
   /**
-   * Initializes the connection if not already initialized.
+   * Initializes the connection once. All repositories call this concurrently,
+   * so the first call starts the initialization and the others wait for it.
+   *
+   * Schema synchronization can fail when another process (app and workers
+   * start at the same time) creates the same tables in parallel, so failed
+   * attempts are retried on a fresh DataSource.
    */
-  public async initialize(): Promise<void> {
-    if (!this.dataSource.isInitialized) {
-      await this.dataSource.initialize();
+  public initialize(): Promise<void> {
+    if (this.dataSource.isInitialized) {
+      return Promise.resolve();
+    }
+    this.initializing ??= this.initializeWithRetry().finally(() => {
+      this.initializing = undefined;
+    });
+    return this.initializing;
+  }
+
+  private async initializeWithRetry(attempts = 5): Promise<void> {
+    for (let attempt = 1; ; attempt++) {
+      try {
+        await this.dataSource.initialize();
+        return;
+      } catch (error) {
+        if (this.dataSource.isInitialized) {
+          await this.dataSource.destroy().catch(() => undefined);
+        }
+        if (attempt >= attempts) {
+          throw error;
+        }
+        // eslint-disable-next-line no-console
+        console.warn(
+          `Database initialization failed (attempt ${attempt}/${attempts}), retrying`,
+          error instanceof Error ? error.message : error
+        );
+        await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+        this.dataSource = this.createDataSource();
+      }
     }
   }
 

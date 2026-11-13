@@ -144,7 +144,7 @@ jobs:
           VERSION="${{ steps.semantic.outputs.new_release_version }}"
           MAJOR="v$(echo $VERSION | cut -d'.' -f1 | sed 's/v//')"
           echo "MAJOR=$MAJOR" >> $GITHUB_OUTPUT
-          sed "s/:v1/:$MAJOR/g" deploy/dockerized/docker-compose.release.yml > deploy/dockerized/docker-compose.release.tmp.yml
+          sed "s/SERVOBILL_VERSION:-v1}/SERVOBILL_VERSION:-$MAJOR}/g" deploy/dockerized/docker-compose.release.yml > deploy/dockerized/docker-compose.release.tmp.yml
           mv deploy/dockerized/docker-compose.release.tmp.yml deploy/dockerized/docker-compose.release.yml
 
       - name: Upload release docker-compose and env.example as artifacts

@@ -1,0 +1,6 @@
+# Optional in-cluster Postgres (replaces DynamoDB). Use a managed database or
+# an operator (CloudNativePG, ...) for production setups with backups.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+resources:
+  - postgres.yaml

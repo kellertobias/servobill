@@ -15,3 +15,4 @@ export { ProductResolver } from './products/product.resolver';
 export { ReceiptResolver } from './receipt/receipt.resolver';
 export { ReportsResolver } from './reports/reports.resolver';
 export { SystemResolver } from './system/system.resolver';
+export { UserResolver } from './users/users.resolver';

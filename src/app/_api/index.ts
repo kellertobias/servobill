@@ -6,7 +6,13 @@ export { gql } from './graphql';
 export const API = {
 	query,
 	isLoggedIn: async (): Promise<
-		false | { userName: string; profilePictureUrl?: string }
+		| false
+		| {
+				userName: string;
+				profilePictureUrl?: string;
+				email?: string;
+				isAdmin: boolean;
+		  }
 	> => {
 		const result = await query(
 			gql(`
@@ -16,6 +22,8 @@ export const API = {
 						userName
 						profilePictureUrl
 						refreshable
+						email
+						isAdmin
 					}
 				}
 			`),
@@ -28,12 +36,17 @@ export const API = {
 				return false;
 			}
 		}
-		const { userName, profilePictureUrl } = result.loggedInUser;
+		const { userName, profilePictureUrl, email, isAdmin } = result.loggedInUser;
 		if (!userName) {
 			return false;
 		}
 
-		return { userName, profilePictureUrl: profilePictureUrl || undefined };
+		return {
+			userName,
+			profilePictureUrl: profilePictureUrl || undefined,
+			email: email || undefined,
+			isAdmin,
+		};
 	},
 	getContext: async () => {
 		const result = await query(
@@ -47,6 +60,16 @@ export const API = {
 		);
 		const context = JSON.parse(result.getContext.contextString);
 		return context;
+	},
+	/** Extracts a readable message from a failed GraphQL request. */
+	getErrorMessage: (error: unknown): string => {
+		const response = (
+			error as { response?: { errors?: { message?: string }[] } }
+		)?.response;
+		return (
+			response?.errors?.[0]?.message ||
+			(error instanceof Error ? error.message : String(error))
+		);
 	},
 	centsToPrice,
 	priceToCents,

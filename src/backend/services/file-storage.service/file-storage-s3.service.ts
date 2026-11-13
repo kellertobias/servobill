@@ -106,6 +106,11 @@ export class FileStorageServiceS3 implements FileStorageService {
   getFileDescriptor(url: string): { bucket?: string; key: string } | null {
     try {
       const urlObj = new URL(url);
+      if (this.s3.usesPathStyle) {
+        // <endpoint>/<bucket>/<key>
+        const [bucket, ...key] = urlObj.pathname.slice(1).split('/');
+        return { bucket, key: key.join('/') };
+      }
       return {
         bucket: urlObj.hostname.split('.')[0],
         key: urlObj.pathname.slice(1),
