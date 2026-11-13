@@ -1,125 +1,168 @@
-name: Weekly Docker Build
+name: Docker Images
+
+# Builds the app, workers and backup images and publishes them to ghcr.io.
+# Each architecture builds on a native runner (no emulation), then the
+# per-architecture images are combined into one multi-arch tag.
+#
+# - after every release (called from release.yml)
+# - weekly, to pick up security fixes of the base images for the latest release
+# - by hand: Actions → Docker Images → Run workflow (optionally without pushing)
+#
+# This workflow only runs on GitHub; Forgejo reads .forgejo/workflows instead.
 
 on:
+  workflow_call:
+    inputs:
+      tag:
+        description: Release tag to build, e.g. v1.18.0
+        type: string
+        required: true
   schedule:
     - cron: '0 3 * * 0' # Every Sunday at 03:00 UTC
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to build (empty = latest release)
+        type: string
+        required: false
+      push:
+        description: Push the images to ghcr.io
+        type: boolean
+        default: true
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 permissions:
   contents: read
   packages: write
 
+concurrency:
+  group: docker-images-${{ inputs.tag || 'latest' }}
+  cancel-in-progress: false
+
 jobs:
-  build-and-push:
-    name: Build and Push Docker Images for Latest Release
+  prepare:
+    name: Resolve release
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      major: ${{ steps.tag.outputs.major }}
+      image_prefix: ${{ steps.tag.outputs.image_prefix }}
+      push: ${{ steps.tag.outputs.push }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Fetch all tags
-        run: git fetch --tags --force
-
-      - name: Get latest release tag
-        id: get_tag
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - name: Resolve tag
+        id: tag
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+          INPUT_PUSH: ${{ github.event_name != 'workflow_dispatch' || inputs.push }}
         run: |
-          # Get the latest release tag (sorted by version)
-          tag=$(git tag --list 'v*' --sort=-v:refname | head -n 1)
-          echo "tag=$tag" >> $GITHUB_OUTPUT
-          # Extract major version (e.g., v1 from v1.2.3)
-          major=$(echo "$tag" | grep -oE '^v[0-9]+')
-          echo "major=$major" >> $GITHUB_OUTPUT
+          tag="${INPUT_TAG:-$(git tag --list 'v*' --sort=-v:refname | head -n 1)}"
+          if ! git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+            echo "::error::Tag '$tag' does not exist"
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "major=$(echo "$tag" | grep -oE '^v[0-9]+')" >> "$GITHUB_OUTPUT"
+          # Image names must be lower case
+          echo "image_prefix=${REGISTRY}/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+          echo "push=${INPUT_PUSH}" >> "$GITHUB_OUTPUT"
+          echo "Building $tag (push: ${INPUT_PUSH})"
 
-      - name: Check out the release tag
-        run: git checkout "${{ steps.get_tag.outputs.tag }}"
+  build:
+    name: Build ${{ matrix.target }} (${{ matrix.arch }})
+    needs: prepare
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [app, workers, backup]
+        arch: [amd64, arm64]
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.prepare.outputs.tag }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Container Registry
+      - name: Log in to ghcr.io
+        if: needs.prepare.outputs.push == 'true'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata for app
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/app
-          tags: |
-            type=raw,value=${{ steps.get_tag.outputs.tag }}
-            type=raw,value=${{ steps.get_tag.outputs.major }}
-            type=raw,value=latest
-
-      - name: Build and push Docker image for app
-        uses: docker/build-push-action@v5
+      - name: Build
+        id: build
+        uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./Dockerfile
-          target: app
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          platforms: linux/amd64,linux/arm64
+          target: ${{ matrix.target }}
+          platforms: linux/${{ matrix.arch }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.version=${{ needs.prepare.outputs.tag }}
+          outputs: ${{ needs.prepare.outputs.push == 'true' && format('type=image,name={0}/{1},push-by-digest=true,name-canonical=true,push=true', needs.prepare.outputs.image_prefix, matrix.target) || 'type=cacheonly' }}
+          cache-from: type=gha,scope=${{ matrix.target }}-${{ matrix.arch }}
+          cache-to: type=gha,scope=${{ matrix.target }}-${{ matrix.arch }},mode=max
 
-      - name: Upload release docker-compose and env.example as artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-compose-and-env
-          path: |
-            deploy/dockerized/docker-compose.release.yml
-            deploy/dockerized/env.example
+      - name: Save digest
+        if: needs.prepare.outputs.push == 'true'
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          mkdir -p /tmp/digests
+          touch "/tmp/digests/${DIGEST#sha256:}"
 
-      - name: Extract metadata for workers
-        id: meta_workers
-        uses: docker/metadata-action@v5
+      - uses: actions/upload-artifact@v4
+        if: needs.prepare.outputs.push == 'true'
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/workers
-          tags: |
-            type=raw,value=${{ steps.get_tag.outputs.tag }}
-            type=raw,value=${{ steps.get_tag.outputs.major }}
-            type=raw,value=latest
+          name: digest-${{ matrix.target }}-${{ matrix.arch }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
 
-      - name: Build and push Docker image for workers
-        uses: docker/build-push-action@v5
+  publish:
+    name: Publish ${{ matrix.target }}
+    needs: [prepare, build]
+    if: needs.prepare.outputs.push == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [app, workers, backup]
+    steps:
+      - uses: actions/download-artifact@v4
         with:
-          context: .
-          file: ./Dockerfile
-          target: workers
-          push: true
-          tags: ${{ steps.meta_workers.outputs.tags }}
-          labels: ${{ steps.meta_workers.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          platforms: linux/amd64,linux/arm64
+          pattern: digest-${{ matrix.target }}-*
+          path: /tmp/digests
+          merge-multiple: true
 
-      - name: Extract metadata for backup
-        id: meta_backup
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backup
-          tags: |
-            type=raw,value=${{ steps.get_tag.outputs.tag }}
-            type=raw,value=${{ steps.get_tag.outputs.major }}
-            type=raw,value=latest
+      - uses: docker/setup-buildx-action@v3
 
-      - name: Build and push Docker image for backup
-        uses: docker/build-push-action@v5
+      - uses: docker/login-action@v3
         with:
-          context: .
-          file: ./Dockerfile
-          target: backup
-          push: true
-          tags: ${{ steps.meta_backup.outputs.tags }}
-          labels: ${{ steps.meta_backup.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          platforms: linux/amd64,linux/arm64
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create multi-arch tags
+        working-directory: /tmp/digests
+        env:
+          IMAGE: ${{ needs.prepare.outputs.image_prefix }}/${{ matrix.target }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+          MAJOR: ${{ needs.prepare.outputs.major }}
+        run: |
+          docker buildx imagetools create \
+            -t "$IMAGE:$TAG" -t "$IMAGE:$MAJOR" -t "$IMAGE:latest" \
+            $(printf "$IMAGE@sha256:%s " *)
+          docker buildx imagetools inspect "$IMAGE:$TAG"

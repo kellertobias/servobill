@@ -94,31 +94,38 @@ The semantic versioning is configured in `.releaserc.json`:
 
 - **Branches**: Only the `main` branch triggers releases
 - **Plugins**: Uses standard semantic-release plugins
-- **Changelog**: Automatically generates CHANGELOG.md
-- **GitHub**: Creates releases with assets
-- **NPM**: Updates package.json version (but doesn't publish)
+- **GitHub**: Creates the tag and the GitHub release (release notes and the
+  compose file, `env.example` and deployment guide as assets)
+- **No release commits**: GitHub is a mirror of the Forgejo repository, so
+  semantic-release does not commit a changelog or version bump there (that
+  made the two diverge). The version lives in the tag and the release notes.
 
-## GitHub Actions Workflow
+## CI: Forgejo and GitHub
 
-The workflow (`.github/workflows/release.yml`) includes:
+The repository runs CI on two systems, each with its own workflow folder:
 
-1. **Lint Job**: Runs ESLint and tests
-2. **Release Job**: Analyzes commits and creates releases
-3. **Docker Job**: Builds and pushes Docker images
-4. **Create Release Job**: Creates GitHub release with assets
+| Where | Folder | What runs |
+|---|---|---|
+| Forgejo (primary) | `.forgejo/workflows/` | `checks.yml`: lint, type check, build, unit and Postgres tests on every pull request and branch push |
+| GitHub (mirror) | `.github/workflows/` | `release.yml`: semantic-release on `main`, then the Docker images. No tests. |
+
+Forgejo only reads `.forgejo/workflows/` as soon as that folder exists, and
+GitHub only reads `.github/workflows/`, so neither runs the other's jobs.
 
 ## Docker Images
 
-Each release creates two Docker images:
+`weekly-docker-build.yml` ("Docker Images") builds three images for
+`linux/amd64` and `linux/arm64`, each on a native runner:
 
-- `ghcr.io/your-username/servobill/app:version` - Next.js application
-- `ghcr.io/your-username/servobill/workers:version` - Background workers
+- `ghcr.io/kellertobias/servobill/app` - Next.js application
+- `ghcr.io/kellertobias/servobill/workers` - background workers
+- `ghcr.io/kellertobias/servobill/backup` - backup and restore
 
-Images are tagged with:
-- Semantic version (e.g., `1.2.3`)
-- Major version (e.g., `1`)
-- Minor version (e.g., `1.2`)
-- `latest` (for main branch)
+Tags: the release (`v1.2.3`), the major version (`v1`) and `latest`.
+
+It runs after every release, every Sunday (rebuilds the latest release with
+current base images) and by hand (Actions → Docker Images → Run workflow, with
+an option to only build without pushing).
 
 ## Troubleshooting
 

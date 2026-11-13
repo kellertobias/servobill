@@ -89,7 +89,11 @@ After setup, your repository should have:
 ```
 .github/
   workflows/
-    release.yml          # Semantic release workflow
+    release.yml              # GitHub: semantic release, then Docker images
+    weekly-docker-build.yml  # GitHub: build and publish the Docker images
+.forgejo/
+  workflows/
+    checks.yml               # Forgejo: lint, type check, build and tests
 deploy/
   dockerized/
     docker-compose.prod.yml  # Production deployment

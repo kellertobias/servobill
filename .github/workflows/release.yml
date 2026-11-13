@@ -1,200 +1,60 @@
 name: Semantic Release
 
+# Runs on GitHub only (Forgejo reads .forgejo/workflows, where the full
+# checks run on every pull request). No tests here: the code on main has
+# already passed them on Forgejo. This workflow only creates the release
+# and builds the Docker images for it.
+
 on:
   push:
     branches:
       - main
   workflow_dispatch:
 
-# Environment variables for the workflow
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-
-# Permissions needed for the workflow
 permissions:
   contents: write
   packages: write
   issues: write
   pull-requests: write
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
-  # Linting job to ensure code quality
-  lint:
-    name: Lint and Test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Required for semantic-release
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run Lint
-        run: npm run lint
-
-      - name: Type check
-        run: npm run typecheck
-
-  # Test job to run tests with coverage (requires Docker)
-  test:
-    name: Run Tests with Coverage
-    runs-on: ubuntu-latest
-    needs: lint
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Set up Java 17 for tests
-        # Java is required to run certain tests (e.g., for tools or dependencies that require a JVM)
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Ensure Docker is available
-        run: docker --version
-
-      - name: Run tests with coverage
-        # only run postgres test, since the dynamodb tests take ages in CI
-        # and we do not want to burn CI minutes
-        run: VITEST_REPOTYPE=postgres npm run test
-
-  # Semantic versioning and release creation
   release:
-    name: Create Release
-    needs: [lint, test]
+    name: Create release
     runs-on: ubuntu-latest
     outputs:
-      new_release_published: ${{ steps.semantic.outputs.new_release_published }}
-      new_release_version: ${{ steps.semantic.outputs.new_release_version }}
-      # Expose the computed major version as an output for downstream jobs
-      major_version: ${{ steps.set_major.outputs.MAJOR }}
+      published: ${{ steps.semantic.outputs.new_release_published }}
+      version: ${{ steps.semantic.outputs.new_release_version }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
-          fetch-depth: 0 # Required for semantic-release
-          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0 # semantic-release needs all tags and commits
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Setup Git
-        run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+      # Only the release tooling, not the whole app
+      - name: Install semantic-release plugins
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
       - name: Run semantic-release
         id: semantic
         uses: cycjimmy/semantic-release-action@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         with:
           semantic_version: 22
-          branches: |
-            [
-              'main'
-            ]
 
-      # Extract the latest changelog section (for the new release) and save as artifact
-      - name: Extract latest changelog section
-        id: extract_changelog
-        run: |
-          # Extract the latest section from CHANGELOG.md (from the top to the next heading)
-          # and remove the first header line (the version header)
-          awk '/^## /{i++} i==2{exit} i==1' CHANGELOG.md | tail -n +2 | tee latest-changelog.md
-        shell: bash
-
-      - name: Upload latest changelog as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: latest-changelog
-          path: latest-changelog.md
-
-      - name: Set major version for compose file
-        id: set_major
-        run: |
-          VERSION="${{ steps.semantic.outputs.new_release_version }}"
-          MAJOR="v$(echo $VERSION | cut -d'.' -f1 | sed 's/v//')"
-          echo "MAJOR=$MAJOR" >> $GITHUB_OUTPUT
-          sed "s/SERVOBILL_VERSION:-v1}/SERVOBILL_VERSION:-$MAJOR}/g" deploy/dockerized/docker-compose.release.yml > deploy/dockerized/docker-compose.release.tmp.yml
-          mv deploy/dockerized/docker-compose.release.tmp.yml deploy/dockerized/docker-compose.release.yml
-
-      - name: Upload release docker-compose and env.example as artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-compose-and-env
-          path: |
-            deploy/dockerized/docker-compose.release.yml
-            deploy/dockerized/env.example
-
-  # Create GitHub release with assets
-  create-release:
-    name: Create GitHub Release
-    needs: [release]
-    runs-on: ubuntu-latest
-    if: needs.release.outputs.new_release_published == 'true'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      # Download the latest changelog artifact
-      - name: Download latest changelog artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: latest-changelog
-
-      # Read the changelog section into an output variable
-      - name: Read latest changelog section
-        id: changelog
-        run: |
-          # Save the changelog content as a single output variable
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          cat latest-changelog.md >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-        shell: bash
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v${{ needs.release.outputs.new_release_version }}
-          name: Release v${{ needs.release.outputs.new_release_version }}
-          body: |
-            ## What's Changed
-
-            ${{ steps.changelog.outputs.changelog }}
-
-            ---
-
-            ## How to deploy
-
-            You can either pull the repository (and checkout the release tag) or use the bundled docker-compose file.
-            Docker images are only built and published once per week, based on the latest release at the time of the build, to save
-            on CI minutes and thus reduce the climate impact. (Using the AI features warm up the world enough...)
+  images:
+    name: Docker images
+    needs: release
+    if: needs.release.outputs.published == 'true'
+    uses: ./.github/workflows/weekly-docker-build.yml
+    with:
+      tag: v${{ needs.release.outputs.version }}
+    secrets: inherit
