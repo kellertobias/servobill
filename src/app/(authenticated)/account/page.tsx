@@ -10,6 +10,13 @@ import { doToast } from '@/components/toast';
 import { useLoadData } from '@/hooks/load-data';
 import { ProfilePictureEditor } from './profile-picture';
 
+/** Section description, same style as on the settings page. */
+const Hint = ({ children }: { children: React.ReactNode }) => (
+	<div className="prose prose-sm leading-4 text-xs text-gray-500/80">
+		{children}
+	</div>
+);
+
 export default function AccountPage() {
 	const { data, reload } = useLoadData(async () =>
 		API.query({
@@ -38,11 +45,20 @@ export default function AccountPage() {
 	const me = data?.me;
 
 	return (
-		<PageContent title="My Account" contentClassName="pt-6">
+		<PageContent
+			title="My Account"
+			noPadding
+			contentClassName="overflow-hidden pt-6"
+		>
 			<div className="space-y-12 p-6 pt-0 divide-y divide-gray-900/10">
 				<SettingsBlock
 					title="Profile Picture"
-					subtitle="Shown in the navigation bar and the user list. It is stored as a 512 x 512 pixel JPEG."
+					subtitle={
+						<Hint>
+							Shown in the navigation bar and the user list. It is stored as a
+							512 x 512 pixel JPEG.
+						</Hint>
+					}
 				>
 					<ProfilePictureEditor
 						pictureUrl={me?.profilePictureUrl}
@@ -51,7 +67,11 @@ export default function AccountPage() {
 				</SettingsBlock>
 				<SettingsBlock
 					title="Profile"
-					subtitle="Your name and email address are managed by an administrator."
+					subtitle={
+						<Hint>
+							Your name and email address are managed by an administrator.
+						</Hint>
+					}
 				>
 					<dl className="text-sm text-gray-700 grid grid-cols-3 gap-2">
 						<dt className="font-medium">Name</dt>
@@ -73,7 +93,7 @@ export default function AccountPage() {
 				{data?.authOptions.localEnabled && (
 					<SettingsBlock
 						title={me?.hasPassword ? 'Change Password' : 'Set a Password'}
-						subtitle="Use at least 10 characters."
+						subtitle={<Hint>Use at least 10 characters.</Hint>}
 					>
 						{me?.hasPassword && (
 							<Input
