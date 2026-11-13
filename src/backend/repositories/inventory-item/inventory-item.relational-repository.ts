@@ -154,8 +154,9 @@ export class InventoryItemRelationalRepository
     }
 
     if (where?.search) {
-      const searchTerm = `%${where.search}%`;
-      queryBuilder.andWhere('item.name ILIKE :search', { search: searchTerm });
+      // LOWER(..) LIKE instead of ILIKE, so it also works on SQLite
+      const searchTerm = `%${where.search.toLowerCase()}%`;
+      queryBuilder.andWhere('LOWER(item.name) LIKE :search', { search: searchTerm });
     }
 
     if (where?.barcode) {

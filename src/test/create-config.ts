@@ -1,9 +1,13 @@
+import { randomUUID } from 'node:crypto';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
 	DatabaseType,
 	type EmailConfig,
 	EmailType,
 	FileStorageType,
 } from '@/backend/services/constants';
+import { SQLITE_TEST_FILE_PREFIX } from './sqlite-test-files';
 import {
 	DYNAMODB_PORT,
 	POSTGRES_DB,
@@ -15,6 +19,15 @@ import {
 
 /** Fallback table name when a test does not pass its own. */
 const DYNAMODB_TABLE_NAME = 'test-table';
+
+/**
+ * One SQLite file per test worker. The name starts with the pid of the
+ * vitest main process, whose global teardown deletes them.
+ */
+const SQLITE_TEST_PATH = join(
+	tmpdir(),
+	`${SQLITE_TEST_FILE_PREFIX}${process.ppid}-${randomUUID()}.sqlite`,
+);
 
 /**
  * Returns a minimal config object for DynamoDB-based tests.
@@ -56,10 +69,17 @@ export function getConfigForRelationalDb(
 	overrides: Record<string, unknown> = {},
 ) {
 	return {
-		tables: {
-			databaseType: DatabaseType.POSTGRES,
-			postgres: `postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT}/${POSTGRES_DB}`,
-		},
+		// VITEST_REPOTYPE=sqlite runs the relational tests against SQLite
+		tables:
+			process.env.VITEST_REPOTYPE === DatabaseType.SQLITE
+				? {
+						databaseType: DatabaseType.SQLITE,
+						sqlite: SQLITE_TEST_PATH,
+					}
+				: {
+						databaseType: DatabaseType.POSTGRES,
+						postgres: `postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT}/${POSTGRES_DB}`,
+					},
 		endpoints: {
 			dynamodb: `http://localhost:${DYNAMODB_PORT}`,
 			s3: `http://localhost:${S3_PORT}`,

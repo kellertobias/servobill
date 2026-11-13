@@ -12,7 +12,7 @@ container replacement:
 | EventBridge | `workers` container (HTTP event bus on port 9326, persistent SQLite queue) | `ENDPOINT_EVENTBRIDGE=http://<workers>:9326`, `EVENT_QUEUE_DB` |
 | Event handler Lambdas (PDF, email, receipts, reports, backups) | `workers` container (incl. Chromium) | – |
 | Scheduled cron (every 30 min) | `workers` container (cron event every 5 min) | – |
-| DynamoDB | PostgreSQL | `POSTGRES_URL` |
+| DynamoDB | PostgreSQL **or** SQLite (single host) | `POSTGRES_URL` **or** `SQLITE_PATH` |
 | S3 | Local volume **or** any S3-compatible storage (MinIO, Garage, AWS S3, …) | `UPLOAD_DIRECTORY` **or** `BUCKET_FILES`, `ENDPOINT_S3`, `S3_PUBLIC_ENDPOINT`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` |
 | SES | Any SMTP server | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`, `SMTP_FROM_NAME` |
 | DynamoDB point-in-time recovery, S3 versioning | `backup` container: daily database dump + file archive, retention, optional offsite copy | `BACKUP_TIME`, `BACKUP_RETENTION_DAYS`, `BACKUP_REMOTE`, see [Backups](backup.md) |
@@ -59,6 +59,24 @@ See [deploy/dockerized](../deploy/dockerized/README.md).
 ## Kubernetes
 
 See [deploy/kubernetes](../deploy/kubernetes/README.md).
+
+## SQLite instead of Postgres
+
+For small single-host installs the database can be a SQLite file on the data
+volume instead of a Postgres server. Set in `.env`:
+
+```bash
+SQLITE_PATH=/data/servobill.sqlite
+```
+
+`SQLITE_PATH` takes precedence over `POSTGRES_URL`, so the bundled `postgres`
+service is then unused and can be removed from the compose file. App and
+workers share the file through the data volume (SQLite runs in WAL mode). Do
+not use SQLite on network file systems or in Kubernetes with several nodes;
+use Postgres there.
+
+There is no automatic migration between Postgres and SQLite; choose one when
+setting up an installation.
 
 ## Operational notes
 

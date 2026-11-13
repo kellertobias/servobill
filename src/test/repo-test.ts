@@ -110,6 +110,13 @@ export function prepareRepoTest<T>({
 		if (process.env.VITEST_REPOTYPE === test.dbType) {
 			return true;
 		}
+		// The relational repositories also run against SQLite
+		if (
+			process.env.VITEST_REPOTYPE === DatabaseType.SQLITE &&
+			test.dbType === DatabaseType.POSTGRES
+		) {
+			return true;
+		}
 		return false;
 	});
 }

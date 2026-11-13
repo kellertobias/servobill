@@ -6,6 +6,7 @@ import type { ConfigService } from './config.service';
 import { DatabaseType } from './constants';
 import { CONFIG_SERVICE, RELATIONALDB_SERVICE } from './di-tokens';
 import { shouldRegister } from './should-register';
+import { adaptColumnTypesForSqlite } from './sqlite-column-types';
 
 /**
  * Service to manage relational database (Postgres/SQLite) connections and configuration using TypeORM.
@@ -43,11 +44,17 @@ export class RelationalDbService {
       if (!this.config.tables.sqlite) {
         throw new Error('SQLITE database path is not defined in config');
       }
+      // Entities use Postgres column types (timestamp, ...); map them once.
+      adaptColumnTypesForSqlite(OrmEntityRegistry);
       return new DataSource({
         type: 'sqlite',
         database: this.config.tables.sqlite as string,
         entities: OrmEntityRegistry,
         synchronize: true,
+        // Readers do not block the writer, and concurrent writes wait for
+        // each other instead of failing with SQLITE_BUSY.
+        enableWAL: true,
+        busyTimeout: 10000,
       });
     } else {
       throw new Error('Unsupported database type for relational DB');
