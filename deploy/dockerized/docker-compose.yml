@@ -79,6 +79,11 @@ services:
       context: ../..
       dockerfile: App.Dockerfile
     container_name: servobill-app
+    # Authentication settings (LOCAL_AUTH_*, INITIAL_ADMIN_*, OIDC_*, ...) are read
+    # from .env, see docs/authentication.md
+    env_file:
+      - path: .env
+        required: false
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:

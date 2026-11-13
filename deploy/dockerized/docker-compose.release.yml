@@ -41,6 +41,11 @@ services:
   app:
     image: ghcr.io/your-username/servobill/app:v1
     container_name: servobill-app
+    # Authentication settings (LOCAL_AUTH_*, INITIAL_ADMIN_*, OIDC_*, ...) are read
+    # from .env, see docs/authentication.md
+    env_file:
+      - path: .env
+        required: false
     restart: unless-stopped
     extra_hosts:
       - "host.docker.internal:host-gateway"

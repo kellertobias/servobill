@@ -33,8 +33,10 @@ export type ExecuteTestFunction = (options: {
 	source: string;
 	variableValues?: Record<string, unknown>;
 	contextValue?: {
-		authenticated: boolean;
+		authenticated?: boolean;
 		session?: Session;
+		/** Roles of the default test user. Defaults to an administrator. */
+		roles?: string[];
 	};
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 }) => Promise<ExecutionResult | { errors: string[]; data?: any }>;
@@ -106,14 +108,15 @@ export async function prepareGraphqlTest() {
 		contextValue,
 	}) => {
 		const session =
-			contextValue?.session || (contextValue?.authenticated ?? true)
+			contextValue?.session ??
+			((contextValue?.authenticated ?? true)
 				? new Session({
 						userId: 'test-user',
 						email: 'test@example.com',
 						name: 'Test User',
-						roles: ['user'],
+						roles: contextValue?.roles ?? ['USER', 'ADMIN'],
 					})
-				: null;
+				: null);
 
 		const gqlHandler = server.createHandler();
 		const cb = vi.fn();

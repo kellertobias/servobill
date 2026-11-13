@@ -24,9 +24,25 @@ type AttachmentDownloadUrlResult {
 
 type AuthCheckResult {
   authenticated: Boolean!
+  email: String
+  isAdmin: Boolean!
   profilePictureUrl: String
   refreshable: Boolean!
   userName: String
+}
+
+type AuthOptions {
+  """Email and password sign in"""
+  localEnabled: Boolean!
+  providers: [AuthProvider!]!
+}
+
+type AuthProvider {
+  id: String!
+
+  """Path that starts the sign in"""
+  loginPath: String!
+  name: String!
 }
 
 """The frequency for automated backups"""
@@ -559,6 +575,7 @@ type Mutation {
   addInventoryNote(id: String!, note: String!): Boolean!
   attachUpload(attachmentId: String!, expenseId: String, inventoryId: String, invoiceId: String): Attachment!
   cancelScheduledInvoiceSend(id: String!): InvoiceChangedResponse!
+  changeOwnPassword(currentPassword: String, newPassword: String!): Boolean!
   confirmUpload(attachmentId: String!): Attachment!
   copyInvoice(as: InvoiceType!, id: String!): InvoiceChangedResponse!
   createCustomer(data: CustomerInput!): Customer!
@@ -568,6 +585,7 @@ type Mutation {
   createInventoryType(data: InventoryTypeInput!): InventoryType!
   createInvoice(customerId: String!, type: InvoiceType): Invoice!
   createProduct(data: ProductInput!): Product!
+  createUser(data: UserCreateInput!): User!
   deleteAttachment(attachmentId: String!): Boolean!
   deleteCustomer(id: String!): Customer!
   deleteExpense(id: String!): Expense!
@@ -577,6 +595,7 @@ type Mutation {
   deleteInvoice(id: String!): Invoice!
   deleteInvoiceAttachmentActivity(activityId: String!, invoiceId: String!): InvoiceChangedResponse!
   deleteProduct(id: String!): Product!
+  deleteUser(id: String!): Boolean!
   extractReceipt(input: ExtractReceiptInput!): ExtractReceiptResult!
   generateReportPdf(format: ReportFormat!, where: IncomeSurplusReportWhereInput!): Boolean!
   importInvoices(data: [InvoiceImportInput!]!): [Invoice!]!
@@ -591,6 +610,9 @@ type Mutation {
   requestUpload(fileName: String!, mimeType: String!, size: Int!): RequestAttachmentUploadUrlResult!
   sendTestEvent(data: String!, name: String!): String!
   setInvoiceActivityAttachmentEmailFlag(activityId: String!, attachToEmail: Boolean!, invoiceId: String!): InvoiceChangedResponse!
+
+  """Set a new password or remove it (null)"""
+  setUserPassword(id: String!, password: String): User!
   testRenderTemplate(pdf: Boolean, styles: String!, template: String!): String!
   updateBackupSettings(data: BackupSettingsInput!): BackupSettings!
   updateCustomer(data: CustomerInput!, id: String!): Customer!
@@ -603,6 +625,7 @@ type Mutation {
   updateProduct(data: ProductInput!, id: String!): Product!
   updateSettings(data: SettingsInput!): SettingsResult!
   updateTemplate(data: InvoiceTemplateInput!): InvoiceTemplateResult!
+  updateUser(data: UserUpdateInput!, id: String!): User!
 }
 
 type Product {
@@ -649,6 +672,7 @@ input ProductWhereInput {
 type Query {
   attachment(attachmentId: String!): AttachmentDownloadUrlResult!
   attachments(input: ListAttachmentsInput): [Attachment!]!
+  authOptions: AuthOptions!
   customer(id: String!): Customer
   customers(limit: Int, skip: Int, where: String): [Customer!]!
   expense(id: String!): Expense!
@@ -665,10 +689,15 @@ type Query {
   invoice(id: String!): Invoice!
   invoices(limit: Int, skip: Int, where: InvoiceWhereInput): [Invoice!]!
   loggedInUser: AuthCheckResult!
+
+  """The signed in user"""
+  me: User
   product(id: String!): Product
   products(limit: Int, skip: Int, where: ProductWhereInput): [Product!]!
   settings: SettingsResult!
   template: InvoiceTemplateResult!
+  user(id: String!): User
+  users: [User!]!
 }
 
 """The format of the report"""
@@ -770,6 +799,43 @@ type SettingsResultCompany {
   vatStatus: VatStatus
   web: String
   zip: String
+}
+
+type User {
+  createdAt: DateTime!
+  disabled: Boolean!
+  email: String!
+  hasPassword: Boolean!
+  id: ID!
+
+  """Ids of the sign in providers linked to this user"""
+  identityProviders: [String!]!
+  lastLoginAt: DateTime
+  name: String!
+  role: UserRole!
+  updatedAt: DateTime!
+}
+
+input UserCreateInput {
+  email: String!
+  name: String!
+
+  """Initial password (requires LOCAL_AUTH_ENABLED)"""
+  password: String
+  role: UserRole
+}
+
+"""Administrators can manage users and settings"""
+enum UserRole {
+  ADMIN
+  USER
+}
+
+input UserUpdateInput {
+  disabled: Boolean
+  email: String
+  name: String
+  role: UserRole
 }
 
 """

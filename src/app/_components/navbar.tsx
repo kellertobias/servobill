@@ -16,6 +16,7 @@ type MenuItemDef = {
 	onClick?: () => void;
 	mobile?: boolean;
 	divider?: boolean;
+	adminOnly?: boolean;
 };
 
 const navigation: MenuItemDef[] = [
@@ -25,13 +26,15 @@ const navigation: MenuItemDef[] = [
 	{ name: 'Inventory', href: '/inventory' },
 	{ name: 'Customers', href: '/customers', mobile: true },
 	{ name: 'Products', href: '/products', mobile: true },
-	{ name: 'Settings', href: '/settings', mobile: true },
+	{ name: 'Settings', href: '/settings', mobile: true, adminOnly: true },
 ];
 
 const userNavigation: MenuItemDef[] = [
 	{ name: 'Customers', href: '/customers', mobile: false },
 	{ name: 'Products', href: '/products', mobile: false },
-	{ name: 'Settings', href: '/settings', mobile: false },
+	{ name: 'Settings', href: '/settings', mobile: false, adminOnly: true },
+	{ name: 'Users', href: '/settings/users', mobile: false, adminOnly: true },
+	{ name: 'My Account', href: '/account' },
 	{ divider: true, mobile: false },
 	{
 		name: 'Sign out',
@@ -63,9 +66,13 @@ const MenuItems: React.FC<{
 	),
 }) => {
 	const pathname = usePathname();
+	const user = useUserContext();
 	return (
 		<>
 			{items.map((item) => {
+				if (item.adminOnly && !user?.isAdmin) {
+					return null;
+				}
 				const isActive = item.href && pathname.startsWith(item.href);
 				if (item.mobile && !isMobile) {
 					return null;

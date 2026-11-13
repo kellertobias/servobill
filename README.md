@@ -33,7 +33,9 @@ These are the high level next steps:
 - [X] Scheduled invoice sending
 - [X] Auto-Generate expenses (based on incoming structured invoices, e.g. ZUGFeRD/ X-Rechnung)
 - [ ] Forward incoming invoice email to servobill
-- [ ] Full Standalone (Local User Management, Multi-user support, automatic backups, etc.)
+- [X] Local User Management & Multi-user support (admins and users)
+- [X] OpenID Connect sign in (Zitadel, Keycloak, ...)
+- [ ] Full Standalone (automatic backups, etc.)
 
 ## Developing & Deploying
 
@@ -72,11 +74,9 @@ From a code perspective, all these options are implemented transparently with an
 
 #### Authentication
 
-In all deployment types, we use Google OAuth/ OpenID to authenticate users. This is the only supported authentication method for now. 
+Servobill has its own user management with two roles: administrators (manage users and settings) and regular users. Users sign in with a local password, with Google, or with any OpenID Connect provider such as Zitadel, Keycloak or Authentik. Everything is configured through environment variables, see [Authentication & Users](docs/authentication.md).
 
-You can allow a given set of email addresses to access the application by setting the `ALLOWED_EMAILS` environment variable. Email addresses not in this list will be denied access.
-
-Once authenticated, you get two JWT tokens in your cookies, one short-lived session token and one long-lived refresh token. The session token is used to authenticate your requests to the API and the refresh token is used to refresh the session token when it expires. When using the refresh token, we also check if the user is still allowed to access the application against the database.
+Once authenticated, you get two JWT tokens in your cookies, one short-lived session token and one long-lived refresh token. The session token is used to authenticate your requests to the API and the refresh token is used to refresh the session token when it expires. When using the refresh token, we also check if the user still exists and is active in the database.
 
 ### Development Setup
 
@@ -87,7 +87,7 @@ If you want to develop Servobill, you can do so by following these steps to get 
 - Start the complimentary background services (`docker-compose up -d`)
 - Copy and adapt the env files: `.env.example` → `.env` & `.env.dev.example` → `.env.dev`
 - Run `npm run dev` in the root directory.
-- Setup a Google OAuth client ID and secret and add them to the env files
+- Configure a sign in method in the env files: `LOCAL_AUTH_ENABLED=true` with `INITIAL_ADMIN_EMAIL`/`INITIAL_ADMIN_PASSWORD`, an OIDC provider, or a Google OAuth client ID (see [Authentication & Users](docs/authentication.md))
 - Open [http://localhost:3000](http://localhost:3000) with your browser for local development.
 
 

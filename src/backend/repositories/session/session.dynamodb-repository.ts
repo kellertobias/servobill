@@ -1,6 +1,5 @@
 import { randomUUID } from 'node:crypto';
 import { SessionEntity } from '@/backend/entities/session.entity';
-import { UserEntity } from '@/backend/entities/user.entity';
 import { AbstractDynamodbRepository } from '@/backend/repositories/abstract-dynamodb-repository';
 import { DatabaseType } from '@/backend/services/constants';
 import { DYNAMODB_SERVICE, EVENTBUS_SERVICE } from '@/backend/services/di-tokens';
@@ -15,10 +14,6 @@ import { entitySchema, type SessionOrmEntity } from './dynamodb-orm-entity';
 import type { SessionRepository } from './interface';
 
 const storeId = 'sessions';
-
-function getAllowedEmails() {
-  return new Set((process.env.ALLOWED_EMAILS || '').split(','));
-}
 
 @Service({
   name: SESSION_REPOSITORY,
@@ -90,25 +85,6 @@ export class SessionDynamodbRepository
       createdAt: new Date(),
       updatedAt: new Date(),
     });
-  }
-
-  /**
-   * Finds a user for a session based on user info (e.g., from OAuth/OpenID).
-   * Returns undefined if the user is not allowed.
-   */
-  public async findUserForSession(user: {
-    userId?: string;
-    name?: string;
-    email?: string;
-    profilePictureUrl?: string;
-  }): Promise<UserEntity | undefined> {
-    if (!user.email || !user.name || !user.userId) {
-      return undefined;
-    }
-    if (getAllowedEmails().has(user.email)) {
-      return new UserEntity(user);
-    }
-    return undefined;
   }
 
   /**
