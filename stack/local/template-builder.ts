@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import express from 'express';
 // eslint-disable-next-line import/no-extraneous-dependencies
-import ws from 'ws';
+import { type WebSocket, WebSocketServer } from 'ws';
 
 import type { GenerateInvoiceHtmlCommand } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.command';
 import { GenerateInvoiceHtmlHandler } from '@/backend/cqrs/generate-invoice-html/generate-invoice-html.handler';
@@ -101,7 +101,7 @@ const invoice = {
 	
 	This is a test invoice. We are not a real company according to §1234 Secion a of the law of the universal tax law.
 	`,
-} as InvoiceEntity;
+} as unknown as InvoiceEntity;
 
 const company = {
 	name: 'Test Company',
@@ -121,7 +121,7 @@ const company = {
 	},
 };
 
-const connections: ws[] = [];
+const connections: WebSocket[] = [];
 const templates = {
 	html: './templates/invoice.html',
 	style: './templates/invoice.css',
@@ -143,7 +143,7 @@ const execute = async (amountItems = -1, tax = true) => {
 		template: fs.readFileSync(path.resolve(templates.html)).toString(),
 		styles: fs.readFileSync(path.resolve(templates.style)).toString(),
 		company,
-	} as GenerateInvoiceHtmlCommand['request']);
+	} as unknown as GenerateInvoiceHtmlCommand['request']);
 	return html;
 };
 fs.watch(
@@ -165,7 +165,7 @@ fs.watch(
 
 const port = Number.parseInt(`${process.env.PORT || 2998}`, 10);
 const app = express();
-const wss = new ws.Server({ port: port + 1 });
+const wss = new WebSocketServer({ port: port + 1 });
 
 app.get('/', async (req, res) => {
 	// Get query parameter ?items=1 to render only one item

@@ -48,6 +48,25 @@ const tryConnection = async (connect: () => Promise<void>, retries = 15) => {
 	return false;
 };
 
+/**
+ * Port of a service that is already running on localhost, e.g. in CI where
+ * the Kubernetes runner has no Docker daemon for testcontainers. When the
+ * variable is unset the service is started as a container instead.
+ */
+const externalPort = (name: string): number | undefined => {
+	const value = process.env[name];
+	if (!value) {
+		return undefined;
+	}
+	const port = Number.parseInt(value, 10);
+	if (!Number.isInteger(port) || port <= 0) {
+		throw new Error(`${name} must be a port number, got '${value}'`);
+	}
+	// eslint-disable-next-line no-console
+	console.log(`Using the service on localhost:${port} from ${name}`);
+	return port;
+};
+
 let teardownHappened = false;
 
 export default async function globalSetup(project: TestProject) {
@@ -65,32 +84,63 @@ export default async function globalSetup(project: TestProject) {
 		process.env.VITEST_REPOTYPE === 'all' ||
 		process.env.VITEST_REPOTYPE === DatabaseType.POSTGRES;
 
+	const startDynamo = async () => {
+		dynamoContainer = await new GenericContainer('amazon/dynamodb-local:latest')
+			.withExposedPorts(9321)
+			.withCommand([
+				'-jar',
+				'DynamoDBLocal.jar',
+				'-sharedDb',
+				'-dbPath',
+				'./data',
+				'-port',
+				'9321',
+			])
+			.withBindMounts([
+				{
+					source: '/tmp/dynamodb-data',
+					target: '/home/dynamodblocal/data',
+				},
+			])
+			.withWorkingDir('/home/dynamodblocal')
+			.start();
+		return dynamoContainer.getMappedPort(9321);
+	};
+
+	const startS3 = async () => {
+		s3Container = await new GenericContainer('quay.io/minio/minio')
+			.withExposedPorts(9000)
+			.withEnvironment({
+				MINIO_ACCESS_KEY: 'AKIAIOSFODNN7EXAMPLE',
+				MINIO_SECRET_KEY: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+				MINIO_API_CORS_ALLOW_ORIGIN: '*',
+			})
+			.withCommand(['server', '/data', '--console-address', ':9320'])
+			.withBindMounts([{ source: '/tmp/s3-data', target: '/data' }])
+			.start();
+		return s3Container.getMappedPort(9000);
+	};
+
+	const startPostgres = async () => {
+		postgresContainer = await new GenericContainer('postgres:15-alpine')
+			.withExposedPorts(5432)
+			.withEnvironment({
+				POSTGRES_USER,
+				POSTGRES_PASSWORD,
+				POSTGRES_DB,
+			})
+			.withWaitStrategy(
+				Wait.forLogMessage('database system is ready to accept connections'),
+			)
+			.start();
+		return postgresContainer.getMappedPort(5432);
+	};
+
 	await Promise.all([
 		(async () => {
 			if (runDynamo) {
-				dynamoContainer = await new GenericContainer(
-					'amazon/dynamodb-local:latest',
-				)
-					.withExposedPorts(9321)
-					.withCommand([
-						'-jar',
-						'DynamoDBLocal.jar',
-						'-sharedDb',
-						'-dbPath',
-						'./data',
-						'-port',
-						'9321',
-					])
-					.withBindMounts([
-						{
-							source: '/tmp/dynamodb-data',
-							target: '/home/dynamodblocal/data',
-						},
-					])
-					.withWorkingDir('/home/dynamodblocal')
-					.start();
-
-				DYNAMODB_PORT = dynamoContainer.getMappedPort(9321);
+				DYNAMODB_PORT =
+					externalPort('TEST_DYNAMODB_PORT') ?? (await startDynamo());
 
 				if (
 					!(await tryConnection(async () => {
@@ -102,18 +152,7 @@ export default async function globalSetup(project: TestProject) {
 			}
 		})(),
 		(async () => {
-			s3Container = await new GenericContainer('quay.io/minio/minio')
-				.withExposedPorts(9000)
-				.withEnvironment({
-					MINIO_ACCESS_KEY: 'AKIAIOSFODNN7EXAMPLE',
-					MINIO_SECRET_KEY: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
-					MINIO_API_CORS_ALLOW_ORIGIN: '*',
-				})
-				.withCommand(['server', '/data', '--console-address', ':9320'])
-				.withBindMounts([{ source: '/tmp/s3-data', target: '/data' }])
-				.start();
-
-			S3_PORT = s3Container.getMappedPort(9000);
+			S3_PORT = externalPort('TEST_S3_PORT') ?? (await startS3());
 
 			if (
 				!(await tryConnection(async () => {
@@ -126,21 +165,8 @@ export default async function globalSetup(project: TestProject) {
 		})(),
 		(async () => {
 			if (runPostgres) {
-				postgresContainer = await new GenericContainer('postgres:15-alpine')
-					.withExposedPorts(5432)
-					.withEnvironment({
-						POSTGRES_USER,
-						POSTGRES_PASSWORD,
-						POSTGRES_DB,
-					})
-					.withWaitStrategy(
-						Wait.forLogMessage(
-							'database system is ready to accept connections',
-						),
-					)
-					.start();
-
-				POSTGRES_PORT = postgresContainer.getMappedPort(5432);
+				POSTGRES_PORT =
+					externalPort('TEST_POSTGRES_PORT') ?? (await startPostgres());
 
 				if (
 					!(await tryConnection(async () => {

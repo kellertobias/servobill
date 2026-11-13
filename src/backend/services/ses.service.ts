@@ -1,5 +1,5 @@
 import * as ses from '@aws-sdk/client-sesv2';
-import nodemailer from 'nodemailer';
+import nodemailer, { type Transporter } from 'nodemailer';
 import type SESTransport from 'nodemailer/lib/ses-transport';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 import { Inject, Service } from '@/common/di';
@@ -16,7 +16,9 @@ import { Logger } from './logger.service';
 export class SESService {
 	private logger = new Logger('SESService');
 	private client: ses.SESv2Client | undefined;
-	private transporter: nodemailer.Transporter;
+	private transporter: Transporter<
+		SESTransport.SentMessageInfo | SMTPTransport.SentMessageInfo
+	>;
 
 	constructor(
 		@Inject(CONFIG_SERVICE) private readonly configuration: ConfigService,

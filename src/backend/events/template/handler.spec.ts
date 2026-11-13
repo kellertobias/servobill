@@ -26,7 +26,13 @@ vi.mock('@/common/di', async (importOriginal) => {
 		},
 	};
 });
-vi.mock('@/backend/services/file-storage.service');
+// Only the DI token is needed; loading the real module would run the
+// storage service decorators against the mocked container.
+vi.mock('@/backend/services/file-storage.service', async () => ({
+	...(await vi.importActual<object>(
+		'@/backend/services/file-storage.service/di-tokens',
+	)),
+}));
 
 describe('template handler', () => {
 	let mockBus: any;

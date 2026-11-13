@@ -1,0 +1,127 @@
+name: Checks
+
+# Runs on every pull request and on pushes to feature branches, so problems
+# show up before a merge to main (where the release workflow runs again).
+on:
+  pull_request:
+  push:
+    branches:
+      - '*'
+      - '!live'
+      - '!main'
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint
+
+  typecheck:
+    name: Type check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - name: Type check (generates GraphQL types and the API index first)
+        run: npm run typecheck
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run generate
+      - run: npm run build
+
+  unit:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run test:unit
+
+  e2e:
+    name: Integration tests (Postgres)
+    # Our Forgejo runner starts each job as a single Kubernetes pod: there is
+    # no Docker daemon for testcontainers and no `services:`. Postgres and the
+    # S3 mock therefore run as plain processes inside the job container, and
+    # the TEST_*_PORT variables make the test setup use them.
+    runs-on: ubuntu-latest
+    container:
+      image: registry.tokenet.de/shared/build-environments/default:latest
+    env:
+      VITEST_REPOTYPE: postgres
+      TEST_POSTGRES_PORT: '5432'
+      TEST_S3_PORT: '8333'
+      SEAWEEDFS_VERSION: '3.97'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      # The build image imported HashiCorp's old apt key, which makes
+      # `apt-get update` fail (same workaround as in other repositories).
+      - name: Refresh HashiCorp's apt signing key
+        run: |
+          if [ -f /etc/apt/sources.list.d/hashicorp.list ]; then
+            curl -fsSL https://apt.releases.hashicorp.com/gpg \
+              | gpg --dearmor --yes -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+          fi
+      # Java runs the Mustang validator for the e-invoice tests
+      - name: Install Postgres and Java
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends postgresql openjdk-17-jre-headless
+      - name: Install SeaweedFS (S3 mock)
+        run: |
+          case "$(uname -m)" in
+            aarch64|arm64) arch=arm64 ;;
+            *) arch=amd64 ;;
+          esac
+          curl -fsSL "https://github.com/seaweedfs/seaweedfs/releases/download/${SEAWEEDFS_VERSION}/linux_${arch}.tar.gz" \
+            | tar -xz -C /usr/local/bin weed
+      # Services and tests share one step so the background processes are
+      # certainly still running when the tests start.
+      - name: Start services and run the tests
+        run: |
+          set -eu
+          service postgresql start
+          su postgres -c "psql -v ON_ERROR_STOP=1 -c \"CREATE ROLE test LOGIN SUPERUSER PASSWORD 'test'\""
+          su postgres -c "createdb -O test test"
+
+          mkdir -p /tmp/seaweedfs
+          weed server -dir=/tmp/seaweedfs -s3 -s3.port=8333 >/tmp/seaweedfs.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -s -o /dev/null "http://localhost:8333/" && break
+            sleep 1
+          done
+          curl -s -o /dev/null "http://localhost:8333/" || { cat /tmp/seaweedfs.log; exit 1; }
+
+          npm test
