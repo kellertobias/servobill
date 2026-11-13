@@ -4,16 +4,22 @@ import { ProfilePictureService } from '@/backend/services/profile-picture.servic
 import { UserDirectoryService } from '@/backend/services/user-directory.service';
 import { DefaultContainer } from '@/common/di';
 import { getSiteUrl } from '../../helpers';
+import { auditAuthEvent } from '../audit';
 import { AuthenticationService } from '../authentication';
 import { storeProfilePicture } from './profile-picture';
 
-export const loginErrorRedirect = (
+export const loginErrorRedirect = async (
 	evt: APIGatewayProxyEventV2,
 	message: string,
 	extraCookies: string[] = [],
 ) => {
 	const auth = DefaultContainer.get(AuthenticationService);
 	const { siteUrl } = getSiteUrl(evt);
+	await auditAuthEvent(evt, {
+		action: 'auth.login_failed',
+		success: false,
+		details: { reason: message },
+	});
 	const response = auth.generateResponse({
 		statusCode: 401,
 		forwardUrl: `${siteUrl}/login?error=${encodeURIComponent(message)}`,
@@ -47,6 +53,7 @@ export const finishExternalLogin = async (
 			storedPicture,
 		);
 	}
+	await auditAuthEvent(evt, { action: 'auth.login', success: true, user });
 	const response = await auth.startSession(evt, {
 		user,
 		forwardUrl: `${siteUrl}/login?success=true`,

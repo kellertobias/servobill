@@ -34,6 +34,12 @@ const userNavigation: MenuItemDef[] = [
 	{ name: 'Products', href: '/products', mobile: false },
 	{ name: 'Settings', href: '/settings', mobile: false, adminOnly: true },
 	{ name: 'Users', href: '/settings/users', mobile: false, adminOnly: true },
+	{
+		name: 'Audit Log',
+		href: '/settings/audit-log',
+		mobile: false,
+		adminOnly: true,
+	},
 	{ name: 'My Account', href: '/account' },
 	{ divider: true, mobile: false },
 	{

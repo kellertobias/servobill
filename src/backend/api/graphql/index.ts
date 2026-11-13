@@ -3,6 +3,7 @@ import 'reflect-metadata';
 import './enums';
 
 export { AttachmentResolver } from './attachments/attachment.resolver';
+export { AuditLogResolver } from './audit-log/audit-log.resolver';
 export { AuthResolver } from './auth/auth.resolver';
 export { CustomerResolver } from './customers/customers.resolver';
 export { ExpenseResolver } from './expenses/expenses.resolver';

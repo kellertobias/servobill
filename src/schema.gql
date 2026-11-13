@@ -22,6 +22,37 @@ type AttachmentDownloadUrlResult {
   downloadUrl: String!
 }
 
+type AuditLogEntry {
+  """The action, e.g. a mutation name or auth.login"""
+  action: String!
+  actorEmail: String
+  actorId: String
+  actorName: String
+  createdAt: DateTime!
+
+  """JSON encoded, sanitized details (arguments, errors)"""
+  details: String!
+  entityId: String
+  entityType: String
+  id: ID!
+  ipAddress: String
+  success: Boolean!
+}
+
+input AuditLogFilter {
+  actorId: String
+  cursor: String
+  entityType: String
+  limit: Int
+}
+
+type AuditLogPage {
+  entries: [AuditLogEntry!]!
+
+  """Pass as cursor to load older entries"""
+  nextCursor: String
+}
+
 type AuthCheckResult {
   authenticated: Boolean!
   email: String
@@ -676,6 +707,9 @@ input ProductWhereInput {
 type Query {
   attachment(attachmentId: String!): AttachmentDownloadUrlResult!
   attachments(input: ListAttachmentsInput): [Attachment!]!
+
+  """Audit log entries, newest first (administrators only)"""
+  auditLog(where: AuditLogFilter): AuditLogPage!
   authOptions: AuthOptions!
   customer(id: String!): Customer
   customers(limit: Int, skip: Int, where: String): [Customer!]!

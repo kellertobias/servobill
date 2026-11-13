@@ -2,6 +2,7 @@
 import './setup';
 
 export * from './attachment';
+export * from './audit-log';
 // Then export all repositories
 export * from './customer';
 export * from './email';

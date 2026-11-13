@@ -4,6 +4,7 @@ import { buildSchema, type NonEmptyArray } from 'type-graphql';
 import './enums';
 
 import { DefaultContainer } from '@/common/di';
+import { AuditMiddleware } from './audit.middleware';
 import { authChecker } from './authorizer';
 import * as resolvers from './index';
 
@@ -26,4 +27,5 @@ export const globalSchema = buildSchema({
 		process.env.NODE_ENV === 'development' ? 'src/schema.gql' : false,
 	container: DefaultContainer,
 	authChecker,
+	globalMiddlewares: [AuditMiddleware],
 });
