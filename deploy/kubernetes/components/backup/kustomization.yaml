@@ -1,0 +1,11 @@
+# Nightly backups: Postgres dump (or SQLite copy) plus the files bucket,
+# written to a volume and optionally copied offsite with rclone.
+# See docs/backup.md for restoring.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+resources:
+  - backup.yaml
+images:
+  - name: servobill-backup
+    newName: ghcr.io/kellertobias/servobill/backup
+    newTag: v1

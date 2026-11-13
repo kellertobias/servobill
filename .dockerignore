@@ -17,6 +17,7 @@ src/**/*.e2e.ts
 src/**/*.spec.ts
 docs
 deploy
+!deploy/backup/servobill-backup.sh
 .cursor
 .vscode
 .github

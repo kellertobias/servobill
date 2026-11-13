@@ -71,8 +71,15 @@ docker compose pull && docker compose up -d   # update
 docker compose down               # stop (keeps data)
 ```
 
-Back up the `postgres-data` and `servobill-data` volumes, or the Postgres
-database and your bucket.
+The `backup` service backs up the database and files every night (02:30 by
+default) into the `servobill-backups` volume and can restore them:
+
+```bash
+docker compose exec backup servobill-backup run    # back up now
+docker compose exec backup servobill-backup list
+```
+
+See [docs/backup.md](../../docs/backup.md) for restoring and offsite copies.
 
 ## Upgrading from the previous compose files
 

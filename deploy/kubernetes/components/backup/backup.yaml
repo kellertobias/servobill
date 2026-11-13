@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: servobill-backups
+  labels:
+    app.kubernetes.io/name: servobill
+    app.kubernetes.io/component: backup
+spec:
+  accessModes: ['ReadWriteOnce']
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: servobill-backup
+  labels:
+    app.kubernetes.io/name: servobill
+    app.kubernetes.io/component: backup
+spec:
+  # 02:30 every night (cluster time zone unless timeZone is set)
+  schedule: '30 2 * * *'
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: servobill
+            app.kubernetes.io/component: backup
+        spec:
+          restartPolicy: OnFailure
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+          containers:
+            - name: backup
+              image: servobill-backup
+              args: ['run']
+              envFrom:
+                - configMapRef:
+                    name: servobill-config
+                - secretRef:
+                    name: servobill-secrets
+              env:
+                - name: BACKUP_RETENTION_DAYS
+                  value: '14'
+              volumeMounts:
+                - name: backups
+                  mountPath: /backups
+                - name: tmp
+                  mountPath: /tmp
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  memory: 512Mi
+          volumes:
+            - name: backups
+              persistentVolumeClaim:
+                claimName: servobill-backups
+            - name: tmp
+              emptyDir: {}
