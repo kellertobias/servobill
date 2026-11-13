@@ -22,6 +22,7 @@
     "stage": "sst dev next dev",
     "start": "next start",
     "template": "tsx stack/local/template-builder.ts",
+    "migrate:dynamodb-to-relational": "tsx stack/tools/migrate-dynamodb-to-relational.ts",
     "test": "vitest run",
     "test:unit": "vitest run --config vitest.unit.config.ts",
     "test:ui": "vitest --ui",
