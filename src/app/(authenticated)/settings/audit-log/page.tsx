@@ -7,6 +7,7 @@ import { Button } from '@/components/button';
 import { PageContent } from '@/components/page';
 import { Table } from '@/components/table';
 import { doToast } from '@/components/toast';
+import { describeAction, describeEntityType } from './audit-actions';
 
 type Entry = {
 	id: string;
@@ -221,21 +222,30 @@ export default function AuditLogPage() {
 							className: 'py-5 pr-6 align-top',
 							render: (entry) => (
 								<>
-									<div className="text-sm font-medium leading-6 text-gray-900">
-										{entry.action}
+									<div
+										className="text-sm font-medium leading-6 text-gray-900"
+										title={entry.action}
+									>
+										{describeAction(entry.action)}
 										{!entry.success && (
 											<span className="ml-2 inline-flex items-center rounded-md bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">
 												Failed
 											</span>
 										)}
 									</div>
-									{(entry.entityType || entry.entityId) && (
-										<div className="mt-1 text-xs leading-5 text-gray-500">
-											{[entry.entityType, entry.entityId]
-												.filter(Boolean)
-												.join(' ')}
-										</div>
-									)}
+									{(() => {
+										const entity = [
+											describeEntityType(entry.entityType),
+											entry.entityId,
+										]
+											.filter(Boolean)
+											.join(' ');
+										return entity ? (
+											<div className="mt-1 text-xs leading-5 text-gray-500">
+												{entity}
+											</div>
+										) : null;
+									})()}
 									<Details json={entry.details} />
 								</>
 							),
