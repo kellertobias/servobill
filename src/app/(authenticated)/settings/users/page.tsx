@@ -1,5 +1,6 @@
 'use client';
 
+import { UserCircleIcon } from '@heroicons/react/24/solid';
 import React from 'react';
 import { API, gql } from '@/api/index';
 import SelectInput from '@/app/_components/select-input';
@@ -23,6 +24,7 @@ type UserRow = {
 	hasPassword: boolean;
 	identityProviders: string[];
 	lastLoginAt?: string | null;
+	profilePictureUrl?: string | null;
 };
 
 const roleOptions = [
@@ -111,6 +113,7 @@ export default function UsersPage() {
 						hasPassword
 						identityProviders
 						lastLoginAt
+						profilePictureUrl
 					}
 					authOptions {
 						localEnabled
@@ -318,14 +321,28 @@ export default function UsersPage() {
 						key: 'name',
 						title: 'Name',
 						render: (user) => (
-							<div>
-								<div className="font-medium text-gray-900">
-									{user.name}
-									{user.email === currentUser?.email && (
-										<span className="ml-2 text-xs text-gray-500">(you)</span>
-									)}
+							<div className="flex items-center gap-x-3">
+								{user.profilePictureUrl ? (
+									<img
+										src={user.profilePictureUrl}
+										alt=""
+										className="h-9 w-9 flex-none rounded-full bg-gray-100 object-cover"
+									/>
+								) : (
+									<UserCircleIcon
+										className="h-9 w-9 flex-none text-gray-300"
+										aria-hidden="true"
+									/>
+								)}
+								<div>
+									<div className="font-medium text-gray-900">
+										{user.name}
+										{user.email === currentUser?.email && (
+											<span className="ml-2 text-xs text-gray-500">(you)</span>
+										)}
+									</div>
+									<div className="text-xs text-gray-500">{user.email}</div>
 								</div>
-								<div className="text-xs text-gray-500">{user.email}</div>
 							</div>
 						),
 					},

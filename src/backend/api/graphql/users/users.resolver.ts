@@ -1,5 +1,18 @@
-import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
+import {
+	Arg,
+	Authorized,
+	Ctx,
+	FieldResolver,
+	Mutation,
+	Query,
+	Resolver,
+	Root,
+} from 'type-graphql';
 import { type UserEntity, UserRole } from '@/backend/entities/user.entity';
+import {
+	ProfilePictureError,
+	ProfilePictureService,
+} from '@/backend/services/profile-picture.service';
 import {
 	UserDirectoryError,
 	UserDirectoryService,
@@ -19,6 +32,7 @@ export const toGqlUser = (user: UserEntity): User => ({
 	identityProviders: [
 		...new Set(user.identities.map((identity) => identity.provider)),
 	],
+	storedProfilePictureUrl: user.profilePictureUrl,
 	lastLoginAt: user.lastLoginAt,
 	createdAt: user.createdAt,
 	updatedAt: user.updatedAt,
@@ -37,7 +51,10 @@ const run = async <T>(action: () => Promise<T>): Promise<T> => {
 	try {
 		return await action();
 	} catch (error) {
-		if (error instanceof UserDirectoryError) {
+		if (
+			error instanceof UserDirectoryError ||
+			error instanceof ProfilePictureError
+		) {
 			throw new Error(error.message);
 		}
 		throw error;
@@ -51,6 +68,8 @@ const run = async <T>(action: () => Promise<T>): Promise<T> => {
 export class UserResolver {
 	constructor(
 		@Inject(UserDirectoryService) private userDirectory: UserDirectoryService,
+		@Inject(ProfilePictureService)
+		private profilePictures: ProfilePictureService,
 	) {}
 
 	@Authorized(UserRole.ADMIN)
@@ -140,5 +159,33 @@ export class UserResolver {
 			);
 			return true;
 		});
+	}
+	@FieldResolver(() => String, { nullable: true })
+	async profilePictureUrl(@Root() user: User): Promise<string | null> {
+		return this.profilePictures.getDisplayUrl(user.storedProfilePictureUrl);
+	}
+
+	@Authorized()
+	@Mutation(() => User, {
+		description:
+			'Set the own profile picture: a 512x512 JPEG as base64 or data URL',
+	})
+	async setOwnProfilePicture(
+		@Arg('image', () => String) image: string,
+		@Ctx() context: GqlContext,
+	): Promise<User> {
+		return run(async () =>
+			toGqlUser(
+				await this.profilePictures.upload(requireUserId(context), image),
+			),
+		);
+	}
+
+	@Authorized()
+	@Mutation(() => User)
+	async removeOwnProfilePicture(@Ctx() context: GqlContext): Promise<User> {
+		return run(async () =>
+			toGqlUser(await this.profilePictures.remove(requireUserId(context))),
+		);
 	}
 }

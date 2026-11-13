@@ -1,5 +1,6 @@
 import type { APIGatewayProxyEventV2 } from 'aws-lambda';
 import type { UserEntity } from '@/backend/entities/user.entity';
+import { ProfilePictureService } from '@/backend/services/profile-picture.service';
 import { UserDirectoryService } from '@/backend/services/user-directory.service';
 import { DefaultContainer } from '@/common/di';
 import { getSiteUrl } from '../../helpers';
@@ -33,7 +34,13 @@ export const finishExternalLogin = async (
 ) => {
 	const auth = DefaultContainer.get(AuthenticationService);
 	const { siteUrl } = getSiteUrl(evt);
-	const storedPicture = await storeProfilePicture(pictureUrl, user.id);
+	// A picture the user uploaded always wins over the provider's picture
+	const keepUploaded = DefaultContainer.get(ProfilePictureService).isUploaded(
+		user.profilePictureUrl,
+	);
+	const storedPicture = keepUploaded
+		? null
+		: await storeProfilePicture(pictureUrl, user.id);
 	if (storedPicture && storedPicture !== user.profilePictureUrl) {
 		await DefaultContainer.get(UserDirectoryService).setProfilePicture(
 			user,

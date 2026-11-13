@@ -607,9 +607,13 @@ type Mutation {
   invoiceSend(id: String!, submission: InvoiceSubmissionInput!): InvoiceChangedResponse!
   purgeExpenses(confirm: String!): Boolean!
   purgeInvoices(confirm: String!): Boolean!
+  removeOwnProfilePicture: User!
   requestUpload(fileName: String!, mimeType: String!, size: Int!): RequestAttachmentUploadUrlResult!
   sendTestEvent(data: String!, name: String!): String!
   setInvoiceActivityAttachmentEmailFlag(activityId: String!, attachToEmail: Boolean!, invoiceId: String!): InvoiceChangedResponse!
+
+  """Set the own profile picture: a 512x512 JPEG as base64 or data URL"""
+  setOwnProfilePicture(image: String!): User!
 
   """Set a new password or remove it (null)"""
   setUserPassword(id: String!, password: String): User!
@@ -812,6 +816,9 @@ type User {
   identityProviders: [String!]!
   lastLoginAt: DateTime
   name: String!
+
+  """URL to load the profile picture from (512x512 JPEG)"""
+  profilePictureUrl: String
   role: UserRole!
   updatedAt: DateTime!
 }
