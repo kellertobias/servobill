@@ -131,6 +131,12 @@ The javascript `Date` as string. Type represents date and time as the ISO Date s
 """
 scalar DateTime
 
+type EmailTestResult {
+  """What was done, or the error reported by the mail server"""
+  message: String!
+  success: Boolean!
+}
+
 type Expense {
   attachments: [Attachment!]
 
@@ -640,6 +646,7 @@ type Mutation {
   purgeInvoices(confirm: String!): Boolean!
   removeOwnProfilePicture: User!
   requestUpload(fileName: String!, mimeType: String!, size: Int!): RequestAttachmentUploadUrlResult!
+  sendTestEmail(to: String!): EmailTestResult!
   sendTestEvent(data: String!, name: String!): String!
   setInvoiceActivityAttachmentEmailFlag(activityId: String!, attachToEmail: Boolean!, invoiceId: String!): InvoiceChangedResponse!
 

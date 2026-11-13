@@ -89,7 +89,11 @@ function makeSESConfig(): ConfigService {
 }
 
 // Helper: create a mock ConfigService for SMTP
-function makeSMTPConfig(): ConfigService {
+function makeSMTPConfig(
+	overrides: Partial<
+		Extract<ConfigService['email'], { type: EmailType.SMTP }>
+	> = {},
+): ConfigService {
 	return new MockConfigService({
 		email: {
 			type: EmailType.SMTP,
@@ -99,6 +103,7 @@ function makeSMTPConfig(): ConfigService {
 			password: 'pass',
 			from: 'default@from.com',
 			fromName: undefined,
+			...overrides,
 		},
 		endpoints: { ses: '', s3: '', dynamodb: '', eventbridge: '' },
 		region: '',
@@ -161,10 +166,12 @@ describe('SESService', () => {
 			host: email.host,
 			port: email.port,
 			secure: false,
+			requireTLS: false,
 			auth: {
 				user: email.user,
 				pass: email.password,
 			},
+			tls: { rejectUnauthorized: true },
 		});
 		// Should call sendMail with correct params
 		expect(sendMailMock).toHaveBeenCalledWith(
@@ -178,6 +185,77 @@ describe('SESService', () => {
 			expect.any(Function),
 		);
 		expect(result.accepted).toContain('to@example.com');
+	});
+
+	it('connects to SMTP relays without authentication and with TLS options', () => {
+		new SESService(
+			makeSMTPConfig({
+				user: '',
+				password: '',
+				port: 465,
+				requireTLS: true,
+				rejectUnauthorized: false,
+			}),
+		);
+		expect(createTransportMock).toHaveBeenCalledWith({
+			host: 'smtp.test',
+			port: 465,
+			secure: true,
+			requireTLS: true,
+			tls: { rejectUnauthorized: false },
+		});
+	});
+
+	it('lets SMTP_SECURE override the port based default', () => {
+		new SESService(makeSMTPConfig({ port: 465, secure: false }));
+		expect(createTransportMock).toHaveBeenCalledWith(
+			expect.objectContaining({ port: 465, secure: false }),
+		);
+	});
+
+	it('uses SMTP_FROM with SMTP_FROM_NAME when no sender is given', () => {
+		const service = new SESService(makeSMTPConfig({ fromName: 'Billing' }));
+		expect(service.resolveSender('', undefined)).toEqual({
+			from: { name: 'Billing', address: 'default@from.com' },
+		});
+		expect(
+			service.resolveSender('me@company.com', 'reply@company.com'),
+		).toEqual({ from: 'me@company.com', replyTo: 'reply@company.com' });
+	});
+
+	it('always sends from SMTP_FROM with SMTP_ENFORCE_FROM and keeps the sender as reply-to', async () => {
+		const service = new SESService(
+			makeSMTPConfig({ enforceFrom: true, fromName: 'Billing' }),
+		);
+		expect(service.resolveSender('me@company.com', undefined)).toEqual({
+			from: { name: 'Billing', address: 'default@from.com' },
+			replyTo: 'me@company.com',
+		});
+		expect(
+			service.resolveSender('me@company.com', 'reply@company.com').replyTo,
+		).toBe('reply@company.com');
+
+		await service.sendEmail({
+			from: 'me@company.com',
+			to: 'to@example.com',
+			subject: 'S',
+			html: 'H',
+		});
+		expect(sendMailMock).toHaveBeenCalledWith(
+			expect.objectContaining({
+				from: { name: 'Billing', address: 'default@from.com' },
+				replyTo: 'me@company.com',
+			}),
+			expect.any(Function),
+		);
+	});
+
+	it('does not change the sender for SES', () => {
+		const service = new SESService(makeSESConfig());
+		expect(service.resolveSender('a@b.c', undefined)).toEqual({
+			from: 'a@b.c',
+			replyTo: undefined,
+		});
 	});
 
 	/**

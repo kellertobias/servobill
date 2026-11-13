@@ -77,6 +77,32 @@ describe('ConfigService', () => {
 		}
 	});
 
+	it('reads the SMTP TLS and sender options', () => {
+		process.env.SMTP_HOST = 'smtp.example.com';
+		process.env.SMTP_SECURE = 'false';
+		process.env.SMTP_REQUIRE_TLS = 'true';
+		process.env.SMTP_TLS_REJECT_UNAUTHORIZED = 'false';
+		process.env.SMTP_ENFORCE_FROM = 'true';
+		const config = new ConfigService();
+		expect(config.email).toMatchObject({
+			type: EmailType.SMTP,
+			secure: false,
+			requireTLS: true,
+			rejectUnauthorized: false,
+			enforceFrom: true,
+		});
+		delete process.env.SMTP_SECURE;
+		delete process.env.SMTP_REQUIRE_TLS;
+		delete process.env.SMTP_TLS_REJECT_UNAUTHORIZED;
+		delete process.env.SMTP_ENFORCE_FROM;
+		expect(new ConfigService().email).toMatchObject({
+			secure: undefined,
+			requireTLS: false,
+			rejectUnauthorized: true,
+			enforceFrom: false,
+		});
+	});
+
 	it('should configure SES email if SMTP_HOST is not set', () => {
 		process.env.SES_ACCESS_KEY_ID = 'AKIA...';
 		process.env.SES_SECRET_ACCESS_KEY = 'SECRET...';

@@ -14,7 +14,7 @@ container replacement:
 | Scheduled cron (every 30 min) | `workers` container (cron event every 5 min) | – |
 | DynamoDB | PostgreSQL **or** SQLite (single host) | `POSTGRES_URL` **or** `SQLITE_PATH` |
 | S3 | Local volume **or** any S3-compatible storage (MinIO, Garage, AWS S3, …) | `UPLOAD_DIRECTORY` **or** `BUCKET_FILES`, `ENDPOINT_S3`, `S3_PUBLIC_ENDPOINT`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` |
-| SES | Any SMTP server | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`, `SMTP_FROM_NAME` |
+| SES | Any SMTP server, see [Email](#email-smtp) | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`, `SMTP_FROM_NAME` |
 | DynamoDB point-in-time recovery, S3 versioning | `backup` container: daily database dump + file archive, retention, optional offsite copy | `BACKUP_TIME`, `BACKUP_RETENTION_DAYS`, `BACKUP_REMOTE`, see [Backups](backup.md) |
 | Google sign in / users | Local users, Google, or any OIDC provider | see [Authentication & Users](authentication.md) |
 
@@ -77,6 +77,30 @@ use Postgres there.
 
 There is no automatic migration between Postgres and SQLite; choose one when
 setting up an installation.
+
+## Email (SMTP)
+
+Self-hosted installs send invoices, offers, reminders and reports through any
+SMTP server: your mail provider, a transactional service (Postmark, Mailgun,
+Brevo, Amazon SES SMTP, …) or a relay in your network. Setting `SMTP_HOST`
+switches from SES to SMTP.
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `SMTP_HOST` | – | Mail server |
+| `SMTP_PORT` | `587` | `587` (STARTTLS), `465` (TLS) or `25` |
+| `SMTP_USER`, `SMTP_PASSWORD` | – | Login; leave `SMTP_USER` empty for relays without authentication |
+| `SMTP_FROM` | – | Sender address used when none is configured in the settings |
+| `SMTP_FROM_NAME` | – | Display name for `SMTP_FROM` |
+| `SMTP_ENFORCE_FROM` | `false` | Always send from `SMTP_FROM`; the sender from the settings becomes the Reply-To. Use this when the provider only accepts verified sender addresses. |
+| `SMTP_SECURE` | `true` for port 465 | Use TLS from the start |
+| `SMTP_REQUIRE_TLS` | `false` | Refuse to send when the server does not offer STARTTLS |
+| `SMTP_TLS_REJECT_UNAUTHORIZED` | `true` | Set to `false` for internal servers with self-signed certificates |
+
+**Testing the setup:** Settings → E-Mail Sending → *Send test email*. The
+page shows the server's answer, for example a rejected login or an
+unreachable host. For trying things out locally, [Mailpit](https://mailpit.axllent.org)
+(`SMTP_HOST=mailpit`, `SMTP_PORT=1025`, no login) catches all messages.
 
 ## Operational notes
 
