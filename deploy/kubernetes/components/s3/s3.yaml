@@ -1,0 +1,124 @@
+# Single node SeaweedFS (master, volume, filer and S3 gateway in one pod).
+# The S3 credentials are AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY from
+# servobill-secrets, the same the app uses.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: servobill-s3
+  labels:
+    app.kubernetes.io/name: servobill-s3
+spec:
+  serviceName: servobill-s3
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: servobill-s3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: servobill-s3
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: seaweedfs
+          image: docker.io/chrislusf/seaweedfs:3.97
+          args: ['server', '-dir=/data', '-s3', '-s3.port=8333']
+          ports:
+            - name: s3
+              containerPort: 8333
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: servobill-secrets
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: servobill-secrets
+                  key: AWS_SECRET_ACCESS_KEY
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          readinessProbe:
+            tcpSocket:
+              port: s3
+            initialDelaySeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ['ReadWriteOnce']
+        resources:
+          requests:
+            storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: servobill-s3
+spec:
+  selector:
+    app.kubernetes.io/name: servobill-s3
+  ports:
+    - name: s3
+      port: 8333
+      targetPort: s3
+---
+# Creates the bucket once the S3 gateway is up (idempotent).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: servobill-s3-bucket
+spec:
+  backoffLimit: 10
+  template:
+    spec:
+      restartPolicy: OnFailure
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+      containers:
+        - name: rclone
+          image: docker.io/rclone/rclone:1.71.2
+          args:
+            - mkdir
+            - ":s3,provider=SeaweedFS,endpoint='http://servobill-s3:8333',env_auth=true:$(BUCKET_FILES)"
+          env:
+            - name: RCLONE_CONFIG
+              value: /tmp/rclone.conf
+          envFrom:
+            - configMapRef:
+                name: servobill-config
+            - secretRef:
+                name: servobill-secrets
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: servobill-s3
+spec:
+  rules:
+    - host: s3.billing.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: servobill-s3
+                port:
+                  name: s3

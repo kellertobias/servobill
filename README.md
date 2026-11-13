@@ -42,7 +42,9 @@ These are the high level next steps:
 We offer two production ready deployment options and a development setup:
 
 - [⚡ Serverless on your AWS account](deploy/serverless/README.md)
-- [🐳 Dockerized on your own hardware](deploy/dockerized/README.md)
+- [🐳 Dockerized on your own hardware (Docker Compose)](deploy/dockerized/README.md)
+- [☸️ Kubernetes](deploy/kubernetes/README.md)
+- [📖 Self-hosting overview: which container replaces which AWS service](docs/self-hosting.md)
 - [💻 Development setup](README.md#developing)
 
 If you have no experience with AWS, we recommend the dockerized deployment, however all ways of deploying Servobill require some level of technical knowledge to deploy it securely.
@@ -65,9 +67,9 @@ Servobill is built with a serverless architecture in mind. It uses AWS Lambda fu
 In the serverless deployment, we use SST to deploy the application to AWS. For the frontend, we use CloudFront and for the APIs we use the AWS API Gateway. Data is stored in AWS DynamoDB and long-running processes are decoupled from the API requests by using AWS EventBridge to trigger Lambda functions.
 
 #### Dockerized Architecture
-For the dockerized deployment, the Next.js app in one docker container also handles the API requests while another container handles the queue workers. For dockerized deployments, we use Postgres rather than DynamoDB for structured data storage.
+For self-hosted deployments (Docker Compose or Kubernetes), the Next.js app in one container also handles the API requests, while a workers container replaces EventBridge, the event handler Lambdas and the cron job. Postgres replaces DynamoDB, SMTP replaces SES.
 
-For storing assets (such as generated invoices or attachments), you can choose if you want to set up and maintain a minio instance (which is basically a self-hostable S3-Clone) or if you want to use an extremely simple local data storage where you just need to provide a folder to store the data in.
+For storing assets (such as generated invoices or attachments), you can use any S3-compatible storage (e.g. MinIO) or a simple data volume shared by both containers. See [Self-hosting](docs/self-hosting.md) for the full mapping and all settings.
 
 From a code perspective, all these options are implemented transparently with an adapter pattern.
 

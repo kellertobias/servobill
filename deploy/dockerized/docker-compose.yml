@@ -1,121 +1,81 @@
-version: '3.8'
+# Servobill - self-hosted deployment.
+#
+#   cp env.example .env           # and adjust it
+#   docker compose up -d --build  # build the images from this repository
+#   docker compose pull && docker compose up -d   # or use the published images
+#
+# docker-compose.release.yml is the same file without the build sections; it is
+# attached to releases for setups without a checkout of the repository.
+#
+# Services replace the AWS parts of the serverless deployment:
+#   app      -> CloudFront, API Gateway, API Lambdas
+#   workers  -> EventBridge, event handler Lambdas, scheduled cron, PDF rendering
+#   postgres -> DynamoDB
+#   /data    -> S3 (or set UPLOAD_DIRECTORY= and ENDPOINT_S3=... for S3/MinIO)
+#   SMTP     -> SES (configure SMTP_* in .env)
 
-# Dockerized deployment for Servobill
-# Includes: Postgres, Queue Workers, Next.js App, FusionAuth
+x-servobill-env: &servobill-env
+  POSTGRES_URL: postgres://servobill-user:${DB_PASSWORD:?set DB_PASSWORD in .env}@postgres:5432/servobill-db
+  UPLOAD_DIRECTORY: ${UPLOAD_DIRECTORY-/data/files}
+  ENDPOINT_EVENTBRIDGE: http://workers:9326
 
 services:
-  # ---
-  # Postgres connection URL for local development:
-  # postgres://servobill:servobill@localhost:5432/servobill
-  # Format: postgres://<user>:<password>@<host>:<port>/<database>
-  # ---
   postgres:
     image: postgres:15
-    restart: unless-stopped
     container_name: servobill-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_USER: servobill-user
-      POSTGRES_PASSWORD: servobill-password
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
       POSTGRES_DB: servobill-db
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U servobill-user -d servobill-db']
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
-
-
-  # # === FusionAuth Service ===
-  # # Untested - for authentication without google auth https://fusionauth.io/download possible alternative: https://www.authelia.com, https://goauthentik.io
-  # fusionauth:
-  #   image: fusionauth/fusionauth-app:latest
-  #   container_name: servobill-fusionauth
-  #   depends_on:
-  #     - postgres
-  #   environment:
-  #     DATABASE_URL: jdbc:postgresql://postgres:5432/servobill-db
-  #     DATABASE_ROOT_USERNAME: servobill-user
-  #     DATABASE_ROOT_PASSWORD: servobill-password
-  #     DATABASE_USERNAME: servobill-user
-  #     DATABASE_PASSWORD: servobill-password
-  #     FUSIONAUTH_APP_MEMORY: 512M
-  #     FUSIONAUTH_APP_RUNTIME_MODE: development
-  #     FUSIONAUTH_APP_URL: http://localhost:9011
-  #     FUSIONAUTH_SEARCH_TYPE: database
-  #   ports:
-  #     - "9011:9011"
-  #   volumes:
-  #     - fusionauth-config:/usr/local/fusionauth/config
-
-  # === Queue Workers ===
   workers:
+    image: ${SERVOBILL_IMAGE_PREFIX:-ghcr.io/kellertobias/servobill}/workers:${SERVOBILL_VERSION:-v1}
     build:
       context: ../..
-      dockerfile: BackgroundJobs.Dockerfile
-    container_name: servobill-queue-workers
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      target: workers
+    container_name: servobill-workers
+    restart: unless-stopped
+    env_file: .env
     environment:
-      UPLOAD_DIRECTORY: "/data"
-      # Inter service communication/configuration
-      ENDPOINT_EVENTBRIDGE: http://queue-workers:9326
-
-      # Change this
-      POSTGRES_URL: postgres://servobill-user:servobill-password@postgres:5432/servobill-db
-
-      # Email related settings
-      SMTP_HOST: host.docker.internal
-      SMTP_PORT: 1025
-      SMTP_USER: please-set
-      SMTP_PASSWORD: please-set
-      SMTP_FROM: please-set
-      SMTP_FROM_NAME: please-set
-    depends_on:
-      - postgres
-    working_dir: /app
+      <<: *servobill-env
+      PORT: '9326'
     volumes:
-      - ./data:/data
+      - ${DATA_VOLUME:-servobill-data}:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
 
-  # === Next.js Application ===
   app:
+    image: ${SERVOBILL_IMAGE_PREFIX:-ghcr.io/kellertobias/servobill}/app:${SERVOBILL_VERSION:-v1}
     build:
       context: ../..
-      dockerfile: App.Dockerfile
+      target: app
     container_name: servobill-app
-    # Authentication settings (LOCAL_AUTH_*, INITIAL_ADMIN_*, OIDC_*, ...) are read
-    # from .env, see docs/authentication.md
-    env_file:
-      - path: .env
-        required: false
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    # Authentication (LOCAL_AUTH_*, INITIAL_ADMIN_*, OIDC_*, ...), SMTP and
+    # everything else comes from .env, see env.example and docs/authentication.md
+    env_file: .env
     environment:
-      UPLOAD_DIRECTORY: "/data"
-      # Inter service communication/configuration
-      ENDPOINT_EVENTBRIDGE: http://workers:9326
-
-      
-      # Remove this once you actually put this behind an tls termination proxy
-      INSECURE_COOKIES: true
-
-      # Change these
-      POSTGRES_URL: postgres://servobill-user:servobill-password@postgres:5432/servobill-db
-
-      # Authentication related settings
-      # ALLOWED_EMAILS: please-set
-      # OAUTH_CLIENT_ID: please-set
-      # JWT_SECRET: please-set
-
-     
-
-
-      # set this to the domain or path that is routed to the app:
-      NEXT_PUBLIC_API_URL: http://localhost:3000/
-
+      <<: *servobill-env
+      PORT: '3000'
     ports:
-      - "3000:3000"
-    depends_on:
-      - postgres
+      - '${HTTP_PORT:-3000}:3000'
     volumes:
-      - ./data:/data
+      - ${DATA_VOLUME:-servobill-data}:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      workers:
+        condition: service_started
 
 volumes:
   postgres-data: {}
-  # fusionauth-config: {} 
+  servobill-data: {}

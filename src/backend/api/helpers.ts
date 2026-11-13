@@ -3,9 +3,41 @@ import querystring from 'node:querystring';
 import type { APIGatewayProxyHandlerV2 } from 'aws-lambda';
 import * as multipart from 'parse-multipart-data';
 
+/**
+ * Resolves the public URLs of the app for redirects (e.g. sign in callbacks).
+ *
+ * - `PUBLIC_URL` (e.g. `https://billing.example.com`) overrides everything.
+ *   Use it for self-hosted setups where UI and API share one origin.
+ * - Otherwise the Host header is used. The protocol is taken from
+ *   `X-Forwarded-Proto` (reverse proxies), else http for localhost and https
+ *   for everything else. In the serverless deployment the API lives on
+ *   `api.<site>`.
+ */
 export const getSiteUrl = (evt: Parameters<APIGatewayProxyHandlerV2>[0]) => {
+	const publicUrl = process.env.PUBLIC_URL?.trim().replace(/\/+$/, '');
+	if (publicUrl) {
+		const parsed = new URL(publicUrl);
+		return {
+			host: parsed.host,
+			protocol: parsed.protocol.replace(':', ''),
+			apiUrl: publicUrl,
+			siteUrl: publicUrl,
+			url: publicUrl,
+		};
+	}
+
 	const host = evt.headers.Host || evt.headers.host;
-	const protocol = host?.includes('localhost') ? 'http' : 'https';
+	const forwardedProto = (
+		evt.headers['X-Forwarded-Proto'] || evt.headers['x-forwarded-proto']
+	)
+		?.split(',')[0]
+		?.trim();
+	const protocol =
+		forwardedProto === 'http' || forwardedProto === 'https'
+			? forwardedProto
+			: host?.includes('localhost')
+				? 'http'
+				: 'https';
 
 	const siteHost = host?.replace('api.', '');
 	const apiHost = host?.includes('localhost')

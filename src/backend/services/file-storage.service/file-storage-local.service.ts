@@ -34,13 +34,28 @@ export class FileStorageServiceLocal implements FileStorageService {
 	}
 
 	/**
+	 * Resolves bucket and key to a path inside the files directory. Keys come
+	 * from request parameters, so paths escaping the directory are rejected.
+	 */
+	private resolvePath(key: string, bucket?: string): string {
+		const base = path.resolve(this.filesDirectory);
+		const filePath = path.resolve(
+			base,
+			bucket || this.defaultSubDirectory,
+			key,
+		);
+		if (!filePath.startsWith(base + path.sep)) {
+			throw new Error('Invalid file path');
+		}
+		return filePath;
+	}
+
+	/**
 	 * Retrieve a file as a Buffer, from S3 or local disk.
 	 */
 	@Span('FileStorageServiceS3.getFile')
 	async getFile(key: string, options?: { bucket?: string }): Promise<Buffer> {
-		const bucket = options?.bucket ?? this.defaultSubDirectory;
-		const filePath = path.join(this.filesDirectory, bucket, key);
-		return await fs.readFile(filePath);
+		return await fs.readFile(this.resolvePath(key, options?.bucket));
 	}
 
 	/**
@@ -53,8 +68,8 @@ export class FileStorageServiceLocal implements FileStorageService {
 		file: Buffer,
 		options?: { bucket?: string },
 	): Promise<string> {
-		const bucket = options?.bucket ?? this.defaultSubDirectory;
-		const filePath = path.join(this.filesDirectory, bucket, key);
+		const bucket = options?.bucket || this.defaultSubDirectory;
+		const filePath = this.resolvePath(key, bucket);
 
 		// Ensure the directory exists
 		const dir = path.dirname(filePath);
@@ -73,8 +88,7 @@ export class FileStorageServiceLocal implements FileStorageService {
 	 */
 	@Span('FileStorageServiceS3.deleteFile')
 	async deleteFile(key: string, options?: { bucket?: string }): Promise<void> {
-		const bucket = options?.bucket ?? this.defaultSubDirectory;
-		const filePath = path.join(this.filesDirectory, bucket, key);
+		const filePath = this.resolvePath(key, options?.bucket);
 		try {
 			await fs.unlink(filePath);
 		} catch (error: unknown) {
@@ -114,7 +128,9 @@ export class FileStorageServiceLocal implements FileStorageService {
 			return `/api/download?attachmentId=${encodeURIComponent(attachment.id)}`;
 		}
 
-		return `/api/download?bucket=${encodeURIComponent(bucket)}&key=${encodeURIComponent(key)}`;
+		return bucket
+			? `/api/download?bucket=${encodeURIComponent(bucket)}&key=${encodeURIComponent(key)}`
+			: `/api/download?key=${encodeURIComponent(key)}`;
 	}
 
 	getFileDescriptor(url: string): { bucket?: string; key: string } | null {

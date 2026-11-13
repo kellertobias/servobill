@@ -34,6 +34,9 @@ jobs:
           major=$(echo "$tag" | grep -oE '^v[0-9]+')
           echo "major=$major" >> $GITHUB_OUTPUT
 
+      - name: Check out the release tag
+        run: git checkout "${{ steps.get_tag.outputs.tag }}"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -58,7 +61,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./App.Dockerfile
+          file: ./Dockerfile
+          target: app
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -74,25 +78,25 @@ jobs:
             deploy/dockerized/docker-compose.release.yml
             deploy/dockerized/env.example
 
-      # Optionally, repeat for workers image if needed
-      # - name: Extract metadata for workers
-      #   id: meta_workers
-      #   uses: docker/metadata-action@v5
-      #   with:
-      #     images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/workers
-      #     tags: |
-      #       type=raw,value=${{ steps.get_tag.outputs.tag }}
-      #       type=raw,value=${{ steps.get_tag.outputs.major }}
-      #       type=raw,value=latest
-      #
-      # - name: Build and push Docker image for workers
-      #   uses: docker/build-push-action@v5
-      #   with:
-      #     context: .
-      #     file: ./BackgroundJobs.Dockerfile
-      #     push: true
-      #     tags: ${{ steps.meta_workers.outputs.tags }}
-      #     labels: ${{ steps.meta_workers.outputs.labels }}
-      #     cache-from: type=gha
-      #     cache-to: type=gha,mode=max
-      #     platforms: linux/amd64,linux/arm64 
+      - name: Extract metadata for workers
+        id: meta_workers
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/workers
+          tags: |
+            type=raw,value=${{ steps.get_tag.outputs.tag }}
+            type=raw,value=${{ steps.get_tag.outputs.major }}
+            type=raw,value=latest
+
+      - name: Build and push Docker image for workers
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          target: workers
+          push: true
+          tags: ${{ steps.meta_workers.outputs.tags }}
+          labels: ${{ steps.meta_workers.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
