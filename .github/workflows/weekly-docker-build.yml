@@ -22,7 +22,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Release tag to build (empty = latest release)
+        description: Release tag to build (empty = latest release). Without push also a branch name.
         type: string
         required: false
       push:
@@ -59,8 +59,11 @@ jobs:
         run: |
           tag="${INPUT_TAG:-$(git tag --list 'v*' --sort=-v:refname | head -n 1)}"
           if ! git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
-            echo "::error::Tag '$tag' does not exist"
-            exit 1
+            # A branch is fine for a test build, published images need a release
+            if [ "$INPUT_PUSH" = "true" ] || ! git rev-parse -q --verify "refs/remotes/origin/$tag" >/dev/null; then
+              echo "::error::'$tag' is not a release tag${INPUT_PUSH:+ (push=$INPUT_PUSH)}"
+              exit 1
+            fi
           fi
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "major=$(echo "$tag" | grep -oE '^v[0-9]+')" >> "$GITHUB_OUTPUT"
