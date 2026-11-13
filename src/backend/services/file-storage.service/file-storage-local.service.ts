@@ -134,6 +134,15 @@ export class FileStorageServiceLocal implements FileStorageService {
 	}
 
 	getFileDescriptor(url: string): { bucket?: string; key: string } | null {
+		// URLs returned by saveFile point to the download route
+		if (url.startsWith('/api/download?')) {
+			const params = new URLSearchParams(url.slice('/api/download?'.length));
+			const key = params.get('key');
+			if (!key) {
+				return null;
+			}
+			return { bucket: params.get('bucket') ?? undefined, key };
+		}
 		try {
 			const urlObj = new URL(url);
 			return {

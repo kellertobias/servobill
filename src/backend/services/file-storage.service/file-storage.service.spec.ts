@@ -184,6 +184,17 @@ describe('FileStorageServiceLocal', () => {
 		const desc = service.getFileDescriptor(url);
 		expect(desc).toEqual({ bucket: 'bucket', key: 'key.txt' });
 	});
+
+	it('parses the download URLs that saveFile returns', async () => {
+		const url = await service.saveFile('dir/a b.txt', Buffer.from('x'), {
+			bucket: 'files',
+		});
+		expect(service.getFileDescriptor(url)).toEqual({
+			bucket: 'files',
+			key: 'dir/a b.txt',
+		});
+		expect(service.getFileDescriptor('/api/download?bucket=x')).toBeNull();
+	});
 });
 
 describe('FileStorageServiceS3', () => {

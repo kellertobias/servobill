@@ -5,6 +5,7 @@ import {
 } from '@/backend/services/file-storage.service';
 import { Inject, Service } from '@/common/di';
 import { AllowUnauthorized } from '@/common/graphql-decorators';
+import { UserDirectoryService } from '@/backend/services/user-directory.service';
 import { GRAPHQL_TEST_SET } from '../di-tokens';
 import type { GqlContext } from '../types';
 import { UserRole } from '@/backend/entities/user.entity';
@@ -18,13 +19,32 @@ import { AuthCheckResult, AuthOptions, GetContextResult } from './auth.schema';
 export class AuthResolver {
   constructor(
     @Inject(FILE_STORAGE_SERVICE)
-    private fileStorageService: FileStorageService
+    private fileStorageService: FileStorageService,
+    @Inject(UserDirectoryService)
+    private userDirectory: UserDirectoryService
   ) {}
 
+  /**
+   * The picture is read from the user, not from the session token, so a new
+   * or removed picture shows up without signing in again.
+   */
+  private async getStoredPicture(context: GqlContext): Promise<string> {
+    const userId = context.session?.user?.userId;
+    if (userId) {
+      const user = await this.userDirectory.getUser(userId);
+      if (user) {
+        return user.profilePictureUrl || '';
+      }
+    }
+    return context.session?.user?.picture || '';
+  }
+
   private async getUserPictureUrl(context: GqlContext): Promise<string | null> {
-    const getFileArgs = this.fileStorageService.getFileDescriptor(
-      context.session?.user?.picture || ''
-    );
+    const stored = await this.getStoredPicture(context);
+    if (!stored) {
+      return null;
+    }
+    const getFileArgs = this.fileStorageService.getFileDescriptor(stored);
     if (!getFileArgs) {
       return null;
     }

@@ -160,7 +160,7 @@ export const Navbar = () => {
 														<span className="bg-gray-700 flex items-center justify-center h-10 w-10 rounded-full">
 															{user?.profilePictureUrl ? (
 																<img
-																	className="h-10 w-10 rounded-full "
+																	className="h-10 w-10 rounded-full object-cover"
 																	src={user?.profilePictureUrl}
 																	alt=""
 																/>

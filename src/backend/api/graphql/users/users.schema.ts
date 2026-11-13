@@ -34,6 +34,15 @@ export class User {
 	})
 	identityProviders!: string[];
 
+	@Field(() => String, {
+		nullable: true,
+		description: 'URL to load the profile picture from (512x512 JPEG)',
+	})
+	profilePictureUrl?: string | null;
+
+	/** The stored picture location; resolved to a loadable URL on request. */
+	storedProfilePictureUrl?: string;
+
 	@Field(() => Date, { nullable: true })
 	lastLoginAt?: Date;
 
