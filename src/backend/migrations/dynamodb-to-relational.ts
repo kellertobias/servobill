@@ -182,18 +182,25 @@ const toDomain = (repo: any, item: any): DomainEntity => {
  *
  * With `reset`, all tables of the target are emptied first, so the target
  * becomes an exact copy (for the final switch-over after test runs).
+ *
+ * `filesBucket` is the S3 bucket of the serverless installation. Attachments
+ * that were stored without a bucket name (the serverless app used its
+ * configured bucket) get it, so their files are found under
+ * `<files>/<bucket>/<key>` like the invoice PDFs.
  */
 export async function migrateDynamodbToRelational({
 	source,
 	target,
 	reset = false,
 	dryRun = false,
+	filesBucket,
 	log = () => {},
 }: {
 	source: Container;
 	target: Container;
 	reset?: boolean;
 	dryRun?: boolean;
+	filesBucket?: string;
 	log?: (message: string) => void;
 }): Promise<MigrationResult> {
 	const result: MigrationResult = [];
@@ -229,6 +236,9 @@ export async function migrateDynamodbToRelational({
 					...(expenseLinks.get(attachment.id) ?? []),
 				]);
 				attachment.setExpenseIds(ids.size > 0 ? [...ids] : null);
+				if (!attachment.s3Bucket && filesBucket) {
+					attachment.s3Bucket = filesBucket;
+				}
 			}
 			// Saving must not publish anything that was recorded while reading
 			(domain as any).events = [];

@@ -8,6 +8,9 @@
  *
  * Use TARGET_SQLITE_PATH instead of TARGET_POSTGRES_URL for SQLite.
  * SOURCE_DYNAMODB_ENDPOINT points to a local DynamoDB (optional).
+ * SOURCE_BUCKET is the S3 bucket of the serverless installation: attachments
+ * stored without a bucket name get it, so all files can be copied to
+ * <files>/<bucket>/<key> (recommended).
  *
  * The DynamoDB table is only read. Files (S3) are not copied by this tool,
  * see docs/migrate-from-aws.md.
@@ -104,7 +107,14 @@ console.log(
 		`${dryRun ? ' (dry run, nothing is written)' : ''}${reset ? ' (target is emptied first)' : ''}`,
 );
 
-migrateDynamodbToRelational({ source, target, reset, dryRun, log: console.log })
+migrateDynamodbToRelational({
+	source,
+	target,
+	reset,
+	dryRun,
+	filesBucket: process.env.SOURCE_BUCKET,
+	log: console.log,
+})
 	.then((result) => {
 		const mismatch = dryRun
 			? []

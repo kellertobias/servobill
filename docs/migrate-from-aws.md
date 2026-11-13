@@ -25,6 +25,7 @@ Run the migration from a machine with read access to the DynamoDB table:
 ```bash
 AWS_PROFILE=<profile> AWS_REGION=eu-central-1 \
 SOURCE_TABLE=<stage>-ServobillDataTableTable-xxxx \
+SOURCE_BUCKET=<stage>-servobillbucketbucket-xxxx \
 TARGET_POSTGRES_URL=postgres://servobill:<password>@localhost:5432/servobill \
 npm run migrate:dynamodb-to-relational -- --dry-run
 ```
@@ -40,6 +41,9 @@ target has fewer.
   PDFs or emails are triggered.
 - Running it again updates the copy. `--reset` empties the target first and
   gives an exact copy: use it for the final switch-over.
+- `SOURCE_BUCKET`: the serverless app stored attachments without a bucket
+  name (it used its configured bucket). The migration fills it in, so all
+  files are found under the bucket name in the new storage (step 3).
 - Not copied: sessions (everyone signs in again) and the audit log.
 - Users: the serverless installation signed in with Google only. Configure
   sign in for the new installation (local users, Google or OIDC, see

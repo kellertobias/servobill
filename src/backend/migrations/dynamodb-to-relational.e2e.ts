@@ -132,7 +132,7 @@ describe.skipIf(needsBoth)('migrateDynamodbToRelational', () => {
 				mimeType: 'application/pdf',
 				size: 1,
 				s3Key: 'old/old.pdf',
-				s3Bucket: 'servobill-prod-bucket',
+				s3Bucket: '',
 				status: 'finished',
 				linkType: 'expense',
 				linkedId: expense.id,
@@ -153,7 +153,11 @@ describe.skipIf(needsBoth)('migrateDynamodbToRelational', () => {
 	});
 
 	it('copies the entities with their content', async () => {
-		const result = await migrateDynamodbToRelational({ source, target });
+		const result = await migrateDynamodbToRelational({
+			source,
+			target,
+			filesBucket: 'servobill-prod-bucket',
+		});
 		const byName = Object.fromEntries(result.map((r) => [r.entity, r]));
 		expect(byName.customer).toMatchObject({ read: 1, written: 1, inTarget: 1 });
 		expect(byName.invoice).toMatchObject({ read: 1, inTarget: 1 });
@@ -187,6 +191,8 @@ describe.skipIf(needsBoth)('migrateDynamodbToRelational', () => {
 			.create<AttachmentRelationalRepository>(AttachmentRelationalRepository)
 			.getById(ids.legacyAttachment);
 		expect(legacy?.expenseIds).toEqual([ids.expense]);
+		// stored without a bucket: gets the bucket of the installation
+		expect(legacy?.s3Bucket).toBe('servobill-prod-bucket');
 
 		const settingsRepo = target.create<SettingsRelationalRepository>(
 			SettingsRelationalRepository,
