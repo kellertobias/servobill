@@ -38,7 +38,10 @@ export async function GET(request: NextRequest) {
 
 		const { searchParams } = new URL(request.url);
 		const attachmentId = searchParams.get('attachmentId');
-		const bucket = searchParams.get('bucket');
+		const bucketParam = searchParams.get('bucket');
+		// Older links contain the literal string "undefined"
+		const bucket =
+			bucketParam && bucketParam !== 'undefined' ? bucketParam : null;
 		const key = searchParams.get('key');
 
 		const file = await (() => {
@@ -79,6 +82,7 @@ export async function GET(request: NextRequest) {
 				status: 404,
 			});
 		}
+		console.error('Download failed', error);
 		return new Response(JSON.stringify({ error: 'Internal server error' }), {
 			status: 500,
 		});
