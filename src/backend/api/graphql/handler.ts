@@ -18,11 +18,6 @@ export const handler = withInstrumentation(
 	},
 	withSession(async (evt, ctx) => {
 		const gqlHandler = await getGraphQLServer(contextBuilder);
-		const answer = await gqlHandler(
-			{ ...evt, httpMethod: evt.requestContext.http.method },
-			ctx,
-			() => {},
-		);
-		return answer;
+		return gqlHandler(evt, ctx);
 	}),
 );

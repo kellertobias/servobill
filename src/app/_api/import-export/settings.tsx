@@ -4,7 +4,7 @@ import { DeferredPromise } from '@/common/deferred';
 import type {
 	InvoiceTemplateResult,
 	SettingsResult,
-} from '@/common/gql/graphql';
+} from '@/common/gql/schema';
 import { doToast } from '@/components/toast';
 import { API, gql } from '../index';
 import { Exporters } from './exporters/exporters';

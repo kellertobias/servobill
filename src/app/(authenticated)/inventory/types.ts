@@ -8,8 +8,8 @@
 
 export interface InventoryItem {
 	id: string;
-	name?: string;
-	barcode?: string;
+	name?: string | null;
+	barcode?: string | null;
 	state: string;
 	location?: {
 		id: string;
@@ -27,10 +27,10 @@ export interface InventoryItem {
 export interface InventoryType {
 	id: string;
 	name: string;
-	checkInterval?: number;
-	checkType?: string;
+	checkInterval?: number | null;
+	checkType?: string | null;
 	properties: string[];
-	parent?: string;
+	parent?: string | null;
 	itemCount: number;
 	items: InventoryItem[];
 	createdAt: string;
@@ -41,8 +41,8 @@ export interface InventoryType {
 export interface InventoryLocation {
 	id: string;
 	name: string;
-	barcode?: string;
-	itemCount?: number;
+	barcode?: string | null;
+	itemCount?: number | null;
 	items: InventoryItem[];
 	createdAt: string;
 	updatedAt: string;

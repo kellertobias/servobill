@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { API, gql } from '@/api/index';
-import type { ExpenseCategoryType } from '@/common/gql/graphql';
+import type { ExpenseCategoryType } from '@/common/gql/schema';
 import { Button } from '@/components/button';
 import { Input } from '@/components/input';
 import { PageContent } from '@/components/page';

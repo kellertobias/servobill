@@ -19,26 +19,30 @@ import { type LLMConfig, type LLMRequest, LLMService } from './llm.service';
 
 // Mock Logger to avoid real logging
 vi.mock('./logger.service', () => ({
-	Logger: vi.fn().mockImplementation(() => ({
-		info: vi.fn(),
-		error: vi.fn(),
-	})),
+	Logger: vi.fn().mockImplementation(function () {
+		return {
+			info: vi.fn(),
+			error: vi.fn(),
+		};
+	}),
 }));
 
 // Mock OpenAI SDK
 const mockCreate = vi.fn();
 const mockFilesCreate = vi.fn();
 vi.mock('openai', () => ({
-	default: vi.fn().mockImplementation(() => ({
-		chat: {
-			completions: {
-				create: mockCreate,
+	default: vi.fn().mockImplementation(function () {
+		return {
+			chat: {
+				completions: {
+					create: mockCreate,
+				},
 			},
-		},
-		files: {
-			create: mockFilesCreate,
-		},
-	})),
+			files: {
+				create: mockFilesCreate,
+			},
+		};
+	}),
 	toFile: vi.fn().mockResolvedValue({}),
 	APIError: class extends Error {
 		status: number;

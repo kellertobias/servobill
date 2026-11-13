@@ -20,7 +20,9 @@ import { S3Service } from './s3.service';
 // Mock AWS SDK S3 client and presigner
 vi.mock('@aws-sdk/client-s3', async () => {
 	return {
-		S3Client: vi.fn().mockImplementation(() => ({ send: vi.fn() })),
+		S3Client: vi.fn().mockImplementation(function () {
+			return { send: vi.fn() };
+		}),
 		GetObjectCommand: vi.fn(),
 		PutObjectCommand: vi.fn(),
 		DeleteObjectCommand: vi.fn(),
@@ -56,9 +58,9 @@ describe('S3Service', () => {
 		config = createMockConfigService();
 		// S3Client mock instance
 		s3ClientInstance = { send: vi.fn() };
-		(S3Client as unknown as MockInstance).mockImplementation(
-			() => s3ClientInstance,
-		);
+		(S3Client as unknown as MockInstance).mockImplementation(function () {
+			return s3ClientInstance;
+		});
 		service = new S3Service(config);
 	});
 
@@ -73,9 +75,11 @@ describe('S3Service', () => {
 		(getSignedUrl as unknown as MockInstance).mockResolvedValue(
 			'https://signed-upload-url',
 		);
-		(PutObjectCommand as unknown as MockInstance).mockImplementation(
-			(input: unknown) => input,
-		);
+		(PutObjectCommand as unknown as MockInstance).mockImplementation(function (
+			input: unknown,
+		) {
+			return input;
+		});
 		const url = await service.getSignedUploadUrl({ key: 'file.txt' });
 		expect(PutObjectCommand).toHaveBeenCalledWith({
 			Bucket: 'test-bucket',
@@ -92,9 +96,11 @@ describe('S3Service', () => {
 		(getSignedUrl as unknown as MockInstance).mockResolvedValue(
 			'https://signed-download-url',
 		);
-		(GetObjectCommand as unknown as MockInstance).mockImplementation(
-			(input: unknown) => input,
-		);
+		(GetObjectCommand as unknown as MockInstance).mockImplementation(function (
+			input: unknown,
+		) {
+			return input;
+		});
 		const url = await service.getSignedUrl({
 			key: 'file.txt',
 			contentDisposition: 'attachment',
@@ -113,7 +119,9 @@ describe('S3Service', () => {
 	 */
 	it('deleteObject calls S3 client with DeleteObjectCommand', async () => {
 		(DeleteObjectCommand as unknown as MockInstance).mockImplementation(
-			(input: unknown) => input,
+			function (input: unknown) {
+				return input;
+			},
 		);
 		(s3ClientInstance.send as MockInstance).mockResolvedValue({});
 		await service.deleteObject({ key: 'file.txt' });
@@ -128,9 +136,11 @@ describe('S3Service', () => {
 	 * Test getObject returns the response body from S3 client.
 	 */
 	it('getObject returns the response body', async () => {
-		(GetObjectCommand as unknown as MockInstance).mockImplementation(
-			(input: unknown) => input,
-		);
+		(GetObjectCommand as unknown as MockInstance).mockImplementation(function (
+			input: unknown,
+		) {
+			return input;
+		});
 		const mockBody = Buffer.from('file-content');
 		(s3ClientInstance.send as MockInstance).mockResolvedValue({
 			Body: mockBody,
@@ -146,16 +156,16 @@ describe('S3Service', () => {
 
 	/**
 		(GetObjectCommand as unknown as MockInstance).mockImplementation(
-			(input: unknown) => input,
-		);
+			function (input: unknown) {	return input;
+		});
 		const mockBody = Buffer.from('file-content');
 		(s3ClientInstance.send as MockInstance).mockResolvedValue({
 			Body: mockBody,
 		});
 		const result = await service.getObject({ key: 'file.txt' });
 		(GetObjectCommand as unknown as MockInstance).mockImplementation(
-			(input: unknown) => input,
-		);
+			function (input: unknown) {	return input;
+		});
 		const mockBody = Buffer.from('file-content');
 		(s3ClientInstance.send as MockInstance).mockResolvedValue({
 			Body: mockBody,
@@ -173,9 +183,11 @@ describe('S3Service', () => {
 	 * Test putObject uploads the object and returns the resource URL.
 	 */
 	it('putObject uploads and returns resource URL', async () => {
-		(PutObjectCommand as unknown as MockInstance).mockImplementation(
-			(input: unknown) => input,
-		);
+		(PutObjectCommand as unknown as MockInstance).mockImplementation(function (
+			input: unknown,
+		) {
+			return input;
+		});
 		(s3ClientInstance.send as MockInstance).mockResolvedValue({});
 		(getSignedUrl as unknown as MockInstance).mockResolvedValue(
 			'https://bucket.s3/file.txt?sig=abc',

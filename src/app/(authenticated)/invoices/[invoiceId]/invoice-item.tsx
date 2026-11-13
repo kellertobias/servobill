@@ -77,6 +77,7 @@ export function InvoiceItem({
 							...(data || []).slice(0, index),
 							{
 								id: Math.random().toString(),
+								productId: null,
 								name: '',
 								description: '',
 								price: '0.00',

@@ -6,6 +6,7 @@ import './enums';
 import { DefaultContainer } from '@/common/di';
 import { AuditMiddleware } from './audit.middleware';
 import { authChecker } from './authorizer';
+import { schemaScalarOptions } from './scalars';
 import * as resolvers from './index';
 
 // import { CqrsBus } from '@/backend/services/cqrs.service';
@@ -28,4 +29,5 @@ export const globalSchema = buildSchema({
 	container: DefaultContainer,
 	authChecker,
 	globalMiddlewares: [AuditMiddleware],
+	...schemaScalarOptions,
 });

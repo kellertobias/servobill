@@ -5,7 +5,7 @@ import '@/components/dev-utils';
 import { QrCodeIcon } from '@heroicons/react/20/solid';
 import { PencilIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { notFound, useRouter } from 'next/navigation';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { type ComponentProps, useEffect, useRef, useState } from 'react';
 import { exportInventory } from '@/api/import-export/inventory-export';
 import { importInventoryItemsFromCSV } from '@/api/import-export/inventory-import-csv';
 import { importInventoryLocationsAndTypesFromJSON } from '@/api/import-export/inventory-import-json';
@@ -390,7 +390,11 @@ export default function InventoryNodePage({
 							{view === 'type' ? (
 								<InventoryTypesTable
 									title={<div className="pt-6">Inventory Types</div>}
-									data={entries as InventoryType[]}
+									data={
+										entries as unknown as ComponentProps<
+											typeof InventoryTypesTable
+										>['data']
+									}
 									loading={loading}
 									/**
 									 * When a row is clicked, navigate to the selected type's page, passing the current node id as 'fromId' in the query params.
@@ -405,7 +409,11 @@ export default function InventoryNodePage({
 							) : (
 								<InventoryLocationsTable
 									title={<div className="pt-6">Inventory Locations</div>}
-									data={entries as InventoryLocation[]}
+									data={
+										entries as unknown as ComponentProps<
+											typeof InventoryLocationsTable
+										>['data']
+									}
 									loading={loading}
 									/**
 									 * When a row is clicked, navigate to the selected location's page, passing the current node id as 'fromId' in the query params.

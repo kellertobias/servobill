@@ -185,12 +185,17 @@ export default $config({
     // cannot discard the security layer or overwrite its startup setting.
     $transform(aws.lambda.Function, (args) => {
       args.layers = pulumi.all([args.layers ?? [], args.architectures ?? ["x86_64"]]).apply(
-        ([layers, architectures]) => [...layers, securityLayers[architectures[0]].arn],
+        ([layers, architectures]) => [
+          ...(layers ?? []),
+          securityLayers[
+            (architectures?.[0] ?? "x86_64") as keyof typeof securityLayers
+          ].arn,
+        ],
       )
       args.environment = pulumi.output(args.environment ?? {}).apply((environment) => ({
         ...environment,
         variables: {
-          ...environment.variables,
+          ...environment?.variables,
           AWS_LAMBDA_EXEC_WRAPPER: "/opt/bin/node-security-wrapper",
         },
       }))
