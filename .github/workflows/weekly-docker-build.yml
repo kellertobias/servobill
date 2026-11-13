@@ -37,10 +37,6 @@ permissions:
   contents: read
   packages: write
 
-concurrency:
-  group: docker-images-${{ inputs.tag || 'latest' }}
-  cancel-in-progress: false
-
 jobs:
   prepare:
     name: Resolve release
