@@ -66,7 +66,7 @@ function Details({ json }: { json: string }) {
 		return null;
 	}
 	return (
-		<div className="text-xs">
+		<div className="mt-1 text-xs">
 			<button
 				type="button"
 				className="text-indigo-600 hover:text-indigo-800"
@@ -75,7 +75,7 @@ function Details({ json }: { json: string }) {
 				{open ? 'Hide details' : 'Show details'}
 			</button>
 			{open && (
-				<pre className="mt-1 max-w-xl overflow-x-auto whitespace-pre-wrap rounded bg-gray-50 p-2 text-gray-700">
+				<pre className="mt-2 max-w-2xl overflow-x-auto whitespace-pre-wrap rounded bg-gray-50 p-2 text-gray-700">
 					{pretty}
 				</pre>
 			)}
@@ -141,15 +141,23 @@ export default function AuditLogPage() {
 	};
 
 	return (
-		<PageContent title="Audit Log" noPadding>
-			<div className="flex flex-wrap items-end justify-between gap-4 px-6 pt-6">
-				<p className="max-w-2xl text-sm text-gray-600">
+		<PageContent
+			title="Audit Log"
+			noPadding
+			contentClassName="overflow-hidden pt-6"
+			footer={
+				<p className="mx-auto mt-6 max-w-2xl px-4 text-center text-xs text-gray-500">
 					Every change made through the app and every sign in, newest first.
 					Passwords and other secrets are never stored here.
 				</p>
-				<div className="w-72">
+			}
+		>
+			<div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+				<h2 className="text-base font-semibold leading-6 text-gray-900">
+					Activity
+				</h2>
+				<div className="w-full sm:w-72">
 					<SelectInput
-						label="User"
 						value={actorId}
 						options={[
 							{ value: ALL_USERS, label: 'All users' },
@@ -159,73 +167,86 @@ export default function AuditLogPage() {
 					/>
 				</div>
 			</div>
-			<Table
-				data={entries}
-				loading={loading && entries.length === 0}
-				keyField="id"
-				columns={[
-					{
-						key: 'createdAt',
-						title: 'Time',
-						render: (entry) => (
-							<span className="whitespace-nowrap text-sm text-gray-700">
-								{new Date(entry.createdAt).toLocaleString()}
-							</span>
-						),
-					},
-					{
-						key: 'actor',
-						title: 'User',
-						render: (entry) => (
-							<div className="text-sm">
-								<div className="text-gray-900">
-									{entry.actorName || entry.actorEmail || 'Anonymous'}
-								</div>
-								{entry.actorName && entry.actorEmail && (
-									<div className="text-xs text-gray-500">
-										{entry.actorEmail}
+			<div className="mt-6">
+				<Table
+					data={entries}
+					loading={loading && entries.length === 0}
+					keyField="id"
+					notFound={{
+						title: 'No entries',
+						subtitle: 'Nothing has been recorded for this selection yet.',
+					}}
+					columns={[
+						{
+							key: 'createdAt',
+							title: 'Time',
+							className: 'py-5 pr-6 align-top',
+							render: (entry) => {
+								const date = new Date(entry.createdAt);
+								return (
+									<>
+										<div className="whitespace-nowrap text-sm leading-6 text-gray-900">
+											{date.toLocaleDateString()}
+										</div>
+										<div className="mt-1 text-xs leading-5 text-gray-500">
+											{date.toLocaleTimeString()}
+										</div>
+									</>
+								);
+							},
+						},
+						{
+							key: 'actor',
+							title: 'User',
+							className: 'py-5 pr-6 align-top hidden sm:table-cell',
+							render: (entry) => (
+								<>
+									<div className="text-sm leading-6 text-gray-900">
+										{entry.actorName || entry.actorEmail || 'Anonymous'}
 									</div>
-								)}
-								{entry.ipAddress && (
-									<div className="text-xs text-gray-400">{entry.ipAddress}</div>
-								)}
-							</div>
-						),
-					},
-					{
-						key: 'action',
-						title: 'Action',
-						render: (entry) => (
-							<div className="text-sm">
-								<div className="font-medium text-gray-900">
-									{entry.action}
-									{!entry.success && (
-										<span className="ml-2 rounded bg-red-50 px-1.5 py-0.5 text-xs text-red-700">
-											failed
-										</span>
-									)}
-								</div>
-								{(entry.entityType || entry.entityId) && (
-									<div className="text-xs text-gray-500">
-										{[entry.entityType, entry.entityId]
+									<div className="mt-1 text-xs leading-5 text-gray-500">
+										{[
+											entry.actorName ? entry.actorEmail : null,
+											entry.ipAddress ? `IP ${entry.ipAddress}` : null,
+										]
 											.filter(Boolean)
-											.join(' ')}
+											.join(' · ')}
 									</div>
-								)}
-							</div>
-						),
-					},
-					{
-						key: 'details',
-						title: 'Details',
-						render: (entry) => <Details json={entry.details} />,
-					},
-				]}
-			/>
+								</>
+							),
+						},
+						{
+							key: 'action',
+							title: 'Action',
+							className: 'py-5 pr-6 align-top',
+							render: (entry) => (
+								<>
+									<div className="text-sm font-medium leading-6 text-gray-900">
+										{entry.action}
+										{!entry.success && (
+											<span className="ml-2 inline-flex items-center rounded-md bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">
+												Failed
+											</span>
+										)}
+									</div>
+									{(entry.entityType || entry.entityId) && (
+										<div className="mt-1 text-xs leading-5 text-gray-500">
+											{[entry.entityType, entry.entityId]
+												.filter(Boolean)
+												.join(' ')}
+										</div>
+									)}
+									<Details json={entry.details} />
+								</>
+							),
+						},
+					]}
+				/>
+			</div>
 			{cursor && (
-				<div className="flex justify-center p-6">
-					<Button secondary onClick={loadMore}>
-						{loading ? 'Loading…' : 'Load older entries'}
+				<div className="flex justify-center border-t border-gray-100 p-6">
+					<Button secondary onClick={loadMore} loading={loading}>
+						Load older entries
 					</Button>
 				</div>
 			)}
