@@ -1,4 +1,5 @@
 import { API, gql } from '@/api/index';
+import { InvoiceType } from '@/common/gql/graphql';
 import { confirmDialog } from '@/components/dialog';
 import { doToast } from '@/components/toast';
 
@@ -7,8 +8,10 @@ import type { InvoiceData } from '../data';
 export const onClickCancelInvoice = async (props: {
 	data: InvoiceData;
 	reload: () => void;
-	isOffer?: boolean;
 }) => {
+	// Offers are discarded (marked invalid), invoices get a cancel notice
+	const isOffer = props.data.type === InvoiceType.Offer;
+
 	/**
 	 * Checks if any invoice items have a linked expense and prompts the user
 	 * whether to delete those expenses when cancelling the invoice.
@@ -18,7 +21,7 @@ export const onClickCancelInvoice = async (props: {
 	);
 
 	let cancelExpenses = false;
-	if (hasLinkedExpenses && !props.isOffer) {
+	if (hasLinkedExpenses && !isOffer) {
 		// Ask the user if they want to delete linked expenses
 		cancelExpenses = (await confirmDialog({
 			danger: true,
@@ -38,10 +41,10 @@ export const onClickCancelInvoice = async (props: {
 	if (
 		await confirmDialog({
 			danger: true,
-			title: props.isOffer ? 'Cancel Offer?' : 'Cancel Invoice?',
-			confirmText: props.isOffer ? 'Cancel Offer' : 'Cancel Invoice',
+			title: isOffer ? 'Discard Offer?' : 'Cancel Invoice?',
+			confirmText: isOffer ? 'Discard Offer' : 'Cancel Invoice',
 			cancelText: 'Abort',
-			content: props.isOffer ? (
+			content: isOffer ? (
 				<>This will mark the offer as invalid and cannot be undone.</>
 			) : (
 				<>This will generate a cancel notice and cannot be undone.</>
@@ -68,11 +71,9 @@ export const onClickCancelInvoice = async (props: {
 				});
 				props.reload();
 			})(),
-			loading: props.isOffer ? 'Cancelling offer...' : 'Cancelling invoice...',
-			success: props.isOffer ? 'Offer cancelled.' : 'Invoice cancelled.',
-			error: props.isOffer
-				? 'Failed to cancel offer.'
-				: 'Failed to cancel invoice.',
+			loading: isOffer ? 'Discarding offer...' : 'Cancelling invoice...',
+			success: isOffer ? 'Offer discarded.' : 'Invoice cancelled.',
+			error: isOffer ? 'Failed to discard offer.' : 'Failed to cancel invoice.',
 		});
 	}
 };
