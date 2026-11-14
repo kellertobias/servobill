@@ -739,6 +739,9 @@ type Query {
   me: User
   product(id: String!): Product
   products(limit: Int, skip: Int, where: ProductWhereInput): [Product!]!
+
+  """Whether receipts can be extracted with AI on this installation"""
+  receiptExtractionAvailable: Boolean!
   settings: SettingsResult!
   template: InvoiceTemplateResult!
   user(id: String!): User

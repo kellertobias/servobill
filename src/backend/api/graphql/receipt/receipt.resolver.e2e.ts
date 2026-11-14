@@ -34,6 +34,31 @@ describe('ReceiptResolver Integration', () => {
 		eventBusMock.send.mockClear();
 	});
 
+	it('reports whether AI extraction is configured', async () => {
+		const query = gql`
+			{
+				receiptExtractionAvailable
+			}
+		`;
+		const previous = process.env.LLM_PROVIDER;
+		try {
+			delete process.env.LLM_PROVIDER;
+			const off = await execute({ source: query });
+			expect(off.errors).toBeUndefined();
+			expect(off.data?.receiptExtractionAvailable).toBe(false);
+
+			process.env.LLM_PROVIDER = 'openai';
+			const on = await execute({ source: query });
+			expect(on.data?.receiptExtractionAvailable).toBe(true);
+		} finally {
+			if (previous === undefined) {
+				delete process.env.LLM_PROVIDER;
+			} else {
+				process.env.LLM_PROVIDER = previous;
+			}
+		}
+	});
+
 	/**
 	 * Test extracting receipt from text only.
 	 * Verifies that an event is published and the response contains an eventId.

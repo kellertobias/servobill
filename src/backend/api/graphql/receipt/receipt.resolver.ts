@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import { Arg, Authorized, Mutation, Resolver } from 'type-graphql';
+import { Arg, Authorized, Mutation, Query, Resolver } from 'type-graphql';
 import { Span } from '@/backend/instrumentation';
 import { ATTACHMENT_REPOSITORY } from '@/backend/repositories/attachment/di-tokens';
 import type { AttachmentRepository } from '@/backend/repositories/attachment/interface';
@@ -34,6 +34,19 @@ export class ReceiptResolver {
     private attachmentRepository: AttachmentRepository,
     @Inject(EVENTBUS_SERVICE) private eventBus: EventBusService
   ) {}
+
+  /**
+   * Whether an AI provider is configured (LLM_PROVIDER), so the frontend can
+   * offer the AI upload. Read at runtime, unlike NEXT_PUBLIC_* variables,
+   * which are fixed when the frontend is built (e.g. in the Docker images).
+   */
+  @Authorized()
+  @Query(() => Boolean, {
+    description: 'Whether receipts can be extracted with AI on this installation',
+  })
+  receiptExtractionAvailable(): boolean {
+    return !!process.env.LLM_PROVIDER?.trim();
+  }
 
   /**
    * Extract receipt data from text content or uploaded attachments.

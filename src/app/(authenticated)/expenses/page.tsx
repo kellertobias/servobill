@@ -18,6 +18,24 @@ export default function ExpensesHomePage() {
 	>(null);
 	const [isAIExtractionModalOpen, setIsAIExtractionModalOpen] =
 		React.useState(false);
+	const [aiExtractionAvailable, setAiExtractionAvailable] =
+		React.useState(false);
+
+	// Asked at runtime: the Docker images are built without knowing whether an
+	// AI provider will be configured.
+	React.useEffect(() => {
+		API.query({
+			query: gql(`
+				query ExpensesHomePageFeatures {
+					receiptExtractionAvailable
+				}
+			`),
+		})
+			.then((result) =>
+				setAiExtractionAvailable(result.receiptExtractionAvailable),
+			)
+			.catch(() => setAiExtractionAvailable(false));
+	}, []);
 
 	const { data, loading, reload } = useLoadData(async () => {
 		const data = await API.query({
@@ -72,7 +90,7 @@ export default function ExpensesHomePage() {
 				contentClassName="overflow-hidden pt-6"
 				right={
 					<>
-						{process.env.NEXT_PUBLIC_HAS_LLM === 'true' && (
+						{aiExtractionAvailable && (
 							<Button
 								icon={SparklesIcon}
 								header

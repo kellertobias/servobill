@@ -534,6 +534,11 @@ export default $config({
 						...authEnvironment,
 						JWT_SECRET: requiredEnv.JWT_SECRET,
 						BUCKET_FILES: dataBucket.name,
+						// Only tells the frontend that AI extraction is available;
+						// the key stays with the event handlers.
+						...(process.env.LLM_API_KEY && process.env.LLM_PROVIDER
+							? { LLM_PROVIDER: process.env.LLM_PROVIDER }
+							: {}),
 					},
 					npmInstall: npm.api.install,
 					npmExternal: npm.api.external,
@@ -552,7 +557,6 @@ export default $config({
 			domain: requiredEnv.SITE_DOMAIN,
 			environment: {
 				NEXT_PUBLIC_API_URL: api.url,
-				NEXT_PUBLIC_HAS_LLM: process.env.LLM_API_KEY ? 'true' : 'false',
 			},
 			transform: {
 				server: {
