@@ -39,13 +39,20 @@ We will update this roadmap as we progress with the development of Servobill.
 
 
 ## Milestone "Full Standalone" (planned till end of September 2025):
-- [ ] Add automatic backups of data (e.g. via email or to S3)
-- [ ] Add local user management (e.g. for self-hosted deployments)
+- [X] Add automatic backups of data (backup container with offsite copies, email backup in the app)
+- [X] Add local user management (e.g. for self-hosted deployments)
+
+## Milestone "Self-hosting" (November 2026):
+- [X] Users with roles (administrators and users), profile pictures and an audit log
+- [X] Sign in with OpenID Connect (Zitadel, Keycloak, Authentik, ...)
+- [X] Kubernetes deployment
+- [X] Multi-architecture Docker images on ghcr.io for every release
+- [X] Move a serverless installation to a self-hosted one (DynamoDB to Postgres, S3 to local files)
 
 ## Long term (MRs welcome after PRD and TDD discussions):
-- [ ] Add support for automatically sending invoices at a given date
+- [X] Add support for automatically sending invoices at a given date
 - [ ] Add "Projects" assign inventory items to projects (e.g. for packing lists, etc.)
 - [ ] Add S3 lifecycle rules to automatically archive old data (e.g. glacier to save on storage)
-- [ ] Add pagination to all lists
-- [ ] PDF export of reports (JSON & CSV export already present)
+- [ ] Add pagination to all lists (the audit log and inventory have it)
+- [X] PDF export of reports (JSON & CSV export already present)
 - [ ] FinTS support for checking for payments (see https://www.fints.org/de/startseite)

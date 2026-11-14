@@ -35,7 +35,10 @@ These are the high level next steps:
 - [ ] Forward incoming invoice email to servobill
 - [X] Local User Management & Multi-user support (admins and users)
 - [X] OpenID Connect sign in (Zitadel, Keycloak, ...)
-- [ ] Full Standalone (automatic backups, etc.)
+- [X] Full Standalone (automatic backups, etc.)
+- [X] Kubernetes deployment
+- [X] Move from the serverless deployment to a self-hosted one ([guide](docs/migrate-from-aws.md))
+- [X] PDF export of reports
 
 ## Developing & Deploying
 
