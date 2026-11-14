@@ -1,16 +1,15 @@
-import { UserRole } from '@/backend/entities/user.entity';
 import { withSpan } from '@/backend/instrumentation';
 import { Logger } from '@/backend/services/logger.service';
 import { UserDirectoryService } from '@/backend/services/user-directory.service';
 import { DefaultContainer } from '@/common/di';
 import type { APIHandler } from '../../types';
-import { getOidcProvider, type OidcProviderConfig } from '../config';
+import { getOidcProvider } from '../config';
 import {
 	exchangeCode,
-	extractRoles,
 	fetchUserInfo,
 	isEmailVerified,
 	type OidcClaims,
+	resolveProviderAccess,
 	verifyIdToken,
 } from '../oidc';
 import { finishExternalLogin, loginErrorRedirect } from './login-result';
@@ -18,19 +17,6 @@ import { getOidcRedirectUri } from './oidc-request';
 import { clearStateCookie, readStateCookie } from './oidc-state';
 
 const logger = new Logger('OidcAuth');
-
-const getProviderRole = (
-	provider: OidcProviderConfig,
-	claims: Record<string, unknown>,
-): UserRole | undefined => {
-	if (!provider.rolesClaim || provider.adminRoles.length === 0) {
-		return undefined;
-	}
-	const roles = extractRoles(claims, provider.rolesClaim);
-	return roles.some((role) => provider.adminRoles.includes(role))
-		? UserRole.ADMIN
-		: UserRole.USER;
-};
 
 export const oidcCallbackHandler: APIHandler = withSpan(
 	{
@@ -94,6 +80,18 @@ export const oidcCallbackHandler: APIHandler = withSpan(
 			return loginErrorRedirect(evt, 'Sign in failed', clear);
 		}
 
+		const access = resolveProviderAccess(provider, claims);
+		if (!access.allowed) {
+			logger.info('Rejecting OIDC login without a required role', {
+				provider: provider.id,
+			});
+			return loginErrorRedirect(
+				evt,
+				'Your account is not allowed to use this application',
+				clear,
+			);
+		}
+
 		const user = await DefaultContainer.get(
 			UserDirectoryService,
 		).resolveExternalLogin({
@@ -107,7 +105,7 @@ export const oidcCallbackHandler: APIHandler = withSpan(
 				claims.preferred_username,
 			autoProvision: provider.autoProvision,
 			requireVerifiedEmail: provider.requireVerifiedEmail,
-			providerRole: getProviderRole(provider, claims),
+			providerRole: access.role,
 		});
 
 		if (!user) {

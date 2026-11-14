@@ -31,6 +31,7 @@ describe('getAuthConfig', () => {
 			OIDC_ZITADEL_NAME: 'Zitadel',
 			OIDC_ZITADEL_ROLES_CLAIM: 'urn:zitadel:iam:org:project:roles',
 			OIDC_ZITADEL_ADMIN_ROLES: 'servobill-admin',
+			OIDC_ZITADEL_USER_ROLES: 'servobill-user',
 			OIDC_ZITADEL_AUTO_PROVISION: 'true',
 			OIDC_COMPANY_SSO_ISSUER: 'https://sso.example.org',
 			OIDC_COMPANY_SSO_CLIENT_ID: 'other',
@@ -46,6 +47,7 @@ describe('getAuthConfig', () => {
 			autoProvision: true,
 			requireVerifiedEmail: true,
 			adminRoles: ['servobill-admin'],
+			userRoles: ['servobill-user'],
 		});
 		expect(company).toMatchObject({
 			id: 'company-sso',
@@ -70,6 +72,14 @@ describe('getAuthConfig', () => {
 		expect(() => getAuthConfig({ OIDC_PROVIDERS: 'google' })).toThrow(
 			/reserved/,
 		);
+		expect(() =>
+			getAuthConfig({
+				OIDC_PROVIDERS: 'zitadel',
+				OIDC_ZITADEL_ISSUER: 'https://auth.example.com',
+				OIDC_ZITADEL_CLIENT_ID: 'client',
+				OIDC_ZITADEL_USER_ROLES: 'servobill-user',
+			}),
+		).toThrow(/USER_ROLES needs OIDC_ZITADEL_ROLES_CLAIM/);
 	});
 
 	it('reads the initial admin only when email and password are set', () => {

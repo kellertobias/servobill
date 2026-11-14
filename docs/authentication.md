@@ -75,6 +75,7 @@ List the providers in `OIDC_PROVIDERS` and configure each with
 | `OIDC_<ID>_REQUIRE_VERIFIED_EMAIL` | Default `true`. Unverified emails are never matched to users. |
 | `OIDC_<ID>_ROLES_CLAIM` | Optional claim with the user's roles. Plain names and dot paths (`realm_access.roles`) work. |
 | `OIDC_<ID>_ADMIN_ROLES` | Comma separated role values that make a user administrator. When set together with the roles claim, the role is synced on every sign in. |
+| `OIDC_<ID>_USER_ROLES` | Comma separated role values that allow signing in as a regular user. When set, only people with one of these or one of the admin roles may sign in; everyone else is rejected, also existing users. Needs `ROLES_CLAIM`. |
 
 For a single provider you can also drop the id: `OIDC_ISSUER`, `OIDC_CLIENT_ID`,
 `OIDC_CLIENT_SECRET`, … (the provider id is then `oidc`).
@@ -95,7 +96,11 @@ it is `https://api.<SITE_DOMAIN>/api/auth/oidc-callback`.
 2. Add the redirect URI from above. Optionally add the post logout URI of your app.
 3. Enable *User roles inside ID token* / *User Info inside ID Token* in the
    application's token settings, or rely on Servobill's userinfo lookup.
-4. Optionally create a project role such as `servobill-admin` and assign it.
+4. Optionally create project roles such as `servobill-user` and `servobill-admin`
+   and assign them. To let the provider alone decide who may use Servobill, set
+   `USER_ROLES` and `ADMIN_ROLES` and enable *Check authorization on
+   Authentication* on the Zitadel project as well (Servobill checks the roles
+   too, so a missing project setting does not open access).
 
 ```bash
 OIDC_PROVIDERS=zitadel
@@ -106,7 +111,8 @@ OIDC_ZITADEL_CLIENT_ID=123456789@servobill
 OIDC_ZITADEL_SCOPES="openid email profile urn:zitadel:iam:org:project:roles"
 OIDC_ZITADEL_ROLES_CLAIM=urn:zitadel:iam:org:project:roles
 OIDC_ZITADEL_ADMIN_ROLES=servobill-admin
-# OIDC_ZITADEL_AUTO_PROVISION=true          # everyone in the Zitadel project may sign in
+OIDC_ZITADEL_USER_ROLES=servobill-user       # only people with one of the roles may sign in
+OIDC_ZITADEL_AUTO_PROVISION=true             # create users for everyone with a role
 ```
 
 ### Google as generic OIDC provider

@@ -1,6 +1,7 @@
 import { generateKeyPairSync } from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { UserRole } from '@/backend/entities/user.entity';
 import type { OidcProviderConfig } from './config';
 import {
 	buildAuthorizationUrl,
@@ -8,6 +9,7 @@ import {
 	createPkcePair,
 	exchangeCode,
 	extractRoles,
+	resolveProviderAccess,
 	verifyIdToken,
 } from './oidc';
 
@@ -23,6 +25,7 @@ const provider: OidcProviderConfig = {
 	autoProvision: false,
 	requireVerifiedEmail: true,
 	adminRoles: [],
+	userRoles: [],
 };
 
 const { privateKey, publicKey } = generateKeyPairSync('rsa', {
@@ -190,5 +193,59 @@ describe('oidc', () => {
 			),
 		).toEqual(['admin']);
 		expect(extractRoles({}, 'roles')).toEqual([]);
+	});
+
+	describe('resolveProviderAccess', () => {
+		const claim = 'urn:zitadel:iam:org:project:roles';
+		const withRoles = (...roles: string[]) => ({
+			[claim]: Object.fromEntries(roles.map((role) => [role, {}])),
+		});
+		const gated = {
+			rolesClaim: claim,
+			adminRoles: ['servobill-admin'],
+			userRoles: ['servobill-user'],
+		};
+
+		it('lets everyone in without role configuration', () => {
+			expect(
+				resolveProviderAccess(
+					{ rolesClaim: claim, adminRoles: [], userRoles: [] },
+					{},
+				),
+			).toEqual({ allowed: true });
+		});
+
+		it('only syncs the role with admin roles alone', () => {
+			const provider = { ...gated, userRoles: [] };
+			expect(resolveProviderAccess(provider, {})).toEqual({
+				allowed: true,
+				role: UserRole.USER,
+			});
+			expect(
+				resolveProviderAccess(provider, withRoles('servobill-admin')),
+			).toEqual({ allowed: true, role: UserRole.ADMIN });
+		});
+
+		it('requires a user or admin role with user roles', () => {
+			expect(resolveProviderAccess(gated, {})).toEqual({ allowed: false });
+			expect(resolveProviderAccess(gated, withRoles('other'))).toEqual({
+				allowed: false,
+			});
+			expect(resolveProviderAccess(gated, withRoles('servobill-user'))).toEqual(
+				{ allowed: true, role: UserRole.USER },
+			);
+			expect(
+				resolveProviderAccess(gated, withRoles('servobill-admin')),
+			).toEqual({ allowed: true, role: UserRole.ADMIN });
+		});
+
+		it('keeps the role unset with user roles alone', () => {
+			expect(
+				resolveProviderAccess(
+					{ ...gated, adminRoles: [] },
+					withRoles('servobill-user'),
+				),
+			).toEqual({ allowed: true, role: undefined });
+		});
 	});
 });

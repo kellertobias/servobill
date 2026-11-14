@@ -6,6 +6,7 @@ import {
 	randomBytes,
 } from 'node:crypto';
 import jwt from 'jsonwebtoken';
+import { UserRole } from '@/backend/entities/user.entity';
 import type { OidcProviderConfig } from './config';
 
 /**
@@ -294,4 +295,40 @@ export const extractRoles = (
 		return Object.keys(value);
 	}
 	return [];
+};
+
+export type ProviderAccess =
+	| { allowed: false }
+	| { allowed: true; role?: UserRole };
+
+/**
+ * Decides from the provider's roles claim whether a person may sign in and
+ * with which role.
+ *
+ * - With `userRoles`, only people with one of the user or admin roles may
+ *   sign in. Everyone else is rejected, even if they already have a user.
+ * - With `adminRoles`, the role is synced on every sign in: administrator
+ *   with an admin role, regular user otherwise.
+ * - Without either, the provider says nothing about access or role.
+ */
+export const resolveProviderAccess = (
+	provider: Pick<OidcProviderConfig, 'rolesClaim' | 'adminRoles' | 'userRoles'>,
+	claims: Record<string, unknown>,
+): ProviderAccess => {
+	const { rolesClaim, adminRoles, userRoles } = provider;
+	if (!rolesClaim || (adminRoles.length === 0 && userRoles.length === 0)) {
+		return { allowed: true };
+	}
+	const roles = extractRoles(claims, rolesClaim);
+	const isAdmin = roles.some((role) => adminRoles.includes(role));
+	if (isAdmin) {
+		return { allowed: true, role: UserRole.ADMIN };
+	}
+	if (userRoles.length > 0 && !roles.some((role) => userRoles.includes(role))) {
+		return { allowed: false };
+	}
+	return {
+		allowed: true,
+		role: adminRoles.length > 0 ? UserRole.USER : undefined,
+	};
 };

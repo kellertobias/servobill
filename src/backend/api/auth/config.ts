@@ -34,6 +34,12 @@ export type OidcProviderConfig = {
 	rolesClaim?: string;
 	/** Values of the roles claim that make a user an administrator. */
 	adminRoles: string[];
+	/**
+	 * Values of the roles claim that allow signing in as a regular user. When
+	 * set, a sign in without one of these or one of the admin roles is
+	 * rejected, also for existing users.
+	 */
+	userRoles: string[];
 };
 
 export type AuthConfig = {
@@ -101,6 +107,13 @@ const readOidcProvider = (
 			`${prefix}TOKEN_AUTH_METHOD must be client_secret_basic, client_secret_post or none`,
 		);
 	}
+	const rolesClaim = get('ROLES_CLAIM');
+	const userRoles = list(get('USER_ROLES'));
+	if (userRoles.length > 0 && !rolesClaim) {
+		// Without the claim every sign in would be rejected (or, worse, an
+		// implementation could skip the check): fail at startup instead.
+		throw new Error(`${prefix}USER_ROLES needs ${prefix}ROLES_CLAIM`);
+	}
 	return {
 		id,
 		name: get('NAME') || id.charAt(0).toUpperCase() + id.slice(1),
@@ -111,8 +124,9 @@ const readOidcProvider = (
 		tokenAuthMethod,
 		autoProvision: isTrue(get('AUTO_PROVISION')),
 		requireVerifiedEmail: isTrue(get('REQUIRE_VERIFIED_EMAIL'), true),
-		rolesClaim: get('ROLES_CLAIM'),
+		rolesClaim,
 		adminRoles: list(get('ADMIN_ROLES')),
+		userRoles,
 	};
 };
 
